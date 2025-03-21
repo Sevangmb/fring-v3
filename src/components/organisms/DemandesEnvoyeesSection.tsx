@@ -2,7 +2,7 @@
 import React from "react";
 import { Heading, Text } from "@/components/atoms/Typography";
 import DemandesEnvoyeesCard from "@/components/molecules/DemandesEnvoyeesCard";
-import { Ami } from "@/services/amiService";
+import { Ami } from "@/services/amis/types";
 
 interface DemandesEnvoyeesSectionProps {
   demandes: Ami[];

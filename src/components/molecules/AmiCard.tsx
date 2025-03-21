@@ -4,7 +4,7 @@ import { Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
 import { UserCheck, X } from "lucide-react";
 import Card, { CardHeader, CardTitle, CardFooter } from "@/components/molecules/Card";
-import { Ami } from "@/services/amiService";
+import { Ami } from "@/services/amis/types";
 
 interface AmiCardProps {
   ami: Ami;

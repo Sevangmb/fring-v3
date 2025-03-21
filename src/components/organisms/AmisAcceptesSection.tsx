@@ -2,7 +2,7 @@
 import React from "react";
 import { Heading, Text } from "@/components/atoms/Typography";
 import AmiCard from "@/components/molecules/AmiCard";
-import { Ami } from "@/services/amiService";
+import { Ami } from "@/services/amis/types";
 
 interface AmisAcceptesSectionProps {
   amis: Ami[];

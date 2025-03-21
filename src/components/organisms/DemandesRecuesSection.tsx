@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Ami } from "@/services/amiService";
+import { Ami } from "@/services/amis/types";
 import DemandesRecuesCard from "@/components/molecules/DemandesRecuesCard";
 import { Heading } from "@/components/atoms/Typography";
 
