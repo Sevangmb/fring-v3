@@ -1,5 +1,5 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 // Type pour un vêtement
 export interface Vetement {
@@ -11,6 +11,23 @@ export interface Vetement {
   description?: string;
   marque?: string;
   image_url?: string;
+  created_at: string;
+}
+
+// Type pour une catégorie
+export interface Categorie {
+  id: number;
+  nom: string;
+  description?: string;
+  created_at: string;
+}
+
+// Type pour une marque
+export interface Marque {
+  id: number;
+  nom: string;
+  site_web?: string;
+  logo_url?: string;
   created_at: string;
 }
 
@@ -303,7 +320,7 @@ export const demoVetements: Omit<Vetement, 'id' | 'created_at'>[] = [
 // Fonctions pour les nouvelles tables
 
 // Fonction pour récupérer toutes les catégories
-export const fetchCategories = async () => {
+export const fetchCategories = async (): Promise<Categorie[]> => {
   try {
     const { data, error } = await supabase
       .from('categories')
@@ -315,7 +332,7 @@ export const fetchCategories = async () => {
       throw error;
     }
     
-    return data;
+    return data as Categorie[];
   } catch (error) {
     console.error('Erreur lors de la récupération des catégories:', error);
     throw error;
@@ -323,7 +340,7 @@ export const fetchCategories = async () => {
 };
 
 // Fonction pour récupérer toutes les marques
-export const fetchMarques = async () => {
+export const fetchMarques = async (): Promise<Marque[]> => {
   try {
     const { data, error } = await supabase
       .from('marques')
@@ -335,7 +352,7 @@ export const fetchMarques = async () => {
       throw error;
     }
     
-    return data;
+    return data as Marque[];
   } catch (error) {
     console.error('Erreur lors de la récupération des marques:', error);
     throw error;

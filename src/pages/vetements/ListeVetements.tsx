@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/templates/Layout";
@@ -9,38 +10,48 @@ import { Shirt, Plus, Search, ArrowLeft, Filter, SlidersHorizontal, TagIcon, Edi
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { fetchVetements, deleteVetement, demoVetements, Vetement } from "@/services/supabaseService";
-
-// Removing the local Vetement interface since we're now importing it from the service
+import { 
+  fetchVetements, fetchCategories, fetchMarques,
+  deleteVetement, demoVetements, Vetement, Categorie, Marque 
+} from "@/services/supabaseService";
 
 const ListeVetementsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [vetements, setVetements] = useState<Vetement[]>([]);
+  const [categories, setCategories] = useState<Categorie[]>([]);
+  const [marques, setMarques] = useState<Marque[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [categorieFilter, setCategorieFilter] = useState<string>("");
+  const [marqueFilter, setMarqueFilter] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("tous");
 
-  // Récupérer les vêtements depuis Supabase
+  // Récupérer les vêtements, catégories et marques depuis Supabase
   useEffect(() => {
-    const loadVetements = async () => {
+    const loadData = async () => {
       try {
         setIsLoading(true);
         
         // Récupérer les données depuis notre service
-        const data = await fetchVetements();
-        setVetements(data);
+        const [vetementsData, categoriesData, marquesData] = await Promise.all([
+          fetchVetements(),
+          fetchCategories(),
+          fetchMarques()
+        ]);
+        
+        setVetements(vetementsData);
+        setCategories(categoriesData);
+        setMarques(marquesData);
       } catch (error) {
-        console.error("Erreur lors de la récupération des vêtements:", error);
+        console.error("Erreur lors de la récupération des données:", error);
         toast({
           title: "Erreur",
-          description: "Impossible de charger vos vêtements. Utilisation des données de démonstration.",
+          description: "Impossible de charger les données. Utilisation des données de démonstration.",
           variant: "destructive",
         });
         
-        // Utiliser les données de démonstration
-        // Simuler des IDs et des dates pour les données de démo
+        // Utiliser les données de démonstration pour les vêtements
         setVetements(demoVetements.map((v, index) => ({
           ...v,
           id: index + 1,
@@ -51,7 +62,7 @@ const ListeVetementsPage = () => {
       }
     };
     
-    loadVetements();
+    loadData();
   }, [toast]);
 
   // Filtrer les vêtements en fonction de la recherche et des filtres
@@ -64,11 +75,14 @@ const ListeVetementsPage = () => {
     // Filtre de catégorie
     const matchesCategorie = categorieFilter ? categorieFilter === "all" ? true : vetement.categorie === categorieFilter : true;
     
+    // Filtre de marque
+    const matchesMarque = marqueFilter ? marqueFilter === "all" ? true : vetement.marque === marqueFilter : true;
+    
     // Filtre par onglet
     if (activeTab === "tous") {
-      return matchesSearch && matchesCategorie;
+      return matchesSearch && matchesCategorie && matchesMarque;
     } else {
-      return matchesSearch && matchesCategorie && vetement.categorie === activeTab;
+      return matchesSearch && matchesCategorie && matchesMarque && vetement.categorie === activeTab;
     }
   });
 
@@ -96,22 +110,6 @@ const ListeVetementsPage = () => {
     }
   };
 
-  // Pour simplifier, ces catégories devraient correspondre à celles dans le formulaire d'ajout
-  const categories = [
-    { value: "t-shirt", label: "T-shirts" },
-    { value: "chemise", label: "Chemises" },
-    { value: "pantalon", label: "Pantalons" },
-    { value: "jeans", label: "Jeans" },
-    { value: "veste", label: "Vestes" },
-    { value: "pull", label: "Pulls" },
-    { value: "robe", label: "Robes" },
-    { value: "jupe", label: "Jupes" },
-    { value: "short", label: "Shorts" },
-    { value: "manteau", label: "Manteaux" },
-    { value: "chaussures", label: "Chaussures" },
-    { value: "accessoire", label: "Accessoires" },
-  ];
-
   // Composant pour afficher la liste des vêtements (utilisé dans plusieurs onglets)
   const VetementsList = () => {
     if (isLoading) {
@@ -130,7 +128,7 @@ const ListeVetementsPage = () => {
           <Shirt size={48} className="mx-auto text-muted-foreground opacity-20 mb-4" />
           <Heading as="h3" variant="h4" className="mb-2">Aucun vêtement trouvé</Heading>
           <Text className="text-muted-foreground mb-6">
-            {searchTerm || categorieFilter 
+            {searchTerm || categorieFilter || marqueFilter
               ? "Aucun vêtement ne correspond à vos critères de recherche."
               : "Vous n'avez pas encore ajouté de vêtements à votre collection."}
           </Text>
@@ -269,7 +267,7 @@ const ListeVetementsPage = () => {
             />
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Select value={categorieFilter} onValueChange={setCategorieFilter}>
               <SelectTrigger className="w-[180px]">
                 <div className="flex items-center">
@@ -280,8 +278,25 @@ const ListeVetementsPage = () => {
               <SelectContent>
                 <SelectItem value="all">Toutes</SelectItem>
                 {categories.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>
-                    {cat.label}
+                  <SelectItem key={cat.id} value={cat.nom}>
+                    {cat.nom}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select value={marqueFilter} onValueChange={setMarqueFilter}>
+              <SelectTrigger className="w-[180px]">
+                <div className="flex items-center">
+                  <TagIcon className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Marque" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes</SelectItem>
+                {marques.map((marque) => (
+                  <SelectItem key={marque.id} value={marque.nom}>
+                    {marque.nom}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -293,6 +308,7 @@ const ListeVetementsPage = () => {
               onClick={() => {
                 setSearchTerm("");
                 setCategorieFilter("");
+                setMarqueFilter("");
               }}
             >
               <SlidersHorizontal className="mr-2 h-4 w-4" />
@@ -318,12 +334,11 @@ const ListeVetementsPage = () => {
         >
           <TabsList className="mb-4 flex flex-wrap">
             <TabsTrigger value="tous">Tous</TabsTrigger>
-            <TabsTrigger value="t-shirt">T-shirts</TabsTrigger>
-            <TabsTrigger value="chemise">Chemises</TabsTrigger>
-            <TabsTrigger value="pantalon">Pantalons</TabsTrigger>
-            <TabsTrigger value="jeans">Jeans</TabsTrigger>
-            <TabsTrigger value="veste">Vestes</TabsTrigger>
-            <TabsTrigger value="pull">Pulls</TabsTrigger>
+            {categories.slice(0, 6).map((cat) => (
+              <TabsTrigger key={cat.id} value={cat.nom}>
+                {cat.nom}
+              </TabsTrigger>
+            ))}
           </TabsList>
           
           {/* Contenu des onglets */}
@@ -333,7 +348,7 @@ const ListeVetementsPage = () => {
           
           {/* Contenu pour chaque catégorie d'onglet */}
           {categories.slice(0, 6).map((cat) => (
-            <TabsContent key={cat.value} value={cat.value} className="mt-0">
+            <TabsContent key={cat.id} value={cat.nom} className="mt-0">
               <VetementsList />
             </TabsContent>
           ))}
