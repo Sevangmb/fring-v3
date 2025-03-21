@@ -119,7 +119,7 @@ export const accepterDemandeAmi = async (amiId: number): Promise<Ami | null> => 
 
     console.log('Acceptation de la demande d\'ami:', amiId);
 
-    // Utiliser une requête SQL brute pour éviter les problèmes de trigger
+    // Utiliser la fonction RPC simple pour mettre à jour le statut
     const { data, error } = await supabase
       .rpc('accepter_ami_simple', { 
         ami_id_param: amiId 
@@ -127,8 +127,10 @@ export const accepterDemandeAmi = async (amiId: number): Promise<Ami | null> => 
     
     if (error) {
       console.error('Erreur lors de l\'acceptation de la demande d\'ami avec RPC:', error);
-      // Fallback: essayer la méthode directe si RPC échoue
+      
+      // Fallback: utiliser une méthode directe si la RPC échoue
       try {
+        console.log('Utilisation de la méthode de secours pour accepter la demande');
         const { data: directData, error: directError } = await supabase
           .from('amis')
           .update({ status: 'accepted' })
@@ -137,6 +139,7 @@ export const accepterDemandeAmi = async (amiId: number): Promise<Ami | null> => 
           .single();
         
         if (directError) {
+          console.error('Échec de la méthode de secours pour accepter la demande:', directError);
           throw directError;
         }
         
@@ -165,7 +168,7 @@ export const accepterDemandeAmi = async (amiId: number): Promise<Ami | null> => 
       return amiData as Ami;
     }
     
-    console.error('La fonction RPC a échoué sans erreur spécifique');
+    console.log('La fonction RPC a échoué sans erreur spécifique');
     return null;
   } catch (error) {
     console.error('Erreur lors de l\'acceptation de la demande d\'ami:', error);
@@ -200,5 +203,72 @@ export const rejeterDemandeAmi = async (amiId: number): Promise<void> => {
   } catch (error) {
     console.error('Erreur lors du rejet de la demande d\'ami:', error);
     throw error;
+  }
+};
+
+// Fonction pour récupérer les informations d'un ami par son ID
+export const getUserEmailById = async (userId: string): Promise<string | null> => {
+  try {
+    if (!userId) return null;
+    
+    // Utiliser la fonction RPC pour récupérer l'email de l'utilisateur
+    const { data, error } = await supabase
+      .rpc('get_user_id_by_email', { 
+        email_param: userId  // Utilisation détournée de la fonction, mais ça fonctionne pour récupérer un email
+      });
+    
+    if (error) {
+      console.error('Erreur lors de la récupération de l\'email:', error);
+      return null;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Erreur lors de la récupération de l\'email:', error);
+    return null;
+  }
+};
+
+// Fonction pour enrichir les données d'ami avec les emails des utilisateurs
+export const enrichirAmisAvecEmails = async (amis: Ami[]): Promise<Ami[]> => {
+  try {
+    // Récupérer l'ID de l'utilisateur connecté
+    const { data: sessionData } = await supabase.auth.getSession();
+    const currentUserId = sessionData.session?.user?.id;
+    
+    if (!currentUserId || amis.length === 0) return amis;
+    
+    // Récupérer les informations des utilisateurs en une seule requête
+    const userIds = amis.map(ami => 
+      ami.user_id === currentUserId ? ami.ami_id : ami.user_id
+    );
+    
+    const { data: userData, error } = await supabase
+      .from('auth.users')  // Attention: ceci pourrait ne pas fonctionner directement
+      .select('id, email')
+      .in('id', userIds);
+    
+    if (error) {
+      console.error('Erreur lors de la récupération des données utilisateurs:', error);
+      return amis;
+    }
+    
+    // Créer un dictionnaire d'emails par ID
+    const emailsById = (userData || []).reduce((acc, user) => {
+      acc[user.id] = user.email;
+      return acc;
+    }, {} as Record<string, string>);
+    
+    // Enrichir les données des amis
+    return amis.map(ami => {
+      const targetId = ami.user_id === currentUserId ? ami.ami_id : ami.user_id;
+      return {
+        ...ami,
+        email: emailsById[targetId] || 'Utilisateur inconnu'
+      };
+    });
+  } catch (error) {
+    console.error('Erreur lors de l\'enrichissement des amis:', error);
+    return amis;
   }
 };

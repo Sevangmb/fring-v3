@@ -4,7 +4,13 @@ import Layout from "@/components/templates/Layout";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { fetchAmis, accepterDemandeAmi, rejeterDemandeAmi, Ami } from "@/services/amiService";
+import { 
+  fetchAmis, 
+  accepterDemandeAmi, 
+  rejeterDemandeAmi, 
+  Ami, 
+  enrichirAmisAvecEmails 
+} from "@/services/amiService";
 import { useToast } from "@/hooks/use-toast";
 
 import AmisPageHeader from "@/components/organisms/AmisPageHeader";
@@ -21,117 +27,133 @@ const MesAmisPage = () => {
   const [ajouterAmiDialogOpen, setAjouterAmiDialogOpen] = useState(false);
   const [processingIds, setProcessingIds] = useState<Record<string, boolean>>({});
 
+  const chargerAmis = async () => {
+    if (!user) {
+      setLoadingAmis(false);
+      return;
+    }
+
+    try {
+      setLoadingAmis(true);
+      const listeAmis = await fetchAmis();
+      
+      // Enrichir les amis avec les emails
+      const amisEnrichis = await enrichirAmisAvecEmails(listeAmis);
+      setAmis(amisEnrichis);
+    } catch (error) {
+      console.error("Erreur lors du chargement des amis:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger vos amis.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingAmis(false);
+    }
+  };
+
   useEffect(() => {
-    const chargerAmis = async () => {
-      if (!user) {
-        setLoadingAmis(false);
-        return;
-      }
-
-      try {
-        setLoadingAmis(true);
-        const listeAmis = await fetchAmis();
-        setAmis(listeAmis);
-      } catch (error) {
-        console.error("Erreur lors du chargement des amis:", error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger vos amis.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoadingAmis(false);
-      }
-    };
-
     chargerAmis();
   }, [user, toast]);
 
   const handleAccepterDemande = async (amiId: number) => {
-    // Éviter les clics multiples
-    if (processingIds[`accept-${amiId}`]) return;
+    // Éviter les clics multiples avec verrouillage
+    const processKey = `accept-${amiId}`;
+    if (processingIds[processKey]) {
+      console.log("Demande déjà en cours de traitement, ignorée");
+      return;
+    }
     
     try {
-      setProcessingIds(prev => ({ ...prev, [`accept-${amiId}`]: true }));
+      // Verrouiller le bouton
+      setProcessingIds(prev => ({ ...prev, [processKey]: true }));
       
+      // Afficher un toast de chargement
+      const loadingToast = toast({
+        title: "Traitement en cours",
+        description: "Acceptation de la demande d'ami...",
+      });
+      
+      // Effectuer l'action
       const amiAccepte = await accepterDemandeAmi(amiId);
       
+      // Fermer le toast de chargement
+      if (loadingToast) {
+        loadingToast.dismiss();
+      }
+      
+      // Vérifier le résultat
       if (amiAccepte) {
+        // Succès
         toast({
           title: "Demande acceptée",
           description: "Vous êtes maintenant amis !",
         });
         
-        // Mettre à jour la liste des amis
-        const listeAmis = await fetchAmis();
-        setAmis(listeAmis);
+        // Recharger la liste des amis
+        await chargerAmis();
       } else {
+        // Erreur sans message spécifique
         toast({
-          title: "Attention",
-          description: "La demande a été traitée mais n'a pas pu être retrouvée. Veuillez actualiser la page.",
+          title: "Erreur",
+          description: "La demande n'a pas pu être acceptée. Veuillez réessayer.",
           variant: "destructive",
         });
-        
-        // Rafraîchir la liste quand même
-        const listeAmis = await fetchAmis();
-        setAmis(listeAmis);
       }
     } catch (error: any) {
+      // Gestion des erreurs avec message spécifique
       console.error("Erreur lors de l'acceptation de la demande:", error);
-      
-      // Message d'erreur détaillé pour debug
-      const errorMessage = error?.message || "Une erreur inconnue s'est produite";
-      
       toast({
-        title: "Erreur lors de l'acceptation",
-        description: errorMessage,
+        title: "Erreur",
+        description: error.message || "Une erreur inattendue est survenue",
         variant: "destructive",
       });
     } finally {
-      setProcessingIds(prev => ({ ...prev, [`accept-${amiId}`]: false }));
+      // Déverrouiller le bouton
+      setProcessingIds(prev => ({ ...prev, [processKey]: false }));
     }
   };
 
   const handleRejeterDemande = async (amiId: number) => {
-    // Éviter les clics multiples
-    if (processingIds[`reject-${amiId}`]) return;
+    const processKey = `reject-${amiId}`;
+    if (processingIds[processKey]) {
+      return;
+    }
     
     try {
-      setProcessingIds(prev => ({ ...prev, [`reject-${amiId}`]: true }));
+      setProcessingIds(prev => ({ ...prev, [processKey]: true }));
+      
+      const loadingToast = toast({
+        title: "Traitement en cours",
+        description: "Rejet de la demande d'ami...",
+      });
       
       await rejeterDemandeAmi(amiId);
+      
+      if (loadingToast) {
+        loadingToast.dismiss();
+      }
       
       toast({
         title: "Demande rejetée",
         description: "La demande d'ami a été rejetée.",
       });
       
-      // Mettre à jour la liste des amis
-      const listeAmis = await fetchAmis();
-      setAmis(listeAmis);
+      await chargerAmis();
     } catch (error: any) {
       console.error("Erreur lors du rejet de la demande:", error);
-      
-      const errorMessage = error?.message || "Une erreur inconnue s'est produite";
-      
       toast({
-        title: "Erreur lors du rejet",
-        description: errorMessage,
+        title: "Erreur",
+        description: error.message || "Une erreur inattendue est survenue",
         variant: "destructive",
       });
     } finally {
-      setProcessingIds(prev => ({ ...prev, [`reject-${amiId}`]: false }));
+      setProcessingIds(prev => ({ ...prev, [processKey]: false }));
     }
   };
 
   const handleAmiAdded = async () => {
-    // Mettre à jour la liste des amis après avoir ajouté un ami
-    try {
-      const listeAmis = await fetchAmis();
-      setAmis(listeAmis);
-    } catch (error) {
-      console.error("Erreur lors du chargement des amis:", error);
-    }
+    await chargerAmis();
   };
 
   // Filtrer les amis par statut
@@ -162,26 +184,22 @@ const MesAmisPage = () => {
             </div>
           ) : (
             <div className="space-y-10">
-              {/* Demandes d'amis reçues */}
               <DemandesRecuesSection 
                 demandes={demandesRecues} 
                 onAccepter={handleAccepterDemande}
                 onRejeter={handleRejeterDemande}
               />
               
-              {/* Demandes d'amis envoyées */}
               <DemandesEnvoyeesSection 
                 demandes={demandesEnvoyees} 
                 onAnnuler={handleRejeterDemande}
               />
               
-              {/* Amis confirmés */}
               <AmisAcceptesSection 
                 amis={amisAcceptes} 
                 onRetirer={handleRejeterDemande}
               />
 
-              {/* Bouton pour ajouter des amis */}
               <div className="flex justify-center mt-8">
                 <Button onClick={() => setAjouterAmiDialogOpen(true)}>
                   <UserPlus className="mr-2 h-4 w-4" />
@@ -191,7 +209,6 @@ const MesAmisPage = () => {
             </div>
           )}
           
-          {/* Dialog pour ajouter des amis */}
           <AjouterAmiDialog 
             open={ajouterAmiDialogOpen}
             onClose={() => setAjouterAmiDialogOpen(false)}

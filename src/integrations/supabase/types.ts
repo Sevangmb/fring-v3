@@ -15,6 +15,7 @@ export type Database = {
           created_at: string
           id: number
           status: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
@@ -22,6 +23,7 @@ export type Database = {
           created_at?: string
           id?: number
           status?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
@@ -29,6 +31,7 @@ export type Database = {
           created_at?: string
           id?: number
           status?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -191,6 +194,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accepter_ami_simple: {
+        Args: {
+          ami_id_param: number
+        }
+        Returns: boolean
+      }
       accepter_demande_ami: {
         Args: {
           demande_id: number
