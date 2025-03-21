@@ -24,7 +24,7 @@ const Navbar = ({ className }: NavbarProps) => {
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/mes-vetements", label: "Mes Vêtements" },
-    { href: "/pricing", label: "Pricing" },
+    { href: "/mes-amis", label: "Mes Amis" },
     { href: "/about", label: "About" },
   ];
 
