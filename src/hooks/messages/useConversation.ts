@@ -22,6 +22,7 @@ export const useConversation = (friendId?: string) => {
     
     try {
       setLoading(true);
+      console.log(`Chargement des messages pour la conversation avec ${friendId}`);
       const enrichedMessages = await loadConversationMessages(user.id, friendId);
       setMessages(enrichedMessages);
       
@@ -41,13 +42,18 @@ export const useConversation = (friendId?: string) => {
 
   // Envoyer un message
   const handleSendMessage = async (content: string) => {
-    if (!user || !friendId || !content.trim()) return;
+    if (!user || !friendId || !content.trim()) {
+      console.error("Impossible d'envoyer le message: utilisateur, destinataire ou contenu manquant");
+      return;
+    }
     
     try {
       setSending(true);
+      console.log(`Tentative d'envoi d'un message à ${friendId}: ${content}`);
       const enrichedMessage = await sendNewMessage(user.id, friendId, content.trim());
       
       if (enrichedMessage) {
+        console.log("Message envoyé avec succès:", enrichedMessage);
         setMessages(prev => [...prev, enrichedMessage]);
       }
     } catch (error: any) {
@@ -68,6 +74,7 @@ export const useConversation = (friendId?: string) => {
     
     // Configurer l'intervalle de rafraîchissement
     if (friendId) {
+      console.log(`Configuration de l'intervalle de rafraîchissement pour la conversation avec ${friendId}`);
       const interval = setInterval(loadConversation, 5000);
       return () => clearInterval(interval);
     }

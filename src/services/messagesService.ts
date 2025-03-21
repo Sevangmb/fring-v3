@@ -22,6 +22,8 @@ export const fetchConversation = async (userId: string): Promise<Message[]> => {
       throw new Error('Vous devez être connecté pour voir les messages');
     }
 
+    console.log(`Récupération des messages entre ${currentUserId} et ${userId}`);
+
     // Récupérer les messages entre les deux utilisateurs (envoyés et reçus)
     const { data, error } = await supabase
       .from('messages')
@@ -34,6 +36,7 @@ export const fetchConversation = async (userId: string): Promise<Message[]> => {
       throw error;
     }
 
+    console.log(`Nombre de messages récupérés: ${data?.length || 0}`);
     return data as Message[] || [];
   } catch (error) {
     console.error('Erreur lors de la récupération des messages:', error);
@@ -50,6 +53,8 @@ export const sendMessage = async (receiverId: string, content: string): Promise<
     if (!senderId) {
       throw new Error('Vous devez être connecté pour envoyer un message');
     }
+
+    console.log(`Envoi d'un message de ${senderId} à ${receiverId}: ${content}`);
 
     // Insérer le nouveau message
     const { data, error } = await supabase
@@ -70,6 +75,7 @@ export const sendMessage = async (receiverId: string, content: string): Promise<
       throw error;
     }
 
+    console.log('Message envoyé avec succès:', data);
     return data as Message;
   } catch (error) {
     console.error('Erreur lors de l\'envoi du message:', error);
@@ -86,6 +92,8 @@ export const markMessagesAsRead = async (senderId: string): Promise<void> => {
     if (!currentUserId) {
       throw new Error('Vous devez être connecté pour mettre à jour les messages');
     }
+
+    console.log(`Marquage des messages de ${senderId} comme lus`);
 
     // Mettre à jour tous les messages non lus de l'expéditeur
     const { error } = await supabase
@@ -115,20 +123,8 @@ export const fetchConversationPreviews = async (): Promise<Message[]> => {
       throw new Error('Vous devez être connecté pour voir les conversations');
     }
 
-    // Essayer d'abord d'utiliser la fonction RPC si elle existe
-    try {
-      const { data, error } = await supabase.rpc('get_conversation_previews');
-      
-      if (!error && data) {
-        return data as Message[];
-      }
-    } catch (rpcError) {
-      console.error('Erreur RPC, utilisation de la méthode de secours:', rpcError);
-    }
-    
-    // Méthode de secours si la RPC n'existe pas ou échoue
-    console.log('Utilisation de la méthode de secours pour les aperçus de conversation');
-    
+    console.log('Récupération des aperçus de conversation');
+
     // Récupérer tous les messages où l'utilisateur est impliqué
     const { data: messagesData, error: messagesError } = await supabase
       .from('messages')
@@ -158,7 +154,8 @@ export const fetchConversationPreviews = async (): Promise<Message[]> => {
         conversationPreviews.push(message);
       }
     });
-    
+
+    console.log(`Nombre d'aperçus de conversation récupérés: ${conversationPreviews.length}`);
     return conversationPreviews as Message[];
   } catch (error) {
     console.error('Erreur lors de la récupération des aperçus de conversation:', error);

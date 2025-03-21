@@ -1,7 +1,8 @@
 
-import React, { useState } from "react";
+import React, { useState, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 
 interface MessageInputProps {
@@ -19,8 +20,20 @@ const MessageInput: React.FC<MessageInputProps> = ({
     e.preventDefault();
     if (!message.trim() || isSending) return;
     
-    await onSendMessage(message);
-    setMessage("");
+    try {
+      console.log("Envoi du message:", message);
+      await onSendMessage(message);
+      setMessage("");
+    } catch (error) {
+      console.error("Erreur lors de l'envoi du message:", error);
+    }
+  };
+
+  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
   };
 
   return (
@@ -32,6 +45,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         placeholder="Écrivez votre message..."
         value={message}
         onChange={(e) => setMessage(e.target.value)}
+        onKeyDown={handleKeyPress}
         disabled={isSending}
         className="flex-1"
       />
