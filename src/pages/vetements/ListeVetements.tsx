@@ -1,10 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
 import Layout from "@/components/templates/Layout";
-import { Heading, Text } from "@/components/atoms/Typography";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, LogIn, Users, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   fetchVetements, fetchVetementsAmis, Vetement, createDemoVetementsForUser
@@ -15,10 +11,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import VetementsList from "@/components/organisms/VetementsList";
 import SearchFilterBar from "@/components/molecules/SearchFilterBar";
 import CategoryTabs from "@/components/molecules/CategoryTabs";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import VetementsPageHeader from "@/components/molecules/VetementsPageHeader";
+import ViewModeSelector from "@/components/molecules/ViewModeSelector";
+import FloatingAddButton from "@/components/molecules/FloatingAddButton";
 
 const ListeVetementsPage = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const [vetements, setVetements] = useState<Vetement[]>([]);
@@ -122,63 +119,19 @@ const ListeVetementsPage = () => {
 
   return (
     <Layout>
-      <div className="pt-24 pb-6 bg-accent/10">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => navigate("/mes-vetements")}
-              className="rounded-full"
-            >
-              <ArrowLeft size={20} />
-            </Button>
-            <Heading>Liste des vêtements</Heading>
-          </div>
-          <Text className="text-muted-foreground max-w-2xl mt-4">
-            {user 
-              ? viewMode === 'mes-vetements' 
-                ? "Consultez tous vos vêtements et gérez votre collection."
-                : "Parcourez les vêtements partagés par vos amis."
-              : "Connectez-vous pour voir et gérer vos vêtements."}
-          </Text>
-          
-          {!user && !authLoading && (
-            <div className="mt-8">
-              <Button asChild>
-                <Link to="/login">
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Se connecter
-                </Link>
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
+      <VetementsPageHeader 
+        isAuthenticated={!!user} 
+        viewMode={viewMode} 
+      />
       
       <div className="container mx-auto px-4 py-8">
         {user && (
           <>
             {/* Sélecteur de mode d'affichage */}
-            <div className="mb-6">
-              <Tabs 
-                defaultValue="mes-vetements" 
-                value={viewMode}
-                onValueChange={(value) => handleViewModeChange(value as 'mes-vetements' | 'vetements-amis')}
-                className="w-full"
-              >
-                <TabsList className="w-full max-w-md mx-auto grid grid-cols-2">
-                  <TabsTrigger value="mes-vetements" className="flex items-center gap-2">
-                    <User size={16} />
-                    <span>Mes vêtements</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="vetements-amis" className="flex items-center gap-2">
-                    <Users size={16} />
-                    <span>Vêtements de mes amis</span>
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
+            <ViewModeSelector 
+              viewMode={viewMode}
+              onViewModeChange={handleViewModeChange}
+            />
 
             {/* Barre de recherche et filtres */}
             <SearchFilterBar 
@@ -208,18 +161,8 @@ const ListeVetementsPage = () => {
               />
             </CategoryTabs>
             
-            {/* Bouton flottant pour mobile - visible uniquement en mode "Mes vêtements" */}
-            {viewMode === 'mes-vetements' && (
-              <div className="fixed bottom-6 right-6 md:hidden">
-                <Button
-                  size="lg"
-                  className="h-14 w-14 rounded-full shadow-lg"
-                  onClick={() => navigate("/mes-vetements/ajouter")}
-                >
-                  <Plus size={24} />
-                </Button>
-              </div>
-            )}
+            {/* Bouton flottant pour mobile */}
+            <FloatingAddButton visible={viewMode === 'mes-vetements'} />
           </>
         )}
         

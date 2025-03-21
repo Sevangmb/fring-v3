@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { Vetement } from './vetementService';
+import { Vetement } from './vetement/types';
 
 // Fonction pour ajouter un vêtement en s'assurant qu'il est associé à l'utilisateur connecté
 export const addVetement = async (vetement: Omit<Vetement, 'id' | 'created_at' | 'user_id'>): Promise<Vetement> => {

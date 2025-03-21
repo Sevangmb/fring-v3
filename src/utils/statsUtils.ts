@@ -1,6 +1,5 @@
-
 import { supabase } from "@/lib/supabase";
-import { Vetement } from "@/services/vetementService";
+import { Vetement } from "@/services/vetement/types";
 
 /**
  * Fetches all clothes for a specific user
