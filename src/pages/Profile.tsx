@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Layout from "@/components/templates/Layout";
 import { Heading, Text } from "@/components/atoms/Typography";
 import Button from "@/components/atoms/Button";
@@ -32,6 +32,54 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarsBucketExists, setAvatarsBucketExists] = useState(false);
+
+  // Vérification du bucket avatars au chargement
+  useEffect(() => {
+    const checkAvatarsBucket = async () => {
+      try {
+        const { data: buckets, error } = await supabase.storage.listBuckets();
+        
+        if (!error && buckets) {
+          const exists = buckets.some(bucket => bucket.name === 'avatars');
+          setAvatarsBucketExists(exists);
+          
+          if (!exists) {
+            // Tentative de création du bucket
+            await createAvatarsBucket();
+          }
+        }
+      } catch (err) {
+        console.error("Erreur lors de la vérification du bucket avatars:", err);
+      }
+    };
+    
+    checkAvatarsBucket();
+  }, []);
+
+  // Fonction pour créer le bucket avatars
+  const createAvatarsBucket = async () => {
+    try {
+      const { error } = await supabase.storage.createBucket('avatars', {
+        public: true,
+        fileSizeLimit: 5242880, // 5MB
+      });
+      
+      if (error) {
+        console.error("Erreur lors de la création du bucket avatars:", error);
+        toast({
+          title: "Avertissement",
+          description: "Impossible de créer l'espace de stockage pour les avatars. Contactez l'administrateur.",
+          variant: "destructive",
+        });
+      } else {
+        setAvatarsBucketExists(true);
+        console.log("Bucket avatars créé avec succès");
+      }
+    } catch (error) {
+      console.error("Exception lors de la création du bucket avatars:", error);
+    }
+  };
 
   // Initialisation du formulaire avec les valeurs actuelles
   const form = useForm<ProfileFormValues>({
@@ -87,8 +135,26 @@ const Profile = () => {
 
       // Gérer l'upload d'avatar si un nouveau fichier a été sélectionné
       if (avatarPreview && avatarPreview !== user?.user_metadata?.avatar_url) {
-        // Extraire le fichier Base64 et le convertir en Blob
+        if (!avatarsBucketExists) {
+          // Si le bucket n'existe pas encore, tenter de le créer
+          await createAvatarsBucket();
+          
+          // Vérifier si la création a réussi
+          if (!avatarsBucketExists) {
+            toast({
+              title: "Erreur",
+              description: "Impossible de créer l'espace de stockage pour les avatars. L'image de profil n'a pas été mise à jour.",
+              variant: "destructive",
+            });
+            
+            setIsLoading(false);
+            setIsEditing(false);
+            return;
+          }
+        }
+        
         try {
+          // Extraire le fichier Base64 et le convertir en Blob
           const base64Data = avatarPreview.split(',')[1];
           const blob = await fetch(`data:image/jpeg;base64,${base64Data}`).then(res => res.blob());
           
@@ -96,17 +162,8 @@ const Profile = () => {
           const fileExt = "jpg";
           const fileName = `${user?.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
           
-          // Créer le bucket s'il n'existe pas (Supabase Storage)
-          const { data: bucketData, error: bucketError } = await supabase.storage.getBucket('avatars');
-          
-          if (bucketError && bucketError.message.includes('does not exist')) {
-            await supabase.storage.createBucket('avatars', {
-              public: true,
-            });
-          }
-          
           // Uploader le fichier
-          const { error: uploadError } = await supabase.storage
+          const { error: uploadError, data: uploadData } = await supabase.storage
             .from('avatars')
             .upload(fileName, blob);
             
@@ -125,11 +182,11 @@ const Profile = () => {
               },
             });
           }
-        } catch (uploadError) {
+        } catch (uploadError: any) {
           console.error("Erreur lors de l'upload de l'avatar:", uploadError);
           toast({
             title: "Erreur lors de l'upload de l'avatar",
-            description: "Impossible de télécharger votre avatar. Veuillez réessayer.",
+            description: uploadError.message || "Impossible de télécharger votre avatar. Veuillez réessayer.",
             variant: "destructive",
           });
         }
@@ -239,6 +296,11 @@ const Profile = () => {
                         <Text variant="small" className="text-muted-foreground mt-1">
                           JPG, PNG ou GIF. Max 2MB.
                         </Text>
+                        {!avatarsBucketExists && (
+                          <Text variant="small" className="text-destructive mt-1">
+                            Avertissement: Stockage des avatars non disponible.
+                          </Text>
+                        )}
                       </div>
                     </div>
                     
@@ -299,8 +361,12 @@ const Profile = () => {
                       disabled={isLoading}
                       className="flex items-center gap-1"
                     >
-                      <Check size={16} />
-                      Enregistrer
+                      {isLoading ? "Enregistrement..." : (
+                        <>
+                          <Check size={16} />
+                          Enregistrer
+                        </>
+                      )}
                     </Button>
                   </div>
                 </form>
