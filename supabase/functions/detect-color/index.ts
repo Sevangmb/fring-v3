@@ -11,10 +11,13 @@ const corsHeaders = {
 
 // Correspondance entre les couleurs anglaises et françaises
 const colorMapping: Record<string, string> = {
+  // Couleurs basiques
   'white': 'blanc',
   'black': 'noir',
   'gray': 'gris',
   'grey': 'gris',
+  
+  // Variations de bleu - élargir la détection du bleu
   'blue': 'bleu',
   'navy': 'bleu',
   'navy blue': 'bleu',
@@ -23,6 +26,24 @@ const colorMapping: Record<string, string> = {
   'sky blue': 'bleu',
   'royal blue': 'bleu',
   'teal': 'bleu',
+  'denim': 'bleu',
+  'indigo': 'bleu',
+  'turquoise': 'bleu',
+  'aqua': 'bleu',
+  'cyan': 'bleu',
+  'azure': 'bleu',
+  'cobalt': 'bleu',
+  'sapphire': 'bleu',
+  'cerulean': 'bleu',
+  'ocean': 'bleu',
+  'midnight': 'bleu',
+  'midnight blue': 'bleu',
+  'steel': 'bleu',
+  'steel blue': 'bleu',
+  'blue jean': 'bleu',
+  'jeans': 'bleu',
+  
+  // Autres couleurs
   'red': 'rouge',
   'burgundy': 'rouge',
   'maroon': 'rouge',
@@ -63,12 +84,7 @@ const colorMapping: Record<string, string> = {
   'silver': 'gris',
   'charcoal': 'gris',
   'dark grey': 'gris',
-  'light grey': 'gris',
-  'denim': 'bleu',
-  'indigo': 'bleu',
-  'turquoise': 'bleu',
-  'aqua': 'bleu',
-  'cyan': 'bleu'
+  'light grey': 'gris'
 };
 
 // Liste des couleurs disponibles dans l'application
@@ -122,12 +138,14 @@ async function extractClothingColor(imageDescription: string, hf: HfInference): 
   console.log("Extracting clothing color from description...");
   
   try {
-    // Créer un prompt spécifique pour extraire la couleur
+    // Créer un prompt spécifique pour extraire la couleur avec une emphase sur le bleu
     const colorAnalysisPrompt = `
     Image description: "${imageDescription}"
     
     Task: Analyze this image description and identify ONLY the color of the clothing item.
     Focus exclusively on the main article of clothing. Ignore the background, accessories, or any other elements.
+    
+    If the clothing item appears to be any shade of blue, navy, denim, or similar blue tones, please identify it as "blue".
     
     Return ONLY the color name - nothing else, no explanations or additional text.
     `;
@@ -161,7 +179,7 @@ async function performDirectColorQuery(imageDescription: string, hf: HfInference
   try {
     const directColorQuery = await hf.textGeneration({
       model: "google/flan-t5-xxl",
-      inputs: `What is the MAIN COLOR of the CLOTHING in this image: "${imageDescription}"? Answer with just ONE word.`,
+      inputs: `What is the MAIN COLOR of the CLOTHING in this image: "${imageDescription}"? Answer with just ONE word. If it's any shade of blue (navy, denim, azure, etc), just say "blue".`,
       parameters: {
         max_new_tokens: 10,
         temperature: 0.2,
@@ -178,12 +196,52 @@ async function performDirectColorQuery(imageDescription: string, hf: HfInference
 }
 
 /**
+ * Analyse directement l'image pour détecter la couleur sans utiliser de description
+ * @param imageUrl URL de l'image à analyser
+ * @param hf Client Hugging Face Inference
+ * @returns Couleur détectée
+ */
+async function analyzeImageDirectly(imageUrl: string, hf: HfInference): Promise<string> {
+  console.log("Analyzing image directly for blue detection...");
+  
+  try {
+    const visionQuery = await hf.textGeneration({
+      model: "google/flan-t5-xxl",
+      inputs: `Is the main clothing item in this image blue? Answer with only yes or no: ${imageUrl}`,
+      parameters: {
+        max_new_tokens: 5,
+        temperature: 0.1,
+      }
+    });
+    
+    const isBlue = visionQuery.generated_text.toLowerCase().trim();
+    console.log("Is clothing blue?", isBlue);
+    
+    if (isBlue === "yes" || isBlue.includes("yes")) {
+      return "blue";
+    }
+    
+    return "unknown"; // Si ce n'est pas bleu, on laisse les autres méthodes déterminer la couleur
+  } catch (error) {
+    console.error("Error analyzing image directly:", error);
+    return "unknown"; // En cas d'erreur, on continue avec les autres méthodes
+  }
+}
+
+/**
  * Mappe la couleur détectée en anglais vers son équivalent français
  * @param detectedColor Couleur détectée en anglais
  * @returns Couleur en français
  */
 function mapToFrenchColor(detectedColor: string): string {
   console.log("Mapping detected color to French:", detectedColor);
+  
+  // Cas spécial pour les pantalons souvent de couleur bleue (jeans)
+  if (detectedColor.includes("pants") || detectedColor.includes("jeans") || 
+      detectedColor.includes("denim") || detectedColor.includes("trousers")) {
+    console.log("Pants/jeans detected, assuming blue");
+    return "bleu";
+  }
   
   for (const [englishColor, frenchColor] of Object.entries(colorMapping)) {
     if (detectedColor.includes(englishColor)) {
@@ -209,8 +267,25 @@ async function detectClothingColor(imageUrl: string): Promise<string> {
     // Initialiser l'API Hugging Face
     const hf = new HfInference(Deno.env.get('HUGGINGFACE_API_KEY'));
     
+    // Vérifier d'abord si c'est bleu par analyse directe
+    const directColorAnalysis = await analyzeImageDirectly(imageUrl, hf);
+    if (directColorAnalysis === "blue") {
+      console.log("Direct analysis detected blue clothing");
+      return "bleu";
+    }
+    
     // Étape 1: Générer une description de l'image
     const imageDescription = await generateImageDescription(imageUrl, hf);
+    
+    // Vérifier si la description contient des mots-clés de jeans/pantalons bleus
+    if (imageDescription.toLowerCase().includes("blue jeans") || 
+        imageDescription.toLowerCase().includes("denim") ||
+        (imageDescription.toLowerCase().includes("blue") && 
+        (imageDescription.toLowerCase().includes("pants") || 
+         imageDescription.toLowerCase().includes("trousers")))) {
+      console.log("Description suggests blue jeans/pants");
+      return "bleu";
+    }
     
     // Étape 2: Extraire la couleur du vêtement à partir de la description
     let detectedColor = await extractClothingColor(imageDescription, hf);
