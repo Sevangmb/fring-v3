@@ -2,9 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Layout from "@/components/templates/Layout";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  fetchVetements, fetchVetementsAmis, Vetement, createDemoVetementsForUser
-} from "@/services/vetement";
+import { fetchVetements, fetchVetementsAmis, Vetement } from "@/services/vetement";
 import { fetchCategories, Categorie } from "@/services/categorieService";
 import { fetchMarques, Marque } from "@/services/marqueService";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +12,8 @@ import CategoryTabs from "@/components/molecules/CategoryTabs";
 import VetementsPageHeader from "@/components/molecules/VetementsPageHeader";
 import ViewModeSelector from "@/components/molecules/ViewModeSelector";
 import FloatingAddButton from "@/components/molecules/FloatingAddButton";
+import { useAmis } from "@/hooks/useAmis";
+import { Ami } from "@/services/amis";
 
 const ListeVetementsPage = () => {
   const { toast } = useToast();
@@ -24,10 +24,12 @@ const ListeVetementsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categorieFilter, setCategorieFilter] = useState<string>("");
   const [marqueFilter, setMarqueFilter] = useState<string>("");
+  const [friendFilter, setFriendFilter] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("tous");
   const [viewMode, setViewMode] = useState<'mes-vetements' | 'vetements-amis'>('mes-vetements');
   const [error, setError] = useState<string | null>(null);
+  const { filteredAmis, loadingAmis } = useAmis();
 
   // Récupérer les vêtements, catégories et marques depuis Supabase
   useEffect(() => {
@@ -49,12 +51,13 @@ const ListeVetementsPage = () => {
           fetchMarques()
         ]);
         
-        // Récupérer les vêtements selon le mode d'affichage
+        // Récupérer les vêtements selon le mode d'affichage et le filtre d'ami
         let vetementsData: Vetement[] = [];
         if (viewMode === 'mes-vetements') {
           vetementsData = await fetchVetements();
         } else {
-          vetementsData = await fetchVetementsAmis();
+          // Si un ami spécifique est sélectionné, filtrer par son ID
+          vetementsData = await fetchVetementsAmis(friendFilter || undefined);
         }
         
         console.log("Vêtements récupérés:", vetementsData.length);
@@ -80,7 +83,10 @@ const ListeVetementsPage = () => {
     if (!authLoading) {
       loadData();
     }
-  }, [user, authLoading, toast, viewMode]);
+  }, [user, authLoading, toast, viewMode, friendFilter]);
+
+  // Liste des amis acceptés à utiliser dans le filtre
+  const acceptedFriends = filteredAmis?.amisAcceptes || [];
 
   // Fonction pour obtenir le nom de la catégorie à partir de son ID
   const getCategoryNameById = (categoryId: number): string => {
@@ -125,6 +131,7 @@ const ListeVetementsPage = () => {
     setSearchTerm("");
     setCategorieFilter("");
     setMarqueFilter("");
+    setFriendFilter("");
   };
 
   return (
@@ -153,6 +160,10 @@ const ListeVetementsPage = () => {
               setMarqueFilter={setMarqueFilter}
               categories={categories}
               marques={marques}
+              showFriendFilter={viewMode === 'vetements-amis'}
+              friendFilter={friendFilter}
+              setFriendFilter={setFriendFilter}
+              friends={acceptedFriends}
             />
             
             {/* Onglets par catégorie */}
@@ -163,7 +174,7 @@ const ListeVetementsPage = () => {
             >
               <VetementsList 
                 vetements={filteredVetements}
-                isLoading={isLoading}
+                isLoading={isLoading || loadingAmis}
                 error={error}
                 isAuthenticated={!!user}
                 onVetementDeleted={handleVetementDeleted}

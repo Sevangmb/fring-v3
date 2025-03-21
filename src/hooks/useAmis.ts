@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -16,7 +15,7 @@ export const useAmis = () => {
   const [loadingAmis, setLoadingAmis] = useState(true);
   const [processingIds, setProcessingIds] = useState<Record<string, boolean>>({});
 
-  const chargerAmis = async () => {
+  const chargerAmis = useCallback(async () => {
     if (!user) {
       setLoadingAmis(false);
       return;
@@ -36,11 +35,11 @@ export const useAmis = () => {
     } finally {
       setLoadingAmis(false);
     }
-  };
+  }, [user, toast]);
 
   useEffect(() => {
     chargerAmis();
-  }, [user, toast]);
+  }, [chargerAmis]);
 
   const handleAccepterDemande = async (amiId: number) => {
     const processKey = `accept-${amiId}`;
