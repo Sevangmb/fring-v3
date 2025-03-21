@@ -50,8 +50,8 @@ export const updateVetement = async (id: number, vetement: Partial<Vetement>): P
     
     // Créer un ensemble de noms de colonnes pour une recherche rapide
     const columnSet = new Set(columns?.map(col => col.column_name) || [
-      'id', 'nom', 'categorie', 'couleur', 'taille', 'description', 
-      'marque', 'image_url', 'user_id', 'created_at'
+      'id', 'nom', 'categorie', 'categorie_id', 'couleur', 'taille', 'description', 
+      'marque', 'image_url', 'user_id', 'created_at', 'temperature', 'weather_type'
     ]);
     
     console.log('Colonnes disponibles:', Array.from(columnSet));

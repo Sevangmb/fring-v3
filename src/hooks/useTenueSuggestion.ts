@@ -16,22 +16,26 @@ export const useTenueSuggestion = (meteo: MeteoData | null, vetements: Vetement[
     // Skip suggestion generation if meteo data or clothing items aren't available
     if (!meteo || vetements.length === 0) return;
     
-    try {
-      // Vérifier s'il pleut
-      const isRaining = meteo.current.isRaining;
-      console.log(`Conditions météo actuelles: ${isRaining ? 'Il pleut' : 'Pas de pluie'}`);
-      
-      // Générer une suggestion de tenue
-      const suggestion = suggestVetements(vetements, meteo.current.temperature, isRaining);
-      const message = generateOutfitMessage(meteo.current.temperature, meteo.current.description, isRaining);
-      
-      setTenueSuggestion({
-        ...suggestion,
-        message
-      });
-    } catch (err) {
-      console.error('Erreur lors de la génération de la suggestion de tenue:', err);
-    }
+    const generateSuggestion = async () => {
+      try {
+        // Vérifier s'il pleut
+        const isRaining = meteo.current.isRaining;
+        console.log(`Conditions météo actuelles: ${isRaining ? 'Il pleut' : 'Pas de pluie'}`);
+        
+        // Générer une suggestion de tenue
+        const suggestion = await suggestVetements(vetements, meteo.current.temperature, isRaining);
+        const message = generateOutfitMessage(meteo.current.temperature, meteo.current.description, isRaining);
+        
+        setTenueSuggestion({
+          ...suggestion,
+          message
+        });
+      } catch (err) {
+        console.error('Erreur lors de la génération de la suggestion de tenue:', err);
+      }
+    };
+
+    generateSuggestion();
   }, [meteo, vetements]);
 
   return { tenueSuggestion };

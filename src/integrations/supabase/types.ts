@@ -153,6 +153,7 @@ export type Database = {
       vetements: {
         Row: {
           categorie: string
+          categorie_id: number | null
           couleur: string
           created_at: string
           description: string | null
@@ -161,10 +162,13 @@ export type Database = {
           marque: string | null
           nom: string
           taille: string
+          temperature: string | null
           user_id: string | null
+          weather_type: string | null
         }
         Insert: {
           categorie: string
+          categorie_id?: number | null
           couleur: string
           created_at?: string
           description?: string | null
@@ -173,10 +177,13 @@ export type Database = {
           marque?: string | null
           nom: string
           taille: string
+          temperature?: string | null
           user_id?: string | null
+          weather_type?: string | null
         }
         Update: {
           categorie?: string
+          categorie_id?: number | null
           couleur?: string
           created_at?: string
           description?: string | null
@@ -185,9 +192,19 @@ export type Database = {
           marque?: string | null
           nom?: string
           taille?: string
+          temperature?: string | null
           user_id?: string | null
+          weather_type?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "vetements_categorie_id_fkey"
+            columns: ["categorie_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

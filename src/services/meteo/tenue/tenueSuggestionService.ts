@@ -1,68 +1,81 @@
 
 import { Vetement } from '@/services/vetement/types';
-import { VetementType, TenueSuggestion } from './types';
+import { TenueSuggestion, VetementType } from './types';
 import { determinerTypeVetement, estAdaptePluie, estAEviterPluie } from './vetementClassifier';
 
 /**
- * Suggère une tenue en fonction de la température actuelle et des conditions météo
+ * Sélectionne un vêtement adapté à la température et à la météo
  */
-export const suggestVetements = (
+const selectionnerVetementAdapte = async (
   vetements: Vetement[], 
   temperature: number, 
-  isRaining: boolean = false
-): TenueSuggestion => {
-  // Trier les vêtements par type
-  const hauts = vetements.filter(v => determinerTypeVetement(v) === VetementType.HAUT);
-  const bas = vetements.filter(v => determinerTypeVetement(v) === VetementType.BAS);
-  const chaussures = vetements.filter(v => determinerTypeVetement(v) === VetementType.CHAUSSURES);
+  isRaining: boolean, 
+  typeVetement: VetementType
+): Promise<Vetement | null> => {
+  // Filtrer les vêtements par type
+  const vetementsFiltered = [];
   
-  // Déterminer la température appropriée
-  let tempType: "froid" | "tempere" | "chaud" = "tempere";
-  
-  if (temperature <= 10) {
-    tempType = "froid";
-  } else if (temperature >= 22) {
-    tempType = "chaud";
+  for (const vetement of vetements) {
+    const type = await determinerTypeVetement(vetement);
+    if (type === typeVetement) {
+      vetementsFiltered.push(vetement);
+    }
   }
   
-  // Filtrer les vêtements selon la température
-  let hautsFiltered = hauts.filter(v => v.temperature === tempType || v.temperature === undefined);
-  let basFiltered = bas.filter(v => v.temperature === tempType || v.temperature === undefined);
-  let chaussuresFiltered = chaussures.filter(v => v.temperature === tempType || v.temperature === undefined);
+  if (vetementsFiltered.length === 0) return null;
   
-  // Si il pleut, privilégier les vêtements adaptés à la pluie et exclure ceux à éviter
+  // Déterminer la catégorie de température
+  const tempCategory = temperature < 10 ? 'froid' : temperature > 20 ? 'chaud' : 'tempere';
+  
+  // Filtrer par adaptation à la température (si disponible)
+  const vetementsTemperatureOk = vetementsFiltered.filter(v => 
+    !v.temperature || v.temperature === tempCategory
+  );
+  
+  // Si aucun vêtement adapté à la température, utiliser tous les vêtements du type
+  const vetementsEligibles = vetementsTemperatureOk.length > 0 ? vetementsTemperatureOk : vetementsFiltered;
+  
+  // S'il pleut, privilégier les vêtements adaptés à la pluie et éviter ceux qui ne le sont pas
   if (isRaining) {
-    // Pour les hauts, privilégier les imperméables
-    const hautsImpermeables = hautsFiltered.filter(v => estAdaptePluie(v));
-    if (hautsImpermeables.length > 0) {
-      hautsFiltered = hautsImpermeables;
-    } else {
-      // Exclure les hauts à éviter sous la pluie
-      hautsFiltered = hautsFiltered.filter(v => !estAEviterPluie(v));
+    // Vêtements explicitement adaptés à la pluie
+    const vetementsAdaptesPluie = vetementsEligibles.filter(v => 
+      estAdaptePluie(v) || v.weatherType === 'pluie'
+    );
+    
+    if (vetementsAdaptesPluie.length > 0) {
+      // Choisir aléatoirement parmi les vêtements adaptés à la pluie
+      return vetementsAdaptesPluie[Math.floor(Math.random() * vetementsAdaptesPluie.length)];
     }
     
-    // Pour les bas, exclure les shorts et autres vêtements inadaptés
-    basFiltered = basFiltered.filter(v => !estAEviterPluie(v));
+    // Sinon, exclure les vêtements à éviter sous la pluie
+    const vetementsNonDeconseilles = vetementsEligibles.filter(v => !estAEviterPluie(v));
     
-    // Pour les chaussures, privilégier les bottes et chaussures imperméables
-    const chaussuresImpermeables = chaussuresFiltered.filter(v => estAdaptePluie(v));
-    if (chaussuresImpermeables.length > 0) {
-      chaussuresFiltered = chaussuresImpermeables;
-    } else {
-      // Exclure les chaussures à éviter sous la pluie
-      chaussuresFiltered = chaussuresFiltered.filter(v => !estAEviterPluie(v));
+    if (vetementsNonDeconseilles.length > 0) {
+      return vetementsNonDeconseilles[Math.floor(Math.random() * vetementsNonDeconseilles.length)];
     }
   }
   
-  // Sélectionner aléatoirement un vêtement de chaque type
-  const selectRandom = <T>(arr: T[]): T | null => {
-    if (arr.length === 0) return null;
-    return arr[Math.floor(Math.random() * arr.length)];
-  };
-  
-  return {
-    haut: selectRandom(hautsFiltered.length > 0 ? hautsFiltered : hauts),
-    bas: selectRandom(basFiltered.length > 0 ? basFiltered : bas),
-    chaussures: selectRandom(chaussuresFiltered.length > 0 ? chaussuresFiltered : chaussures)
-  };
+  // Choisir aléatoirement parmi les vêtements éligibles
+  return vetementsEligibles[Math.floor(Math.random() * vetementsEligibles.length)];
+};
+
+/**
+ * Suggère une tenue complète (haut, bas, chaussures) adaptée à la température et à la météo
+ */
+export const suggestVetements = async (
+  vetements: Vetement[], 
+  temperature: number, 
+  isRaining: boolean
+): Promise<TenueSuggestion> => {
+  try {
+    // Sélectionner un haut, un bas et des chaussures adaptés
+    const haut = await selectionnerVetementAdapte(vetements, temperature, isRaining, VetementType.HAUT);
+    const bas = await selectionnerVetementAdapte(vetements, temperature, isRaining, VetementType.BAS);
+    const chaussures = await selectionnerVetementAdapte(vetements, temperature, isRaining, VetementType.CHAUSSURES);
+    
+    return { haut, bas, chaussures };
+  } catch (error) {
+    console.error('Erreur lors de la suggestion de vêtements:', error);
+    return { haut: null, bas: null, chaussures: null };
+  }
 };

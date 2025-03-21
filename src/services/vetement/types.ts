@@ -4,6 +4,7 @@ export interface Vetement {
   id: number;
   nom: string;
   categorie: string;
+  categorie_id?: number;
   couleur: string;
   taille: string;
   description?: string;
