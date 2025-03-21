@@ -26,7 +26,7 @@ const MessagesPageContent: React.FC = () => {
   const { friendId } = useParams<{ friendId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [friendEmail, setFriendEmail] = useState<string>("");
+  const [friendEmail, setFriendEmail] = useState<string | null>(null);
   const {
     messages,
     conversations,
@@ -61,6 +61,9 @@ const MessagesPageContent: React.FC = () => {
       };
       
       fetchFriendEmail();
+    } else {
+      // Réinitialiser l'email si aucun ami n'est sélectionné
+      setFriendEmail(null);
     }
   }, [friendId]);
 

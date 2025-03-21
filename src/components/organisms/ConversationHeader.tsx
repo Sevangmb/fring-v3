@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 
 interface ConversationHeaderProps {
-  friendEmail: string;
+  friendEmail: string | null;
   friendId: string;
 }
 
@@ -14,8 +14,11 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({
   friendEmail,
   friendId
 }) => {
-  // Extraire les initiales de l'email pour l'avatar
-  const initials = friendEmail.substring(0, 2).toUpperCase();
+  // Extraire les initiales de l'email pour l'avatar seulement si l'email existe
+  const initials = friendEmail ? friendEmail.substring(0, 2).toUpperCase() : "UN";
+  
+  // Définir un nom d'affichage par défaut si l'email n'est pas disponible
+  const displayName = friendEmail || "Chargement...";
 
   return (
     <div className="bg-card border-b p-2 flex items-center justify-between sticky top-0 z-10">
@@ -34,7 +37,7 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
         <div>
-          <p className="font-medium">{friendEmail}</p>
+          <p className="font-medium">{displayName}</p>
         </div>
       </div>
       <Button variant="ghost" size="icon">
