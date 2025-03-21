@@ -41,8 +41,8 @@ export const useColorDetection = (
     setCurrentStep(null);
     
     try {
-      // Créer le toast et stocker son ID
-      const { id: detectionToastId } = toast({
+      // Créer le toast pour notification
+      const toastNotification = toast({
         title: "Détection en cours",
         description: "Analyse de l'image avec Mistral AI (peut prendre jusqu'à 30 secondes)...",
         duration: 30000, // Augmenter la durée pour correspondre au timeout de la fonction
@@ -56,10 +56,8 @@ export const useColorDetection = (
         addStep(step);
       });
       
-      // Fermer le toast précédent en utilisant son ID
-      if (detectionToastId) {
-        toast.dismiss(detectionToastId);
-      }
+      // Fermer le toast précédent manuellement en utilisant l'API retournée par toast()
+      toastNotification.dismiss();
       
       addStep(`3. Informations détectées: couleur=${detectedInfo.color}, catégorie=${detectedInfo.category}`);
       console.log("Informations détectées:", detectedInfo);
