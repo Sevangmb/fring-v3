@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { detectImageInfo } from "@/services/colorDetectionService";
+import { detectImageInfo } from "@/services/colorDetection";
 import { UseFormReturn } from "react-hook-form";
 import { VetementFormValues } from "@/components/vetements/VetementFormFields";
 
