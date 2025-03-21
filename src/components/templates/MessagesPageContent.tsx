@@ -123,10 +123,10 @@ const MessagesPageContent: React.FC = () => {
                       >
                         <Avatar className="h-8 w-8 mr-2">
                           <AvatarFallback>
-                            {ami.ami_email ? ami.ami_email.substring(0, 2).toUpperCase() : 'UN'}
+                            {ami.email ? ami.email.substring(0, 2).toUpperCase() : 'UN'}
                           </AvatarFallback>
                         </Avatar>
-                        <span>{ami.ami_email || "Utilisateur inconnu"}</span>
+                        <span>{ami.email || "Utilisateur inconnu"}</span>
                       </Button>
                     ))}
                   </div>
