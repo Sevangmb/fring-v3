@@ -47,6 +47,7 @@ const MessagesSidebar: React.FC<MessagesSidebarProps> = ({
     try {
       console.log("Rafraîchissement manuel des conversations");
       await refreshConversations();
+      await chargerAmis(); // Rafraîchir également la liste des amis
       toast({
         title: "Mise à jour terminée",
         description: "La liste des conversations a été mise à jour",

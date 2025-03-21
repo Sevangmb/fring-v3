@@ -10,7 +10,6 @@ export const useConversationList = () => {
   const { toast } = useToast();
   const [conversations, setConversations] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
-  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastLoadedRef = useRef<string | null>(null);
   const loadingRef = useRef(false); // Référence pour suivre l'état de chargement
 
@@ -60,30 +59,14 @@ export const useConversationList = () => {
     }
   }, [user, toast, conversations]);
 
-  // Charger au démarrage et configurer l'intervalle de rafraîchissement
+  // Charger uniquement au démarrage, sans intervalle de rafraîchissement
   useEffect(() => {
     if (user) {
       loadConversationPreviews();
-      
-      // Nettoyer l'intervalle précédent
-      if (refreshTimerRef.current) {
-        clearInterval(refreshTimerRef.current);
-        refreshTimerRef.current = null;
-      }
-      
-      // Rafraîchir les conversations toutes les 20 secondes (silencieusement)
-      refreshTimerRef.current = setInterval(() => loadConversationPreviews(true), 20000);
     } else {
       setConversations([]);
       setLoading(false);
     }
-    
-    return () => {
-      if (refreshTimerRef.current) {
-        clearInterval(refreshTimerRef.current);
-        refreshTimerRef.current = null;
-      }
-    };
   }, [user, loadConversationPreviews]);
 
   return {

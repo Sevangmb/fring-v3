@@ -13,7 +13,6 @@ export const useConversation = (friendId?: string | null) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastLoadedRef = useRef<string | null>(null);
   const loadingRef = useRef(false);
 
@@ -77,6 +76,9 @@ export const useConversation = (friendId?: string | null) => {
       if (enrichedMessage) {
         console.log("Message envoyé avec succès:", enrichedMessage);
         setMessages(prev => [...prev, enrichedMessage]);
+        
+        // Rafraîchir la conversation après l'envoi d'un message
+        await loadConversation(true);
       }
     } catch (error: any) {
       console.error('Erreur lors de l\'envoi du message:', error);
@@ -90,34 +92,14 @@ export const useConversation = (friendId?: string | null) => {
     }
   };
 
-  // Charger au démarrage et lors du changement de friendId
+  // Charger uniquement quand friendId change
   useEffect(() => {
-    // Nettoyer l'intervalle précédent
-    if (refreshTimerRef.current) {
-      clearInterval(refreshTimerRef.current);
-      refreshTimerRef.current = null;
-    }
-    
-    if (friendId) {
-      // Charger les messages une seule fois au démarrage
+    if (friendId && user) {
       loadConversation();
-      
-      // Configurer l'intervalle de rafraîchissement silencieux seulement si friendId est défini
-      if (user) {
-        console.log(`Configuration de l'intervalle de rafraîchissement pour la conversation avec ${friendId}`);
-        refreshTimerRef.current = setInterval(() => loadConversation(true), 5000);
-      }
     } else {
       setMessages([]);
       setLoading(false);
     }
-    
-    return () => {
-      if (refreshTimerRef.current) {
-        clearInterval(refreshTimerRef.current);
-        refreshTimerRef.current = null;
-      }
-    };
   }, [friendId, user, loadConversation]);
 
   return {

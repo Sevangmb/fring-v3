@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import NewConversationDialog from "./NewConversationDialog";
 import { User } from "@supabase/supabase-js";
@@ -40,14 +40,15 @@ const MessagesSidebarHeader: React.FC<MessagesSidebarHeaderProps> = ({
       
       <div className="flex items-center gap-2">
         <Button 
-          variant="ghost" 
-          size="icon" 
+          variant="outline" 
+          size="sm" 
           onClick={handleRefresh}
           disabled={isRefreshing}
           title="Rafraîchir les conversations"
+          className="flex items-center gap-1"
         >
           <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
-          <span className="sr-only">Rafraîchir</span>
+          <span className="hidden sm:inline">Rafraîchir</span>
         </Button>
         
         <NewConversationDialog 
