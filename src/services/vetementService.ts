@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 
 // Type pour un vêtement
@@ -18,7 +17,7 @@ export interface Vetement {
 // Fonction pour récupérer tous les vêtements de l'utilisateur connecté
 export const fetchVetements = async (): Promise<Vetement[]> => {
   try {
-    // Récupérer la session utilisateur
+    // Récupérer la session utilisateur pour vérifier l'authentification
     const { data: sessionData } = await supabase.auth.getSession();
     const userId = sessionData.session?.user?.id;
 
@@ -30,10 +29,10 @@ export const fetchVetements = async (): Promise<Vetement[]> => {
 
     console.log('Récupération des vêtements pour l\'utilisateur:', userId);
 
+    // La politique RLS s'assurera que seuls les vêtements de l'utilisateur sont retournés
     const { data, error } = await supabase
       .from('vetements')
       .select('*')
-      .eq('user_id', userId)
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -41,43 +40,8 @@ export const fetchVetements = async (): Promise<Vetement[]> => {
       throw error;
     }
     
-    console.log('Vêtements récupérés:', data);
-    
-    // Si aucune donnée n'est retournée, la table est peut-être vide pour cet utilisateur
-    if (!data || data.length === 0) {
-      console.log('Aucun vêtement trouvé pour cet utilisateur, ajout de données de démo');
-      // Insérer des données de démo pour l'utilisateur connecté
-      try {
-        const { error: insertError } = await supabase
-          .from('vetements')
-          .insert(demoVetements.map(v => ({...v, user_id: userId})));
-        
-        if (insertError) {
-          console.error('Erreur lors de l\'insertion des données de démo:', insertError);
-          return [];
-        }
-        
-        // Réessayer de récupérer les données après insertion
-        const { data: refreshedData, error: refreshError } = await supabase
-          .from('vetements')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
-        
-        if (refreshError) {
-          console.error('Erreur lors de la récupération après insertion:', refreshError);
-          return [];
-        }
-        
-        console.log('Données de démo insérées et récupérées:', refreshedData);
-        return refreshedData as Vetement[] || [];
-      } catch (insertCatchError) {
-        console.error('Exception lors de l\'insertion des données de démo:', insertCatchError);
-        return [];
-      }
-    }
-    
-    return data as Vetement[];
+    console.log('Vêtements récupérés:', data?.length || 0);
+    return data as Vetement[] || [];
   } catch (error) {
     console.error('Erreur lors de la récupération des vêtements:', error);
     throw error;
@@ -95,8 +59,9 @@ export const addVetement = async (vetement: Omit<Vetement, 'id' | 'created_at' |
       throw new Error('Vous devez être connecté pour ajouter un vêtement');
     }
 
-    console.log('Ajout d\'un vêtement pour l\'utilisateur:', userId, vetement);
+    console.log('Ajout d\'un vêtement pour l\'utilisateur:', userId);
 
+    // Ajouter le user_id aux données du vêtement
     const { data, error } = await supabase
       .from('vetements')
       .insert([{ ...vetement, user_id: userId }])
@@ -120,6 +85,7 @@ export const addVetement = async (vetement: Omit<Vetement, 'id' | 'created_at' |
 export const deleteVetement = async (id: number): Promise<void> => {
   try {
     console.log('Tentative de suppression du vêtement ID:', id);
+    // La politique RLS s'assurera que l'utilisateur ne peut supprimer que ses propres vêtements
     const { error } = await supabase
       .from('vetements')
       .delete()
@@ -142,6 +108,7 @@ export const updateVetement = async (id: number, updates: Partial<Vetement>): Pr
     // Supprimer user_id des mises à jour si présent pour éviter de changer le propriétaire
     const { user_id, ...updateData } = updates;
     
+    // La politique RLS s'assurera que l'utilisateur ne peut mettre à jour que ses propres vêtements
     const { data, error } = await supabase
       .from('vetements')
       .update(updateData)
@@ -161,7 +128,7 @@ export const updateVetement = async (id: number, updates: Partial<Vetement>): Pr
   }
 };
 
-// Données de démo pour le développement
+// Données de démo pour le développement - ne sont plus utilisées ici car les RLS sont en place
 export const demoVetements: Omit<Vetement, 'id' | 'created_at' | 'user_id'>[] = [
   {
     nom: "T-shirt blanc",
