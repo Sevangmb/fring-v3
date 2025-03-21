@@ -9,6 +9,7 @@ export const vetementSchema = z.object({
   taille: z.string().min(1, { message: "Veuillez sélectionner une taille" }),
   description: z.string().optional(),
   marque: z.string().optional(),
+  image_url: z.string().optional(),
 });
 
 export type VetementFormValues = z.infer<typeof vetementSchema>;
