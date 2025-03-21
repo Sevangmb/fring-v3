@@ -2,14 +2,14 @@
 import { supabase } from '@/lib/supabase';
 
 /**
- * Service pour détecter la couleur dominante d'une image en utilisant Hugging Face
+ * Service pour détecter la couleur dominante d'une image de vêtement en utilisant Hugging Face
  * @param imageUrl URL de l'image à analyser
- * @returns La couleur dominante détectée
+ * @returns La couleur dominante du vêtement détectée
  */
 export const detectImageColor = async (imageUrl: string): Promise<string> => {
   try {
     // Afficher un message indiquant que la détection de couleur est en cours
-    console.log('Détection de couleur en cours avec Hugging Face...');
+    console.log('Détection de couleur du vêtement en cours avec Hugging Face...');
     
     const { data, error } = await supabase.functions.invoke('detect-color', {
       body: { imageUrl },

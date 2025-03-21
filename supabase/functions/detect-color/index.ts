@@ -15,22 +15,59 @@ const colorMapping: Record<string, string> = {
   'gray': 'gris',
   'grey': 'gris',
   'blue': 'bleu',
+  'navy': 'bleu',
+  'navy blue': 'bleu',
+  'light blue': 'bleu',
+  'dark blue': 'bleu',
+  'sky blue': 'bleu',
+  'royal blue': 'bleu',
+  'teal': 'bleu',
   'red': 'rouge',
+  'burgundy': 'rouge',
+  'maroon': 'rouge',
+  'crimson': 'rouge',
+  'scarlet': 'rouge',
   'green': 'vert',
+  'olive': 'vert',
+  'olive green': 'vert',
+  'lime': 'vert',
+  'dark green': 'vert',
+  'light green': 'vert',
+  'forest green': 'vert',
   'yellow': 'jaune',
+  'gold': 'jaune',
+  'mustard': 'jaune',
+  'lemon': 'jaune',
   'orange': 'orange',
+  'peach': 'orange',
+  'coral': 'orange',
+  'tangerine': 'orange',
   'purple': 'violet',
+  'lavender': 'violet',
+  'lilac': 'violet',
+  'mauve': 'violet',
+  'magenta': 'violet',
   'pink': 'rose',
+  'hot pink': 'rose',
+  'salmon': 'rose',
   'brown': 'marron',
+  'chocolate': 'marron',
+  'tan': 'marron',
+  'coffee': 'marron',
   'beige': 'beige',
   'cream': 'beige',
-  'tan': 'beige',
-  'turquoise': 'bleu',
-  'navy': 'bleu',
-  'burgundy': 'rouge',
-  'maroon': 'marron',
+  'khaki': 'beige',
+  'sand': 'beige',
+  'ivory': 'beige',
   'silver': 'gris',
-  'gold': 'jaune',
+  'charcoal': 'gris',
+  'dark grey': 'gris',
+  'light grey': 'gris',
+  'denim': 'bleu',
+  'indigo': 'bleu',
+  'turquoise': 'bleu',
+  'aqua': 'bleu',
+  'cyan': 'bleu'
 };
 
 // Liste des couleurs disponibles dans l'application
@@ -50,121 +87,85 @@ async function blobToBase64(blob: Blob): Promise<string> {
 }
 
 /**
- * Fonction qui détecte la couleur dominante d'une image en utilisant Hugging Face
+ * Fonction qui détecte la couleur dominante d'un vêtement en utilisant Hugging Face
  */
-async function detectDominantColor(imageUrl: string): Promise<string> {
+async function detectClothingColor(imageUrl: string): Promise<string> {
   try {
+    console.log("Detecting clothing color from image:", imageUrl.substring(0, 50) + "...");
+    
     // Vérifier si l'URL est un data URL ou une URL HTTP
     const isDataUrl = imageUrl.startsWith('data:');
     
-    // Si c'est un data URL, on doit extraire l'image
-    let imageToAnalyze = imageUrl;
-    if (isDataUrl) {
-      // Essayer de récupérer l'image à partir du data URL
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      
-      // Si necessaire, convertir le blob en une forme utilisable pour l'API
-      const base64Data = await blobToBase64(blob);
-      imageToAnalyze = base64Data;
-    }
-
-    // Utiliser l'API Hugging Face pour la détection de couleur
+    // Initialiser l'API Hugging Face
     const hf = new HfInference(Deno.env.get('HUGGINGFACE_API_KEY'));
     
-    // Première tentative : demande spécifique pour se concentrer sur le vêtement
-    const detectedColor = await detectColorWithDirectQuery(hf, imageToAnalyze);
-    
-    // Si aucune couleur spécifique n'est détectée, essayer avec la détection secondaire
-    if (detectedColor === 'multicolore') {
-      const refinedColor = await detectColorWithSecondaryMethod(hf, imageToAnalyze);
-      return refinedColor;
-    }
-    
-    return detectedColor;
-  } catch (error) {
-    console.error('Erreur dans detectDominantColor:', error);
-    return 'multicolore'; // Couleur par défaut en cas d'erreur
-  }
-}
-
-/**
- * Détecte la couleur avec une requête directe
- */
-async function detectColorWithDirectQuery(hf: HfInference, imageToAnalyze: string): Promise<string> {
-  try {
-    // Demande spécifique pour se concentrer sur le vêtement
-    const result = await hf.textGeneration({
-      model: "gpt2",
-      inputs: "Describe the color of the clothing item in this image, focus ONLY on the main clothing item and NOT the background. Respond with ONLY the color name:",
-      parameters: {
-        max_new_tokens: 20,
-        temperature: 0.1
-      }
+    // Utiliser un modèle plus précis pour la détection des vêtements
+    const visionResult = await hf.imageToText({
+      model: "Salesforce/blip-image-captioning-large",
+      data: imageUrl,
     });
     
-    console.log("Color query result:", result);
+    console.log("Image description:", visionResult);
     
-    const generatedColor = result.generated_text.toLowerCase().trim();
-    console.log("Generated color text:", generatedColor);
+    // Extraire une description précise de l'image
+    const imageDescription = visionResult.generated_text;
     
-    // Rechercher la couleur dans la réponse générée
-    for (const [englishColor, frenchColor] of Object.entries(colorMapping)) {
-      if (generatedColor.includes(englishColor)) {
-        return frenchColor;
-      }
-    }
+    // Utiliser un modèle de langage pour extraire spécifiquement la couleur du vêtement
+    const colorAnalysisPrompt = `
+    Image description: "${imageDescription}"
     
-    return 'multicolore';
-  } catch (error) {
-    console.error("Error in primary color detection:", error);
-    return 'multicolore';
-  }
-}
-
-/**
- * Détecte la couleur avec une méthode secondaire
- */
-async function detectColorWithSecondaryMethod(hf: HfInference, imageToAnalyze: string): Promise<string> {
-  try {
-    // Générer une description de l'image
-    const captionResult = await hf.imageToText({
-      model: "nlpconnect/vit-gpt2-image-captioning",
-      data: imageToAnalyze,
-    });
+    Task: Analyze this image description and identify ONLY the color of the clothing item.
+    Focus exclusively on the main article of clothing. Ignore the background, accessories, or any other elements.
     
-    console.log("Image caption result:", captionResult);
+    Return ONLY the color name - nothing else, no explanations or additional text.
+    `;
     
-    // Extraire les termes de couleur à partir de la description générée
-    const description = captionResult.generated_text.toLowerCase();
-    console.log("Generated description:", description);
-    
-    // Créer une requête plus spécifique basée sur la description
-    const colorQuery = await hf.textGeneration({
-      model: "gpt2",
-      inputs: `The image shows: "${description}". What is the main color of the clothing item in this image? Answer with just one color name.`,
+    const colorResult = await hf.textGeneration({
+      model: "google/flan-t5-xxl", // Modèle de langage plus grand et plus précis
+      inputs: colorAnalysisPrompt,
       parameters: {
         max_new_tokens: 10,
-        temperature: 0.1
+        temperature: 0.2, // Faible température pour des réponses plus déterministes
       }
     });
     
-    console.log("Refined color query result:", colorQuery);
+    console.log("Raw detected color:", colorResult.generated_text);
     
-    const refinedColor = colorQuery.generated_text.toLowerCase().trim();
+    // Nettoyer la réponse et extraire la couleur
+    let detectedColor = colorResult.generated_text.toLowerCase().trim();
     
-    // Rechercher la couleur dans la réponse raffinée
+    // Si la détection échoue, essayer directement avec une requête spécifique
+    if (!detectedColor || detectedColor.length > 20) {
+      console.log("First detection failed, trying with direct query");
+      
+      // Utiliser une requête plus spécifique pour la couleur
+      const directColorQuery = await hf.textGeneration({
+        model: "google/flan-t5-xxl",
+        inputs: `What is the MAIN COLOR of the CLOTHING in this image: "${imageDescription}"? Answer with just ONE word.`,
+        parameters: {
+          max_new_tokens: 10,
+          temperature: 0.2,
+        }
+      });
+      
+      detectedColor = directColorQuery.generated_text.toLowerCase().trim();
+      console.log("Direct query color result:", detectedColor);
+    }
+    
+    // Mapper la couleur détectée vers les couleurs françaises disponibles
     for (const [englishColor, frenchColor] of Object.entries(colorMapping)) {
-      if (refinedColor.includes(englishColor)) {
+      if (detectedColor.includes(englishColor)) {
+        console.log(`Mapped '${detectedColor}' to '${frenchColor}'`);
         return frenchColor;
       }
     }
     
-    // Si aucune couleur n'a été trouvée, retourner la valeur par défaut
-    return 'multicolore';
+    // Si aucune correspondance n'est trouvée
+    console.log("No color mapping found for:", detectedColor);
+    return "multicolore";
   } catch (error) {
-    console.error("Error in secondary color detection:", error);
-    return 'multicolore';
+    console.error("Error detecting clothing color:", error);
+    return "multicolore"; // Valeur par défaut en cas d'erreur
   }
 }
 
@@ -195,8 +196,8 @@ serve(async (req) => {
       );
     }
 
-    // Extraire la couleur dominante de l'image en utilisant Hugging Face
-    let color = await detectDominantColor(imageUrl);
+    // Extraire la couleur du vêtement de l'image
+    let color = await detectClothingColor(imageUrl);
     
     // Valider que la couleur détectée est parmi les couleurs disponibles
     color = validateDetectedColor(color);

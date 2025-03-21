@@ -7,9 +7,18 @@ import { Plus, Loader2 } from "lucide-react";
 interface FormActionsProps {
   isSubmitting: boolean;
   onCancel: () => void;
+  submitLabel?: string;
+  cancelLabel?: string;
+  submitIcon?: React.ReactNode;
 }
 
-const FormActions: React.FC<FormActionsProps> = ({ isSubmitting, onCancel }) => {
+const FormActions: React.FC<FormActionsProps> = ({ 
+  isSubmitting, 
+  onCancel,
+  submitLabel = "Ajouter le vêtement",
+  cancelLabel = "Annuler",
+  submitIcon = <Plus className="mr-2 h-4 w-4" />
+}) => {
   return (
     <div className="flex justify-end gap-4 pt-4">
       <Button
@@ -17,7 +26,7 @@ const FormActions: React.FC<FormActionsProps> = ({ isSubmitting, onCancel }) => 
         variant="outline"
         onClick={onCancel}
       >
-        Annuler
+        {cancelLabel}
       </Button>
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? (
@@ -27,8 +36,8 @@ const FormActions: React.FC<FormActionsProps> = ({ isSubmitting, onCancel }) => 
           </>
         ) : (
           <>
-            <Plus className="mr-2 h-4 w-4" />
-            Ajouter le vêtement
+            {submitIcon}
+            {submitLabel}
           </>
         )}
       </Button>
