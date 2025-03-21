@@ -2,23 +2,19 @@
 import React from "react";
 import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
-import { VetementFormValues, Categorie } from "../schema/VetementFormSchema";
+import { VetementFormValues } from "../schema/VetementFormSchema";
 import { CategorySelector } from "./category/CategorySelector";
 import { AddCategoryDialog } from "./category/AddCategoryDialog";
 import { useCategories } from "@/hooks/useCategories";
 
 interface CategorieFieldProps {
   form: UseFormReturn<VetementFormValues>;
-  categories: Categorie[];
-  loadingCategories: boolean;
   loading: boolean;
   onCategoriesChange?: () => void;
 }
 
 const CategorieField: React.FC<CategorieFieldProps> = ({ 
   form, 
-  categories, 
-  loadingCategories,
   loading,
   onCategoriesChange
 }) => {
@@ -26,21 +22,21 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
   const hasDetectedValue = !!categorieId && !loading;
 
   const { 
-    categories: localCategories,
+    categories,
+    loadingCategories, 
     addDialogOpen, 
     addingCategory,
     openAddDialog, 
     closeAddDialog, 
     handleAddCategory 
   } = useCategories({
-    initialCategories: categories,
     onCategoryAdded: (categoryId) => {
       form.setValue('categorie_id', categoryId, { shouldValidate: true });
     },
     onCategoriesChange
   });
 
-  const selectedCategory = localCategories.find(cat => Number(cat.id) === categorieId);
+  const selectedCategory = categories.find(cat => Number(cat.id) === categorieId);
   const displayValue = selectedCategory ? selectedCategory.nom : "";
 
   return (
@@ -63,7 +59,7 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
             onChange={(categoryId) => {
               form.setValue('categorie_id', categoryId, { shouldValidate: true });
             }}
-            categories={localCategories}
+            categories={categories}
             displayValue={displayValue}
             loadingCategories={loadingCategories}
             disabled={loading}

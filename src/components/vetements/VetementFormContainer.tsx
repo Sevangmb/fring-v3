@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -12,9 +13,7 @@ import FormActions from "./FormActions";
 
 interface VetementFormContainerProps {
   user: any;
-  categories: any[];
   marques: any[];
-  loadingCategories: boolean;
   initialValues?: VetementFormValues;
   onSubmit?: (data: VetementFormValues) => Promise<void>;
   submitLabel?: string;
@@ -24,9 +23,7 @@ interface VetementFormContainerProps {
 
 const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
   user,
-  categories,
   marques,
-  loadingCategories,
   initialValues,
   onSubmit,
   submitLabel,
@@ -151,9 +148,7 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             <VetementFormFields
               form={form}
-              categories={categories}
               marques={marques}
-              loadingCategories={loadingCategories}
               loading={loading}
             />
             

@@ -13,9 +13,7 @@ import WeatherTypeField from "./form-fields/WeatherTypeField";
 
 interface VetementFormFieldsProps {
   form: UseFormReturn<VetementFormValues>;
-  categories: Categorie[];
   marques: any[];
-  loadingCategories: boolean;
   loading: boolean;
   onCategoriesChange?: () => void;
 }
@@ -26,9 +24,7 @@ interface VetementFormFieldsProps {
  */
 const VetementFormFields: React.FC<VetementFormFieldsProps> = ({
   form,
-  categories,
   marques,
-  loadingCategories,
   loading,
   onCategoriesChange
 }) => {
@@ -39,8 +35,6 @@ const VetementFormFields: React.FC<VetementFormFieldsProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <CategorieField 
           form={form} 
-          categories={categories} 
-          loadingCategories={loadingCategories} 
           loading={loading}
           onCategoriesChange={onCategoriesChange}
         />

@@ -11,13 +11,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AuthLoading, NotAuthenticated } from "@/components/vetements/AuthStateDisplay";
 import VetementFormContainer from "@/components/vetements/VetementFormContainer";
 
-// Type pour les catégories
-interface Categorie {
-  id: number;
-  nom: string;
-  description: string | null;
-}
-
 // Type pour les marques
 interface Marque {
   id: number;
@@ -30,9 +23,7 @@ const AjouterVetementPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
-  const [categories, setCategories] = useState<Categorie[]>([]);
   const [marques, setMarques] = useState<Marque[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
 
   useEffect(() => {
     // Rediriger vers la page de connexion si l'utilisateur n'est pas connecté
@@ -45,32 +36,6 @@ const AjouterVetementPage = () => {
       navigate("/login");
       return;
     }
-
-    // Charger les catégories depuis Supabase
-    const fetchCategories = async () => {
-      setLoadingCategories(true);
-      try {
-        const { data, error } = await supabase
-          .from('categories')
-          .select('*')
-          .order('nom');
-        
-        if (error) {
-          console.error("Erreur lors du chargement des catégories:", error);
-          toast({
-            title: "Erreur",
-            description: "Impossible de charger les catégories.",
-            variant: "destructive",
-          });
-        } else {
-          setCategories(data || []);
-        }
-      } catch (error) {
-        console.error("Erreur lors du chargement des catégories:", error);
-      } finally {
-        setLoadingCategories(false);
-      }
-    };
 
     // Charger les marques depuis Supabase
     const fetchMarques = async () => {
@@ -91,7 +56,6 @@ const AjouterVetementPage = () => {
     };
 
     if (user) {
-      fetchCategories();
       fetchMarques();
     }
   }, [user, authLoading, toast, navigate]);
@@ -129,9 +93,7 @@ const AjouterVetementPage = () => {
       <div className="container mx-auto px-4 py-12">
         <VetementFormContainer
           user={user}
-          categories={categories}
           marques={marques}
-          loadingCategories={loadingCategories}
         />
       </div>
     </Layout>

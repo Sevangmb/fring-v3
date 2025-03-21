@@ -1,24 +1,48 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Categorie } from "@/components/vetements/schema/VetementFormSchema";
-import { addCategorie } from "@/services/categorieService";
+import { addCategorie, fetchCategories } from "@/services/categorieService";
 import { useToast } from "@/hooks/use-toast";
 
 interface UseCategoriesProps {
-  initialCategories: Categorie[];
+  initialCategories?: Categorie[];
   onCategoryAdded?: (categoryId: number) => void;
   onCategoriesChange?: () => void;
 }
 
 export const useCategories = ({
-  initialCategories,
+  initialCategories = [],
   onCategoryAdded,
   onCategoriesChange
 }: UseCategoriesProps) => {
   const [categories, setCategories] = useState<Categorie[]>(initialCategories);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [addingCategory, setAddingCategory] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(false);
   const { toast } = useToast();
+
+  // Charger les catégories depuis Supabase
+  const loadCategories = useCallback(async () => {
+    try {
+      setLoadingCategories(true);
+      const categoriesData = await fetchCategories();
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error("Erreur lors du chargement des catégories:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les catégories",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingCategories(false);
+    }
+  }, [toast]);
+
+  // Charger les catégories au montage du composant
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
 
   const openAddDialog = useCallback(() => {
     setAddDialogOpen(true);
@@ -73,10 +97,12 @@ export const useCategories = ({
 
   return {
     categories,
+    loadingCategories,
     addDialogOpen,
     addingCategory,
     openAddDialog,
     closeAddDialog,
-    handleAddCategory
+    handleAddCategory,
+    refreshCategories: loadCategories
   };
 };
