@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -65,11 +64,9 @@ export default {
 				},
 				// Nouvelles couleurs thématiques basées sur l'image
 				theme: {
-					'blue-light': '#9DD3E8',
-					'blue-medium': '#2C98B6',
-					'blue-dark': '#00293D',
-					'yellow': '#FFBE0B',
-					'orange': '#F97316',
+					'teal-dark': '#00696B',
+					'teal-medium': '#7EC4BC',
+					'teal-light': '#EDF7F8',
 				}
 			},
 			borderRadius: {

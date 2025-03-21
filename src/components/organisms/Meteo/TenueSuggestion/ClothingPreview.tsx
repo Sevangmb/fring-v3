@@ -13,7 +13,7 @@ interface ClothingPreviewProps {
 const ClothingPreview: React.FC<ClothingPreviewProps> = ({ item, type, label, icon }) => {
   return (
     <div className="flex flex-col items-center">
-      <div className="h-40 w-40 bg-white/80 dark:bg-white/10 rounded-lg border border-amber-200 dark:border-amber-800 overflow-hidden shadow-md mb-2">
+      <div className="h-40 w-40 bg-white/80 dark:bg-white/10 rounded-lg border border-theme-teal-medium dark:border-theme-teal-medium/60 overflow-hidden shadow-md mb-2">
         {item?.image_url ? (
           <img 
             src={item.image_url} 
@@ -21,7 +21,7 @@ const ClothingPreview: React.FC<ClothingPreviewProps> = ({ item, type, label, ic
             className="w-full h-full object-contain p-1"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-amber-100/50 dark:bg-amber-900/20">
+          <div className="w-full h-full flex items-center justify-center bg-theme-teal-light/50 dark:bg-theme-teal-dark/20">
             {icon}
           </div>
         )}

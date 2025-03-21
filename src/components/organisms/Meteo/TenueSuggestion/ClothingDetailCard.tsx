@@ -13,15 +13,15 @@ interface ClothingDetailCardProps {
 const ClothingDetailCard: React.FC<ClothingDetailCardProps> = ({ item, type, icon }) => {
   const defaultIcon = () => {
     switch(type.toLowerCase()) {
-      case 'haut': return <Shirt className="h-6 w-6 text-amber-600 dark:text-amber-400" />;
-      case 'bas': return <ShoppingBag className="h-6 w-6 text-amber-600 dark:text-amber-400" />;
-      case 'chaussures': return <Footprints className="h-6 w-6 text-amber-600 dark:text-amber-400" />;
-      default: return <Shirt className="h-6 w-6 text-amber-600 dark:text-amber-400" />;
+      case 'haut': return <Shirt className="h-6 w-6 text-theme-teal-dark dark:text-theme-teal-medium" />;
+      case 'bas': return <ShoppingBag className="h-6 w-6 text-theme-teal-dark dark:text-theme-teal-medium" />;
+      case 'chaussures': return <Footprints className="h-6 w-6 text-theme-teal-dark dark:text-theme-teal-medium" />;
+      default: return <Shirt className="h-6 w-6 text-theme-teal-dark dark:text-theme-teal-medium" />;
     }
   };
 
   return (
-    <div className="border border-amber-200 dark:border-amber-800 rounded-lg p-3 bg-white/50 dark:bg-white/5">
+    <div className="border border-theme-teal-medium/30 dark:border-theme-teal-medium/20 rounded-lg p-3 bg-white/50 dark:bg-white/5">
       <div className="flex items-center mb-2">
         {icon}
         <Text variant="subtle" weight="medium">{type}</Text>
@@ -37,7 +37,7 @@ const ClothingDetailCard: React.FC<ClothingDetailCardProps> = ({ item, type, ico
               />
             </div>
           ) : (
-            <div className="h-10 w-10 bg-amber-100 dark:bg-amber-800/30 rounded-full flex items-center justify-center mr-3">
+            <div className="h-10 w-10 bg-theme-teal-light dark:bg-theme-teal-dark/30 rounded-full flex items-center justify-center mr-3">
               {defaultIcon()}
             </div>
           )}
