@@ -9,14 +9,15 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, UserPlus, X, Users, AlertCircle } from "lucide-react";
+import { X, AlertCircle } from "lucide-react";
 import { searchUsersByEmail } from "@/services/userService";
 import { envoyerDemandeAmi } from "@/services/amis";
 import { useToast } from "@/hooks/use-toast";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { User } from "@/services/userService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { User } from "@/services/userService";
+import UserSearchForm from "@/components/atoms/UserSearchForm";
+import UserSearchResults from "@/components/molecules/UserSearchResults";
+import UserSuggestions from "@/components/molecules/UserSuggestions";
 
 interface AjouterAmiDialogProps {
   open: boolean;
@@ -128,35 +129,6 @@ const AjouterAmiDialog: React.FC<AjouterAmiDialogProps> = ({ open, onClose, onAm
     }
   };
 
-  const renderUserItem = (user: User, isSuggestion = false) => (
-    <div 
-      key={user.id} 
-      className="flex items-center justify-between p-3 rounded-md border"
-    >
-      <div className="flex items-center gap-3">
-        <Avatar className="h-10 w-10">
-          <AvatarFallback>
-            {user.email.substring(0, 2).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        <div>
-          <p className="font-medium">{user.email}</p>
-          {isSuggestion && (
-            <p className="text-xs text-muted-foreground">Suggestion</p>
-          )}
-        </div>
-      </div>
-      <Button
-        size="sm"
-        onClick={() => handleEnvoyerDemande(user.id)}
-        disabled={sendingRequest[user.id]}
-      >
-        <UserPlus className="h-4 w-4 mr-1" />
-        {sendingRequest[user.id] ? "Envoi..." : "Ajouter"}
-      </Button>
-    </div>
-  );
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -174,59 +146,28 @@ const AjouterAmiDialog: React.FC<AjouterAmiDialogProps> = ({ open, onClose, onAm
           </Alert>
         )}
         
-        <form onSubmit={handleSearch} className="flex items-center space-x-2 mt-4">
-          <Input
-            placeholder="Rechercher par email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1"
-          />
-          <Button 
-            type="submit" 
-            size="sm"
-            disabled={isSearching || !searchTerm.trim()}
-          >
-            <Search className="h-4 w-4 mr-1" />
-            {isSearching ? "Recherche..." : "Rechercher"}
-          </Button>
-        </form>
+        <UserSearchForm 
+          searchTerm={searchTerm}
+          onSearchTermChange={setSearchTerm}
+          onSearch={handleSearch}
+          isSearching={isSearching}
+        />
         
         <div className="mt-4 max-h-[300px] overflow-y-auto">
-          {/* Résultats de recherche */}
-          {searchTerm && searchResults.length > 0 && (
-            <div className="space-y-2 mb-4">
-              <h3 className="text-sm font-medium mb-2 flex items-center">
-                <Search className="h-4 w-4 mr-1 text-muted-foreground" />
-                Résultats de recherche
-              </h3>
-              {searchResults.map(user => renderUserItem(user))}
-            </div>
-          )}
+          <UserSearchResults 
+            searchTerm={searchTerm}
+            searchResults={searchResults}
+            isSearching={isSearching}
+            sendingRequest={sendingRequest}
+            onAddFriend={handleEnvoyerDemande}
+          />
           
-          {/* Message si aucun résultat trouvé */}
-          {searchTerm && isSearching === false && searchResults.length === 0 && (
-            <div className="text-center py-4 text-muted-foreground border rounded-md mb-4">
-              <p>Aucun utilisateur trouvé pour "{searchTerm}"</p>
-            </div>
-          )}
-          
-          {/* Suggestions d'utilisateurs */}
-          {suggestedUsers.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium mb-2 flex items-center">
-                <Users className="h-4 w-4 mr-1 text-muted-foreground" />
-                Suggestions d'utilisateurs
-              </h3>
-              {suggestedUsers.map(user => renderUserItem(user, true))}
-            </div>
-          )}
-          
-          {/* État de chargement */}
-          {(isSearching || isLoadingSuggestions) && searchResults.length === 0 && suggestedUsers.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>Recherche en cours...</p>
-            </div>
-          )}
+          <UserSuggestions 
+            suggestedUsers={suggestedUsers}
+            isLoadingSuggestions={isLoadingSuggestions}
+            sendingRequest={sendingRequest}
+            onAddFriend={handleEnvoyerDemande}
+          />
           
           {/* État vide */}
           {!isSearching && !isLoadingSuggestions && searchResults.length === 0 && suggestedUsers.length === 0 && !searchError && (
