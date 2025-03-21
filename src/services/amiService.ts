@@ -108,7 +108,7 @@ export const envoyerDemandeAmi = async (amiId: string): Promise<Ami> => {
 };
 
 // Fonction pour accepter une demande d'ami
-export const accepterDemandeAmi = async (amiId: number): Promise<Ami> => {
+export const accepterDemandeAmi = async (amiId: number): Promise<Ami | null> => {
   try {
     // Récupérer l'ID de l'utilisateur connecté
     const { data: sessionData } = await supabase.auth.getSession();
@@ -120,12 +120,13 @@ export const accepterDemandeAmi = async (amiId: number): Promise<Ami> => {
 
     console.log('Acceptation de la demande d\'ami:', amiId);
 
-    // Utilisation de RPC pour éviter le problème avec le trigger updated_at
+    // Mise à jour directe sans utiliser la fonction RPC problématique
     const { data, error } = await supabase
-      .rpc('accepter_demande_ami', {
-        demande_id: amiId,
-        current_user_id: userId
-      });
+      .from('amis')
+      .update({ status: 'accepted' })
+      .eq('id', amiId)
+      .select()
+      .single();
     
     if (error) {
       console.error('Erreur lors de l\'acceptation de la demande d\'ami:', error);
@@ -133,24 +134,12 @@ export const accepterDemandeAmi = async (amiId: number): Promise<Ami> => {
     }
     
     if (!data) {
-      throw new Error('Échec de l\'acceptation de la demande d\'ami');
+      console.error('Aucune donnée retournée après acceptation');
+      return null;
     }
     
     console.log('Demande acceptée avec succès:', data);
-    
-    // Récupérer la demande mise à jour
-    const { data: updatedRequest, error: fetchError } = await supabase
-      .from('amis')
-      .select('*')
-      .eq('id', amiId)
-      .single();
-      
-    if (fetchError) {
-      console.error('Erreur lors de la récupération de la demande mise à jour:', fetchError);
-      throw new Error(`Erreur de récupération après acceptation: ${fetchError.message}`);
-    }
-    
-    return updatedRequest as Ami;
+    return data as Ami;
   } catch (error) {
     console.error('Erreur lors de l\'acceptation de la demande d\'ami:', error);
     throw error;

@@ -27,7 +27,7 @@ const DemandesRecuesCard: React.FC<DemandesRecuesCardProps> = ({
           <CardTitle>Demande d'ami</CardTitle>
         </div>
         <Text className="mt-2">
-          Vous avez reçu une demande d'ami.
+          Vous avez reçu une demande d'ami de {demande.email || 'quelqu\'un'}.
         </Text>
       </CardHeader>
       <CardFooter className="flex justify-end gap-2">
