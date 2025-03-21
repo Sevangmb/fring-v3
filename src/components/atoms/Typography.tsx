@@ -11,6 +11,7 @@ interface TextProps {
   align?: "left" | "center" | "right";
   color?: string;
   style?: React.CSSProperties;
+  title?: string; // Add this line to include the title prop
 }
 
 export const Text = ({
@@ -22,6 +23,7 @@ export const Text = ({
   align = "left",
   color,
   style,
+  title, // Add this to destructure the title prop
   ...props
 }: TextProps) => {
   const baseStyles = "tracking-tight transition-colors duration-200";
@@ -64,6 +66,7 @@ export const Text = ({
         className
       )}
       style={style}
+      title={title} // Add this to pass the title prop to the component
       {...props}
     >
       {children}
