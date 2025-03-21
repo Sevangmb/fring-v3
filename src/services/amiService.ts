@@ -120,28 +120,37 @@ export const accepterDemandeAmi = async (amiId: number): Promise<Ami> => {
 
     console.log('Acceptation de la demande d\'ami:', amiId);
 
-    // Mise à jour du statut de la demande sans spécifier updated_at
-    // (sera géré par le trigger de la base de données)
+    // Utilisation de RPC pour éviter le problème avec le trigger updated_at
     const { data, error } = await supabase
-      .from('amis')
-      .update({ 
-        status: 'accepted'
-      })
-      .eq('id', amiId)
-      .eq('ami_id', userId) // S'assure que l'utilisateur est bien le destinataire
-      .select();
+      .rpc('accepter_demande_ami', {
+        demande_id: amiId,
+        current_user_id: userId
+      });
     
     if (error) {
       console.error('Erreur lors de l\'acceptation de la demande d\'ami:', error);
       throw new Error(`Erreur d'acceptation: ${error.message}`);
     }
     
-    if (!data || data.length === 0) {
-      throw new Error('Demande d\'ami non trouvée ou vous n\'êtes pas autorisé à l\'accepter');
+    if (!data) {
+      throw new Error('Échec de l\'acceptation de la demande d\'ami');
     }
     
-    console.log('Demande acceptée avec succès:', data[0]);
-    return data[0] as Ami;
+    console.log('Demande acceptée avec succès:', data);
+    
+    // Récupérer la demande mise à jour
+    const { data: updatedRequest, error: fetchError } = await supabase
+      .from('amis')
+      .select('*')
+      .eq('id', amiId)
+      .single();
+      
+    if (fetchError) {
+      console.error('Erreur lors de la récupération de la demande mise à jour:', fetchError);
+      throw new Error(`Erreur de récupération après acceptation: ${fetchError.message}`);
+    }
+    
+    return updatedRequest as Ami;
   } catch (error) {
     console.error('Erreur lors de l\'acceptation de la demande d\'ami:', error);
     throw error;
