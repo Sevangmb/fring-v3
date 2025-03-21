@@ -45,7 +45,7 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
     resolver: zodResolver(vetementFormSchema),
     defaultValues: initialValues || {
       nom: "",
-      categorie: "",
+      categorie_id: 0,
       couleur: "",
       taille: "",
       description: "",
@@ -113,13 +113,14 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
         // En mode création, utiliser addVetement
         await addVetement({
           nom: formDataWithImage.nom,
-          categorie: formDataWithImage.categorie,
+          categorie_id: formDataWithImage.categorie_id,
           couleur: formDataWithImage.couleur,
           taille: formDataWithImage.taille,
           description: formDataWithImage.description || null,
           marque: formDataWithImage.marque || null,
           image_url: formDataWithImage.image_url || null,
           temperature: formDataWithImage.temperature || null,
+          weatherType: formDataWithImage.weatherType || null
         });
         
         toast({

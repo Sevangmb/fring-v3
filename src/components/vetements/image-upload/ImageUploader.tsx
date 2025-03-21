@@ -35,7 +35,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const handleDeleteImage = () => {
     setImagePreview(null);
     form.setValue('couleur', '');
-    form.setValue('categorie', '');
+    form.setValue('categorie_id', 0);
   };
 
   return (

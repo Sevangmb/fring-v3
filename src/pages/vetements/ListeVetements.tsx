@@ -82,6 +82,12 @@ const ListeVetementsPage = () => {
     }
   }, [user, authLoading, toast, viewMode]);
 
+  // Fonction pour obtenir le nom de la catégorie à partir de son ID
+  const getCategoryNameById = (categoryId: number): string => {
+    const category = categories.find(cat => Number(cat.id) === categoryId);
+    return category ? category.nom : 'Catégorie inconnue';
+  };
+
   // Filtrer les vêtements en fonction de la recherche et des filtres
   const filteredVetements = vetements.filter(vetement => {
     // Filtre de recherche
@@ -90,8 +96,12 @@ const ListeVetementsPage = () => {
                          (vetement.description && vetement.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (vetement.owner_email && vetement.owner_email.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    // Filtre de catégorie
-    const matchesCategorie = categorieFilter ? categorieFilter === "all" ? true : vetement.categorie === categorieFilter : true;
+    // Filtre de catégorie - utiliser les IDs de catégorie
+    const matchesCategorie = categorieFilter 
+      ? categorieFilter === "all" 
+        ? true 
+        : getCategoryNameById(vetement.categorie_id) === categorieFilter 
+      : true;
     
     // Filtre de marque
     const matchesMarque = marqueFilter ? marqueFilter === "all" ? true : vetement.marque === marqueFilter : true;
@@ -100,7 +110,7 @@ const ListeVetementsPage = () => {
     if (activeTab === "tous") {
       return matchesSearch && matchesCategorie && matchesMarque;
     } else {
-      return matchesSearch && matchesCategorie && matchesMarque && vetement.categorie === activeTab;
+      return matchesSearch && matchesCategorie && matchesMarque && getCategoryNameById(vetement.categorie_id) === activeTab;
     }
   });
 

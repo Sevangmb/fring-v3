@@ -92,13 +92,14 @@ const ModifierVetementPage = () => {
       // Préparation des données pour la mise à jour
       const updateData = {
         nom: formData.nom,
-        categorie: formData.categorie,
+        categorie_id: formData.categorie_id,
         couleur: formData.couleur,
         taille: formData.taille,
         description: formData.description || null,
         marque: formData.marque || null,
         image_url: formData.image_url || null,
-        temperature: formData.temperature || null
+        temperature: formData.temperature || null,
+        weatherType: formData.weatherType || null
       };
       
       console.log("Données préparées pour mise à jour:", updateData);

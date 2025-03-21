@@ -1,10 +1,12 @@
+
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import Card, { CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/molecules/Card";
 import { Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
 import { Shirt, Edit, Trash2, TagIcon, User } from "lucide-react";
-import { Vetement } from '@/services/vetement';
+import { Vetement } from '@/services/vetement/types';
+import { useVetements } from '@/hooks/useVetements';
 
 interface VetementCardProps {
   vetement: Vetement;
@@ -14,6 +16,7 @@ interface VetementCardProps {
 
 const VetementCard: React.FC<VetementCardProps> = ({ vetement, onDelete, showOwner = false }) => {
   const navigate = useNavigate();
+  const { categories, getCategoryNameById } = useVetements();
 
   const handleEdit = () => {
     navigate(`/mes-vetements/modifier/${vetement.id}`);
@@ -26,6 +29,9 @@ const VetementCard: React.FC<VetementCardProps> = ({ vetement, onDelete, showOwn
       console.error("Erreur lors de la suppression:", error);
     }
   };
+
+  // Obtenir le nom de la catégorie à partir de son ID
+  const categoryName = getCategoryNameById(vetement.categorie_id);
 
   return (
     <Card className="overflow-hidden h-full flex flex-col" hoverable>
@@ -74,7 +80,7 @@ const VetementCard: React.FC<VetementCardProps> = ({ vetement, onDelete, showOwn
         <div className="flex items-center gap-2 mb-2">
           <TagIcon size={16} className="text-muted-foreground" />
           <Text variant="subtle" className="capitalize">
-            {vetement.categorie}
+            {categoryName}
           </Text>
         </div>
         <CardTitle className="line-clamp-1">{vetement.nom}</CardTitle>

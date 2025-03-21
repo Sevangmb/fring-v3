@@ -28,12 +28,14 @@ export const determinerTypeVetement = async (vetement: Vetement): Promise<Veteme
       }
     }
     
-    // Si pas d'ID de catégorie ou catégorie non trouvée, on utilise le nom de la catégorie
-    const categorieLower = vetement.categorie.toLowerCase();
+    // Si pas d'identifiant valide ou catégorie non trouvée, vérifier le nom du vetement et la description
+    const nomLower = vetement.nom.toLowerCase();
+    const descriptionLower = vetement.description ? vetement.description.toLowerCase() : '';
+    const textToCheck = nomLower + ' ' + descriptionLower;
     
-    if (VETEMENTS_HAUTS.some(h => categorieLower.includes(h))) return VetementType.HAUT;
-    if (VETEMENTS_BAS.some(b => categorieLower.includes(b))) return VetementType.BAS;
-    if (VETEMENTS_CHAUSSURES.some(c => categorieLower.includes(c))) return VetementType.CHAUSSURES;
+    if (VETEMENTS_HAUTS.some(h => textToCheck.includes(h))) return VetementType.HAUT;
+    if (VETEMENTS_BAS.some(b => textToCheck.includes(b))) return VetementType.BAS;
+    if (VETEMENTS_CHAUSSURES.some(c => textToCheck.includes(c))) return VetementType.CHAUSSURES;
     
     return null;
   } catch (err) {
@@ -49,11 +51,18 @@ export const estAdaptePluie = (vetement: Vetement): boolean => {
   // Vérifier si le type de météo du vêtement est explicitement "pluie"
   if (vetement.weatherType === 'pluie') return true;
   
+  // Récupérer le nom de la catégorie si nécessaire
+  let categorieName = '';
+  if (vetement.categorie_id) {
+    // Idéalement, cette fonction devrait être asynchrone et récupérer le nom de la catégorie
+    // Pour simplifier, on utilise juste l'ID dans cet exemple
+    categorieName = `catégorie ${vetement.categorie_id}`;
+  }
+  
   // Vérifier dans le nom, la catégorie et la description
   const nomLower = vetement.nom ? vetement.nom.toLowerCase() : '';
-  const categorieLower = vetement.categorie.toLowerCase();
   const descriptionLower = vetement.description ? vetement.description.toLowerCase() : '';
-  const textToCheck = nomLower + ' ' + categorieLower + ' ' + descriptionLower;
+  const textToCheck = nomLower + ' ' + categorieName + ' ' + descriptionLower;
   
   // Vérifier les mots-clés associés aux vêtements imperméables
   return VETEMENTS_PLUIE.some(v => textToCheck.includes(v));
@@ -72,11 +81,18 @@ export const estAEviterPluie = (vetement: Vetement): boolean => {
   // Si le type de météo est autre chose que "pluie" ou "neige"
   if (vetement.weatherType && vetement.weatherType !== 'normal') return true;
   
+  // Récupérer le nom de la catégorie si nécessaire
+  let categorieName = '';
+  if (vetement.categorie_id) {
+    // Idéalement, cette fonction devrait être asynchrone et récupérer le nom de la catégorie
+    // Pour simplifier, on utilise juste l'ID dans cet exemple
+    categorieName = `catégorie ${vetement.categorie_id}`;
+  }
+  
   // Sinon, vérifier par le nom, la catégorie ou la description
   const nomLower = vetement.nom ? vetement.nom.toLowerCase() : '';
-  const categorieLower = vetement.categorie.toLowerCase();
   const descriptionLower = vetement.description ? vetement.description.toLowerCase() : '';
-  const textToCheck = nomLower + ' ' + categorieLower + ' ' + descriptionLower;
+  const textToCheck = nomLower + ' ' + categorieName + ' ' + descriptionLower;
   
   return VETEMENTS_A_EVITER_PLUIE.some(v => textToCheck.includes(v));
 };

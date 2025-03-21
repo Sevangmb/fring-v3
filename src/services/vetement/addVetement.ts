@@ -47,7 +47,12 @@ export const addVetement = async (vetement: Omit<Vetement, 'id' | 'created_at'>)
       if (value !== undefined && columnSet.has(key) && key !== 'categorie_id') {
         cleanedData[key] = value;
       } else if (value !== undefined && !columnSet.has(key)) {
-        console.log(`La colonne '${key}' n'existe pas dans la table vetements et sera ignorée`);
+        // Cas spécial pour weatherType -> weather_type
+        if (key === 'weatherType' && columnSet.has('weather_type')) {
+          cleanedData['weather_type'] = value;
+        } else {
+          console.log(`La colonne '${key}' n'existe pas dans la table vetements et sera ignorée`);
+        }
       }
     });
     

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 import { Vetement } from "@/services/vetement/types";
 
@@ -7,7 +8,7 @@ import { Vetement } from "@/services/vetement/types";
 export const fetchVetementsStats = async (userId: string): Promise<Vetement[]> => {
   const { data: vetements, error: vetementsError } = await supabase
     .from('vetements')
-    .select('*')
+    .select('*, categories(nom)')
     .eq('user_id', userId);
 
   if (vetementsError) throw vetementsError;
@@ -48,10 +49,11 @@ export const calculateDistributions = (vetements: Vetement[]) => {
   const couleurs: Record<string, number> = {};
   const marques: Record<string, number> = {};
 
-  vetements.forEach((vetement: Vetement) => {
-    // Catégories
-    if (vetement.categorie) {
-      categories[vetement.categorie] = (categories[vetement.categorie] || 0) + 1;
+  vetements.forEach((vetement: any) => {
+    // Catégories - utiliser le nom de la catégorie à partir de la jointure
+    if (vetement.categories && vetement.categories.nom) {
+      const categoryName = vetement.categories.nom;
+      categories[categoryName] = (categories[categoryName] || 0) + 1;
     }
 
     // Couleurs

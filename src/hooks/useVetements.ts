@@ -54,6 +54,12 @@ export const useVetements = () => {
     fetchData();
   };
 
+  // Fonction pour obtenir le nom d'une catégorie à partir de son ID
+  const getCategoryNameById = (categoryId: number): string => {
+    const category = categories.find(cat => cat.id === categoryId);
+    return category ? category.nom : 'Catégorie inconnue';
+  };
+
   return { 
     vetements, 
     categories, 
@@ -61,6 +67,7 @@ export const useVetements = () => {
     categoriesLoading, 
     vetementsError,
     categoriesError,
-    refreshData
+    refreshData,
+    getCategoryNameById
   };
 };

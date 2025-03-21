@@ -4,7 +4,7 @@ import { UseFormReturn } from "react-hook-form";
 import { VetementFormValues } from "./schema/VetementFormSchema";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useDetection } from "@/hooks/useDetection";
-import ImagePreviewArea from "./image-upload/ImagePreviewArea";
+import ImagePreviewArea from "./ImagePreviewArea";
 import DetectionResults from "./detection/DetectionResults";
 import { Button } from "@/components/ui/button";
 import DetectionButton from "./detection/DetectionButton";
@@ -35,7 +35,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const handleDeleteImage = () => {
     setImagePreview(null);
     form.setValue('couleur', '');
-    form.setValue('categorie', '');
+    form.setValue('categorie_id', 0);
   };
 
   return (
