@@ -7,6 +7,7 @@ import {
   performDirectColorQuery, 
   detectDominantColor, 
   analyzeImageDirectly,
+  analyzeImageForBoth,
   detectClothingType
 } from "../huggingface/index.ts";
 import { mapToFrenchColor, mapToFrenchCategory } from './translationMapper.ts';
@@ -30,6 +31,36 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     
     const hf = new HfInference(hfApiKey);
     console.log("HuggingFace client initialized");
+    
+    // Méthode optimisée: analyser directement l'image pour la couleur et la catégorie
+    try {
+      console.log("Trying combined analysis for both color and category...");
+      const combinedResult = await analyzeImageForBoth(imageUrl, hf);
+      
+      if (combinedResult.color !== "unknown" && combinedResult.category !== "unknown") {
+        console.log("Combined analysis successful!");
+        const frenchColor = mapToFrenchColor(combinedResult.color);
+        const frenchCategory = mapToFrenchCategory(combinedResult.category);
+        
+        // Validation finale des résultats
+        const isBottom = isBottomGarment("", combinedResult.category);
+        const validatedColor = validateDetectedColor(frenchColor, isBottom);
+        
+        console.log("Final results from combined analysis:");
+        console.log("- Color:", validatedColor);
+        console.log("- Category:", frenchCategory);
+        
+        return {
+          color: validatedColor,
+          category: frenchCategory || "T-shirt"
+        };
+      }
+    } catch (combinedError) {
+      console.error("Combined analysis failed:", combinedError);
+      // Continuer avec les méthodes séparées en cas d'échec
+    }
+    
+    // Analyse traditionnelle en cas d'échec de l'analyse combinée
     
     // Étape 1: Générer une description de l'image pour l'analyse
     const imageDescription = await generateImageDescription(imageUrl, hf);

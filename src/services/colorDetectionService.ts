@@ -28,20 +28,7 @@ export const detectImageInfo = async (imageUrl: string): Promise<{color: string,
 
     if (error) {
       console.error('Erreur lors de la détection:', error);
-      
-      // Générer des résultats aléatoires en cas d'erreur
-      const randomColors = ['bleu', 'rouge', 'vert', 'jaune', 'noir', 'blanc', 'violet', 'orange'];
-      const randomCategories = ['T-shirt', 'Pantalon', 'Chemise', 'Robe', 'Veste'];
-      
-      const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
-      const randomCategory = randomCategories[Math.floor(Math.random() * randomCategories.length)];
-      
-      console.log('Détection échouée, utilisation des valeurs aléatoires:', randomColor, randomCategory);
-      
-      return {
-        color: randomColor,
-        category: randomCategory
-      };
+      throw new Error(`Erreur lors de la détection: ${error.message}`);
     }
 
     // Afficher les informations détectées dans la console pour déboguer
@@ -50,17 +37,11 @@ export const detectImageInfo = async (imageUrl: string): Promise<{color: string,
     
     // Vérifier que les données retournées sont valides
     if (!data || !data.color || !data.category) {
-      console.warn('Données de détection incomplètes, utilisation de valeurs aléatoires');
-      
-      const randomColors = ['bleu', 'rouge', 'vert', 'jaune', 'noir', 'blanc', 'violet', 'orange'];
-      const randomCategories = ['T-shirt', 'Pantalon', 'Chemise', 'Robe', 'Veste'];
-      
-      const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
-      const randomCategory = randomCategories[Math.floor(Math.random() * randomCategories.length)];
+      console.warn('Données de détection incomplètes, utilisation de valeurs par défaut');
       
       return {
-        color: randomColor,
-        category: randomCategory
+        color: 'bleu',
+        category: 'T-shirt'
       };
     }
     
@@ -70,17 +51,6 @@ export const detectImageInfo = async (imageUrl: string): Promise<{color: string,
     };
   } catch (error) {
     console.error('Erreur lors de la détection:', error);
-    
-    // Générer des résultats aléatoires en cas d'erreur
-    const randomColors = ['bleu', 'rouge', 'vert', 'jaune', 'noir', 'blanc', 'violet', 'orange'];
-    const randomCategories = ['T-shirt', 'Pantalon', 'Chemise', 'Robe', 'Veste'];
-    
-    const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
-    const randomCategory = randomCategories[Math.floor(Math.random() * randomCategories.length)];
-    
-    return {
-      color: randomColor,
-      category: randomCategory
-    };
+    throw error; // Propager l'erreur pour permettre une gestion appropriée en amont
   }
 };
