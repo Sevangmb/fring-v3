@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Type pour un vêtement
@@ -112,6 +111,48 @@ export const initializeDatabase = async () => {
   }
 };
 
+// Fonction pour attribuer tous les vêtements existants à un utilisateur spécifique
+export const assignVetementsToUser = async (userEmail: string): Promise<boolean> => {
+  try {
+    // Récupérer l'ID de l'utilisateur à partir de son email
+    const { data: userData, error: userError } = await supabase
+      .from('auth.users')
+      .select('id')
+      .eq('email', userEmail)
+      .single();
+    
+    if (userError) {
+      console.error('Erreur lors de la récupération de l\'utilisateur:', userError);
+      return false;
+    }
+    
+    if (!userData) {
+      console.error('Utilisateur non trouvé:', userEmail);
+      return false;
+    }
+    
+    const userId = userData.id;
+    console.log('ID de l\'utilisateur récupéré:', userId);
+    
+    // Mettre à jour tous les vêtements sans propriétaire pour les attribuer à cet utilisateur
+    const { error: updateError } = await supabase
+      .from('vetements')
+      .update({ user_id: userId })
+      .is('user_id', null);
+    
+    if (updateError) {
+      console.error('Erreur lors de la mise à jour des vêtements:', updateError);
+      return false;
+    }
+    
+    console.log('Tous les vêtements ont été attribués à l\'utilisateur:', userEmail);
+    return true;
+  } catch (error) {
+    console.error('Erreur lors de l\'attribution des vêtements:', error);
+    return false;
+  }
+};
+
 // Fonction pour récupérer tous les vêtements de l'utilisateur connecté
 export const fetchVetements = async (): Promise<Vetement[]> => {
   try {
@@ -135,8 +176,7 @@ export const fetchVetements = async (): Promise<Vetement[]> => {
     
     if (error) {
       console.error('Erreur lors de la récupération des vêtements:', error);
-      // Renvoyer un tableau vide en cas d'erreur
-      return [];
+      throw error;
     }
     
     console.log('Vêtements récupérés:', data);
@@ -178,7 +218,7 @@ export const fetchVetements = async (): Promise<Vetement[]> => {
     return data as Vetement[];
   } catch (error) {
     console.error('Erreur lors de la récupération des vêtements:', error);
-    return [];
+    throw error;
   }
 };
 

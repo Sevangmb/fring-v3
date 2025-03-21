@@ -6,12 +6,14 @@ import MesVetementsSection from "@/components/organisms/MesVetements";
 import { Heading, Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
 import { Plus, List, LogIn } from "lucide-react";
-import { createVetementsTable } from "@/services/supabaseService";
+import { createVetementsTable, assignVetementsToUser } from "@/services/supabaseService";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const MesVetementsPage = () => {
   const [initialized, setInitialized] = useState(false);
   const { user, loading } = useAuth();
+  const { toast } = useToast();
 
   // Initialiser la base de données au chargement de la page, une seule fois
   useEffect(() => {
@@ -23,6 +25,21 @@ const MesVetementsPage = () => {
         try {
           // Essayer de créer la table directement via SQL, silencieusement
           await createVetementsTable();
+          
+          // Attribuer tous les vêtements existants à l'utilisateur sevans@hotmail.fr
+          const targetUserEmail = 'sevans@hotmail.fr';
+          const assignResult = await assignVetementsToUser(targetUserEmail);
+          
+          if (assignResult) {
+            console.log(`Tous les vêtements ont été attribués à ${targetUserEmail}`);
+            toast({
+              title: "Initialisation réussie",
+              description: `Tous les vêtements ont été attribués à ${targetUserEmail}`,
+            });
+          } else {
+            console.warn(`Impossible d'attribuer les vêtements à ${targetUserEmail}`);
+          }
+          
           // Marquer comme initialisé
           sessionStorage.setItem('dbInitialized', 'true');
           setInitialized(true);
@@ -39,7 +56,7 @@ const MesVetementsPage = () => {
       // Déjà initialisé selon sessionStorage
       setInitialized(true);
     }
-  }, [initialized]);
+  }, [initialized, toast]);
 
   // Affichage conditionnel en fonction de l'état d'authentification
   return (
