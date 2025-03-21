@@ -1,8 +1,18 @@
 
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
-import { ToastProps } from '@/components/ui/toast';
+import { useToast as useToastHook } from '@/hooks/use-toast';
+
+// Définir correctement l'interface pour les propriétés des toasts
+interface ToastOptions {
+  title?: string;
+  description?: string;
+  variant?: "default" | "destructive";
+}
+
+// Fonction pour afficher un toast avec le hook useToast
+// Utilisée en tant que type pour les arguments des fonctions d'authentification
+type ShowToastFn = (options: ToastOptions) => void;
 
 /**
  * Sign in with email and password
@@ -10,7 +20,7 @@ import { ToastProps } from '@/components/ui/toast';
 export const signInWithEmailPassword = async (
   email: string, 
   password: string,
-  showToast: (props: ToastProps) => void
+  showToast: ShowToastFn
 ): Promise<void> => {
   try {
     console.log("Tentative de connexion avec email:", email);
@@ -51,7 +61,7 @@ export const signUpWithEmailPassword = async (
   email: string, 
   password: string, 
   name: string,
-  showToast: (props: ToastProps) => void
+  showToast: ShowToastFn
 ): Promise<void> => {
   try {
     console.log("Tentative d'inscription avec email:", email);
@@ -95,7 +105,7 @@ export const signUpWithEmailPassword = async (
  * Sign out the current user
  */
 export const signOutUser = async (
-  showToast: (props: ToastProps) => void,
+  showToast: ShowToastFn,
   clearUserState: () => void
 ): Promise<void> => {
   try {
