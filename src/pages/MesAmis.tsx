@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { LogIn, UserPlus, Check, X, User, Clock, UserCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { fetchAmis, accepterDemandeAmi, rejeterDemandeAmi, Ami } from "@/services/supabaseService";
+import { fetchAmis, accepterDemandeAmi, rejeterDemandeAmi, Ami } from "@/services/amiService";
 import { useToast } from "@/hooks/use-toast";
 import Card, { CardHeader, CardTitle, CardFooter } from "@/components/molecules/Card";
 
