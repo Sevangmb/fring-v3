@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { HfInference } from 'https://esm.sh/@huggingface/inference@2.3.2';
 import { colorMapping } from "../utils/colorMapping.ts";
@@ -10,8 +9,9 @@ import {
   performDirectColorQuery, 
   detectDominantColor, 
   analyzeImageDirectly,
-  detectClothingType
-} from "./huggingFaceService.ts";
+  detectClothingType,
+  checkIfPantsOrJeans
+} from "./huggingface/index.ts";
 
 /**
  * Mappe la couleur détectée en anglais vers son équivalent français
