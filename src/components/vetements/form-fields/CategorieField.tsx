@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
@@ -36,13 +35,11 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
   const [addingCategory, setAddingCategory] = useState(false);
   const { toast } = useToast();
 
-  // Fonction pour mettre à jour la catégorie sélectionnée
   const handleCategorySelect = (categoryId: number) => {
     form.setValue('categorie_id', categoryId, { shouldValidate: true });
     setOpen(false);
   };
 
-  // Fonction pour ajouter une nouvelle catégorie
   const handleAddCategory = async () => {
     if (!newCategorieValue.trim()) {
       toast({
@@ -62,14 +59,11 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
         description: `La catégorie ${newCategory.nom} a été ajoutée`
       });
       
-      // Mettre à jour le formulaire avec la nouvelle catégorie
       form.setValue('categorie_id', Number(newCategory.id), { shouldValidate: true });
       
-      // Fermer le dialogue
       setAddDialogOpen(false);
       setNewCategorieValue('');
       
-      // Informer le parent que les catégories ont changé
       if (onCategoriesChange) {
         onCategoriesChange();
       }
@@ -85,7 +79,6 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
     }
   };
 
-  // Trouver le nom de la catégorie actuellement sélectionnée
   const selectedCategory = categories.find(cat => Number(cat.id) === categorieId);
   const displayValue = selectedCategory ? selectedCategory.nom : "";
 
@@ -156,8 +149,7 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
                     <DialogTrigger asChild>
                       <CommandItem
                         className="text-primary"
-                        onSelect={(e) => {
-                          e.preventDefault();
+                        onSelect={() => {
                           setAddDialogOpen(true);
                         }}
                       >
