@@ -5,7 +5,7 @@ import { Heading, Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
 import { Shirt, Plus, LogIn, Users } from "lucide-react";
 import VetementCard from '@/components/molecules/VetementCard';
-import { Vetement, deleteVetement } from '@/services/vetementService';
+import { Vetement, deleteVetement } from '@/services/vetement';
 import { useToast } from "@/hooks/use-toast";
 
 interface VetementsListProps {

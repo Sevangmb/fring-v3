@@ -8,7 +8,7 @@ import { ArrowLeft, Plus, LogIn, Users, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   fetchVetements, fetchVetementsAmis, Vetement, createDemoVetementsForUser
-} from "@/services/vetementService";
+} from "@/services/vetement";
 import { fetchCategories, Categorie } from "@/services/categorieService";
 import { fetchMarques, Marque } from "@/services/marqueService";
 import { useAuth } from "@/contexts/AuthContext";

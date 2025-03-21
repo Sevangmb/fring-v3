@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { Vetement } from "@/services/vetementService";
+import { Vetement } from "@/services/vetement";
 import { fetchVetementsStats } from "@/utils/statsUtils";
 import { fetchTenutesCount } from "@/utils/statsUtils";
 import { fetchAmisCount } from "@/utils/statsUtils";

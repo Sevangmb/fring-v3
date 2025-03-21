@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import MesVetements from "./pages/MesVetements";
 import AjouterVetement from "./pages/vetements/AjouterVetement";
 import ListeVetements from "./pages/vetements/ListeVetements";
+import ModifierVetement from "./pages/vetements/ModifierVetement";
 import MesAmis from "./pages/MesAmis";
 import About from "./pages/About";
 
@@ -46,6 +47,7 @@ const App = () => {
               <Route path="/mes-vetements" element={<MesVetements />} />
               <Route path="/mes-vetements/ajouter" element={<AjouterVetement />} />
               <Route path="/mes-vetements/liste" element={<ListeVetements />} />
+              <Route path="/mes-vetements/modifier/:id" element={<ModifierVetement />} />
               <Route path="/mes-amis" element={<MesAmis />} />
               <Route path="/about" element={<About />} />
               

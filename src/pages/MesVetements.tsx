@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/templates/Layout";
@@ -8,7 +9,7 @@ import { Plus, List, LogIn } from "lucide-react";
 import { assignVetementsToUser } from "@/services/databaseService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { createDemoVetementsForUser } from "@/services/vetementService";
+import { createDemoVetementsForUser } from "@/services/vetement";
 import { supabase } from "@/lib/supabase";
 
 const MesVetementsPage = () => {

@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import Card, { CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/molecules/Card";
 import { Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
 import { Shirt, Edit, Trash2, TagIcon, User } from "lucide-react";
-import { Vetement } from '@/services/vetementService';
+import { Vetement } from '@/services/vetement';
 
 interface VetementCardProps {
   vetement: Vetement;

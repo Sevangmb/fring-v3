@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchCategories } from "@/services/categorieService";
 import { fetchMarques } from "@/services/marqueService";
-import { getVetementById, updateVetement } from "@/services/vetementService";
+import { getVetementById, updateVetement } from "@/services/vetement";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import VetementFormContainer from "@/components/vetements/VetementFormContainer";
 

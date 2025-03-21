@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { addVetement } from "@/services/vetementService";
+import { addVetement } from "@/services/vetement";
 import VetementFormFields, { vetementSchema, VetementFormValues } from "./VetementFormFields";
 import ImageUploader from "./ImageUploader";
 import FormActions from "./FormActions";
