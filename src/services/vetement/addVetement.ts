@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { Vetement } from './types';
 
 /**
- * Adds a new vetement to the database
+ * Adds a new vetement to the database, with proper handling of categorie_id
  */
 export const addVetement = async (vetement: Omit<Vetement, 'id' | 'created_at'>): Promise<Vetement> => {
   try {
@@ -14,6 +14,8 @@ export const addVetement = async (vetement: Omit<Vetement, 'id' | 'created_at'>)
       throw new Error('Vous devez être connecté pour ajouter un vêtement');
     }
 
+    console.log('Ajout d\'un vêtement avec les données:', vetement);
+    
     // Vérifier quelles colonnes existent réellement dans la table
     const { data: columns, error: columnsError } = await supabase
       .from('information_schema.columns')
@@ -34,9 +36,9 @@ export const addVetement = async (vetement: Omit<Vetement, 'id' | 'created_at'>)
     console.log('Colonnes disponibles pour ajout:', Array.from(columnSet));
     
     // Ne garder que les propriétés qui existent dans la table
-    const cleanedData = { user_id: userId };
+    const cleanedData: any = { user_id: userId };
     
-    // Si categorie_id est présent, l'utiliser de préférence
+    // Priorité à categorie_id s'il est fourni
     if (vetement.categorie_id) {
       cleanedData['categorie_id'] = vetement.categorie_id;
       
@@ -49,10 +51,15 @@ export const addVetement = async (vetement: Omit<Vetement, 'id' | 'created_at'>)
       
       if (categorieData && categorieData.nom) {
         cleanedData['categorie'] = categorieData.nom;
+      } else if (vetement.categorie) {
+        // Utiliser le nom de catégorie fourni comme fallback
+        cleanedData['categorie'] = vetement.categorie;
       } else {
-        cleanedData['categorie'] = vetement.categorie || 'Inconnu';
+        cleanedData['categorie'] = 'Inconnu';
       }
-    } else if (vetement.categorie) {
+    } 
+    // Si pas de categorie_id mais nom de catégorie fourni
+    else if (vetement.categorie) {
       cleanedData['categorie'] = vetement.categorie;
       
       // Essayer de trouver l'ID de catégorie correspondant

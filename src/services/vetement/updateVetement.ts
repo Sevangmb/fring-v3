@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { Vetement } from './types';
 
 /**
- * Updates an existing vetement with the given ID
+ * Updates an existing vetement with the given ID, handling the relation with categories properly
  */
 export const updateVetement = async (id: number, vetement: Partial<Vetement>): Promise<Vetement> => {
   try {
@@ -35,7 +35,7 @@ export const updateVetement = async (id: number, vetement: Partial<Vetement>): P
     console.log('Données existantes:', JSON.stringify(existingData, null, 2));
     
     // Nettoyer les données avant la mise à jour
-    const cleanedData = {};
+    const cleanedData: any = {};
     
     // Vérifier quelles colonnes existent réellement dans la table
     const { data: columns, error: columnsError } = await supabase
@@ -56,7 +56,7 @@ export const updateVetement = async (id: number, vetement: Partial<Vetement>): P
     
     console.log('Colonnes disponibles:', Array.from(columnSet));
     
-    // Traitement spécial pour categorie et categorie_id
+    // Priorité à categorie_id s'il est fourni
     if (vetement.categorie_id) {
       cleanedData['categorie_id'] = vetement.categorie_id;
       
@@ -69,8 +69,13 @@ export const updateVetement = async (id: number, vetement: Partial<Vetement>): P
       
       if (categorieData && categorieData.nom) {
         cleanedData['categorie'] = categorieData.nom;
+      } else if (vetement.categorie) {
+        // Utiliser le nom de catégorie fourni comme fallback
+        cleanedData['categorie'] = vetement.categorie;
       }
-    } else if (vetement.categorie && vetement.categorie !== existingData.categorie) {
+    } 
+    // Si pas de categorie_id mais nom de catégorie fourni et différent de l'existant
+    else if (vetement.categorie && vetement.categorie !== existingData.categorie) {
       cleanedData['categorie'] = vetement.categorie;
       
       // Essayer de trouver l'ID de catégorie correspondant

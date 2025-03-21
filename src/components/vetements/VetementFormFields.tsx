@@ -22,6 +22,7 @@ interface VetementFormFieldsProps {
 
 /**
  * Tous les champs du formulaire de vêtement
+ * Utilise les relations avec les tables catégories et marques
  */
 const VetementFormFields: React.FC<VetementFormFieldsProps> = ({
   form,
