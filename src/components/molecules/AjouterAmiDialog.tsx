@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, UserPlus, X, Users, AlertCircle } from "lucide-react";
 import { searchUsersByEmail } from "@/services/userService";
-import { envoyerDemandeAmi } from "@/services/amiService";
+import { envoyerDemandeAmi } from "@/services/amis";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { User } from "@/services/userService";

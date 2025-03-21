@@ -1,16 +1,14 @@
-
 import React, { useEffect, useState } from "react";
 import Layout from "@/components/templates/Layout";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
-  fetchAmis, 
+  fetchAmisWithEmails, 
   accepterDemandeAmi, 
   rejeterDemandeAmi, 
-  Ami, 
-  enrichirAmisAvecEmails 
-} from "@/services/amiService";
+  Ami 
+} from "@/services/amis";
 import { useToast } from "@/hooks/use-toast";
 
 import AmisPageHeader from "@/components/organisms/AmisPageHeader";
@@ -35,10 +33,7 @@ const MesAmisPage = () => {
 
     try {
       setLoadingAmis(true);
-      const listeAmis = await fetchAmis();
-      
-      // Enrichir les amis avec les emails
-      const amisEnrichis = await enrichirAmisAvecEmails(listeAmis);
+      const amisEnrichis = await fetchAmisWithEmails();
       setAmis(amisEnrichis);
     } catch (error) {
       console.error("Erreur lors du chargement des amis:", error);
@@ -57,7 +52,6 @@ const MesAmisPage = () => {
   }, [user, toast]);
 
   const handleAccepterDemande = async (amiId: number) => {
-    // Éviter les clics multiples avec verrouillage
     const processKey = `accept-${amiId}`;
     if (processingIds[processKey]) {
       console.log("Demande déjà en cours de traitement, ignorée");
@@ -65,35 +59,27 @@ const MesAmisPage = () => {
     }
     
     try {
-      // Verrouiller le bouton
       setProcessingIds(prev => ({ ...prev, [processKey]: true }));
       
-      // Afficher un toast de chargement
       const loadingToast = toast({
         title: "Traitement en cours",
         description: "Acceptation de la demande d'ami...",
       });
       
-      // Effectuer l'action
       const amiAccepte = await accepterDemandeAmi(amiId);
       
-      // Fermer le toast de chargement
       if (loadingToast) {
         loadingToast.dismiss();
       }
       
-      // Vérifier le résultat
       if (amiAccepte) {
-        // Succès
         toast({
           title: "Demande acceptée",
           description: "Vous êtes maintenant amis !",
         });
         
-        // Recharger la liste des amis
         await chargerAmis();
       } else {
-        // Erreur sans message spécifique
         toast({
           title: "Erreur",
           description: "La demande n'a pas pu être acceptée. Veuillez réessayer.",
@@ -101,7 +87,6 @@ const MesAmisPage = () => {
         });
       }
     } catch (error: any) {
-      // Gestion des erreurs avec message spécifique
       console.error("Erreur lors de l'acceptation de la demande:", error);
       toast({
         title: "Erreur",
@@ -109,7 +94,6 @@ const MesAmisPage = () => {
         variant: "destructive",
       });
     } finally {
-      // Déverrouiller le bouton
       setProcessingIds(prev => ({ ...prev, [processKey]: false }));
     }
   };
@@ -156,7 +140,6 @@ const MesAmisPage = () => {
     await chargerAmis();
   };
 
-  // Filtrer les amis par statut
   const demandesRecues = amis.filter(ami => 
     ami.status === 'pending' && ami.ami_id === user?.id
   );
