@@ -8,10 +8,9 @@ export interface Ami {
   ami_id: string;
   status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
+  updated_at: string;
   // Données supplémentaires pour l'affichage
-  nom?: string;
   email?: string;
-  avatar_url?: string;
 }
 
 // Fonctions pour gérer les amis
