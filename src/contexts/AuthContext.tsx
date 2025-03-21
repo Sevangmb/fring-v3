@@ -25,27 +25,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const setData = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession()
-      if (error) {
-        console.error(error)
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (error) {
+          console.warn('Erreur lors de la récupération de la session:', error.message)
+        }
+        setSession(session)
+        setUser(session?.user ?? null)
+      } catch (error) {
+        console.warn('Erreur lors de l\'initialisation de l\'authentification:', error)
+      } finally {
+        setLoading(false)
       }
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
     }
 
     setData()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session)
-        setUser(session?.user ?? null)
-        setLoading(false)
-      }
-    )
+    try {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          setSession(session)
+          setUser(session?.user ?? null)
+          setLoading(false)
+        }
+      )
 
-    return () => {
-      subscription.unsubscribe()
+      return () => {
+        subscription.unsubscribe()
+      }
+    } catch (error) {
+      console.warn('Erreur lors de la configuration des événements d\'authentification:', error)
+      setLoading(false)
+      return () => {}
     }
   }, [])
 
@@ -71,6 +82,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return Promise.resolve()
     } catch (error) {
       console.error(error)
+      toast({
+        title: "Erreur de connexion",
+        description: "Une erreur est survenue lors de la connexion",
+        variant: "destructive",
+      })
       return Promise.reject(error)
     }
   }
@@ -103,6 +119,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return Promise.resolve()
     } catch (error) {
       console.error(error)
+      toast({
+        title: "Erreur d'inscription",
+        description: "Une erreur est survenue lors de l'inscription",
+        variant: "destructive",
+      })
       return Promise.reject(error)
     }
   }
@@ -129,6 +150,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return Promise.resolve()
     } catch (error) {
       console.error(error)
+      toast({
+        title: "Erreur de déconnexion",
+        description: "Une erreur est survenue lors de la déconnexion",
+        variant: "destructive",
+      })
       return Promise.reject(error)
     }
   }
