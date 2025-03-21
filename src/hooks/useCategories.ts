@@ -73,7 +73,7 @@ export const useCategories = ({
         description: `La catégorie ${newCategory.nom} a été ajoutée`
       });
       
-      // Update local categories list
+      // Update local categories list safely
       setCategories((prev) => [...(prev || []), newCategory]);
       
       if (onCategoryAdded) {

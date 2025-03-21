@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandSeparator } from "@/components/ui/command";
+import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandSeparator, CommandList } from "@/components/ui/command";
 import { FormControl } from "@/components/ui/form";
 import { Categorie } from "../../schema/VetementFormSchema";
 import { cn } from "@/lib/utils";
@@ -22,7 +22,7 @@ interface CategorySelectorProps {
 export const CategorySelector: React.FC<CategorySelectorProps> = ({
   value,
   onChange,
-  categories = [], // Add default empty array here
+  categories = [], // Default empty array
   displayValue,
   loadingCategories,
   disabled = false,
@@ -60,36 +60,44 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
       <PopoverContent className="w-full p-0">
         <Command>
           <CommandInput placeholder="Rechercher une catégorie..." />
-          <CommandEmpty>
-            <p className="py-2 px-4 text-sm text-muted-foreground">Aucune catégorie trouvée.</p>
-          </CommandEmpty>
-          {!loadingCategories && safeCategories.length > 0 ? (
-            <CommandGroup className="max-h-64 overflow-auto">
-              {safeCategories.map((category) => (
-                <CommandItem
-                  key={String(category.id)}
-                  value={String(category.nom)}
-                  onSelect={() => handleCategorySelect(Number(category.id))}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === Number(category.id) ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {category.nom}
-                </CommandItem>
-              ))}
+          <CommandList>
+            <CommandEmpty>
+              <p className="py-2 px-4 text-sm text-muted-foreground">Aucune catégorie trouvée.</p>
+            </CommandEmpty>
+            
+            {loadingCategories ? (
+              <div className="py-6 text-center text-sm text-muted-foreground">
+                Chargement des catégories...
+              </div>
+            ) : safeCategories.length > 0 ? (
+              <CommandGroup className="max-h-64 overflow-auto">
+                {safeCategories.map((category) => (
+                  <CommandItem
+                    key={String(category.id)}
+                    value={String(category.nom)}
+                    onSelect={() => handleCategorySelect(Number(category.id))}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value === Number(category.id) ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {category.nom}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            ) : (
+              <div className="py-6 text-center text-sm text-muted-foreground">
+                Aucune catégorie disponible
+              </div>
+            )}
+            
+            <CommandSeparator />
+            <CommandGroup>
+              <AddCategoryCommand onAddCategory={onOpenAddDialog} />
             </CommandGroup>
-          ) : (
-            <div className="py-6 text-center text-sm text-muted-foreground">
-              {loadingCategories ? "Chargement des catégories..." : "Aucune catégorie disponible"}
-            </div>
-          )}
-          <CommandSeparator />
-          <CommandGroup>
-            <AddCategoryCommand onAddCategory={onOpenAddDialog} />
-          </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>

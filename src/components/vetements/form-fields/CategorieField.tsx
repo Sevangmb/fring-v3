@@ -37,7 +37,7 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
     onCategoriesChange
   });
 
-  const selectedCategory = categories.find(cat => Number(cat.id) === categorieId);
+  const selectedCategory = Array.isArray(categories) ? categories.find(cat => Number(cat.id) === categorieId) : undefined;
   const displayValue = selectedCategory ? selectedCategory.nom : "";
 
   return (
@@ -60,7 +60,7 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
             onChange={(categoryId) => {
               form.setValue('categorie_id', categoryId, { shouldValidate: true });
             }}
-            categories={categories}
+            categories={categories || []}
             displayValue={displayValue}
             loadingCategories={loadingCategories}
             disabled={loading}
