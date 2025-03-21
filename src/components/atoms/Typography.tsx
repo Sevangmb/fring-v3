@@ -10,6 +10,7 @@ interface TextProps {
   weight?: "light" | "regular" | "medium" | "semibold" | "bold";
   align?: "left" | "center" | "right";
   color?: string;
+  style?: React.CSSProperties;
 }
 
 export const Text = ({
@@ -20,6 +21,7 @@ export const Text = ({
   weight = "regular",
   align = "left",
   color,
+  style,
   ...props
 }: TextProps) => {
   const baseStyles = "tracking-tight transition-colors duration-200";
@@ -61,6 +63,7 @@ export const Text = ({
         color,
         className
       )}
+      style={style}
       {...props}
     >
       {children}
@@ -70,7 +73,8 @@ export const Text = ({
 
 export const Heading = (props: TextProps) => {
   const { variant = "h2", as } = props;
-  const Component = as || variant;
+  // Use the correct element type for headings
+  const Component = as || (variant.startsWith('h') ? variant : 'h2');
   
   return <Text as={Component} variant={variant} weight="bold" {...props} />;
 };

@@ -1,6 +1,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import { Slot } from "@radix-ui/react-slot";
 
 type ButtonProps = {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ type ButtonProps = {
   type?: "button" | "submit" | "reset";
   icon?: React.ReactNode;
   iconPosition?: "left" | "right";
+  asChild?: boolean;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 export const Button = ({
@@ -24,6 +26,7 @@ export const Button = ({
   type = "button",
   icon,
   iconPosition = "left",
+  asChild = false,
   ...props
 }: ButtonProps) => {
   const baseStyles = "relative inline-flex items-center justify-center font-medium transition-all duration-200 ease-in-out rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary";
@@ -49,8 +52,10 @@ export const Button = ({
       : "inline-flex flex-row-reverse items-center gap-2"
   ) : "";
 
+  const Comp = asChild ? Slot : "button";
+
   return (
-    <button
+    <Comp
       className={cn(
         baseStyles,
         variantStyles[variant],
@@ -66,7 +71,7 @@ export const Button = ({
     >
       {icon && icon}
       {children}
-    </button>
+    </Comp>
   );
 };
 

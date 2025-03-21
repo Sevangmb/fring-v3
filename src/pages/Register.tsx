@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import Layout from "@/components/templates/Layout";
-import { Card } from "@/components/molecules/Card"; 
+import Card from "@/components/molecules/Card";
 import { Heading, Text } from "@/components/atoms/Typography";
 import Input from "@/components/atoms/Input";
 import Button from "@/components/atoms/Button";

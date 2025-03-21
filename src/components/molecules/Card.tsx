@@ -10,9 +10,10 @@ interface CardProps {
   hoverable?: boolean;
   clickable?: boolean;
   onClick?: () => void;
+  style?: React.CSSProperties;
 }
 
-const Card = ({
+export const Card = ({
   children,
   className,
   variant = "default",
@@ -20,6 +21,7 @@ const Card = ({
   hoverable = false,
   clickable = false,
   onClick,
+  style,
   ...props
 }: CardProps) => {
   const baseStyles = "rounded-lg transition-all duration-300";
@@ -54,6 +56,7 @@ const Card = ({
       )}
       onClick={clickable ? onClick : undefined}
       role={clickable ? "button" : undefined}
+      style={style}
       {...props}
     >
       {children}
