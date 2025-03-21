@@ -1,5 +1,8 @@
 
-import { createClient } from 'https://esm.sh/@mistralai/mistralai@0.0.9';
+/**
+ * Utilise l'API Mistral pour analyser les images via une implémentation directe de l'API
+ * plutôt que d'utiliser la bibliothèque client qui n'est pas compatible avec Deno
+ */
 
 /**
  * Détecte la couleur et la catégorie d'un vêtement dans une image
@@ -10,20 +13,19 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
   try {
     console.log("Starting clothing detection process with Mistral AI");
     
-    // Initialiser l'API Mistral avec la clé API
+    // Récupérer la clé API Mistral de l'environnement
     const mistralApiKey = Deno.env.get('MISTRAL_API_KEY');
     if (!mistralApiKey) {
       console.error("MISTRAL_API_KEY not found in environment variables");
       throw new Error("Configuration API Mistral manquante");
     }
     
-    const mistral = createClient(mistralApiKey);
-    console.log("Mistral AI client initialized");
+    console.log("Mistral AI API key retrieved from environment");
 
     // Préparer l'image au bon format (gestion du base64)
     const processedImage = imageUrl;
     
-    // Utiliser Mistral AI pour la détection
+    // Utiliser l'API Mistral directement au lieu d'utiliser la bibliothèque client
     const imageAnalysisPrompt = `
     Observe attentivement cette image de vêtement et réponds UNIQUEMENT à ces deux questions:
     1. Quelle est la COULEUR PRINCIPALE du vêtement? (un seul mot)
@@ -36,28 +38,46 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     Sois très précis et réponds UNIQUEMENT dans ce format.
     `;
     
-    console.log("Sending request to Mistral AI API");
-    const response = await mistral.chat({
-      model: "mistral-large-latest", // Utilisation du modèle Mistral le plus récent
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: imageAnalysisPrompt
-            },
-            {
-              type: "image_url",
-              image_url: processedImage
-            }
-          ]
-        }
-      ],
-      temperature: 0.1 // Température réduite pour plus de précision
+    console.log("Preparing request to Mistral AI API");
+    
+    // Faire une requête directe à l'API Mistral au lieu d'utiliser la bibliothèque
+    const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${mistralApiKey}`
+      },
+      body: JSON.stringify({
+        model: "mistral-large-latest", // Utilisation du modèle Mistral le plus récent
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: imageAnalysisPrompt
+              },
+              {
+                type: "image_url",
+                image_url: processedImage
+              }
+            ]
+          }
+        ],
+        temperature: 0.1 // Température réduite pour plus de précision
+      })
     });
     
-    const generatedText = response.choices[0].message.content.toLowerCase();
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Mistral AI API error:", response.status, errorText);
+      throw new Error(`Erreur API Mistral: ${response.status} ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log("Mistral AI API response received");
+    
+    const generatedText = result.choices[0].message.content.toLowerCase();
     console.log("Mistral AI detection response:", generatedText);
     
     // Extraire la couleur avec regex
