@@ -18,22 +18,36 @@ export const updateVetement = async (id: number, vetement: Partial<Vetement>): P
 
     console.log('===== DÉBUT MISE À JOUR VÊTEMENT =====');
     console.log('ID:', id);
-    console.log('Données reçues:', JSON.stringify(vetement, null, 2));
+    console.log('Données envoyées pour mise à jour:', JSON.stringify(vetement, null, 2));
     
-    // APPROCHE DIRECTE : Envoyer les données telles quelles à Supabase
+    // Récupérer les données actuelles du vêtement pour ne mettre à jour que ce qui a changé
+    const { data: existingData, error: fetchError } = await supabase
+      .from('vetements')
+      .select('*')
+      .eq('id', id)
+      .single();
+      
+    if (fetchError) {
+      console.error('ERREUR lors de la récupération du vêtement:', fetchError);
+      throw fetchError;
+    }
+    
+    console.log('Données existantes:', JSON.stringify(existingData, null, 2));
+    
+    // Faire la mise à jour avec les nouvelles données
     const { data, error } = await supabase
       .from('vetements')
       .update(vetement)
       .eq('id', id)
-      .select()
+      .select('*')
       .single();
     
     if (error) {
-      console.error('ERREUR Supabase:', error);
+      console.error('ERREUR Supabase lors de la mise à jour:', error);
       throw error;
     }
     
-    console.log('Réponse Supabase:', data);
+    console.log('Réponse Supabase après mise à jour:', data);
     console.log('===== FIN MISE À JOUR VÊTEMENT =====');
     
     return data as Vetement;

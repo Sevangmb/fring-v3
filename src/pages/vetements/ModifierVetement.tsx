@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/templates/Layout";
@@ -78,33 +77,29 @@ const ModifierVetementPage = () => {
     loadData();
   }, [vetementId, user, authLoading, navigate, toast]);
 
-  // NOUVELLE IMPLÉMENTATION: Fonction de mise à jour directe
+  // Fonction de mise à jour avec gestion d'erreur simplifiée
   const handleUpdate = async (updatedData: VetementFormValues) => {
     try {
       setIsLoading(true);
       console.log("====== DÉBUT SOUMISSION DU FORMULAIRE ======");
-      console.log("Données du formulaire:", updatedData);
+      console.log("Données complètes du formulaire:", updatedData);
       
       if (!vetementId) {
         throw new Error("ID de vêtement manquant");
       }
       
-      // Collecte directe des données sans transformation
-      const dataToUpdate = {
+      // Envoi direct des données au service de mise à jour
+      const result = await updateVetement(vetementId, {
         nom: updatedData.nom,
         categorie: updatedData.categorie,
         couleur: updatedData.couleur,
         taille: updatedData.taille,
-        description: updatedData.description || null,
-        marque: updatedData.marque || null,
-        image_url: updatedData.image_url || null
-      };
+        description: updatedData.description,
+        marque: updatedData.marque,
+        image_url: updatedData.image_url
+      });
       
-      console.log("Données envoyées au service:", dataToUpdate);
-      
-      // Appel direct au service de mise à jour
-      await updateVetement(vetementId, dataToUpdate);
-      
+      console.log("Résultat de la mise à jour:", result);
       console.log("====== FIN SOUMISSION DU FORMULAIRE ======");
       
       toast({
@@ -117,7 +112,7 @@ const ModifierVetementPage = () => {
       console.error("Erreur lors de la mise à jour:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de mettre à jour le vêtement.",
+        description: "Impossible de mettre à jour le vêtement. Veuillez réessayer.",
         variant: "destructive",
       });
     } finally {

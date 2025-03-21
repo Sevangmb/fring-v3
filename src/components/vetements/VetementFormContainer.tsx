@@ -54,21 +54,32 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
     },
   });
   
+  // Synchroniser les valeurs initiales lorsqu'elles changent
+  useEffect(() => {
+    if (initialValues) {
+      console.log("Initialisation du formulaire avec:", initialValues);
+      
+      // Réinitialiser le formulaire avec les nouvelles valeurs
+      Object.entries(initialValues).forEach(([key, value]) => {
+        if (value !== undefined) {
+          form.setValue(key as keyof VetementFormValues, value);
+        }
+      });
+      
+      // Mise à jour de l'aperçu de l'image si disponible
+      if (initialValues.image_url) {
+        setImagePreview(initialValues.image_url);
+      }
+    }
+  }, [initialValues, form]);
+  
   // Debug des valeurs du formulaire
-  React.useEffect(() => {
+  useEffect(() => {
     const subscription = form.watch((value, { name, type }) => {
       console.log("Form value changed:", name, value);
     });
     return () => subscription.unsubscribe();
   }, [form]);
-
-  // Mettre à jour l'aperçu de l'image si initialValues contient une image_url
-  useEffect(() => {
-    if (initialValues?.image_url) {
-      console.log("Initialisation de l'aperçu de l'image:", initialValues.image_url);
-      setImagePreview(initialValues.image_url);
-    }
-  }, [initialValues]);
 
   const handleSubmit = async (data: VetementFormValues) => {
     if (!user) {
@@ -84,29 +95,29 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
     try {
       setIsSubmitting(true);
       console.log("===== DÉBUT SOUMISSION FORMULAIRE =====");
+      console.log("Données brutes du formulaire:", data);
       
-      // Préparation des données avec l'image_url
-      const vetementData = {
+      // S'assurer que l'image_url est correctement définie
+      const formDataWithImage = {
         ...data,
-        // S'assurer que l'image_url est correctement défini
-        image_url: imagePreview,
+        image_url: imagePreview || data.image_url || null,
       };
       
-      console.log("Données du formulaire complètes:", vetementData);
+      console.log("Données complètes avec image:", formDataWithImage);
       
       if (mode === "update" && onSubmit) {
         // En mode modification, utiliser la fonction onSubmit personnalisée
-        await onSubmit(vetementData);
+        await onSubmit(formDataWithImage);
       } else {
         // En mode création, utiliser addVetement
         await addVetement({
-          nom: data.nom,
-          categorie: data.categorie,
-          couleur: data.couleur,
-          taille: data.taille,
-          description: data.description || null,
-          marque: data.marque || null,
-          image_url: imagePreview || null,
+          nom: formDataWithImage.nom,
+          categorie: formDataWithImage.categorie,
+          couleur: formDataWithImage.couleur,
+          taille: formDataWithImage.taille,
+          description: formDataWithImage.description || null,
+          marque: formDataWithImage.marque || null,
+          image_url: formDataWithImage.image_url || null,
         });
         
         toast({
@@ -157,7 +168,7 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
             
             <FormActions
               isSubmitting={isSubmitting}
-              onCancel={() => navigate("/mes-vetements")}
+              onCancel={() => navigate("/mes-vetements/liste")}
               submitLabel={submitLabel || (mode === "create" ? "Ajouter le vêtement" : "Enregistrer les modifications")}
               submitIcon={submitIcon}
             />
