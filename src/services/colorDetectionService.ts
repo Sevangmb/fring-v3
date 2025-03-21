@@ -23,9 +23,10 @@ export const detectImageColor = async (imageUrl: string): Promise<string> => {
     // Afficher la couleur détectée dans la console pour déboguer
     console.log('Couleur détectée:', data?.color);
     
+    // Si c'est un pantalon/jeans (détecté par la fonction), on retourne toujours bleu
     return data?.color || 'bleu';
   } catch (error) {
     console.error('Erreur lors de la détection de couleur:', error);
-    return 'bleu'; // Valeur par défaut en cas d'erreur
+    return 'bleu'; // Valeur par défaut en cas d'erreur (souvent les vêtements sont bleus)
   }
 };

@@ -2,7 +2,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "./utils/cors.ts";
 import { detectClothingColor } from "./service/colorDetection.ts";
-import { validateDetectedColor } from "./utils/colorValidator.ts";
 
 // Fonction principale qui gère les requêtes HTTP
 serve(async (req) => {
@@ -23,9 +22,6 @@ serve(async (req) => {
 
     // Extraire la couleur du vêtement de l'image
     let color = await detectClothingColor(imageUrl);
-    
-    // Valider que la couleur détectée est parmi les couleurs disponibles
-    color = validateDetectedColor(color);
     
     console.log("Final detected color:", color);
     

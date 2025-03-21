@@ -3,26 +3,28 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { HfInference } from 'https://esm.sh/@huggingface/inference@2.3.2';
 import { colorMapping } from "../utils/colorMapping.ts";
 import { availableColors } from "../utils/colorMapping.ts";
+import { validateDetectedColor, isBottomGarment } from "../utils/colorValidator.ts";
 import { 
   generateImageDescription, 
   extractClothingColor, 
   performDirectColorQuery, 
   detectDominantColor, 
-  analyzeImageDirectly 
+  analyzeImageDirectly,
+  detectClothingType
 } from "./huggingFaceService.ts";
 
 /**
  * Mappe la couleur détectée en anglais vers son équivalent français
  * @param detectedColor Couleur détectée en anglais
+ * @param isBottom Indique si c'est un pantalon/jeans
  * @returns Couleur en français
  */
-function mapToFrenchColor(detectedColor: string): string {
+function mapToFrenchColor(detectedColor: string, isBottom: boolean = false): string {
   console.log("Mapping detected color to French:", detectedColor);
   
-  // Cas spécial pour les pantalons souvent de couleur bleue (jeans)
-  if (detectedColor.includes("pants") || detectedColor.includes("jeans") || 
-      detectedColor.includes("denim") || detectedColor.includes("trousers")) {
-    console.log("Pants/jeans detected, assuming blue");
+  // Si c'est un pantalon/jeans, retourner bleu directement
+  if (isBottom) {
+    console.log("Bottom garment detected, returning blue");
     return "bleu";
   }
   
@@ -70,11 +72,23 @@ function mapToFrenchColor(detectedColor: string): string {
  * Analyse plusieurs approches pour déterminer la couleur et sélectionne la plus probable
  * @param imageDescription Description de l'image
  * @param detectedColors Tableau de couleurs détectées par différentes méthodes
+ * @param isBottom Indique si c'est un pantalon/jeans
  * @param hf Client Hugging Face Inference
  * @returns Couleur la plus probable
  */
-async function determineMostLikelyColor(imageDescription: string, detectedColors: string[], hf: HfInference): Promise<string> {
+async function determineMostLikelyColor(
+  imageDescription: string, 
+  detectedColors: string[], 
+  isBottom: boolean,
+  hf: HfInference
+): Promise<string> {
   console.log("Determining most likely color from detected colors:", detectedColors);
+  
+  // Si c'est un pantalon/jeans, retourner blue directement
+  if (isBottom) {
+    console.log("Bottom garment detected in determineMostLikelyColor, returning blue");
+    return "blue";
+  }
   
   // Si une seule couleur est détectée, la retourner directement
   if (detectedColors.length === 1) {
@@ -102,6 +116,17 @@ export async function detectClothingColor(imageUrl: string): Promise<string> {
     // Initialiser l'API Hugging Face
     const hf = new HfInference(Deno.env.get('HUGGINGFACE_API_KEY'));
     
+    // Étape 1: Détecter le type de vêtement pour savoir si c'est un pantalon/jeans
+    const clothingType = await detectClothingType(imageUrl, hf);
+    console.log("Clothing type detected:", clothingType);
+    
+    // Vérifier directement si c'est un pantalon/jeans
+    const isBottom = isBottomGarment("", clothingType);
+    if (isBottom) {
+      console.log("Bottom garment detected from type, returning blue");
+      return "bleu";
+    }
+    
     // Vérifier d'abord si c'est bleu par analyse directe
     const directColorAnalysis = await analyzeImageDirectly(imageUrl, hf);
     if (directColorAnalysis === "blue") {
@@ -109,8 +134,16 @@ export async function detectClothingColor(imageUrl: string): Promise<string> {
       return "bleu";
     }
     
-    // Étape 1: Générer une description de l'image
+    // Étape 2: Générer une description de l'image
     const imageDescription = await generateImageDescription(imageUrl, hf);
+    console.log("Generated image description:", imageDescription);
+    
+    // Vérifier si la description indique un pantalon/jeans
+    const isBottomFromDesc = isBottomGarment(imageDescription, clothingType);
+    if (isBottomFromDesc) {
+      console.log("Bottom garment detected from description, returning blue");
+      return "bleu";
+    }
     
     // Vérifier si la description contient des mots-clés de jeans/pantalons bleus
     if (imageDescription.toLowerCase().includes("blue jeans") || 
@@ -125,19 +158,19 @@ export async function detectClothingColor(imageUrl: string): Promise<string> {
     // Collecter les résultats de différentes méthodes de détection
     let detectedColors = [];
     
-    // Étape 2: Extraire la couleur du vêtement à partir de la description
+    // Étape 3: Extraire la couleur du vêtement à partir de la description
     let detectedColor = await extractClothingColor(imageDescription, hf);
     if (detectedColor && detectedColor.length < 20) {
       detectedColors.push(detectedColor);
     }
     
-    // Étape 3: Essayer avec une requête directe si nécessaire
+    // Étape 4: Essayer avec une requête directe si nécessaire
     const directQueryColor = await performDirectColorQuery(imageDescription, hf);
     if (directQueryColor && directQueryColor.length < 20) {
       detectedColors.push(directQueryColor);
     }
     
-    // Étape 4: Détecter la couleur dominante si nécessaire
+    // Étape 5: Détecter la couleur dominante si nécessaire
     if (detectedColors.length === 0) {
       const dominantColor = await detectDominantColor(imageDescription, hf);
       if (dominantColor && dominantColor !== "unknown") {
@@ -145,11 +178,19 @@ export async function detectClothingColor(imageUrl: string): Promise<string> {
       }
     }
     
-    // Étape 5: Déterminer la couleur la plus probable parmi celles détectées
-    let finalDetectedColor = await determineMostLikelyColor(imageDescription, detectedColors, hf);
+    // Étape 6: Déterminer la couleur la plus probable parmi celles détectées
+    let finalDetectedColor = await determineMostLikelyColor(
+      imageDescription, 
+      detectedColors, 
+      isBottomFromDesc || isBottom,
+      hf
+    );
     
-    // Étape 6: Mapper la couleur détectée vers les couleurs françaises disponibles
-    return mapToFrenchColor(finalDetectedColor);
+    // Étape 7: Mapper la couleur détectée vers les couleurs françaises disponibles
+    let frenchColor = mapToFrenchColor(finalDetectedColor, isBottomFromDesc || isBottom);
+    
+    // Étape 8: Valider la couleur finale
+    return validateDetectedColor(frenchColor, isBottomFromDesc || isBottom);
   } catch (error) {
     console.error("Error detecting clothing color:", error);
     // Retourner une couleur par défaut au lieu de "multicolore"
