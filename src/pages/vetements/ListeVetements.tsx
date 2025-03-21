@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import Layout from "@/components/templates/Layout";
 import { useToast } from "@/hooks/use-toast";
@@ -30,8 +29,8 @@ const ListeVetementsPage = () => {
   const [viewMode, setViewMode] = useState<'mes-vetements' | 'vetements-amis'>('mes-vetements');
   const [error, setError] = useState<string | null>(null);
   const { filteredAmis, loadingAmis } = useAmis();
+  const [selectedFriendEmail, setSelectedFriendEmail] = useState<string | undefined>(undefined);
 
-  // Récupérer les vêtements, catégories et marques depuis Supabase
   useEffect(() => {
     const loadData = async () => {
       if (!user) {
@@ -45,21 +44,26 @@ const ListeVetementsPage = () => {
         
         console.log("Chargement des données pour l'utilisateur:", user.id);
         
-        // Récupérer les catégories et marques
         const [categoriesData, marquesData] = await Promise.all([
           fetchCategories(),
           fetchMarques()
         ]);
         
-        // Récupérer les vêtements selon le mode d'affichage et le filtre d'ami
         let vetementsData: Vetement[] = [];
         if (viewMode === 'mes-vetements') {
           vetementsData = await fetchVetements();
         } else {
-          // Si un ami spécifique est sélectionné, filtrer par son ID
-          // Utiliser undefined au lieu de chaîne vide pour récupérer tous les vêtements des amis
           const friendIdParam = friendFilter !== "all" ? friendFilter : undefined;
           vetementsData = await fetchVetementsAmis(friendIdParam);
+          
+          if (friendFilter !== "all") {
+            const selectedFriend = acceptedFriends.find(ami => 
+              (ami.user_id === ami.ami_id ? ami.ami_id : ami.user_id) === friendFilter
+            );
+            setSelectedFriendEmail(selectedFriend?.email);
+          } else {
+            setSelectedFriendEmail(undefined);
+          }
         }
         
         console.log("Vêtements récupérés:", vetementsData.length);
@@ -87,34 +91,27 @@ const ListeVetementsPage = () => {
     }
   }, [user, authLoading, toast, viewMode, friendFilter]);
 
-  // Liste des amis acceptés à utiliser dans le filtre
   const acceptedFriends = filteredAmis?.amisAcceptes || [];
 
-  // Fonction pour obtenir le nom de la catégorie à partir de son ID
   const getCategoryNameById = (categoryId: number): string => {
     const category = categories.find(cat => Number(cat.id) === categoryId);
     return category ? category.nom : 'Catégorie inconnue';
   };
 
-  // Filtrer les vêtements en fonction de la recherche et des filtres
   const filteredVetements = vetements.filter(vetement => {
-    // Filtre de recherche
     const matchesSearch = vetement.nom.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          (vetement.marque && vetement.marque.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (vetement.description && vetement.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (vetement.owner_email && vetement.owner_email.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    // Filtre de catégorie - utiliser les IDs de catégorie
     const matchesCategorie = categorieFilter 
       ? categorieFilter === "all" 
         ? true 
         : getCategoryNameById(vetement.categorie_id) === categorieFilter 
       : true;
     
-    // Filtre de marque
     const matchesMarque = marqueFilter ? marqueFilter === "all" ? true : vetement.marque === marqueFilter : true;
     
-    // Filtre par onglet
     if (activeTab === "tous") {
       return matchesSearch && matchesCategorie && matchesMarque;
     } else {
@@ -128,7 +125,6 @@ const ListeVetementsPage = () => {
 
   const handleViewModeChange = (mode: 'mes-vetements' | 'vetements-amis') => {
     setViewMode(mode);
-    // Réinitialiser les filtres lors du changement de mode
     setActiveTab("tous");
     setSearchTerm("");
     setCategorieFilter("");
@@ -140,19 +136,18 @@ const ListeVetementsPage = () => {
     <Layout>
       <VetementsPageHeader 
         isAuthenticated={!!user} 
-        viewMode={viewMode} 
+        viewMode={viewMode}
+        selectedFriendEmail={selectedFriendEmail}
       />
       
       <div className="container mx-auto px-4 py-8">
         {user && (
           <>
-            {/* Sélecteur de mode d'affichage */}
             <ViewModeSelector 
               viewMode={viewMode}
               onViewModeChange={handleViewModeChange}
             />
 
-            {/* Barre de recherche et filtres */}
             <SearchFilterBar 
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
@@ -168,7 +163,6 @@ const ListeVetementsPage = () => {
               friends={acceptedFriends}
             />
             
-            {/* Onglets par catégorie */}
             <CategoryTabs 
               categories={categories}
               activeTab={activeTab}
@@ -184,7 +178,6 @@ const ListeVetementsPage = () => {
               />
             </CategoryTabs>
             
-            {/* Bouton flottant pour mobile */}
             <FloatingAddButton visible={viewMode === 'mes-vetements'} />
           </>
         )}

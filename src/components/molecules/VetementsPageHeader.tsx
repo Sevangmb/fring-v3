@@ -3,16 +3,19 @@ import React from 'react';
 import { useNavigate, Link } from "react-router-dom";
 import { Heading, Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, LogIn } from "lucide-react";
+import { ArrowLeft, LogIn, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface VetementsPageHeaderProps {
   isAuthenticated: boolean;
   viewMode: 'mes-vetements' | 'vetements-amis';
+  selectedFriendEmail?: string;
 }
 
 const VetementsPageHeader: React.FC<VetementsPageHeaderProps> = ({ 
   isAuthenticated,
-  viewMode
+  viewMode,
+  selectedFriendEmail
 }) => {
   const navigate = useNavigate();
 
@@ -29,12 +32,21 @@ const VetementsPageHeader: React.FC<VetementsPageHeaderProps> = ({
             <ArrowLeft size={20} />
           </Button>
           <Heading>Liste des vêtements</Heading>
+          
+          {viewMode === 'vetements-amis' && selectedFriendEmail && (
+            <Badge variant="secondary" className="ml-2 flex items-center gap-1">
+              <User size={12} />
+              {selectedFriendEmail}
+            </Badge>
+          )}
         </div>
         <Text className="text-muted-foreground max-w-2xl mt-4">
           {isAuthenticated 
             ? viewMode === 'mes-vetements' 
               ? "Consultez tous vos vêtements et gérez votre collection."
-              : "Parcourez les vêtements partagés par vos amis."
+              : selectedFriendEmail 
+                ? `Parcourez les vêtements partagés par ${selectedFriendEmail}.`
+                : "Parcourez les vêtements partagés par vos amis."
             : "Connectez-vous pour voir et gérer vos vêtements."}
         </Text>
         
