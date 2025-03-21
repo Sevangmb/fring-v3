@@ -7,7 +7,7 @@ import Card from "@/components/molecules/Card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit, LogOut, User, Mail, Calendar, Shield, Check, X } from "lucide-react";
+import { ArrowLeft, Edit, LogOut, User, Mail, Calendar, Shield, Check, X, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -32,54 +32,7 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [avatarsBucketExists, setAvatarsBucketExists] = useState(false);
-
-  // Vérification du bucket avatars au chargement
-  useEffect(() => {
-    const checkAvatarsBucket = async () => {
-      try {
-        const { data: buckets, error } = await supabase.storage.listBuckets();
-        
-        if (!error && buckets) {
-          const exists = buckets.some(bucket => bucket.name === 'avatars');
-          setAvatarsBucketExists(exists);
-          
-          if (!exists) {
-            // Tentative de création du bucket
-            await createAvatarsBucket();
-          }
-        }
-      } catch (err) {
-        console.error("Erreur lors de la vérification du bucket avatars:", err);
-      }
-    };
-    
-    checkAvatarsBucket();
-  }, []);
-
-  // Fonction pour créer le bucket avatars
-  const createAvatarsBucket = async () => {
-    try {
-      const { error } = await supabase.storage.createBucket('avatars', {
-        public: true,
-        fileSizeLimit: 5242880, // 5MB
-      });
-      
-      if (error) {
-        console.error("Erreur lors de la création du bucket avatars:", error);
-        toast({
-          title: "Avertissement",
-          description: "Impossible de créer l'espace de stockage pour les avatars. Contactez l'administrateur.",
-          variant: "destructive",
-        });
-      } else {
-        setAvatarsBucketExists(true);
-        console.log("Bucket avatars créé avec succès");
-      }
-    } catch (error) {
-      console.error("Exception lors de la création du bucket avatars:", error);
-    }
-  };
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // Initialisation du formulaire avec les valeurs actuelles
   const form = useForm<ProfileFormValues>({
@@ -121,7 +74,6 @@ const Profile = () => {
         data: {
           name: data.name,
         },
-        avatar_url: data.avatar_url,
       };
 
       // Mettre à jour les métadonnées de l'utilisateur
@@ -135,25 +87,8 @@ const Profile = () => {
 
       // Gérer l'upload d'avatar si un nouveau fichier a été sélectionné
       if (avatarPreview && avatarPreview !== user?.user_metadata?.avatar_url) {
-        if (!avatarsBucketExists) {
-          // Si le bucket n'existe pas encore, tenter de le créer
-          await createAvatarsBucket();
-          
-          // Vérifier si la création a réussi
-          if (!avatarsBucketExists) {
-            toast({
-              title: "Erreur",
-              description: "Impossible de créer l'espace de stockage pour les avatars. L'image de profil n'a pas été mise à jour.",
-              variant: "destructive",
-            });
-            
-            setIsLoading(false);
-            setIsEditing(false);
-            return;
-          }
-        }
-        
         try {
+          setUploadingAvatar(true);
           // Extraire le fichier Base64 et le convertir en Blob
           const base64Data = avatarPreview.split(',')[1];
           const blob = await fetch(`data:image/jpeg;base64,${base64Data}`).then(res => res.blob());
@@ -182,6 +117,11 @@ const Profile = () => {
               },
             });
           }
+          
+          toast({
+            title: "Avatar mis à jour",
+            description: "Votre avatar a été mis à jour avec succès.",
+          });
         } catch (uploadError: any) {
           console.error("Erreur lors de l'upload de l'avatar:", uploadError);
           toast({
@@ -189,6 +129,8 @@ const Profile = () => {
             description: uploadError.message || "Impossible de télécharger votre avatar. Veuillez réessayer.",
             variant: "destructive",
           });
+        } finally {
+          setUploadingAvatar(false);
         }
       }
 
@@ -276,13 +218,21 @@ const Profile = () => {
                   <div className="flex flex-col md:flex-row gap-8">
                     <div className="flex flex-col items-center">
                       <Avatar className="w-24 h-24 text-2xl mb-3">
-                        <AvatarImage 
-                          src={avatarPreview || user?.user_metadata?.avatar_url} 
-                          alt={form.getValues("name")} 
-                        />
-                        <AvatarFallback className="bg-primary text-primary-foreground">
-                          {getUserInitials()}
-                        </AvatarFallback>
+                        {uploadingAvatar ? (
+                          <div className="w-24 h-24 bg-muted flex items-center justify-center">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                          </div>
+                        ) : (
+                          <>
+                            <AvatarImage 
+                              src={avatarPreview || user?.user_metadata?.avatar_url} 
+                              alt={form.getValues("name")} 
+                            />
+                            <AvatarFallback className="bg-primary text-primary-foreground">
+                              {getUserInitials()}
+                            </AvatarFallback>
+                          </>
+                        )}
                       </Avatar>
                       
                       <div className="mt-3">
@@ -292,15 +242,11 @@ const Profile = () => {
                           accept="image/*"
                           onChange={handleAvatarChange}
                           className="w-full text-xs"
+                          disabled={uploadingAvatar}
                         />
                         <Text variant="small" className="text-muted-foreground mt-1">
                           JPG, PNG ou GIF. Max 2MB.
                         </Text>
-                        {!avatarsBucketExists && (
-                          <Text variant="small" className="text-destructive mt-1">
-                            Avertissement: Stockage des avatars non disponible.
-                          </Text>
-                        )}
                       </div>
                     </div>
                     
@@ -358,10 +304,15 @@ const Profile = () => {
                     </Button>
                     <Button 
                       type="submit" 
-                      disabled={isLoading}
+                      disabled={isLoading || uploadingAvatar}
                       className="flex items-center gap-1"
                     >
-                      {isLoading ? "Enregistrement..." : (
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Enregistrement...
+                        </>
+                      ) : (
                         <>
                           <Check size={16} />
                           Enregistrer
