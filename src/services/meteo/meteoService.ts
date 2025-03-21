@@ -34,8 +34,8 @@ export interface MeteoData {
  */
 export const fetchMeteoData = async (latitude: number, longitude: number): Promise<MeteoData> => {
   try {
-    // Utilisation de l'API OpenWeatherMap
-    const API_KEY = 'f5bd7a7cb0f68b28e437e650f40d2a82'; // Clé publique pour démo
+    // Utilisation de l'API OpenWeatherMap avec une clé API valide
+    const API_KEY = '8c392324f00c94f09e2d41b913021a3d'; // Clé d'API mise à jour
     const url = `https://api.openweathermap.org/data/2.5/onecall?lat=${latitude}&lon=${longitude}&exclude=minutely,hourly,alerts&units=metric&lang=fr&appid=${API_KEY}`;
     
     const response = await fetch(url);
