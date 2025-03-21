@@ -45,7 +45,7 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
     setCategorieFilter("");
     setMarqueFilter("");
     if (showFriendFilter && setFriendFilter) {
-      setFriendFilter("");
+      setFriendFilter("all");
     }
   };
 
@@ -71,7 +71,7 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tous les amis</SelectItem>
+              <SelectItem value="all">Tous les amis</SelectItem>
               {friends.map((ami) => (
                 <SelectItem key={ami.user_id === ami.ami_id ? ami.ami_id : ami.user_id} value={ami.user_id === ami.ami_id ? ami.ami_id : ami.user_id}>
                   {ami.email || 'Email inconnu'}

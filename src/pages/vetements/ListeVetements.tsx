@@ -24,7 +24,7 @@ const ListeVetementsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categorieFilter, setCategorieFilter] = useState<string>("");
   const [marqueFilter, setMarqueFilter] = useState<string>("");
-  const [friendFilter, setFriendFilter] = useState<string>("");
+  const [friendFilter, setFriendFilter] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("tous");
   const [viewMode, setViewMode] = useState<'mes-vetements' | 'vetements-amis'>('mes-vetements');
@@ -57,7 +57,9 @@ const ListeVetementsPage = () => {
           vetementsData = await fetchVetements();
         } else {
           // Si un ami spécifique est sélectionné, filtrer par son ID
-          vetementsData = await fetchVetementsAmis(friendFilter || undefined);
+          // Utiliser undefined au lieu de chaîne vide pour récupérer tous les vêtements des amis
+          const friendIdParam = friendFilter !== "all" ? friendFilter : undefined;
+          vetementsData = await fetchVetementsAmis(friendIdParam);
         }
         
         console.log("Vêtements récupérés:", vetementsData.length);
@@ -131,7 +133,7 @@ const ListeVetementsPage = () => {
     setSearchTerm("");
     setCategorieFilter("");
     setMarqueFilter("");
-    setFriendFilter("");
+    setFriendFilter("all");
   };
 
   return (
