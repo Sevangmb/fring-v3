@@ -8,7 +8,7 @@
  * @param imageUrl URL de l'image à analyser
  * @returns Informations du vêtement détecté (couleur et catégorie)
  */
-export async function detectClothingInfo(imageUrl: string): Promise<{color: string, category: string}> {
+export async function detectClothingInfo(imageUrl: string): Promise<{color: string, category: string, description?: string}> {
   try {
     console.log("Starting clothing detection process with Google AI (Gemini)");
     
@@ -30,13 +30,15 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     
     // Créer un prompt pour l'analyse d'image
     const imageAnalysisPrompt = `
-    Observe attentivement cette image de vêtement et réponds UNIQUEMENT à ces deux questions:
+    Observe attentivement cette image de vêtement et réponds à ces questions:
     1. Quelle est la COULEUR PRINCIPALE du vêtement? (un seul mot)
     2. De quelle CATÉGORIE de vêtement s'agit-il? (t-shirt, chemise, pantalon, etc.)
+    3. Décris ce vêtement en 1-2 phrases, en mentionnant son style, sa texture et autres caractéristiques notables.
     
     Format de ta réponse (EXACTEMENT):
     COULEUR: [couleur]
     CATÉGORIE: [catégorie]
+    DESCRIPTION: [description]
     
     Sois très précis et réponds UNIQUEMENT dans ce format.
     `;
@@ -62,7 +64,7 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
       ],
       generationConfig: {
         temperature: 0.1,
-        maxOutputTokens: 100,
+        maxOutputTokens: 200,
       }
     };
     
@@ -127,6 +129,10 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
       console.error("Could not extract category from response:", generatedText);
       throw new Error("Impossible de détecter la catégorie du vêtement");
     }
+    
+    // Extraire la description avec regex
+    const descriptionMatch = generatedText.match(/description:\s*(.*?)(?=\n|$)/is);
+    const description = descriptionMatch?.[1]?.trim() || null;
     
     // Normalisation des couleurs en français
     const colorMapping: Record<string, string> = {
@@ -198,10 +204,12 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     console.log("Normalized color:", normalizedColor);
     console.log("Detected category:", category);
     console.log("Normalized category:", normalizedCategory);
+    console.log("Description:", description);
     
     return {
       color: normalizedColor,
-      category: normalizedCategory
+      category: normalizedCategory,
+      description: description
     };
   } catch (error) {
     console.error("Critical error in detectClothingInfo:", error);

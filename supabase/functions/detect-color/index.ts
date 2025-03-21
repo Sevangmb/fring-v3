@@ -32,7 +32,7 @@ serve(async (req) => {
     console.log("Processing image with Google AI Gemini:", truncatedUrl);
     
     try {
-      // Extraire les informations du vêtement de l'image (couleur et catégorie)
+      // Extraire les informations du vêtement de l'image (couleur, catégorie et description)
       const clothingInfo = await detectClothingInfo(imageUrl);
       
       console.log("Google AI Gemini detection results:", clothingInfo);
@@ -49,7 +49,8 @@ serve(async (req) => {
         JSON.stringify({ 
           error: detectionError.message || 'Une erreur s\'est produite lors de la détection',
           color: null,
-          category: null
+          category: null,
+          description: null
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -61,7 +62,8 @@ serve(async (req) => {
       JSON.stringify({ 
         error: error.message || 'Une erreur s\'est produite', 
         color: null,
-        category: null
+        category: null,
+        description: null
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

@@ -68,6 +68,12 @@ export const useColorDetection = (
       // Définir la catégorie détectée
       form.setValue('categorie', detectedInfo.category);
       
+      // Définir la description si elle est disponible
+      if (detectedInfo.description) {
+        form.setValue('description', detectedInfo.description);
+        addStep(`4. Description détectée: ${detectedInfo.description}`);
+      }
+      
       // Définir les autres champs disponibles si possible
       if (detectedInfo.category === "T-shirt") {
         // Pré-remplir les tailles communes pour les T-shirts
@@ -81,7 +87,7 @@ export const useColorDetection = (
       const suggestedName = `${detectedInfo.color.charAt(0).toUpperCase() + detectedInfo.color.slice(1)} ${detectedInfo.category.toLowerCase()}`;
       form.setValue('nom', suggestedName);
       
-      addStep("4. Application des valeurs détectées au formulaire");
+      addStep("5. Application des valeurs détectées au formulaire");
       toast({
         title: "Détection réussie",
         description: `La couleur ${detectedInfo.color}, la catégorie ${detectedInfo.category} et d'autres champs ont été pré-remplis`,

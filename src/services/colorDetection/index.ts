@@ -14,12 +14,12 @@ type StepCallback = (step: string) => void;
  * Fonction principale pour détecter la couleur et la catégorie dominante d'une image de vêtement
  * @param imageUrl URL de l'image à analyser
  * @param onStep Callback pour suivre les étapes de traitement
- * @returns Les informations détectées (couleur et catégorie)
+ * @returns Les informations détectées (couleur, catégorie et description)
  */
 export const detectImageInfo = async (
   imageUrl: string, 
   onStep?: StepCallback
-): Promise<{color: string, category: string}> => {
+): Promise<{color: string, category: string, description?: string}> => {
   try {
     // Étape 1: Afficher un message indiquant que la détection est en cours
     console.log('Détection des informations du vêtement en cours...');
@@ -41,11 +41,13 @@ export const detectImageInfo = async (
     // Étape 4: Afficher les informations détectées dans la console pour déboguer
     console.log('Couleur détectée:', detectionResults.color);
     console.log('Catégorie détectée:', detectionResults.category);
+    console.log('Description détectée:', detectionResults.description || 'Non disponible');
     onStep?.(`Détection terminée - Couleur: ${detectionResults.color}, Catégorie: ${detectionResults.category}`);
     
     return {
       color: detectionResults.color,
-      category: detectionResults.category
+      category: detectionResults.category,
+      description: detectionResults.description
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
