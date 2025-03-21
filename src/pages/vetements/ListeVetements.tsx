@@ -11,18 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { fetchVetements, deleteVetement, demoVetements, Vetement } from "@/services/supabaseService";
 
-// Type pour un vêtement
-interface Vetement {
-  id: number;
-  nom: string;
-  categorie: string;
-  couleur: string;
-  taille: string;
-  description?: string;
-  marque?: string;
-  image_url?: string;
-  created_at: string;
-}
+// Removing the local Vetement interface since we're now importing it from the service
 
 const ListeVetementsPage = () => {
   const navigate = useNavigate();
