@@ -3,7 +3,7 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Text } from '@/components/atoms/Typography';
 import { Vetement } from '@/services/vetement/types';
-import { VetementType } from '@/services/meteo/tenueService';
+import { VetementType } from '@/services/meteo/tenue';
 import TenueHeader from './TenueSuggestion/TenueHeader';
 import TenuePreviews from './TenueSuggestion/TenuePreviews';
 import TenueDetails from './TenueSuggestion/TenueDetails';

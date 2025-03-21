@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Vetement } from '@/services/vetement/types';
 import { MeteoData } from '@/services/meteo/meteoService';
-import { suggestVetements, generateOutfitMessage } from '@/services/meteo/tenueService';
+import { suggestVetements, generateOutfitMessage } from '@/services/meteo/tenue';
 
 export const useTenueSuggestion = (meteo: MeteoData | null, vetements: Vetement[]) => {
   const [tenueSuggestion, setTenueSuggestion] = useState<{
