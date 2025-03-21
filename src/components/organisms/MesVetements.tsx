@@ -3,16 +3,16 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { Heading, Text } from "../atoms/Typography";
 import Card, { CardHeader, CardTitle, CardDescription } from "../molecules/Card";
-import { Shield, Users, Zap, LayoutGrid } from "lucide-react";
+import { Shirt, ShoppingBag, ShoppingCart, Zap } from "lucide-react";
 
-interface FeatureCardProps {
+interface ClothingItemProps {
   title: string;
   description: string;
   icon: React.ReactNode;
   delay?: number;
 }
 
-const FeatureCard = ({ title, description, icon, delay = 0 }: FeatureCardProps) => {
+const ClothingItem = ({ title, description, icon, delay = 0 }: ClothingItemProps) => {
   return (
     <Card
       className="h-full animate-slide-up"
@@ -30,31 +30,31 @@ const FeatureCard = ({ title, description, icon, delay = 0 }: FeatureCardProps) 
   );
 };
 
-interface FeaturesProps {
+interface MesVetementsProps {
   className?: string;
 }
 
-const Features = ({ className }: FeaturesProps) => {
-  const features = [
+const MesVetements = ({ className }: MesVetementsProps) => {
+  const clothingItems = [
     {
-      icon: <Users size={24} />,
-      title: "Multi-User Collaboration",
-      description: "Work together seamlessly with real-time updates and collaborative editing features.",
+      icon: <Shirt size={24} />,
+      title: "T-shirts",
+      description: "Collection de t-shirts modernes et confortables pour toutes les occasions.",
+    },
+    {
+      icon: <ShoppingBag size={24} />,
+      title: "Pantalons",
+      description: "Des pantalons élégants et durables, parfaits pour le quotidien ou les événements spéciaux.",
     },
     {
       icon: <Zap size={24} />,
-      title: "Lightning Fast Performance",
-      description: "Enjoy blazing fast load times and responsive interactions across all devices.",
+      title: "Accessoires",
+      description: "Complétez votre tenue avec notre gamme d'accessoires tendance.",
     },
     {
-      icon: <Shield size={24} />,
-      title: "Enterprise-Grade Security",
-      description: "Rest easy with our robust security protocols and data encryption standards.",
-    },
-    {
-      icon: <LayoutGrid size={24} />,
-      title: "Atomic Design Architecture",
-      description: "Built with scalable components following modern design principles for easy maintenance.",
+      icon: <ShoppingCart size={24} />,
+      title: "Nouveautés",
+      description: "Découvrez nos dernières collections et restez à la pointe de la mode.",
     },
   ];
 
@@ -66,27 +66,27 @@ const Features = ({ className }: FeaturesProps) => {
             variant="subtle" 
             className="uppercase tracking-wider font-medium mb-3 animate-fade-in"
           >
-            Key Features
+            Ma Collection
           </Text>
           <Heading className="mb-6 animate-slide-up">
-            Everything you need to build amazing products
+            Découvrez notre sélection de vêtements
           </Heading>
           <Text 
             variant="lead" 
             className="text-muted-foreground animate-slide-up"
             style={{ animationDelay: "100ms" }}
           >
-            Our platform provides all the essential tools and features to help you create exceptional user experiences without the complexity.
+            Notre boutique vous propose une variété de vêtements de qualité pour toutes les saisons et tous les styles.
           </Text>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {features.map((feature, index) => (
-            <FeatureCard
+          {clothingItems.map((item, index) => (
+            <ClothingItem
               key={index}
-              title={feature.title}
-              description={feature.description}
-              icon={feature.icon}
+              title={item.title}
+              description={item.description}
+              icon={item.icon}
               delay={index * 100}
             />
           ))}
@@ -96,4 +96,4 @@ const Features = ({ className }: FeaturesProps) => {
   );
 };
 
-export default Features;
+export default MesVetements;

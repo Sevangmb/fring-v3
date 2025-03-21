@@ -6,7 +6,7 @@ import { Heading, Text } from "@/components/atoms/Typography";
 import Button from "@/components/atoms/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import Hero from "@/components/organisms/Hero";
-import Features from "@/components/organisms/Features";
+import MesVetements from "@/components/organisms/MesVetements";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -19,7 +19,7 @@ const Index = () => {
   return (
     <Layout>
       <Hero />
-      <Features />
+      <MesVetements />
       
       <div className="container mx-auto px-4 py-16 bg-accent/10">
         <div className="max-w-3xl mx-auto text-center">
