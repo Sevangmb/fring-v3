@@ -6,18 +6,20 @@ import { Heading, Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Card, { CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/molecules/Card";
-import { Shirt, Plus, Search, ArrowLeft, Filter, SlidersHorizontal, TagIcon, Edit, Trash2 } from "lucide-react";
+import { Shirt, Plus, Search, ArrowLeft, Filter, SlidersHorizontal, TagIcon, Edit, Trash2, LogIn } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { 
   fetchVetements, fetchCategories, fetchMarques,
-  deleteVetement, demoVetements, Vetement, Categorie, Marque 
+  deleteVetement, Vetement, Categorie, Marque 
 } from "@/services/supabaseService";
+import { useAuth } from "@/contexts/AuthContext";
 
 const ListeVetementsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
   const [vetements, setVetements] = useState<Vetement[]>([]);
   const [categories, setCategories] = useState<Categorie[]>([]);
   const [marques, setMarques] = useState<Marque[]>([]);
@@ -30,6 +32,11 @@ const ListeVetementsPage = () => {
   // Récupérer les vêtements, catégories et marques depuis Supabase
   useEffect(() => {
     const loadData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
         
@@ -47,23 +54,18 @@ const ListeVetementsPage = () => {
         console.error("Erreur lors de la récupération des données:", error);
         toast({
           title: "Erreur",
-          description: "Impossible de charger les données. Utilisation des données de démonstration.",
+          description: "Impossible de charger les données.",
           variant: "destructive",
         });
-        
-        // Utiliser les données de démonstration pour les vêtements
-        setVetements(demoVetements.map((v, index) => ({
-          ...v,
-          id: index + 1,
-          created_at: new Date().toISOString()
-        })));
       } finally {
         setIsLoading(false);
       }
     };
     
-    loadData();
-  }, [toast]);
+    if (!authLoading) {
+      loadData();
+    }
+  }, [user, authLoading, toast]);
 
   // Filtrer les vêtements en fonction de la recherche et des filtres
   const filteredVetements = vetements.filter(vetement => {
@@ -112,6 +114,22 @@ const ListeVetementsPage = () => {
 
   // Composant pour afficher la liste des vêtements (utilisé dans plusieurs onglets)
   const VetementsList = () => {
+    if (!user) {
+      return (
+        <div className="text-center py-16">
+          <Shirt size={48} className="mx-auto text-muted-foreground opacity-20 mb-4" />
+          <Heading as="h3" variant="h4" className="mb-2">Connectez-vous pour voir vos vêtements</Heading>
+          <Text className="text-muted-foreground mb-6">
+            Vous devez être connecté pour accéder à votre collection de vêtements.
+          </Text>
+          <Button onClick={() => navigate("/login")}>
+            <LogIn className="mr-2 h-4 w-4" />
+            Se connecter
+          </Button>
+        </div>
+      );
+    }
+
     if (isLoading) {
       return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -249,121 +267,142 @@ const ListeVetementsPage = () => {
             <Heading>Liste des vêtements</Heading>
           </div>
           <Text className="text-muted-foreground max-w-2xl mt-4">
-            Consultez tous vos vêtements et gérez votre collection.
+            {user 
+              ? "Consultez tous vos vêtements et gérez votre collection." 
+              : "Connectez-vous pour voir et gérer vos vêtements."}
           </Text>
+          
+          {!user && !authLoading && (
+            <div className="mt-8">
+              <Button asChild>
+                <Link to="/login">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Se connecter
+                </Link>
+              </Button>
+            </div>
+          )}
         </div>
       </div>
       
       <div className="container mx-auto px-4 py-8">
-        {/* Barre de recherche et filtres */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="relative flex-grow">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Rechercher un vêtement..."
-              className="pl-10"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          
-          <div className="flex gap-2 flex-wrap">
-            <Select value={categorieFilter} onValueChange={setCategorieFilter}>
-              <SelectTrigger className="w-[180px]">
-                <div className="flex items-center">
-                  <Filter className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Catégorie" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.nom}>
+        {user && (
+          <>
+            {/* Barre de recherche et filtres */}
+            <div className="flex flex-col md:flex-row gap-4 mb-8">
+              <div className="relative flex-grow">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Rechercher un vêtement..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              
+              <div className="flex gap-2 flex-wrap">
+                <Select value={categorieFilter} onValueChange={setCategorieFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <div className="flex items-center">
+                      <Filter className="mr-2 h-4 w-4" />
+                      <SelectValue placeholder="Catégorie" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.nom}>
+                        {cat.nom}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <Select value={marqueFilter} onValueChange={setMarqueFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <div className="flex items-center">
+                      <TagIcon className="mr-2 h-4 w-4" />
+                      <SelectValue placeholder="Marque" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes</SelectItem>
+                    {marques.map((marque) => (
+                      <SelectItem key={marque.id} value={marque.nom}>
+                        {marque.nom}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <Button 
+                  variant="outline" 
+                  className="flex items-center"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setCategorieFilter("");
+                    setMarqueFilter("");
+                  }}
+                >
+                  <SlidersHorizontal className="mr-2 h-4 w-4" />
+                  Réinitialiser
+                </Button>
+                
+                <Button 
+                  onClick={() => navigate("/mes-vetements/ajouter")}
+                  className="hidden md:flex items-center"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Ajouter
+                </Button>
+              </div>
+            </div>
+            
+            {/* Onglets par catégorie */}
+            <Tabs 
+              defaultValue="tous" 
+              value={activeTab} 
+              onValueChange={setActiveTab}
+              className="mb-8"
+            >
+              <TabsList className="mb-4 flex flex-wrap">
+                <TabsTrigger value="tous">Tous</TabsTrigger>
+                {categories.slice(0, 6).map((cat) => (
+                  <TabsTrigger key={cat.id} value={cat.nom}>
                     {cat.nom}
-                  </SelectItem>
+                  </TabsTrigger>
                 ))}
-              </SelectContent>
-            </Select>
+              </TabsList>
+              
+              {/* Contenu des onglets */}
+              <TabsContent value="tous" className="mt-0">
+                <VetementsList />
+              </TabsContent>
+              
+              {/* Contenu pour chaque catégorie d'onglet */}
+              {categories.slice(0, 6).map((cat) => (
+                <TabsContent key={cat.id} value={cat.nom} className="mt-0">
+                  <VetementsList />
+                </TabsContent>
+              ))}
+            </Tabs>
             
-            <Select value={marqueFilter} onValueChange={setMarqueFilter}>
-              <SelectTrigger className="w-[180px]">
-                <div className="flex items-center">
-                  <TagIcon className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Marque" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes</SelectItem>
-                {marques.map((marque) => (
-                  <SelectItem key={marque.id} value={marque.nom}>
-                    {marque.nom}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Button 
-              variant="outline" 
-              className="flex items-center"
-              onClick={() => {
-                setSearchTerm("");
-                setCategorieFilter("");
-                setMarqueFilter("");
-              }}
-            >
-              <SlidersHorizontal className="mr-2 h-4 w-4" />
-              Réinitialiser
-            </Button>
-            
-            <Button 
-              onClick={() => navigate("/mes-vetements/ajouter")}
-              className="hidden md:flex items-center"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Ajouter
-            </Button>
-          </div>
-        </div>
+            {/* Bouton flottant pour mobile */}
+            <div className="fixed bottom-6 right-6 md:hidden">
+              <Button
+                size="lg"
+                className="h-14 w-14 rounded-full shadow-lg"
+                onClick={() => navigate("/mes-vetements/ajouter")}
+              >
+                <Plus size={24} />
+              </Button>
+            </div>
+          </>
+        )}
         
-        {/* Onglets par catégorie */}
-        <Tabs 
-          defaultValue="tous" 
-          value={activeTab} 
-          onValueChange={setActiveTab}
-          className="mb-8"
-        >
-          <TabsList className="mb-4 flex flex-wrap">
-            <TabsTrigger value="tous">Tous</TabsTrigger>
-            {categories.slice(0, 6).map((cat) => (
-              <TabsTrigger key={cat.id} value={cat.nom}>
-                {cat.nom}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          
-          {/* Contenu des onglets */}
-          <TabsContent value="tous" className="mt-0">
-            <VetementsList />
-          </TabsContent>
-          
-          {/* Contenu pour chaque catégorie d'onglet */}
-          {categories.slice(0, 6).map((cat) => (
-            <TabsContent key={cat.id} value={cat.nom} className="mt-0">
-              <VetementsList />
-            </TabsContent>
-          ))}
-        </Tabs>
-        
-        {/* Bouton flottant pour mobile */}
-        <div className="fixed bottom-6 right-6 md:hidden">
-          <Button
-            size="lg"
-            className="h-14 w-14 rounded-full shadow-lg"
-            onClick={() => navigate("/mes-vetements/ajouter")}
-          >
-            <Plus size={24} />
-          </Button>
-        </div>
+        {!user && !isLoading && (
+          <VetementsList />
+        )}
       </div>
     </Layout>
   );

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 // Type pour un vêtement
@@ -11,6 +12,7 @@ export interface Vetement {
   marque?: string;
   image_url?: string;
   created_at: string;
+  user_id?: string;
 }
 
 // Type pour une catégorie
@@ -28,6 +30,19 @@ export interface Marque {
   site_web?: string;
   logo_url?: string;
   created_at: string;
+}
+
+// Type pour un ami
+export interface Ami {
+  id: number;
+  user_id: string;
+  ami_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+  // Données supplémentaires pour l'affichage
+  nom?: string;
+  email?: string;
+  avatar_url?: string;
 }
 
 // Fonction pour créer la table vetements si elle n'existe pas
@@ -56,7 +71,8 @@ export const initializeDatabase = async () => {
             description TEXT,
             marque VARCHAR(100),
             image_url TEXT,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+            user_id UUID REFERENCES auth.users(id)
           `
         }
       );
@@ -96,70 +112,85 @@ export const initializeDatabase = async () => {
   }
 };
 
-// Fonction pour récupérer tous les vêtements
+// Fonction pour récupérer tous les vêtements de l'utilisateur connecté
 export const fetchVetements = async (): Promise<Vetement[]> => {
   try {
+    // Récupérer la session utilisateur
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+
+    // Si pas d'utilisateur connecté, renvoyer un tableau vide ou les données de démo
+    if (!userId) {
+      console.warn('Aucun utilisateur connecté. Retour de données vides.');
+      return [];
+    }
+
     const { data, error } = await supabase
       .from('vetements')
       .select('*')
+      .eq('user_id', userId)
       .order('created_at', { ascending: false });
     
     if (error) {
       console.error('Erreur lors de la récupération des vêtements:', error);
       
-      // Renvoyer les données de démo en cas d'erreur
-      return demoVetements.map((v, index) => ({
-        ...v,
-        id: index + 1,
-        created_at: new Date().toISOString()
-      }));
+      // Renvoyer un tableau vide en cas d'erreur
+      return [];
     }
     
-    // Si aucune donnée n'est retournée, la table est peut-être vide
+    // Si aucune donnée n'est retournée, la table est peut-être vide pour cet utilisateur
     if (!data || data.length === 0) {
-      const { error: insertError } = await supabase
-        .from('vetements')
-        .insert(demoVetements.map(v => ({...v})));
-      
-      if (insertError) {
-        console.error('Erreur lors de l\'insertion des données de démo:', insertError);
+      // Insérer des données de démo pour l'utilisateur connecté
+      try {
+        const { error: insertError } = await supabase
+          .from('vetements')
+          .insert(demoVetements.map(v => ({...v, user_id: userId})));
         
-        // Renvoyer les données de démo même en cas d'erreur d'insertion
-        return demoVetements.map((v, index) => ({
-          ...v,
-          id: index + 1,
-          created_at: new Date().toISOString()
-        }));
+        if (insertError) {
+          console.error('Erreur lors de l\'insertion des données de démo:', insertError);
+          return [];
+        }
+        
+        // Réessayer de récupérer les données après insertion
+        const { data: refreshedData, error: refreshError } = await supabase
+          .from('vetements')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+        
+        if (refreshError) {
+          console.error('Erreur lors de la récupération après insertion:', refreshError);
+          return [];
+        }
+        
+        return refreshedData as Vetement[] || [];
+      } catch (insertCatchError) {
+        console.error('Exception lors de l\'insertion des données de démo:', insertCatchError);
+        return [];
       }
-      
-      // Réessayer de récupérer les données après insertion
-      const { data: refreshedData } = await supabase
-        .from('vetements')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      return refreshedData as Vetement[] || [];
     }
     
     return data as Vetement[];
   } catch (error) {
     console.error('Erreur lors de la récupération des vêtements:', error);
-    
-    // Renvoyer les données de démo en cas d'erreur
-    return demoVetements.map((v, index) => ({
-      ...v,
-      id: index + 1,
-      created_at: new Date().toISOString()
-    }));
+    return [];
   }
 };
 
 // Fonction pour ajouter un vêtement
-export const addVetement = async (vetement: Omit<Vetement, 'id' | 'created_at'>): Promise<Vetement> => {
+export const addVetement = async (vetement: Omit<Vetement, 'id' | 'created_at' | 'user_id'>): Promise<Vetement> => {
   try {
+    // Récupérer l'ID de l'utilisateur connecté
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+
+    if (!userId) {
+      throw new Error('Vous devez être connecté pour ajouter un vêtement');
+    }
+
     const { data, error } = await supabase
       .from('vetements')
-      .insert([vetement])
+      .insert([{ ...vetement, user_id: userId }])
       .select()
       .single();
     
@@ -178,6 +209,7 @@ export const addVetement = async (vetement: Omit<Vetement, 'id' | 'created_at'>)
 // Fonction pour supprimer un vêtement
 export const deleteVetement = async (id: number): Promise<void> => {
   try {
+    // Vérifier que l'utilisateur est propriétaire du vêtement (la RLS s'en chargera)
     const { error } = await supabase
       .from('vetements')
       .delete()
@@ -196,9 +228,12 @@ export const deleteVetement = async (id: number): Promise<void> => {
 // Fonction pour mettre à jour un vêtement
 export const updateVetement = async (id: number, updates: Partial<Vetement>): Promise<Vetement> => {
   try {
+    // Supprimer user_id des mises à jour si présent pour éviter de changer le propriétaire
+    const { user_id, ...updateData } = updates;
+    
     const { data, error } = await supabase
       .from('vetements')
-      .update(updates)
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
@@ -233,12 +268,29 @@ export const createVetementsTable = async () => {
           description TEXT,
           marque VARCHAR(100),
           image_url TEXT,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+          user_id UUID REFERENCES auth.users(id)
         );
         ALTER TABLE public.vetements ENABLE ROW LEVEL SECURITY;
-        CREATE POLICY "Enable all access for authenticated users" ON public.vetements
-          USING (auth.role() = 'authenticated')
-          WITH CHECK (auth.role() = 'authenticated');
+        CREATE POLICY "Users can view their own vetements" 
+        ON public.vetements 
+        FOR SELECT 
+        USING (auth.uid() = user_id);
+        
+        CREATE POLICY "Users can insert their own vetements" 
+        ON public.vetements 
+        FOR INSERT 
+        WITH CHECK (auth.uid() = user_id);
+        
+        CREATE POLICY "Users can update their own vetements" 
+        ON public.vetements 
+        FOR UPDATE 
+        USING (auth.uid() = user_id);
+        
+        CREATE POLICY "Users can delete their own vetements" 
+        ON public.vetements 
+        FOR DELETE 
+        USING (auth.uid() = user_id);
       `;
       
       const { error: sqlError } = await supabase.rpc('exec_sql', {
@@ -265,7 +317,7 @@ export const createVetementsTable = async () => {
 };
 
 // Données de démo pour le développement
-export const demoVetements: Omit<Vetement, 'id' | 'created_at'>[] = [
+export const demoVetements: Omit<Vetement, 'id' | 'created_at' | 'user_id'>[] = [
   {
     nom: "T-shirt blanc",
     categorie: "t-shirt",
@@ -360,4 +412,146 @@ export const fetchMarques = async (): Promise<Marque[]> => {
 export const createStorageBucket = async () => {
   console.log('Création du bucket désactivée pour éviter les erreurs RLS');
   return false;
+};
+
+// Fonctions pour gérer les amis
+export const fetchAmis = async (): Promise<Ami[]> => {
+  try {
+    // Récupérer l'ID de l'utilisateur connecté
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+
+    if (!userId) {
+      return [];
+    }
+
+    // Récupérer les amis (où l'utilisateur est soit l'initiateur, soit le destinataire)
+    const { data, error } = await supabase
+      .from('amis')
+      .select('*')
+      .or(`user_id.eq.${userId},ami_id.eq.${userId}`)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Erreur lors de la récupération des amis:', error);
+      return [];
+    }
+    
+    return data as Ami[];
+  } catch (error) {
+    console.error('Erreur lors de la récupération des amis:', error);
+    return [];
+  }
+};
+
+// Fonction pour envoyer une demande d'ami
+export const envoyerDemandeAmi = async (amiId: string): Promise<Ami> => {
+  try {
+    // Récupérer l'ID de l'utilisateur connecté
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+
+    if (!userId) {
+      throw new Error('Vous devez être connecté pour envoyer une demande d\'ami');
+    }
+
+    // Vérifier si une demande existe déjà
+    const { data: existingRequest, error: checkError } = await supabase
+      .from('amis')
+      .select('*')
+      .or(`and(user_id.eq.${userId},ami_id.eq.${amiId}),and(user_id.eq.${amiId},ami_id.eq.${userId})`)
+      .maybeSingle();
+    
+    if (checkError) {
+      console.error('Erreur lors de la vérification de la demande d\'ami:', checkError);
+      throw checkError;
+    }
+    
+    if (existingRequest) {
+      throw new Error('Une demande d\'ami existe déjà avec cet utilisateur');
+    }
+
+    // Insérer la nouvelle demande d'ami
+    const { data, error } = await supabase
+      .from('amis')
+      .insert([
+        {
+          user_id: userId,
+          ami_id: amiId,
+          status: 'pending'
+        }
+      ])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Erreur lors de l\'envoi de la demande d\'ami:', error);
+      throw error;
+    }
+    
+    return data as Ami;
+  } catch (error) {
+    console.error('Erreur lors de l\'envoi de la demande d\'ami:', error);
+    throw error;
+  }
+};
+
+// Fonction pour accepter une demande d'ami
+export const accepterDemandeAmi = async (amiId: number): Promise<Ami> => {
+  try {
+    // Récupérer l'ID de l'utilisateur connecté
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+
+    if (!userId) {
+      throw new Error('Vous devez être connecté pour accepter une demande d\'ami');
+    }
+
+    // Mise à jour du statut de la demande
+    const { data, error } = await supabase
+      .from('amis')
+      .update({ status: 'accepted' })
+      .eq('id', amiId)
+      .eq('ami_id', userId) // S'assure que l'utilisateur est bien le destinataire
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Erreur lors de l\'acceptation de la demande d\'ami:', error);
+      throw error;
+    }
+    
+    return data as Ami;
+  } catch (error) {
+    console.error('Erreur lors de l\'acceptation de la demande d\'ami:', error);
+    throw error;
+  }
+};
+
+// Fonction pour rejeter une demande d'ami
+export const rejeterDemandeAmi = async (amiId: number): Promise<void> => {
+  try {
+    // Récupérer l'ID de l'utilisateur connecté
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+
+    if (!userId) {
+      throw new Error('Vous devez être connecté pour rejeter une demande d\'ami');
+    }
+
+    // Supprimer la demande
+    const { error } = await supabase
+      .from('amis')
+      .delete()
+      .eq('id', amiId)
+      .or(`user_id.eq.${userId},ami_id.eq.${userId}`); // S'assure que l'utilisateur est impliqué
+    
+    if (error) {
+      console.error('Erreur lors du rejet de la demande d\'ami:', error);
+      throw error;
+    }
+  } catch (error) {
+    console.error('Erreur lors du rejet de la demande d\'ami:', error);
+    throw error;
+  }
 };

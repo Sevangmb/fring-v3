@@ -3,7 +3,9 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { Heading, Text } from "../atoms/Typography";
 import Card, { CardHeader, CardTitle, CardDescription } from "../molecules/Card";
-import { Shirt, ShoppingBag, ShoppingCart, Zap } from "lucide-react";
+import { Shirt, ShoppingBag, ShoppingCart, Zap, LogIn } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 interface ClothingItemProps {
   title: string;
@@ -32,9 +34,10 @@ const ClothingItem = ({ title, description, icon, delay = 0 }: ClothingItemProps
 
 interface MesVetementsProps {
   className?: string;
+  isAuthenticated: boolean;
 }
 
-const MesVetements = ({ className }: MesVetementsProps) => {
+const MesVetements = ({ className, isAuthenticated }: MesVetementsProps) => {
   const clothingItems = [
     {
       icon: <Shirt size={24} />,
@@ -66,31 +69,55 @@ const MesVetements = ({ className }: MesVetementsProps) => {
             variant="subtle" 
             className="uppercase tracking-wider font-medium mb-3 animate-fade-in"
           >
-            Ma Collection
+            {isAuthenticated ? "Ma Collection" : "Découvrez nos collections"}
           </Text>
           <Heading className="mb-6 animate-slide-up">
-            Découvrez notre sélection de vêtements
+            {isAuthenticated 
+              ? "Découvrez votre sélection de vêtements" 
+              : "Connectez-vous pour voir vos vêtements"}
           </Heading>
           <Text 
             variant="lead" 
             className="text-muted-foreground animate-slide-up"
             style={{ animationDelay: "100ms" }}
           >
-            Notre boutique vous propose une variété de vêtements de qualité pour toutes les saisons et tous les styles.
+            {isAuthenticated 
+              ? "Votre garde-robe personnelle vous permet de visualiser et gérer tous vos vêtements." 
+              : "Créez un compte ou connectez-vous pour accéder à votre collection personnelle de vêtements."}
           </Text>
+          
+          {!isAuthenticated && (
+            <Button asChild className="mt-6 animate-slide-up" style={{ animationDelay: "200ms" }}>
+              <Link to="/login">
+                <LogIn className="mr-2 h-4 w-4" />
+                Se connecter
+              </Link>
+            </Button>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {clothingItems.map((item, index) => (
-            <ClothingItem
-              key={index}
-              title={item.title}
-              description={item.description}
-              icon={item.icon}
-              delay={index * 100}
-            />
-          ))}
-        </div>
+        {isAuthenticated ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {clothingItems.map((item, index) => (
+              <ClothingItem
+                key={index}
+                title={item.title}
+                description={item.description}
+                icon={item.icon}
+                delay={index * 100}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="bg-accent/10 p-10 rounded-lg text-center animate-fade-in">
+            <Shirt size={48} className="mx-auto text-muted-foreground mb-4" />
+            <Heading as="h3" variant="h4" className="mb-2">Connectez-vous pour voir vos vêtements</Heading>
+            <Text className="text-muted-foreground max-w-md mx-auto mb-6">
+              Notre application vous permet de créer une collection personnelle de vêtements
+              accessible uniquement à vous.
+            </Text>
+          </div>
+        )}
       </div>
     </section>
   );

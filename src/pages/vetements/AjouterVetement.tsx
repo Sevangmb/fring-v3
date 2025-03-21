@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/templates/Layout";
@@ -11,10 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Shirt, ArrowLeft, ImagePlus, Plus, Loader2 } from "lucide-react";
+import { Shirt, ArrowLeft, ImagePlus, Plus, Loader2, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { addVetement } from "@/services/supabaseService";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
 
 // Type pour les catégories
 interface Categorie {
@@ -46,6 +47,7 @@ type VetementFormValues = z.infer<typeof vetementSchema>;
 const AjouterVetementPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [imagePreview, setImagePreview] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -67,6 +69,17 @@ const AjouterVetementPage = () => {
   });
 
   useEffect(() => {
+    // Rediriger vers la page de connexion si l'utilisateur n'est pas connecté
+    if (!authLoading && !user) {
+      toast({
+        title: "Non autorisé",
+        description: "Vous devez être connecté pour ajouter un vêtement.",
+        variant: "destructive",
+      });
+      navigate("/login");
+      return;
+    }
+
     // Charger les catégories depuis Supabase
     const fetchCategories = async () => {
       setLoadingCategories(true);
@@ -111,9 +124,11 @@ const AjouterVetementPage = () => {
       }
     };
 
-    fetchCategories();
-    fetchMarques();
-  }, [toast]);
+    if (user) {
+      fetchCategories();
+      fetchMarques();
+    }
+  }, [user, authLoading, toast, navigate]);
 
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -124,6 +139,15 @@ const AjouterVetementPage = () => {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+
+      if (!user) {
+        toast({
+          title: "Erreur",
+          description: "Vous devez être connecté pour télécharger des images.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       // Télécharger l'image sur Supabase Storage
       try {
@@ -166,10 +190,20 @@ const AjouterVetementPage = () => {
   };
 
   const onSubmit = async (data: VetementFormValues) => {
+    if (!user) {
+      toast({
+        title: "Non autorisé",
+        description: "Vous devez être connecté pour ajouter un vêtement.",
+        variant: "destructive",
+      });
+      navigate("/login");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       
-      // Utiliser notre service pour ajouter le vêtement
+      // Utiliser notre service pour ajouter le vêtement (avec user_id ajouté dans le service)
       await addVetement({
         nom: data.nom,
         categorie: data.categorie,
@@ -198,6 +232,43 @@ const AjouterVetementPage = () => {
       setIsSubmitting(false);
     }
   };
+
+  // Affichage conditionnel en fonction de l'authentification
+  if (authLoading) {
+    return (
+      <Layout>
+        <div className="pt-24 flex items-center justify-center">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 w-64 bg-muted rounded-lg"></div>
+            <div className="h-4 w-48 bg-muted rounded-lg mx-auto"></div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Layout>
+        <div className="pt-24 pb-6 bg-accent/10">
+          <div className="container mx-auto px-4 text-center">
+            <Heading>Ajout de vêtement</Heading>
+            <Text className="text-muted-foreground max-w-2xl mx-auto mt-4">
+              Vous devez être connecté pour ajouter un vêtement à votre collection.
+            </Text>
+            <div className="mt-8">
+              <Button asChild>
+                <Link to="/login">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Se connecter
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
