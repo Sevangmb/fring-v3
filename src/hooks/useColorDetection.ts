@@ -41,19 +41,22 @@ export const useColorDetection = (
     setCurrentStep(null);
     
     try {
-      toast({
+      const detectionToast = toast({
         title: "Détection en cours",
-        description: "Analyse de l'image pour identifier la couleur et la catégorie...",
-        duration: 20000, // Augmenter la durée pour correspondre au timeout de la fonction
+        description: "Analyse de l'image avec Mistral AI (peut prendre jusqu'à 30 secondes)...",
+        duration: 30000, // Augmenter la durée pour correspondre au timeout de la fonction
       });
       
-      addStep("1. Préparation de l'image pour l'analyse");
+      addStep("1. Préparation de l'image pour l'analyse avec Mistral AI");
       console.log("Envoi de l'image pour détection:", imagePreview.substring(0, 50) + "...");
       
-      addStep("2. Appel du service de détection");
+      addStep("2. Appel du service de détection Mistral AI");
       const detectedInfo = await detectImageInfo(imagePreview, (step) => {
         addStep(step);
       });
+      
+      // Fermer le toast précédent
+      toast.dismiss(detectionToast);
       
       addStep(`3. Informations détectées: couleur=${detectedInfo.color}, catégorie=${detectedInfo.category}`);
       console.log("Informations détectées:", detectedInfo);

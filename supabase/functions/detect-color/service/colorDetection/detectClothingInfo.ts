@@ -23,26 +23,26 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     // Préparer l'image au bon format (gestion du base64)
     const processedImage = imageUrl;
     
-    // Utiliser un modèle plus efficace pour la détection
+    // Utiliser Mistral AI pour la détection
     const imageAnalysisPrompt = `
-    Describe precisely what clothing item is in this image. Focus on:
-    1. The main COLOR (exactly one word)
-    2. The CATEGORY of clothing (t-shirt, shirt, pants, etc.)
+    Observe attentivement cette image de vêtement et réponds UNIQUEMENT à ces deux questions:
+    1. Quelle est la COULEUR PRINCIPALE du vêtement? (un seul mot)
+    2. De quelle CATÉGORIE de vêtement s'agit-il? (t-shirt, chemise, pantalon, etc.)
     
-    Format your answer exactly like this:
-    COLOR: [color]
-    CATEGORY: [category]
+    Format de ta réponse (EXACTEMENT):
+    COULEUR: [couleur]
+    CATÉGORIE: [catégorie]
     
-    Be very specific and accurate.
+    Sois très précis et réponds UNIQUEMENT dans ce format.
     `;
     
-    console.log("Sending request to HuggingFace API");
+    console.log("Sending request to HuggingFace API with Mistral model");
     const response = await hf.textGeneration({
-      model: "bigscience/bloom-560m", // Modèle plus léger pour réduire le temps de réponse
+      model: "mistralai/Mistral-7B-Instruct-v0.2", // Utilisation du modèle Mistral
       inputs: `${imageAnalysisPrompt}\n${processedImage}`,
       parameters: {
         max_new_tokens: 100,
-        temperature: 0.2,
+        temperature: 0.1, // Température réduite pour plus de précision
         top_p: 0.95,
         return_full_text: false
       }
@@ -52,7 +52,7 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     console.log("Model detection response:", generatedText);
     
     // Extraire la couleur avec regex
-    const colorMatch = generatedText.match(/color:\s*([a-z]+)/i);
+    const colorMatch = generatedText.match(/couleur:\s*([a-zéèêëàâäôöùûüç]+)/i);
     const color = colorMatch?.[1] || null;
     
     if (!color) {
@@ -60,67 +60,87 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     }
     
     // Extraire la catégorie avec regex
-    const categoryMatch = generatedText.match(/category:\s*([a-z\s-]+)/i);
+    const categoryMatch = generatedText.match(/catégorie:\s*([a-zéèêëàâäôöùûüç\s-]+)/i);
     const category = categoryMatch?.[1]?.trim() || null;
     
     if (!category) {
       throw new Error("Impossible de détecter la catégorie du vêtement");
     }
     
-    // Mapping couleurs en anglais vers français
+    // Normalisation des couleurs en français
     const colorMapping: Record<string, string> = {
+      "bleu": "bleu",
+      "rouge": "rouge",
+      "vert": "vert", 
+      "jaune": "jaune",
+      "noir": "noir",
+      "blanc": "blanc",
+      "gris": "gris",
+      "violet": "violet",
+      "rose": "rose",
+      "orange": "orange",
+      "marron": "marron",
+      "beige": "beige",
       "blue": "bleu",
       "red": "rouge",
-      "green": "vert", 
+      "green": "vert",
       "yellow": "jaune",
-      "black": "noir",
+      "black": "noir", 
       "white": "blanc",
       "gray": "gris",
       "grey": "gris",
       "purple": "violet",
       "pink": "rose",
-      "orange": "orange",
-      "brown": "marron",
-      "beige": "beige",
-      // Ajoutez d'autres correspondances au besoin
+      "brown": "marron"
     };
     
-    // Mapping catégories en anglais vers français
+    // Normalisation des catégories en français
     const categoryMapping: Record<string, string> = {
       "t-shirt": "T-shirt",
+      "tshirt": "T-shirt",
+      "t shirt": "T-shirt",
       "shirt": "Chemise", 
+      "chemise": "Chemise",
       "pants": "Pantalon",
+      "pantalon": "Pantalon",
       "jeans": "Jeans",
+      "jean": "Jeans",
       "shorts": "Short",
+      "short": "Short",
       "dress": "Robe",
+      "robe": "Robe",
       "skirt": "Jupe",
+      "jupe": "Jupe",
       "jacket": "Veste",
+      "veste": "Veste",
       "coat": "Manteau",
+      "manteau": "Manteau",
       "sweater": "Pull",
+      "pull": "Pull",
       "hoodie": "Pull",
-      // Ajoutez d'autres correspondances au besoin
+      "sweatshirt": "Pull"
     };
     
-    // Convertir en français
-    const frenchColor = colorMapping[color] || color;
+    // Normaliser la couleur
+    const normalizedColor = colorMapping[color] || color;
     
-    // Pour la catégorie, chercher des correspondances partielles
-    let frenchCategory = "T-shirt"; // Valeur par défaut
-    for (const [engCategory, frCategory] of Object.entries(categoryMapping)) {
-      if (category.includes(engCategory)) {
-        frenchCategory = frCategory;
+    // Normaliser la catégorie
+    let normalizedCategory = "T-shirt"; // Valeur par défaut
+    for (const [key, value] of Object.entries(categoryMapping)) {
+      if (category.includes(key)) {
+        normalizedCategory = value;
         break;
       }
     }
     
-    console.log("Detected color (English):", color);
-    console.log("Detected category (English):", category);
-    console.log("Final color (French):", frenchColor);
-    console.log("Final category (French):", frenchCategory);
+    console.log("Detected color:", color);
+    console.log("Normalized color:", normalizedColor);
+    console.log("Detected category:", category);
+    console.log("Normalized category:", normalizedCategory);
     
     return {
-      color: frenchColor,
-      category: frenchCategory
+      color: normalizedColor,
+      category: normalizedCategory
     };
   } catch (error) {
     console.error("Critical error in detectClothingInfo:", error);
