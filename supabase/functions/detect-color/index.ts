@@ -39,37 +39,15 @@ const availableColors = [
   'jaune', 'orange', 'violet', 'rose', 'marron', 'beige', 'multicolore'
 ];
 
-serve(async (req) => {
-  // Gérer les requêtes CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    const { imageUrl } = await req.json();
-    
-    if (!imageUrl) {
-      return new Response(
-        JSON.stringify({ error: 'URL de l\'image manquante' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Extraire la couleur dominante de l'image en utilisant Hugging Face
-    const color = await detectDominantColor(imageUrl);
-    
-    return new Response(
-      JSON.stringify({ color }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  } catch (error) {
-    console.error('Erreur lors de la détection de couleur:', error);
-    return new Response(
-      JSON.stringify({ error: error.message || 'Une erreur s\'est produite lors de la détection de couleur' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
-});
+/**
+ * Convertit un Blob en Base64
+ */
+async function blobToBase64(blob: Blob): Promise<string> {
+  const arrayBuffer = await blob.arrayBuffer();
+  const uint8Array = new Uint8Array(arrayBuffer);
+  const base64 = btoa(String.fromCharCode(...uint8Array));
+  return base64;
+}
 
 /**
  * Fonction qui détecte la couleur dominante d'une image en utilisant Hugging Face
@@ -94,6 +72,27 @@ async function detectDominantColor(imageUrl: string): Promise<string> {
     // Utiliser l'API Hugging Face pour la détection de couleur
     const hf = new HfInference(Deno.env.get('HUGGINGFACE_API_KEY'));
     
+    // Première tentative : demande spécifique pour se concentrer sur le vêtement
+    const detectedColor = await detectColorWithDirectQuery(hf, imageToAnalyze);
+    
+    // Si aucune couleur spécifique n'est détectée, essayer avec la détection secondaire
+    if (detectedColor === 'multicolore') {
+      const refinedColor = await detectColorWithSecondaryMethod(hf, imageToAnalyze);
+      return refinedColor;
+    }
+    
+    return detectedColor;
+  } catch (error) {
+    console.error('Erreur dans detectDominantColor:', error);
+    return 'multicolore'; // Couleur par défaut en cas d'erreur
+  }
+}
+
+/**
+ * Détecte la couleur avec une requête directe
+ */
+async function detectColorWithDirectQuery(hf: HfInference, imageToAnalyze: string): Promise<string> {
+  try {
     // Demande spécifique pour se concentrer sur le vêtement
     const result = await hf.textGeneration({
       model: "gpt2",
@@ -110,74 +109,109 @@ async function detectDominantColor(imageUrl: string): Promise<string> {
     console.log("Generated color text:", generatedColor);
     
     // Rechercher la couleur dans la réponse générée
-    let detectedColor = 'multicolore';
-    
     for (const [englishColor, frenchColor] of Object.entries(colorMapping)) {
       if (generatedColor.includes(englishColor)) {
-        detectedColor = frenchColor;
-        break;
+        return frenchColor;
       }
     }
     
-    // Si aucune couleur spécifique n'est détectée, essayons une approche différente avec image-to-text
-    if (detectedColor === 'multicolore') {
-      try {
-        const captionResult = await hf.imageToText({
-          model: "nlpconnect/vit-gpt2-image-captioning",
-          data: imageToAnalyze,
-        });
-        
-        console.log("Image caption result:", captionResult);
-        
-        // Extraire les termes de couleur à partir de la description générée
-        const description = captionResult.generated_text.toLowerCase();
-        console.log("Generated description:", description);
-        
-        // Créer une requête plus spécifique basée sur la description
-        const colorQuery = await hf.textGeneration({
-          model: "gpt2",
-          inputs: `The image shows: "${description}". What is the main color of the clothing item in this image? Answer with just one color name.`,
-          parameters: {
-            max_new_tokens: 10,
-            temperature: 0.1
-          }
-        });
-        
-        console.log("Refined color query result:", colorQuery);
-        
-        const refinedColor = colorQuery.generated_text.toLowerCase().trim();
-        
-        // Rechercher la couleur dans la réponse raffinée
-        for (const [englishColor, frenchColor] of Object.entries(colorMapping)) {
-          if (refinedColor.includes(englishColor)) {
-            detectedColor = frenchColor;
-            break;
-          }
-        }
-      } catch (error) {
-        console.error("Error in secondary color detection:", error);
-      }
-    }
-    
-    // Vérifier si la couleur détectée est dans la liste des couleurs disponibles
-    if (!availableColors.includes(detectedColor)) {
-      detectedColor = 'multicolore';
-    }
-    
-    console.log("Final detected color:", detectedColor);
-    return detectedColor;
+    return 'multicolore';
   } catch (error) {
-    console.error('Erreur dans detectDominantColor:', error);
-    return 'multicolore'; // Couleur par défaut en cas d'erreur
+    console.error("Error in primary color detection:", error);
+    return 'multicolore';
   }
 }
 
 /**
- * Convertit un Blob en Base64
+ * Détecte la couleur avec une méthode secondaire
  */
-async function blobToBase64(blob: Blob): Promise<string> {
-  const arrayBuffer = await blob.arrayBuffer();
-  const uint8Array = new Uint8Array(arrayBuffer);
-  const base64 = btoa(String.fromCharCode(...uint8Array));
-  return base64;
+async function detectColorWithSecondaryMethod(hf: HfInference, imageToAnalyze: string): Promise<string> {
+  try {
+    // Générer une description de l'image
+    const captionResult = await hf.imageToText({
+      model: "nlpconnect/vit-gpt2-image-captioning",
+      data: imageToAnalyze,
+    });
+    
+    console.log("Image caption result:", captionResult);
+    
+    // Extraire les termes de couleur à partir de la description générée
+    const description = captionResult.generated_text.toLowerCase();
+    console.log("Generated description:", description);
+    
+    // Créer une requête plus spécifique basée sur la description
+    const colorQuery = await hf.textGeneration({
+      model: "gpt2",
+      inputs: `The image shows: "${description}". What is the main color of the clothing item in this image? Answer with just one color name.`,
+      parameters: {
+        max_new_tokens: 10,
+        temperature: 0.1
+      }
+    });
+    
+    console.log("Refined color query result:", colorQuery);
+    
+    const refinedColor = colorQuery.generated_text.toLowerCase().trim();
+    
+    // Rechercher la couleur dans la réponse raffinée
+    for (const [englishColor, frenchColor] of Object.entries(colorMapping)) {
+      if (refinedColor.includes(englishColor)) {
+        return frenchColor;
+      }
+    }
+    
+    // Si aucune couleur n'a été trouvée, retourner la valeur par défaut
+    return 'multicolore';
+  } catch (error) {
+    console.error("Error in secondary color detection:", error);
+    return 'multicolore';
+  }
 }
+
+/**
+ * Valide la couleur détectée par rapport aux couleurs disponibles
+ */
+function validateDetectedColor(detectedColor: string): string {
+  // Vérifier si la couleur détectée est dans la liste des couleurs disponibles
+  if (!availableColors.includes(detectedColor)) {
+    return 'multicolore';
+  }
+  return detectedColor;
+}
+
+serve(async (req) => {
+  // Gérer les requêtes CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { imageUrl } = await req.json();
+    
+    if (!imageUrl) {
+      return new Response(
+        JSON.stringify({ error: 'URL de l\'image manquante' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Extraire la couleur dominante de l'image en utilisant Hugging Face
+    let color = await detectDominantColor(imageUrl);
+    
+    // Valider que la couleur détectée est parmi les couleurs disponibles
+    color = validateDetectedColor(color);
+    
+    console.log("Final detected color:", color);
+    
+    return new Response(
+      JSON.stringify({ color }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('Erreur lors de la détection de couleur:', error);
+    return new Response(
+      JSON.stringify({ error: error.message || 'Une erreur s\'est produite lors de la détection de couleur' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
