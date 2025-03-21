@@ -21,7 +21,7 @@ import { User } from "@supabase/supabase-js";
 interface MessagesSidebarProps {
   conversations: Message[];
   loading: boolean;
-  friendId?: string;
+  friendEmail?: string | null;
   isMobile: boolean;
   user: User;
 }
@@ -29,7 +29,7 @@ interface MessagesSidebarProps {
 const MessagesSidebar: React.FC<MessagesSidebarProps> = ({
   conversations,
   loading,
-  friendId,
+  friendEmail,
   isMobile,
   user
 }) => {
@@ -45,16 +45,16 @@ const MessagesSidebar: React.FC<MessagesSidebarProps> = ({
   }, [user, chargerAmis]);
 
   // Démarrer une nouvelle conversation avec un ami
-  const startNewConversation = (amiId: string) => {
+  const startNewConversation = (amiEmail: string) => {
     setIsDialogOpen(false);
-    navigate(`/messages/${amiId}`);
+    navigate(`/messages/${amiEmail}`);
   };
 
   return (
     <div 
       className={cn(
         "w-full md:w-1/3 md:border-r",
-        friendId && isMobile ? "hidden" : "flex flex-col"
+        friendEmail && isMobile ? "hidden" : "flex flex-col"
       )}
     >
       <div className="p-3 flex items-center justify-between border-b">
@@ -84,7 +84,7 @@ interface NewConversationDialogProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   filteredAmis: any[];
-  startNewConversation: (amiId: string) => void;
+  startNewConversation: (amiEmail: string) => void;
   user: User;
   navigate: (path: string) => void;
 }
@@ -118,7 +118,7 @@ const NewConversationDialog: React.FC<NewConversationDialogProps> = ({
                   key={ami.id}
                   variant="ghost"
                   className="w-full justify-start p-2 h-auto"
-                  onClick={() => startNewConversation(ami.ami_id === user.id ? ami.user_id : ami.ami_id)}
+                  onClick={() => startNewConversation(ami.email || "")}
                 >
                   <Avatar className="h-8 w-8 mr-2">
                     <AvatarFallback>

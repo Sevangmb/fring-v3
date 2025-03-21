@@ -27,7 +27,8 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: false,
-      refetchOnWindowFocus: false
+      refetchOnWindowFocus: false,
+      staleTime: 10000 // 10 secondes avant qu'une requête soit considérée comme périmée
     }
   }
 });

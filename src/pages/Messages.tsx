@@ -4,8 +4,12 @@ import Layout from "@/components/templates/Layout";
 import { Helmet } from "react-helmet";
 import { Heading, Text } from "@/components/atoms/Typography";
 import MessagesPageContent from "@/components/templates/MessagesPageContent";
+import { useParams } from "react-router-dom";
+import { getUserIdByEmail } from "@/services/amis/userEmail";
 
 const MessagesPage = () => {
+  const { friendId } = useParams<{ friendId: string }>();
+  
   return (
     <Layout>
       <Helmet>
@@ -23,7 +27,7 @@ const MessagesPage = () => {
       </div>
       
       <div className="container mx-auto px-4 py-8">
-        <MessagesPageContent />
+        <MessagesPageContent friendIdOrEmail={friendId} />
       </div>
     </Layout>
   );

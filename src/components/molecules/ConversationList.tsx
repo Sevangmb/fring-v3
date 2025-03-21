@@ -53,14 +53,14 @@ const ConversationList: React.FC<ConversationListProps> = ({
         
         const isUnread = !conversation.read && conversation.receiver_id === user?.id;
         
-        // Extraire le nom d'utilisateur de l'email (si disponible)
+        // Utiliser l'email au lieu de l'ID pour les liens
         const email = conversation.sender_email || 'Utilisateur inconnu';
         const initials = email.substring(0, 2).toUpperCase();
         
         return (
           <Link
             key={conversation.id}
-            to={`/messages/${otherUserId}`}
+            to={`/messages/${email}`}
             className={cn(
               "flex items-center gap-3 p-3 border rounded-md hover:bg-accent/50 transition-colors",
               isUnread && "bg-primary/5 border-primary/20"
