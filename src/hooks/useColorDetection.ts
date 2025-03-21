@@ -40,30 +40,36 @@ export const useColorDetection = (
       
       console.log("Informations détectées:", detectedInfo);
       
-      // Définir la couleur détectée
-      form.setValue('couleur', detectedInfo.color);
-      
-      // Définir la catégorie détectée si disponible
-      if (detectedInfo.category) {
-        form.setValue('categorie', detectedInfo.category);
+      // Vérifier que les informations détectées sont valides
+      if (detectedInfo && detectedInfo.color) {
+        // Définir la couleur détectée
+        form.setValue('couleur', detectedInfo.color);
+        
+        // Définir la catégorie détectée si disponible
+        if (detectedInfo.category) {
+          form.setValue('categorie', detectedInfo.category);
+        }
+        
+        toast({
+          title: "Détection réussie",
+          description: `La couleur ${detectedInfo.color} et la catégorie ${detectedInfo.category || 'inconnue'} ont été détectées.`,
+        });
+      } else {
+        throw new Error("Données de détection invalides");
       }
-      
-      toast({
-        title: "Détection réussie",
-        description: `La couleur ${detectedInfo.color} et la catégorie ${detectedInfo.category} ont été détectées.`,
-      });
     } catch (error) {
       console.error("Erreur lors de la détection:", error);
       setDetectionError("La détection automatique a échoué. Veuillez sélectionner manuellement les informations.");
       
+      // Utiliser une couleur aléatoire comme fallback
       const randomColors = ['bleu', 'rouge', 'vert', 'jaune', 'noir', 'blanc', 'violet', 'orange'];
       const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
       form.setValue('couleur', randomColor);
       
       toast({
-        title: "Détection échouée",
-        description: "La détection automatique a rencontré un problème. Vous pouvez sélectionner manuellement la couleur.",
-        variant: "destructive",
+        title: "Détection partielle",
+        description: "La détection automatique a rencontré un problème. Une couleur a été suggérée automatiquement.",
+        variant: "default",
       });
     } finally {
       setDetectingColor(false);
@@ -72,7 +78,6 @@ export const useColorDetection = (
 
   return {
     detectingColor,
-    setDetectingColor,
     detectionError,
     handleDetectImage
   };
