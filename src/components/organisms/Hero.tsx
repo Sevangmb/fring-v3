@@ -46,7 +46,7 @@ const Hero = ({ className }: HeroProps) => {
               </Link>
             </Button>
             <Button variant="outline" size="lg" asChild>
-              <Link to="/features">Learn more</Link>
+              <Link to="/login">Learn more</Link>
             </Button>
           </div>
           
