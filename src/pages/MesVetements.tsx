@@ -6,60 +6,38 @@ import MesVetementsSection from "@/components/organisms/MesVetements";
 import { Heading, Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
 import { Plus, List } from "lucide-react";
-import { initializeDatabase, createVetementsTable } from "@/services/supabaseService";
-import { useToast } from "@/hooks/use-toast";
+import { createVetementsTable } from "@/services/supabaseService";
 
 const MesVetementsPage = () => {
-  const { toast } = useToast();
   const [initialized, setInitialized] = useState(false);
 
-  // Initialiser la base de données au chargement de la page
+  // Initialiser la base de données au chargement de la page, une seule fois
   useEffect(() => {
-    const setupDatabase = async () => {
-      if (initialized) return; // Éviter les initialisations multiples
-      
-      try {
-        // Essayer d'abord de créer la table directement via SQL
-        const tableCreated = await createVetementsTable();
-        
-        if (!tableCreated) {
-          // Fallback: essayer d'initialiser avec l'ancienne méthode
-          const success = await initializeDatabase();
-          
-          if (success) {
-            toast({
-              title: "Base de données initialisée",
-              description: "La connexion à la base de données a été établie avec succès.",
-            });
-          } else {
-            toast({
-              title: "Base de données non disponible",
-              description: "Utilisation des données de démonstration.",
-              variant: "destructive",
-            });
-          }
-        } else {
-          // La table existe, pas besoin d'afficher un message pour le bucket de stockage
-          toast({
-            title: "Base de données initialisée",
-            description: "La table a été créée ou existait déjà.",
-          });
-        }
-        
-        setInitialized(true);
-      } catch (error) {
-        console.error("Erreur d'initialisation:", error);
-        toast({
-          title: "Erreur",
-          description: "Impossible d'initialiser la base de données. Utilisation des données de démonstration.",
-          variant: "destructive",
-        });
-        setInitialized(true);
-      }
-    };
+    // Utiliser sessionStorage pour éviter d'initialiser à chaque visite de page
+    const alreadyInitialized = sessionStorage.getItem('dbInitialized');
     
-    setupDatabase();
-  }, [toast, initialized]);
+    if (!alreadyInitialized && !initialized) {
+      const setupDatabase = async () => {
+        try {
+          // Essayer de créer la table directement via SQL, silencieusement
+          await createVetementsTable();
+          // Marquer comme initialisé
+          sessionStorage.setItem('dbInitialized', 'true');
+          setInitialized(true);
+        } catch (error) {
+          console.error("Erreur d'initialisation:", error);
+          // Même en cas d'erreur, on marque comme initialisé pour ne pas réessayer
+          sessionStorage.setItem('dbInitialized', 'true');
+          setInitialized(true);
+        }
+      };
+      
+      setupDatabase();
+    } else {
+      // Déjà initialisé selon sessionStorage
+      setInitialized(true);
+    }
+  }, [initialized]);
 
   return (
     <Layout>
