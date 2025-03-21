@@ -3,16 +3,14 @@ import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { VetementFormValues } from "./schema/VetementFormSchema";
 import { useImageUpload } from "@/hooks/useImageUpload";
-import { useColorDetection } from "@/hooks/useColorDetection";
+import { useDetection } from "@/hooks/useDetection";
 import ImagePreviewArea from "./image-upload/ImagePreviewArea";
 import ImageActions from "./image-upload/ImageActions";
-import DetectionErrorMessage from "./image-upload/DetectionErrorMessage";
+import DetectionResults from "./detection/DetectionResults";
 
 interface ImageUploaderProps {
   form: UseFormReturn<VetementFormValues>;
   user: any;
-  detectingColor: boolean;
-  setDetectingColor: React.Dispatch<React.SetStateAction<boolean>>;
   imagePreview: string | null;
   setImagePreview: React.Dispatch<React.SetStateAction<string | null>>;
 }
@@ -20,19 +18,18 @@ interface ImageUploaderProps {
 const ImageUploader: React.FC<ImageUploaderProps> = ({
   form,
   user,
-  detectingColor,
-  setDetectingColor,
   imagePreview,
   setImagePreview
 }) => {
   const { fileInputRef, handleImageChange } = useImageUpload(user, setImagePreview);
   
   const { 
-    detectionError, 
-    detectionSteps,
+    loading,
+    error,
+    steps,
     currentStep,
-    handleDetectImage 
-  } = useColorDetection(form, imagePreview);
+    detectImage
+  } = useDetection(form, imagePreview);
 
   const handleDeleteImage = () => {
     setImagePreview(null);
@@ -45,7 +42,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       <div className="w-full mb-4">
         <ImagePreviewArea 
           imagePreview={imagePreview}
-          detectingColor={detectingColor}
+          loading={loading}
           onClick={() => fileInputRef.current?.click()}
         />
       </div>
@@ -58,17 +55,28 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         onChange={handleImageChange}
       />
       
-      <ImageActions 
-        imagePreview={imagePreview}
-        detectingColor={detectingColor}
-        onDetect={handleDetectImage}
-        onDelete={handleDeleteImage}
-      />
+      {imagePreview && (
+        <div className="flex gap-4 mt-4">
+          <Button 
+            variant="outline" 
+            onClick={handleDeleteImage}
+            disabled={loading}
+          >
+            Supprimer l'image
+          </Button>
+          <DetectionButton 
+            onClick={detectImage}
+            loading={loading}
+            disabled={!imagePreview}
+          />
+        </div>
+      )}
       
-      <DetectionErrorMessage 
-        error={detectionError}
-        steps={detectionSteps}
+      <DetectionResults 
+        error={error}
+        steps={steps}
         currentStep={currentStep}
+        loading={loading}
       />
     </div>
   );
