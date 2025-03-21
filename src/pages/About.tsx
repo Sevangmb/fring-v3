@@ -22,7 +22,7 @@ const AboutPage = () => {
             <section className="space-y-4">
               <div className="flex items-center gap-3">
                 <Info className="h-6 w-6 text-primary" />
-                <Heading as="h2" size="sm">Notre Mission</Heading>
+                <Heading as="h2" variant="h3">Notre Mission</Heading>
               </div>
               <Text>
                 Notre application vise à simplifier la gestion de votre garde-robe et à faciliter le partage avec 
@@ -33,7 +33,7 @@ const AboutPage = () => {
             <section className="space-y-4">
               <div className="flex items-center gap-3">
                 <Building className="h-6 w-6 text-primary" />
-                <Heading as="h2" size="sm">Notre Entreprise</Heading>
+                <Heading as="h2" variant="h3">Notre Entreprise</Heading>
               </div>
               <Text>
                 Fondée en 2023, notre entreprise s'engage à créer des solutions innovantes pour faciliter 
@@ -47,7 +47,7 @@ const AboutPage = () => {
             <section className="space-y-4">
               <div className="flex items-center gap-3">
                 <User className="h-6 w-6 text-primary" />
-                <Heading as="h2" size="sm">Notre Équipe</Heading>
+                <Heading as="h2" variant="h3">Notre Équipe</Heading>
               </div>
               <Text>
                 Notre équipe est composée de designers, développeurs et experts en mode qui partagent 
@@ -59,7 +59,7 @@ const AboutPage = () => {
             <section className="space-y-4">
               <div className="flex items-center gap-3">
                 <Award className="h-6 w-6 text-primary" />
-                <Heading as="h2" size="sm">Nos Valeurs</Heading>
+                <Heading as="h2" variant="h3">Nos Valeurs</Heading>
               </div>
               <Text>
                 Nous croyons en la simplicité, la durabilité et le partage. Notre application 
@@ -71,7 +71,7 @@ const AboutPage = () => {
             <section className="space-y-4">
               <div className="flex items-center gap-3">
                 <Book className="h-6 w-6 text-primary" />
-                <Heading as="h2" size="sm">Notre Histoire</Heading>
+                <Heading as="h2" variant="h3">Notre Histoire</Heading>
               </div>
               <Text>
                 L'idée de cette application est née d'un besoin personnel : mieux organiser sa garde-robe 
