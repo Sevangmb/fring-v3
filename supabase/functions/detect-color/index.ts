@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "./utils/cors.ts";
-import { detectClothingInfo } from "./service/colorDetection.ts";
+import { detectClothingInfo } from "./service/colorDetection/index.ts";
 
 // Fonction principale qui gère les requêtes HTTP
 serve(async (req) => {
