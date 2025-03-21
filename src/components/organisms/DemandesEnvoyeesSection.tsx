@@ -4,7 +4,7 @@ import { Heading } from "@/components/atoms/Typography";
 import DemandesEnvoyeesCard from "@/components/molecules/DemandesEnvoyeesCard";
 import { Ami } from "@/services/amis/types";
 import DemandesEnvoyeesListItem from "@/components/molecules/DemandesEnvoyeesListItem";
-import { UserClock } from "lucide-react";
+import { Clock } from "lucide-react";
 
 interface DemandesEnvoyeesSectionProps {
   demandes: Ami[];
@@ -20,7 +20,7 @@ const DemandesEnvoyeesSection: React.FC<DemandesEnvoyeesSectionProps> = ({
   return (
     <section>
       <div className="flex items-center gap-2 mb-4">
-        <UserClock className="h-5 w-5 text-amber-500" />
+        <Clock className="h-5 w-5 text-amber-500" />
         <Heading as="h2" variant="h3">
           Demandes d'amis envoyées ({demandes.length})
         </Heading>

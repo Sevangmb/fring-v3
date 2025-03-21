@@ -8,7 +8,7 @@ import {
   Users, 
   Layout, 
   LayoutList,
-  UserClock
+  Clock
 } from "lucide-react";
 import DemandesRecuesSection from "@/components/organisms/DemandesRecuesSection";
 import DemandesEnvoyeesSection from "@/components/organisms/DemandesEnvoyeesSection";
@@ -140,7 +140,7 @@ const AmisPageContent: React.FC<AmisPageContentProps> = ({
             value="demandes-envoyees" 
             className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground relative"
           >
-            <UserClock className="h-4 w-4 mr-2" />
+            <Clock className="h-4 w-4 mr-2" />
             Demandes envoyées
             {demandesEnvoyees.length > 0 && (
               <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -189,7 +189,7 @@ const AmisPageContent: React.FC<AmisPageContentProps> = ({
           ) : (
             <div className="text-center py-12 bg-muted/30 rounded-lg border">
               <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 mb-4">
-                <UserClock className="h-6 w-6 text-amber-600" />
+                <Clock className="h-6 w-6 text-amber-600" />
               </div>
               <h3 className="text-lg font-medium">Aucune demande envoyée</h3>
               <p className="text-muted-foreground mt-2">
