@@ -1,7 +1,7 @@
 
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
-import { Categorie, Marque, VetementFormValues, vetementSchema } from "./schema/VetementFormSchema";
+import { VetementFormValues, Categorie } from "./schema/VetementFormSchema";
 import NomField from "./form-fields/NomField";
 import CategorieField from "./form-fields/CategorieField";
 import CouleurField from "./form-fields/CouleurField";
@@ -12,51 +12,46 @@ import DescriptionField from "./form-fields/DescriptionField";
 interface VetementFormFieldsProps {
   form: UseFormReturn<VetementFormValues>;
   categories: Categorie[];
-  marques: Marque[];
+  marques: any[];
   loadingCategories: boolean;
-  detectingColor: boolean;
+  loading: boolean;
 }
 
+/**
+ * Tous les champs du formulaire de vêtement
+ */
 const VetementFormFields: React.FC<VetementFormFieldsProps> = ({
   form,
   categories,
   marques,
   loadingCategories,
-  detectingColor,
+  loading
 }) => {
   return (
-    <>
-      {/* Nom */}
+    <div className="space-y-4">
       <NomField form={form} />
       
-      {/* Ligne: Catégorie et Couleur */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <CategorieField 
-          form={form}
-          categories={categories}
-          loadingCategories={loadingCategories}
-          detectingColor={detectingColor}
+          form={form} 
+          categories={categories} 
+          loadingCategories={loadingCategories} 
+          loading={loading}
         />
         <CouleurField 
-          form={form}
-          detectingColor={detectingColor}
+          form={form} 
+          loading={loading}
         />
       </div>
       
-      {/* Ligne: Taille et Marque */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <TailleField form={form} />
         <MarqueField form={form} marques={marques} />
       </div>
       
-      {/* Description */}
       <DescriptionField form={form} />
-    </>
+    </div>
   );
 };
-
-// Export the schema and types for external use
-export { vetementSchema };
-export type { VetementFormValues };
 
 export default VetementFormFields;

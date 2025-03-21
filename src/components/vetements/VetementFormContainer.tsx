@@ -8,9 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { addVetement } from "@/services/vetement";
 import VetementFormFields from "./VetementFormFields";
 import { vetementSchema, VetementFormValues } from "./schema/VetementFormSchema";
-import ImageUploader from "./ImageUploader";
+import ImageUploader from "./image-upload/ImageUploader";
 import FormActions from "./FormActions";
-import { useImagePreview } from "@/hooks/useImagePreview";
 
 interface VetementFormContainerProps {
   user: any;
@@ -38,12 +37,8 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { 
-    imagePreview, 
-    setImagePreview, 
-    detectingColor, 
-    setDetectingColor 
-  } = useImagePreview();
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // Initialiser le formulaire avec react-hook-form
   const form = useForm<VetementFormValues>({
@@ -65,7 +60,7 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
       console.log("Initialisation de l'aperçu de l'image:", initialValues.image_url);
       setImagePreview(initialValues.image_url);
     }
-  }, [initialValues, setImagePreview]);
+  }, [initialValues]);
 
   const handleSubmit = async (data: VetementFormValues) => {
     if (!user) {
@@ -131,8 +126,6 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
         <ImageUploader
           form={form}
           user={user}
-          detectingColor={detectingColor}
-          setDetectingColor={setDetectingColor}
           imagePreview={imagePreview}
           setImagePreview={setImagePreview}
         />
@@ -147,7 +140,7 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
               categories={categories}
               marques={marques}
               loadingCategories={loadingCategories}
-              detectingColor={detectingColor}
+              loading={loading}
             />
             
             <FormActions

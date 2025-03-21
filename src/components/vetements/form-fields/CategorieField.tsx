@@ -10,18 +10,18 @@ interface CategorieFieldProps {
   form: UseFormReturn<VetementFormValues>;
   categories: Categorie[];
   loadingCategories: boolean;
-  detectingColor: boolean;
+  loading: boolean;
 }
 
 const CategorieField: React.FC<CategorieFieldProps> = ({ 
   form, 
   categories, 
   loadingCategories,
-  detectingColor
+  loading
 }) => {
   // Récupérer la valeur actuelle pour l'afficher dans le label si elle existe
   const categorieValue = form.watch('categorie');
-  const hasDetectedValue = !!categorieValue && detectingColor === false;
+  const hasDetectedValue = !!categorieValue && !loading;
 
   return (
     <FormField
@@ -41,15 +41,26 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
             onValueChange={field.onChange} 
             defaultValue={field.value}
             value={field.value}
-            disabled={loadingCategories}
+            disabled={loadingCategories || loading}
           >
             <FormControl>
               <SelectTrigger>
-                <SelectValue placeholder={loadingCategories ? "Chargement..." : "Sélectionner une catégorie"} />
+                <SelectValue placeholder={
+                  loading 
+                    ? "Détection en cours..." 
+                    : loadingCategories 
+                      ? "Chargement..." 
+                      : "Sélectionner une catégorie"
+                } />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {loadingCategories ? (
+              {loading ? (
+                <div className="flex items-center justify-center p-2">
+                  <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full mr-2" />
+                  <span>Détection en cours...</span>
+                </div>
+              ) : loadingCategories ? (
                 <div className="flex items-center justify-center p-2">
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   <span>Chargement...</span>

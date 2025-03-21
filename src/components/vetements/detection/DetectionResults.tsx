@@ -1,25 +1,41 @@
 
 import React from "react";
-import { Text } from "@/components/atoms/Typography";
 import { AlertTriangle, Info, CheckCircle } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Text } from "@/components/atoms/Typography";
 
-interface DetectionErrorMessageProps {
+interface DetectionResultsProps {
   error: string | null;
-  steps?: string[];
+  steps: string[];
+  currentStep: string | null;
+  loading: boolean;
 }
 
 /**
- * Composant pour afficher un message d'erreur de détection et les étapes du processus
+ * Composant d'affichage des résultats de détection avec les étapes du processus
  */
-const DetectionErrorMessage: React.FC<DetectionErrorMessageProps> = ({ error, steps = [] }) => {
+const DetectionResults: React.FC<DetectionResultsProps> = ({ 
+  error, 
+  steps, 
+  currentStep,
+  loading 
+}) => {
   const hasSteps = steps && steps.length > 0;
   const hasError = error !== null;
   
-  if (!hasError && !hasSteps) return null;
+  if (!hasError && !hasSteps && !loading) return null;
   
   return (
     <div className="mt-3 space-y-2 w-full">
+      {loading && (
+        <div className="flex items-center gap-2 text-primary bg-primary/10 p-3 rounded-md">
+          <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+          <Text className="text-primary text-sm font-medium">
+            {currentStep || "Détection en cours..."}
+          </Text>
+        </div>
+      )}
+      
       {error && (
         <div className="flex items-center gap-2 text-destructive bg-destructive/10 p-3 rounded-md">
           <AlertTriangle size={18} />
@@ -72,4 +88,4 @@ const DetectionErrorMessage: React.FC<DetectionErrorMessageProps> = ({ error, st
   );
 };
 
-export default DetectionErrorMessage;
+export default DetectionResults;
