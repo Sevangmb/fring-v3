@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { addVetement } from "@/services/vetement";
 import VetementFormFields from "./VetementFormFields";
 import { vetementSchema, VetementFormValues } from "./schema/VetementFormSchema";
-import ImageUploader from "./image-upload/ImageUploader";
+import ImageUploader from "./ImageUploader";
 import FormActions from "./FormActions";
 
 interface VetementFormContainerProps {

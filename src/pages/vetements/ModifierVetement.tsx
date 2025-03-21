@@ -81,11 +81,19 @@ const ModifierVetementPage = () => {
   const handleUpdate = async (updatedData: VetementFormValues) => {
     try {
       console.log("Données à mettre à jour:", updatedData);
+      
+      // S'assurer que l'ID est inclus pour la mise à jour
+      if (!vetementId) {
+        throw new Error("ID de vêtement manquant");
+      }
+      
       await updateVetement(vetementId, updatedData);
+      
       toast({
         title: "Vêtement mis à jour",
         description: "Les modifications ont été enregistrées avec succès.",
       });
+      
       navigate("/mes-vetements/liste");
     } catch (error) {
       console.error("Erreur lors de la mise à jour:", error);
