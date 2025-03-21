@@ -9,6 +9,7 @@ import { addVetement } from "@/services/supabaseService";
 import VetementFormFields, { vetementSchema, VetementFormValues } from "./VetementFormFields";
 import ImageUploader from "./ImageUploader";
 import FormActions from "./FormActions";
+import { useImagePreview } from "@/hooks/useImagePreview";
 
 interface VetementFormContainerProps {
   user: any;
@@ -26,8 +27,12 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [detectingColor, setDetectingColor] = useState(false);
+  const { 
+    imagePreview, 
+    setImagePreview, 
+    detectingColor, 
+    setDetectingColor 
+  } = useImagePreview();
 
   // Initialiser le formulaire avec react-hook-form
   const form = useForm<VetementFormValues>({
