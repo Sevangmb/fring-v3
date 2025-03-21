@@ -191,6 +191,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accepter_demande_ami: {
+        Args: {
+          demande_id: number
+          current_user_id: string
+        }
+        Returns: boolean
+      }
       assign_all_clothes_to_user: {
         Args: {
           target_user_id: string

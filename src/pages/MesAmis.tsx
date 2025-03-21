@@ -49,20 +49,29 @@ const MesAmisPage = () => {
   const handleAccepterDemande = async (amiId: number) => {
     try {
       const amiAccepte = await accepterDemandeAmi(amiId);
-      toast({
-        title: "Demande acceptée",
-        description: "Vous êtes maintenant amis !",
-      });
       
-      // Mettre à jour la liste des amis
-      const listeAmis = await fetchAmis();
-      setAmis(listeAmis);
+      if (amiAccepte) {
+        toast({
+          title: "Demande acceptée",
+          description: "Vous êtes maintenant amis !",
+        });
+        
+        // Mettre à jour la liste des amis
+        const listeAmis = await fetchAmis();
+        setAmis(listeAmis);
+      } else {
+        toast({
+          title: "Erreur",
+          description: "La demande n'a pas pu être acceptée. Veuillez réessayer.",
+          variant: "destructive",
+        });
+      }
     } catch (error: any) {
       console.error("Erreur lors de l'acceptation de la demande:", error);
       
       // Message d'erreur avec plus de détails
       toast({
-        title: "Erreur",
+        title: "Erreur lors de l'acceptation",
         description: error?.message || "Impossible d'accepter cette demande.",
         variant: "destructive",
       });
@@ -83,7 +92,7 @@ const MesAmisPage = () => {
     } catch (error: any) {
       console.error("Erreur lors du rejet de la demande:", error);
       toast({
-        title: "Erreur",
+        title: "Erreur lors du rejet",
         description: error?.message || "Impossible de rejeter cette demande.",
         variant: "destructive",
       });
