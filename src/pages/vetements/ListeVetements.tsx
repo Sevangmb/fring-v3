@@ -28,6 +28,7 @@ const ListeVetementsPage = () => {
   const [marqueFilter, setMarqueFilter] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("tous");
+  const [error, setError] = useState<string | null>(null);
 
   // Récupérer les vêtements, catégories et marques depuis Supabase
   useEffect(() => {
@@ -39,6 +40,9 @@ const ListeVetementsPage = () => {
 
       try {
         setIsLoading(true);
+        setError(null);
+        
+        console.log("Chargement des données pour l'utilisateur:", user.id);
         
         // Récupérer les données depuis notre service
         const [vetementsData, categoriesData, marquesData] = await Promise.all([
@@ -47,11 +51,16 @@ const ListeVetementsPage = () => {
           fetchMarques()
         ]);
         
+        console.log("Vêtements récupérés:", vetementsData);
+        console.log("Catégories récupérées:", categoriesData);
+        console.log("Marques récupérées:", marquesData);
+        
         setVetements(vetementsData);
         setCategories(categoriesData);
         setMarques(marquesData);
-      } catch (error) {
-        console.error("Erreur lors de la récupération des données:", error);
+      } catch (err) {
+        console.error("Erreur lors de la récupération des données:", err);
+        setError("Impossible de charger les données. Veuillez réessayer.");
         toast({
           title: "Erreur",
           description: "Impossible de charger les données.",
@@ -136,6 +145,17 @@ const ListeVetementsPage = () => {
           {[1, 2, 3, 4, 5, 6].map((n) => (
             <div key={n} className="h-[300px] bg-muted/30 animate-pulse rounded-lg"></div>
           ))}
+        </div>
+      );
+    }
+    
+    if (error) {
+      return (
+        <div className="text-center py-16">
+          <Text className="text-destructive mb-4">{error}</Text>
+          <Button onClick={() => window.location.reload()}>
+            Réessayer
+          </Button>
         </div>
       );
     }

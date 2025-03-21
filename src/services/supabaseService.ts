@@ -125,6 +125,8 @@ export const fetchVetements = async (): Promise<Vetement[]> => {
       return [];
     }
 
+    console.log('Récupération des vêtements pour l\'utilisateur:', userId);
+
     const { data, error } = await supabase
       .from('vetements')
       .select('*')
@@ -133,13 +135,15 @@ export const fetchVetements = async (): Promise<Vetement[]> => {
     
     if (error) {
       console.error('Erreur lors de la récupération des vêtements:', error);
-      
       // Renvoyer un tableau vide en cas d'erreur
       return [];
     }
     
+    console.log('Vêtements récupérés:', data);
+    
     // Si aucune donnée n'est retournée, la table est peut-être vide pour cet utilisateur
     if (!data || data.length === 0) {
+      console.log('Aucun vêtement trouvé pour cet utilisateur, ajout de données de démo');
       // Insérer des données de démo pour l'utilisateur connecté
       try {
         const { error: insertError } = await supabase
@@ -163,6 +167,7 @@ export const fetchVetements = async (): Promise<Vetement[]> => {
           return [];
         }
         
+        console.log('Données de démo insérées et récupérées:', refreshedData);
         return refreshedData as Vetement[] || [];
       } catch (insertCatchError) {
         console.error('Exception lors de l\'insertion des données de démo:', insertCatchError);
@@ -188,6 +193,8 @@ export const addVetement = async (vetement: Omit<Vetement, 'id' | 'created_at' |
       throw new Error('Vous devez être connecté pour ajouter un vêtement');
     }
 
+    console.log('Ajout d\'un vêtement pour l\'utilisateur:', userId, vetement);
+
     const { data, error } = await supabase
       .from('vetements')
       .insert([{ ...vetement, user_id: userId }])
@@ -199,6 +206,7 @@ export const addVetement = async (vetement: Omit<Vetement, 'id' | 'created_at' |
       throw error;
     }
     
+    console.log('Vêtement ajouté avec succès:', data);
     return data as Vetement;
   } catch (error) {
     console.error('Erreur lors de l\'ajout d\'un vêtement:', error);
@@ -209,6 +217,7 @@ export const addVetement = async (vetement: Omit<Vetement, 'id' | 'created_at' |
 // Fonction pour supprimer un vêtement
 export const deleteVetement = async (id: number): Promise<void> => {
   try {
+    console.log('Tentative de suppression du vêtement ID:', id);
     // Vérifier que l'utilisateur est propriétaire du vêtement (la RLS s'en chargera)
     const { error } = await supabase
       .from('vetements')
@@ -219,6 +228,7 @@ export const deleteVetement = async (id: number): Promise<void> => {
       console.error('Erreur lors de la suppression d\'un vêtement:', error);
       throw error;
     }
+    console.log('Vêtement supprimé avec succès');
   } catch (error) {
     console.error('Erreur lors de la suppression d\'un vêtement:', error);
     throw error;
@@ -366,6 +376,14 @@ export const demoVetements: Omit<Vetement, 'id' | 'created_at' | 'user_id'>[] = 
     marque: "Uniqlo",
     description: "Short en coton léger pour l'été",
   },
+  {
+    nom: "T-shirt jaune",
+    categorie: "t-shirt",
+    couleur: "jaune",
+    taille: "L",
+    marque: "Adidas",
+    description: "T-shirt sport en matière respirante",
+  },
 ];
 
 // Fonction pour récupérer toutes les catégories
@@ -425,6 +443,8 @@ export const fetchAmis = async (): Promise<Ami[]> => {
       return [];
     }
 
+    console.log('Récupération des amis pour l\'utilisateur:', userId);
+
     // Récupérer les amis (où l'utilisateur est soit l'initiateur, soit le destinataire)
     const { data, error } = await supabase
       .from('amis')
@@ -436,6 +456,8 @@ export const fetchAmis = async (): Promise<Ami[]> => {
       console.error('Erreur lors de la récupération des amis:', error);
       return [];
     }
+
+    console.log('Amis récupérés:', data);
     
     return data as Ami[];
   } catch (error) {
