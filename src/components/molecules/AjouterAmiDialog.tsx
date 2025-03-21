@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -10,10 +10,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, UserPlus, X } from "lucide-react";
+import { Search, UserPlus, X, Users } from "lucide-react";
 import { searchUsersByEmail } from "@/services/userService";
 import { envoyerDemandeAmi } from "@/services/amiService";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { User } from "@/services/userService";
 
 interface AjouterAmiDialogProps {
   open: boolean;
@@ -24,10 +26,32 @@ interface AjouterAmiDialogProps {
 const AjouterAmiDialog: React.FC<AjouterAmiDialogProps> = ({ open, onClose, onAmiAdded }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<User[]>([]);
   const [sendingRequest, setSendingRequest] = useState<Record<string, boolean>>({});
+  const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   
   const { toast } = useToast();
+
+  // Charger les suggestions d'utilisateurs lors de l'ouverture de la boîte de dialogue
+  useEffect(() => {
+    if (open) {
+      loadSuggestedUsers();
+    }
+  }, [open]);
+
+  const loadSuggestedUsers = async () => {
+    try {
+      setIsLoadingSuggestions(true);
+      // Utiliser la même fonction mais sans terme de recherche pour obtenir quelques utilisateurs récents
+      const users = await searchUsersByEmail("");
+      setSuggestedUsers(users);
+    } catch (error) {
+      console.error("Erreur lors du chargement des suggestions:", error);
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,8 +92,14 @@ const AjouterAmiDialog: React.FC<AjouterAmiDialogProps> = ({ open, onClose, onAm
         description: "Votre demande d'ami a été envoyée avec succès.",
       });
       
+      // Retirer l'utilisateur des résultats de recherche
       setSearchResults(prevResults => 
         prevResults.filter(user => user.id !== userId)
+      );
+      
+      // Retirer également des suggestions
+      setSuggestedUsers(prevSuggestions => 
+        prevSuggestions.filter(user => user.id !== userId)
       );
       
       onAmiAdded();
@@ -84,6 +114,35 @@ const AjouterAmiDialog: React.FC<AjouterAmiDialogProps> = ({ open, onClose, onAm
       setSendingRequest(prev => ({ ...prev, [userId]: false }));
     }
   };
+
+  const renderUserItem = (user: User, isSuggestion = false) => (
+    <div 
+      key={user.id} 
+      className="flex items-center justify-between p-3 rounded-md border"
+    >
+      <div className="flex items-center gap-3">
+        <Avatar className="h-10 w-10">
+          <AvatarFallback>
+            {user.email.substring(0, 2).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <div>
+          <p className="font-medium">{user.email}</p>
+          {isSuggestion && (
+            <p className="text-xs text-muted-foreground">Suggestion</p>
+          )}
+        </div>
+      </div>
+      <Button
+        size="sm"
+        onClick={() => handleEnvoyerDemande(user.id)}
+        disabled={sendingRequest[user.id]}
+      >
+        <UserPlus className="h-4 w-4 mr-1" />
+        {sendingRequest[user.id] ? "Envoi..." : "Ajouter"}
+      </Button>
+    </div>
+  );
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -113,36 +172,46 @@ const AjouterAmiDialog: React.FC<AjouterAmiDialogProps> = ({ open, onClose, onAm
         </form>
         
         <div className="mt-4 max-h-[300px] overflow-y-auto">
-          {searchResults.length > 0 ? (
-            <div className="space-y-2">
-              {searchResults.map((user) => (
-                <div 
-                  key={user.id} 
-                  className="flex items-center justify-between p-3 rounded-md border"
-                >
-                  <div>
-                    <p className="font-medium">{user.email}</p>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={() => handleEnvoyerDemande(user.id)}
-                    disabled={sendingRequest[user.id]}
-                  >
-                    <UserPlus className="h-4 w-4 mr-1" />
-                    {sendingRequest[user.id] ? "Envoi..." : "Ajouter"}
-                  </Button>
-                </div>
-              ))}
+          {/* Résultats de recherche */}
+          {searchTerm && searchResults.length > 0 && (
+            <div className="space-y-2 mb-4">
+              <h3 className="text-sm font-medium mb-2 flex items-center">
+                <Search className="h-4 w-4 mr-1 text-muted-foreground" />
+                Résultats de recherche
+              </h3>
+              {searchResults.map(user => renderUserItem(user))}
             </div>
-          ) : (
+          )}
+          
+          {/* Message si aucun résultat trouvé */}
+          {searchTerm && isSearching === false && searchResults.length === 0 && (
+            <div className="text-center py-4 text-muted-foreground border rounded-md mb-4">
+              <p>Aucun utilisateur trouvé pour "{searchTerm}"</p>
+            </div>
+          )}
+          
+          {/* Suggestions d'utilisateurs */}
+          {suggestedUsers.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium mb-2 flex items-center">
+                <Users className="h-4 w-4 mr-1 text-muted-foreground" />
+                Suggestions d'utilisateurs
+              </h3>
+              {suggestedUsers.map(user => renderUserItem(user, true))}
+            </div>
+          )}
+          
+          {/* État de chargement */}
+          {(isSearching || isLoadingSuggestions) && searchResults.length === 0 && suggestedUsers.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
-              {isSearching ? (
-                <p>Recherche en cours...</p>
-              ) : searchTerm ? (
-                <p>Aucun utilisateur trouvé</p>
-              ) : (
-                <p>Recherchez des utilisateurs pour les ajouter comme amis</p>
-              )}
+              <p>Recherche en cours...</p>
+            </div>
+          )}
+          
+          {/* État vide */}
+          {!isSearching && !isLoadingSuggestions && searchResults.length === 0 && suggestedUsers.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>Recherchez des utilisateurs pour les ajouter comme amis</p>
             </div>
           )}
         </div>
