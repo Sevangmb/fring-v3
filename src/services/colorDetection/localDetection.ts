@@ -3,27 +3,68 @@
  * Service de détection locale pour l'analyse des couleurs via Canvas
  */
 import { simplifyColor } from './utils';
-import { generateFallbackResults } from './fallbackGenerator';
 
 /**
  * Type pour la fonction de callback des étapes
  */
 type StepCallback = (step: string) => void;
 
+// Mapping des couleurs simplifiées vers les noms de couleurs en français
+const colorMapping: Record<string, string> = {
+  "rgb(0,0,0)": "noir",
+  "rgb(255,255,255)": "blanc",
+  "rgb(128,128,128)": "gris",
+  "rgb(255,0,0)": "rouge",
+  "rgb(0,255,0)": "vert",
+  "rgb(0,0,255)": "bleu",
+  "rgb(255,255,0)": "jaune",
+  "rgb(255,165,0)": "orange",
+  "rgb(128,0,128)": "violet",
+  "rgb(255,192,203)": "rose",
+  "rgb(139,69,19)": "marron",
+  "rgb(245,245,220)": "beige"
+};
+
+/**
+ * Fonction pour classer un vêtement selon les pixels détectés
+ */
+function classifyClothing(imageData: ImageData): string {
+  // Analyse basique de la forme pour déterminer le type de vêtement
+  // Cette implémentation est simplifiée et peut être améliorée
+  
+  const width = imageData.width;
+  const height = imageData.height;
+  const data = imageData.data;
+  
+  // Calculer la proportion hauteur/largeur
+  const ratio = height / width;
+  
+  if (ratio > 1.5) {
+    // Vêtement allongé (robe, pantalon)
+    return ratio > 2.5 ? "Pantalon" : "Robe";
+  } else if (ratio < 0.8) {
+    // Vêtement large (jupe, short)
+    return "Jupe";
+  } else {
+    // Vêtement proportionné (t-shirt, chemise)
+    // Analyse de la partie supérieure pour détecter les manches
+    // Cette logique est simplifiée
+    const hasTopDetails = false; // À implémenter avec une analyse plus détaillée
+    
+    return hasTopDetails ? "Chemise" : "T-shirt";
+  }
+}
+
 /**
  * Mode de détection local pour simuler la détection lorsque la fonction Edge n'est pas disponible
- * @param imageUrl URL de l'image (non utilisée dans cette implémentation)
+ * @param imageUrl URL de l'image
  * @param onStep Callback pour suivre les étapes de traitement
- * @returns Résultats simulés
+ * @returns Résultats de l'analyse
  */
 export const simulateLocalDetection = async (imageUrl: string, onStep?: StepCallback): Promise<{color: string, category: string}> => {
   onStep?.("Simulation locale de la détection...");
   console.log('Simulation locale de la détection...');
   
-  // Simuler un délai pour rendre la simulation plus réaliste
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // En mode local, essayons d'utiliser l'analyse des couleurs dominantes via le Canvas
   try {
     onStep?.("Tentative d'analyse des couleurs dominantes via Canvas");
     
@@ -77,20 +118,24 @@ export const simulateLocalDetection = async (imageUrl: string, onStep?: StepCall
       
       onStep?.(`Couleur dominante détectée via Canvas: ${dominantColor}`);
       
-      // Définir une catégorie basée sur des heuristiques simples (exemple)
-      const randomCategories = ['T-shirt', 'Chemise', 'Pull', 'Veste'];
-      const category = randomCategories[Math.floor(Math.random() * randomCategories.length)];
+      // Convertir le code RGB en nom de couleur
+      const colorName = colorMapping[dominantColor] || "bleu"; // Couleur par défaut si non trouvée
+      
+      // Détecter la catégorie basée sur l'analyse d'image
+      const category = classifyClothing(imageData);
+      
+      onStep?.(`Analyse locale complétée - Couleur: ${colorName}, Catégorie: ${category}`);
       
       return {
-        color: dominantColor,
+        color: colorName,
         category: category
       };
+    } else {
+      throw new Error("Impossible d'accéder au document ou URL d'image invalide");
     }
   } catch (canvasError) {
     console.error("Erreur lors de l'analyse via Canvas:", canvasError);
     onStep?.(`Erreur lors de l'analyse via Canvas: ${canvasError instanceof Error ? canvasError.message : "Erreur inconnue"}`);
+    throw new Error("L'analyse locale a échoué");
   }
-  
-  // Si l'analyse via Canvas échoue, utiliser la fonction de secours
-  return generateFallbackResults(onStep);
 };

@@ -29,8 +29,26 @@ export const detectImageInfo = async (
     // Étape 2: Préparer l'URL de l'image
     const preparedImageUrl = prepareImageUrl(imageUrl, onStep);
     
-    // Étape 3: Appeler la fonction de détection (avec fallback)
+    // Étape 3: Appeler la fonction de détection Edge
     const detectionResults = await invokeDetectionFunction(preparedImageUrl, onStep);
+    
+    // Vérifier si la détection a réussi
+    if (!detectionResults.color || !detectionResults.category) {
+      onStep?.("La détection à distance a échoué, tentative avec la méthode locale...");
+      
+      // Essayer la méthode locale si l'Edge Function échoue
+      const localResults = await simulateLocalDetection(preparedImageUrl, onStep);
+      
+      // Vérifier si la détection locale a réussi
+      if (!localResults.color || !localResults.category) {
+        onStep?.("Échec de la détection. Veuillez réessayer ou saisir les valeurs manuellement.");
+        throw new Error("Impossible de détecter la couleur et la catégorie");
+      }
+      
+      // Retourner les résultats de la détection locale
+      onStep?.(`Détection locale réussie - Couleur: ${localResults.color}, Catégorie: ${localResults.category}`);
+      return localResults;
+    }
     
     // Étape 4: Valider et normaliser les résultats
     const validatedResults = validateDetectionResults(detectionResults, onStep);
@@ -46,8 +64,9 @@ export const detectImageInfo = async (
     console.error('Erreur lors de la détection:', error);
     onStep?.(`Erreur lors de la détection: ${errorMessage}`);
     
-    // En cas d'erreur, utiliser le mode local de secours
-    return simulateLocalDetection(imageUrl, onStep);
+    // Ne pas retourner de valeurs aléatoires mais plutôt une erreur
+    onStep?.("Échec de la détection. Veuillez réessayer ou saisir les valeurs manuellement.");
+    throw new Error("Impossible de détecter la couleur et la catégorie");
   }
 };
 

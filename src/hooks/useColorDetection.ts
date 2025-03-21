@@ -58,25 +58,18 @@ export const useColorDetection = (
       addStep(`3. Informations détectées: couleur=${detectedInfo.color}, catégorie=${detectedInfo.category}`);
       console.log("Informations détectées:", detectedInfo);
       
-      // Vérifier que les informations détectées sont valides
-      if (detectedInfo && detectedInfo.color) {
-        // Définir la couleur détectée
-        form.setValue('couleur', detectedInfo.color);
-        
-        // Définir la catégorie détectée si disponible
-        if (detectedInfo.category) {
-          form.setValue('categorie', detectedInfo.category);
-        }
-        
-        addStep("4. Application des valeurs détectées au formulaire");
-        toast({
-          title: "Détection réussie",
-          description: `La couleur ${detectedInfo.color} et la catégorie ${detectedInfo.category || 'inconnue'} ont été détectées.`,
-          duration: 5000,
-        });
-      } else {
-        throw new Error("Données de détection invalides");
-      }
+      // Définir la couleur détectée
+      form.setValue('couleur', detectedInfo.color);
+      
+      // Définir la catégorie détectée
+      form.setValue('categorie', detectedInfo.category);
+      
+      addStep("4. Application des valeurs détectées au formulaire");
+      toast({
+        title: "Détection réussie",
+        description: `La couleur ${detectedInfo.color} et la catégorie ${detectedInfo.category} ont été détectées.`,
+        duration: 5000,
+      });
     } catch (error) {
       console.error("Erreur lors de la détection:", error);
       
@@ -84,23 +77,13 @@ export const useColorDetection = (
         ? error.message 
         : "Erreur inconnue lors de la détection";
       
-      setDetectionError("La détection automatique a rencontré un problème. Veuillez vérifier les détails ci-dessous.");
+      setDetectionError("La détection automatique a rencontré un problème. Veuillez vérifier les détails ci-dessous ou saisir les valeurs manuellement.");
       addStep(`Erreur: ${errorMessage}`);
       
-      // Utiliser une couleur par défaut comme fallback
-      const randomColors = ['bleu', 'rouge', 'vert', 'jaune', 'noir', 'blanc', 'violet', 'orange'];
-      const randomCategories = ['T-shirt', 'Pantalon', 'Chemise', 'Robe', 'Jupe', 'Veste'];
-      
-      const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
-      const randomCategory = randomCategories[Math.floor(Math.random() * randomCategories.length)];
-      
-      form.setValue('couleur', randomColor);
-      form.setValue('categorie', randomCategory);
-      
       toast({
-        title: "Détection partielle",
-        description: "Une couleur et une catégorie ont été suggérées automatiquement. Vérifiez les détails de l'erreur.",
-        variant: "default",
+        title: "Échec de la détection",
+        description: "Impossible de détecter automatiquement la couleur et la catégorie. Veuillez les saisir manuellement.",
+        variant: "destructive",
         duration: 7000,
       });
     } finally {

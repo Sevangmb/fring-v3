@@ -4,89 +4,133 @@
  */
 
 /**
+ * Type pour la fonction de callback des étapes
+ */
+type StepCallback = (step: string) => void;
+
+/**
+ * Simplifie la couleur RGB en réduisant le nombre de valeurs possibles
+ * @param r Valeur de rouge (0-255)
+ * @param g Valeur de vert (0-255)
+ * @param b Valeur de bleu (0-255)
+ * @returns Couleur simplifiée au format RGB
+ */
+export function simplifyColor(r: number, g: number, b: number): string {
+  // Simplification des couleurs en réduisant le nombre de valeurs possibles
+  // Quantification simple en 3 niveaux (0, 128, 255)
+  const simplifyValue = (value: number): number => {
+    if (value < 85) return 0;
+    if (value < 170) return 128;
+    return 255;
+  };
+  
+  const simplifiedR = simplifyValue(r);
+  const simplifiedG = simplifyValue(g);
+  const simplifiedB = simplifyValue(b);
+  
+  return `rgb(${simplifiedR},${simplifiedG},${simplifiedB})`;
+}
+
+/**
  * Prépare l'URL de l'image pour l'envoi à l'API de détection
  * @param imageUrl URL de l'image (peut être une URL ou une chaîne base64)
  * @param onStep Callback pour suivre les étapes de traitement
- * @returns URL préparée pour l'API
+ * @returns URL préparée
  */
-export const prepareImageUrl = (imageUrl: string, onStep?: (step: string) => void): string => {
-  // Vérifier si l'image est au format base64 ou URL
+export function prepareImageUrl(imageUrl: string, onStep?: StepCallback): string {
+  // Vérifier si l'URL est au format base64
   const isBase64 = imageUrl.startsWith('data:');
   
-  // Tronquer l'URL/base64 pour le log
-  const truncatedUrl = isBase64 
-    ? imageUrl.substring(0, imageUrl.indexOf(",") + 10) + "..." 
-    : imageUrl.substring(0, 50) + "...";
+  console.log('Format de l\'image pour détection:', isBase64 ? 'base64' : 'URL');
+  console.log('URL tronquée:', isBase64 ? imageUrl.substring(0, 50) + '...' : imageUrl);
   
-  console.log('Format de l\'image pour détection:', isBase64 ? "base64" : "URL");
-  console.log('URL tronquée:', truncatedUrl);
+  if (isBase64) {
+    onStep?.("Préparation de l'image au format base64");
+    // Pour les images en base64, on les envoie telles quelles
+    return imageUrl;
+  }
   
-  onStep?.(`Préparation de l'image au format ${isBase64 ? "base64" : "URL"}`);
-  
-  return imageUrl;
-};
+  // Pour les URLs normales, vérifier qu'elles sont bien formées
+  try {
+    const url = new URL(imageUrl);
+    onStep?.("Validation de l'URL de l'image");
+    return url.toString();
+  } catch (error) {
+    console.error('URL d\'image invalide:', error);
+    onStep?.("URL d'image invalide");
+    throw new Error("L'URL de l'image est invalide");
+  }
+}
 
 /**
- * Fonction utilitaire pour simplifier une couleur RGB en nom de couleur
+ * Valide et normalise les résultats de détection
+ * @param results Résultats bruts de la détection
+ * @param onStep Callback pour suivre les étapes de traitement
+ * @returns Résultats validés et normalisés
  */
-export const simplifyColor = (r: number, g: number, b: number): string => {
-  const colors = [
-    { name: "rouge", rgb: [255, 0, 0] },
-    { name: "vert", rgb: [0, 255, 0] },
-    { name: "bleu", rgb: [0, 0, 255] },
-    { name: "jaune", rgb: [255, 255, 0] },
-    { name: "cyan", rgb: [0, 255, 255] },
-    { name: "magenta", rgb: [255, 0, 255] },
-    { name: "blanc", rgb: [255, 255, 255] },
-    { name: "noir", rgb: [0, 0, 0] },
-    { name: "gris", rgb: [128, 128, 128] },
-    { name: "orange", rgb: [255, 165, 0] },
-    { name: "violet", rgb: [128, 0, 128] },
-    { name: "marron", rgb: [165, 42, 42] }
+export function validateDetectionResults(
+  results: {color: string | null, category: string | null}, 
+  onStep?: StepCallback
+): {color: string, category: string} {
+  onStep?.("Normalisation des résultats de détection");
+  
+  // Liste des couleurs autorisées
+  const validColors = [
+    'bleu', 'rouge', 'vert', 'jaune', 'noir', 'blanc', 
+    'gris', 'violet', 'rose', 'orange', 'marron', 'beige'
   ];
   
-  // Trouver la couleur la plus proche
-  let closestColor = "";
-  let minDistance = Number.MAX_VALUE;
+  // Liste des catégories autorisées
+  const validCategories = [
+    'T-shirt', 'Chemise', 'Pull', 'Veste', 'Pantalon', 
+    'Jeans', 'Jupe', 'Robe', 'Short', 'Manteau'
+  ];
   
-  for (const color of colors) {
-    const distance = Math.sqrt(
-      Math.pow(r - color.rgb[0], 2) +
-      Math.pow(g - color.rgb[1], 2) +
-      Math.pow(b - color.rgb[2], 2)
-    );
+  // Vérifier et normaliser la couleur
+  let normalizedColor = 'bleu'; // Valeur par défaut
+  
+  if (results.color) {
+    const lowerColor = results.color.toLowerCase().trim();
     
-    if (distance < minDistance) {
-      minDistance = distance;
-      closestColor = color.name;
+    // Chercher une correspondance exacte
+    if (validColors.includes(lowerColor)) {
+      normalizedColor = lowerColor;
+    } else {
+      // Chercher une correspondance partielle
+      for (const validColor of validColors) {
+        if (lowerColor.includes(validColor) || validColor.includes(lowerColor)) {
+          normalizedColor = validColor;
+          break;
+        }
+      }
     }
   }
   
-  return closestColor;
-};
-
-/**
- * Valide et normalise les données de détection
- * @param data Données brutes de l'API
- * @param onStep Callback pour suivre les étapes de traitement
- * @returns Données validées et normalisées
- */
-export const validateDetectionResults = (data: any, onStep?: (step: string) => void): {color: string, category: string} => {
-  // Vérifier que les données retournées sont valides
-  if (!data || !data.color || !data.category) {
-    console.warn('Données de détection incomplètes, utilisation de valeurs par défaut');
-    onStep?.("Données de détection incomplètes, utilisation de valeurs par défaut");
+  // Vérifier et normaliser la catégorie
+  let normalizedCategory = 'T-shirt'; // Valeur par défaut
+  
+  if (results.category) {
+    const upperCaseCategory = results.category.charAt(0).toUpperCase() + results.category.slice(1).toLowerCase().trim();
     
-    return {
-      color: 'bleu',
-      category: 'T-shirt'
-    };
+    // Chercher une correspondance exacte
+    if (validCategories.includes(upperCaseCategory)) {
+      normalizedCategory = upperCaseCategory;
+    } else {
+      // Chercher une correspondance partielle
+      for (const validCategory of validCategories) {
+        if (upperCaseCategory.includes(validCategory) || validCategory.toLowerCase().includes(upperCaseCategory.toLowerCase())) {
+          normalizedCategory = validCategory;
+          break;
+        }
+      }
+    }
   }
   
-  // Normaliser les résultats si nécessaire (première lettre en majuscule pour la catégorie)
-  onStep?.("Normalisation des résultats de détection");
+  console.log('Couleur détectée:', normalizedColor);
+  console.log('Catégorie détectée:', normalizedCategory);
+  
   return {
-    color: data.color.toLowerCase(),
-    category: data.category.charAt(0).toUpperCase() + data.category.slice(1)
+    color: normalizedColor,
+    category: normalizedCategory
   };
-};
+}

@@ -35,9 +35,7 @@ serve(async (req) => {
       // Extraire les informations du vêtement de l'image (couleur et catégorie)
       const clothingInfo = await detectClothingInfo(imageUrl);
       
-      console.log("Final detection results:");
-      console.log("- Detected color:", clothingInfo.color);
-      console.log("- Detected category:", clothingInfo.category);
+      console.log("Detection results:", clothingInfo);
       
       return new Response(
         JSON.stringify(clothingInfo),
@@ -46,39 +44,26 @@ serve(async (req) => {
     } catch (detectionError) {
       console.error('Erreur spécifique à la détection:', detectionError);
       
-      // Générer des résultats aléatoires en cas d'erreur
-      const randomColors = ['bleu', 'rouge', 'vert', 'jaune', 'noir', 'blanc', 'violet', 'orange'];
-      const randomCategories = ['T-shirt', 'Pantalon', 'Chemise', 'Robe', 'Jupe', 'Veste'];
-      
-      const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
-      const randomCategory = randomCategories[Math.floor(Math.random() * randomCategories.length)];
-      
+      // Retourner une erreur avec un message clair
       return new Response(
         JSON.stringify({ 
-          error: detectionError.message || 'Une erreur s\'est produite lors de la détection', 
-          color: randomColor,
-          category: randomCategory
+          error: detectionError.message || 'Une erreur s\'est produite lors de la détection',
+          color: null,
+          category: null
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
   } catch (error) {
-    console.error('Erreur lors de la détection:', error);
-    
-    // En cas d'erreur générale, retourner des résultats aléatoires
-    const randomColors = ['bleu', 'rouge', 'vert', 'jaune', 'noir', 'blanc', 'violet', 'orange'];
-    const randomCategories = ['T-shirt', 'Pantalon', 'Chemise', 'Robe', 'Jupe', 'Veste'];
-    
-    const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
-    const randomCategory = randomCategories[Math.floor(Math.random() * randomCategories.length)];
+    console.error('Erreur générale:', error);
     
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Une erreur s\'est produite lors de la détection', 
-        color: randomColor,
-        category: randomCategory
+        error: error.message || 'Une erreur s\'est produite', 
+        color: null,
+        category: null
       }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
