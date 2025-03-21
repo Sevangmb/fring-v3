@@ -1,8 +1,6 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import Navbar from "../organisms/Navbar";
-import Footer from "../organisms/Footer";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,7 +17,13 @@ const Layout = ({
 }: LayoutProps) => {
   return (
     <div className="flex flex-col min-h-screen">
-      {header || <Navbar />}
+      {header || (
+        <header className="bg-background p-4 border-b">
+          <div className="container mx-auto">
+            <h1 className="text-xl font-bold">Multi-User App</h1>
+          </div>
+        </header>
+      )}
       <main 
         className={cn(
           "flex-grow", 
@@ -28,7 +32,13 @@ const Layout = ({
       >
         {children}
       </main>
-      {footer && <Footer />}
+      {footer && (
+        <footer className="bg-muted/30 p-4 border-t">
+          <div className="container mx-auto text-center text-sm text-muted-foreground">
+            © {new Date().getFullYear()} Multi-User App. All rights reserved.
+          </div>
+        </footer>
+      )}
     </div>
   );
 };
