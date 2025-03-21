@@ -8,7 +8,6 @@ export interface Ami {
   ami_id: string;
   status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
-  updated_at?: string;
   // Données supplémentaires pour l'affichage
   email?: string;
 }
@@ -120,26 +119,54 @@ export const accepterDemandeAmi = async (amiId: number): Promise<Ami | null> => 
 
     console.log('Acceptation de la demande d\'ami:', amiId);
 
-    // Mise à jour directe sans utiliser la fonction RPC problématique
+    // Utiliser une requête SQL brute pour éviter les problèmes de trigger
     const { data, error } = await supabase
-      .from('amis')
-      .update({ status: 'accepted' })
-      .eq('id', amiId)
-      .select()
-      .single();
+      .rpc('accepter_ami_simple', { 
+        ami_id_param: amiId 
+      });
     
     if (error) {
-      console.error('Erreur lors de l\'acceptation de la demande d\'ami:', error);
-      throw new Error(`Erreur d'acceptation: ${error.message}`);
+      console.error('Erreur lors de l\'acceptation de la demande d\'ami avec RPC:', error);
+      // Fallback: essayer la méthode directe si RPC échoue
+      try {
+        const { data: directData, error: directError } = await supabase
+          .from('amis')
+          .update({ status: 'accepted' })
+          .eq('id', amiId)
+          .select()
+          .single();
+        
+        if (directError) {
+          throw directError;
+        }
+        
+        console.log('Demande acceptée avec méthode de secours:', directData);
+        return directData as Ami;
+      } catch (fallbackError) {
+        console.error('Échec de la méthode de secours:', fallbackError);
+        throw new Error(`Impossible d'accepter la demande: ${error.message}`);
+      }
     }
     
-    if (!data) {
-      console.error('Aucune donnée retournée après acceptation');
-      return null;
+    if (data === true) {
+      // La RPC a réussi, récupérer la demande mise à jour
+      const { data: amiData, error: fetchError } = await supabase
+        .from('amis')
+        .select('*')
+        .eq('id', amiId)
+        .single();
+      
+      if (fetchError) {
+        console.error('Erreur lors de la récupération de la demande mise à jour:', fetchError);
+        throw new Error(`Erreur après acceptation: ${fetchError.message}`);
+      }
+      
+      console.log('Demande acceptée et récupérée avec succès:', amiData);
+      return amiData as Ami;
     }
     
-    console.log('Demande acceptée avec succès:', data);
-    return data as Ami;
+    console.error('La fonction RPC a échoué sans erreur spécifique');
+    return null;
   } catch (error) {
     console.error('Erreur lors de l\'acceptation de la demande d\'ami:', error);
     throw error;

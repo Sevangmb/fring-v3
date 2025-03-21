@@ -19,6 +19,7 @@ const MesAmisPage = () => {
   const [amis, setAmis] = useState<Ami[]>([]);
   const [loadingAmis, setLoadingAmis] = useState(true);
   const [ajouterAmiDialogOpen, setAjouterAmiDialogOpen] = useState(false);
+  const [processingIds, setProcessingIds] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const chargerAmis = async () => {
@@ -47,7 +48,12 @@ const MesAmisPage = () => {
   }, [user, toast]);
 
   const handleAccepterDemande = async (amiId: number) => {
+    // Éviter les clics multiples
+    if (processingIds[`accept-${amiId}`]) return;
+    
     try {
+      setProcessingIds(prev => ({ ...prev, [`accept-${amiId}`]: true }));
+      
       const amiAccepte = await accepterDemandeAmi(amiId);
       
       if (amiAccepte) {
@@ -61,26 +67,40 @@ const MesAmisPage = () => {
         setAmis(listeAmis);
       } else {
         toast({
-          title: "Erreur",
-          description: "La demande n'a pas pu être acceptée. Veuillez réessayer.",
+          title: "Attention",
+          description: "La demande a été traitée mais n'a pas pu être retrouvée. Veuillez actualiser la page.",
           variant: "destructive",
         });
+        
+        // Rafraîchir la liste quand même
+        const listeAmis = await fetchAmis();
+        setAmis(listeAmis);
       }
     } catch (error: any) {
       console.error("Erreur lors de l'acceptation de la demande:", error);
       
-      // Message d'erreur avec plus de détails
+      // Message d'erreur détaillé pour debug
+      const errorMessage = error?.message || "Une erreur inconnue s'est produite";
+      
       toast({
         title: "Erreur lors de l'acceptation",
-        description: error?.message || "Impossible d'accepter cette demande.",
+        description: errorMessage,
         variant: "destructive",
       });
+    } finally {
+      setProcessingIds(prev => ({ ...prev, [`accept-${amiId}`]: false }));
     }
   };
 
   const handleRejeterDemande = async (amiId: number) => {
+    // Éviter les clics multiples
+    if (processingIds[`reject-${amiId}`]) return;
+    
     try {
+      setProcessingIds(prev => ({ ...prev, [`reject-${amiId}`]: true }));
+      
       await rejeterDemandeAmi(amiId);
+      
       toast({
         title: "Demande rejetée",
         description: "La demande d'ami a été rejetée.",
@@ -91,11 +111,16 @@ const MesAmisPage = () => {
       setAmis(listeAmis);
     } catch (error: any) {
       console.error("Erreur lors du rejet de la demande:", error);
+      
+      const errorMessage = error?.message || "Une erreur inconnue s'est produite";
+      
       toast({
         title: "Erreur lors du rejet",
-        description: error?.message || "Impossible de rejeter cette demande.",
+        description: errorMessage,
         variant: "destructive",
       });
+    } finally {
+      setProcessingIds(prev => ({ ...prev, [`reject-${amiId}`]: false }));
     }
   };
 
