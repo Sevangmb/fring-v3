@@ -21,7 +21,7 @@ const TenueSuggestion: React.FC<TenueSuggestionProps> = ({
   chaussures,
   message
 }) => {
-  const isRainyWeather = message.toLowerCase().includes('pleut');
+  const isRainyWeather = message.toLowerCase().includes('pleut') || message.toLowerCase().includes('pluie');
   
   return (
     <Card className="p-4 bg-gradient-to-br from-theme-teal-light to-white/80 dark:from-theme-teal-dark/20 dark:to-theme-teal-dark/10 border-theme-teal-medium/30 dark:border-theme-teal-medium/20">
