@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
 import { VetementFormValues, Categorie } from "../schema/VetementFormSchema";
@@ -28,10 +28,8 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
   loading,
   onCategoriesChange
 }) => {
-  // Récupérer la valeur actuelle pour l'afficher dans le label si elle existe
-  const categorieValue = form.watch('categorie');
-  const categorieIdValue = form.watch('categorie_id');
-  const hasDetectedValue = !!categorieValue && !loading;
+  const categorieId = form.watch('categorie_id');
+  const hasDetectedValue = !!categorieId && !loading;
   const [open, setOpen] = useState(false);
   const [newCategorieValue, setNewCategorieValue] = useState('');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -39,20 +37,8 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
   const { toast } = useToast();
 
   // Fonction pour mettre à jour la catégorie sélectionnée
-  const handleCategorySelect = (value: string, categoryId?: number) => {
-    form.setValue('categorie', value, { shouldValidate: true });
-    if (categoryId) {
-      form.setValue('categorie_id', categoryId, { shouldValidate: true });
-    } else {
-      // Pas d'id ? Essayer de le trouver dans les catégories existantes
-      const foundCategory = categories.find(cat => cat.nom.toLowerCase() === value.toLowerCase());
-      if (foundCategory && foundCategory.id) {
-        form.setValue('categorie_id', Number(foundCategory.id), { shouldValidate: true });
-      } else {
-        // Réinitialiser l'ID si on ne le trouve pas
-        form.setValue('categorie_id', undefined, { shouldValidate: true });
-      }
-    }
+  const handleCategorySelect = (categoryId: number) => {
+    form.setValue('categorie_id', categoryId, { shouldValidate: true });
     setOpen(false);
   };
 
@@ -77,7 +63,6 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
       });
       
       // Mettre à jour le formulaire avec la nouvelle catégorie
-      form.setValue('categorie', newCategory.nom, { shouldValidate: true });
       form.setValue('categorie_id', Number(newCategory.id), { shouldValidate: true });
       
       // Fermer le dialogue
@@ -100,20 +85,14 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
     }
   };
 
-  // Si un ID de catégorie est défini mais pas le nom, récupérer le nom
-  useEffect(() => {
-    if (categorieIdValue && (!categorieValue || categorieValue === '') && categories.length > 0) {
-      const selectedCategory = categories.find(cat => Number(cat.id) === categorieIdValue);
-      if (selectedCategory) {
-        form.setValue('categorie', selectedCategory.nom, { shouldValidate: true });
-      }
-    }
-  }, [categorieIdValue, categorieValue, categories, form]);
+  // Trouver le nom de la catégorie actuellement sélectionnée
+  const selectedCategory = categories.find(cat => Number(cat.id) === categorieId);
+  const displayValue = selectedCategory ? selectedCategory.nom : "";
 
   return (
     <FormField
       control={form.control}
-      name="categorie"
+      name="categorie_id"
       render={({ field }) => (
         <FormItem className="flex flex-col">
           <FormLabel>
@@ -133,11 +112,11 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
                   aria-expanded={open}
                   className={cn(
                     "w-full justify-between",
-                    !field.value && "text-muted-foreground"
+                    !displayValue && "text-muted-foreground"
                   )}
                   disabled={loading}
                 >
-                  {field.value || "Sélectionner une catégorie"}
+                  {displayValue || "Sélectionner une catégorie"}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </FormControl>
@@ -153,12 +132,12 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
                     <CommandItem
                       key={category.id}
                       value={category.nom}
-                      onSelect={() => handleCategorySelect(category.nom, Number(category.id))}
+                      onSelect={() => handleCategorySelect(Number(category.id))}
                     >
                       <Check
                         className={cn(
                           "mr-2 h-4 w-4",
-                          field.value === category.nom ? "opacity-100" : "opacity-0"
+                          field.value === Number(category.id) ? "opacity-100" : "opacity-0"
                         )}
                       />
                       {category.nom}

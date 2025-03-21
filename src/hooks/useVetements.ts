@@ -28,23 +28,7 @@ export const useVetements = () => {
       console.log("Catégories chargées:", categoriesData);
       console.log("Vêtements récupérés:", vetementsData);
       
-      // Enrichir les vêtements avec les informations de catégorie
-      const enrichedVetements = vetementsData.map(vetement => {
-        // Trouver la catégorie correspondante si categorie_id existe
-        if (vetement.categorie_id) {
-          const categorie = categoriesData.find(cat => cat.id === vetement.categorie_id);
-          if (categorie) {
-            return {
-              ...vetement,
-              categorie: categorie.nom // Assurer que le nom de la catégorie est toujours à jour
-            };
-          }
-        }
-        // Si pas de categorie_id ou si la catégorie n'est pas trouvée, garder l'existant
-        return vetement;
-      });
-      
-      setVetements(enrichedVetements);
+      setVetements(vetementsData);
       setCategories(categoriesData);
     } catch (err) {
       console.warn('Impossible de récupérer les données:', err);

@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { Vetement } from './types';
 
 /**
- * Updates an existing vetement with the given ID, handling the relation with categories properly
+ * Updates an existing vetement with the given ID
  */
 export const updateVetement = async (id: number, vetement: Partial<Vetement>): Promise<Vetement> => {
   try {
@@ -50,54 +50,16 @@ export const updateVetement = async (id: number, vetement: Partial<Vetement>): P
     
     // Créer un ensemble de noms de colonnes pour une recherche rapide
     const columnSet = new Set(columns?.map(col => col.column_name) || [
-      'id', 'nom', 'categorie', 'categorie_id', 'couleur', 'taille', 'description', 
+      'id', 'nom', 'categorie_id', 'couleur', 'taille', 'description', 
       'marque', 'image_url', 'user_id', 'created_at', 'temperature', 'weather_type'
     ]);
     
     console.log('Colonnes disponibles:', Array.from(columnSet));
     
-    // Priorité à categorie_id s'il est fourni
-    if (vetement.categorie_id) {
-      cleanedData['categorie_id'] = vetement.categorie_id;
-      
-      // Récupérer le nom de la catégorie pour maintenir la cohérence
-      const { data: categorieData } = await supabase
-        .from('categories')
-        .select('nom')
-        .eq('id', vetement.categorie_id)
-        .single();
-      
-      if (categorieData && categorieData.nom) {
-        cleanedData['categorie'] = categorieData.nom;
-      } else if (vetement.categorie) {
-        // Utiliser le nom de catégorie fourni comme fallback
-        cleanedData['categorie'] = vetement.categorie;
-      }
-    } 
-    // Si pas de categorie_id mais nom de catégorie fourni et différent de l'existant
-    else if (vetement.categorie && vetement.categorie !== existingData.categorie) {
-      cleanedData['categorie'] = vetement.categorie;
-      
-      // Essayer de trouver l'ID de catégorie correspondant
-      const { data: categorieData } = await supabase
-        .from('categories')
-        .select('id')
-        .eq('nom', vetement.categorie)
-        .maybeSingle();
-      
-      if (categorieData && categorieData.id) {
-        cleanedData['categorie_id'] = categorieData.id;
-      } else {
-        // Si la catégorie n'existe pas, supprimer la référence à l'ancienne catégorie
-        cleanedData['categorie_id'] = null;
-      }
-    }
-    
     // Ne garder que les propriétés qui existent dans la table
     Object.entries(vetement).forEach(([key, value]) => {
       // Ne pas inclure les propriétés undefined ou qui n'existent pas dans la table
-      // Éviter également de redéfinir categorie et categorie_id qui ont déjà été traités
-      if (value !== undefined && columnSet.has(key) && key !== 'categorie' && key !== 'categorie_id') {
+      if (value !== undefined && columnSet.has(key)) {
         cleanedData[key] = value;
       } else if (value !== undefined && !columnSet.has(key)) {
         console.log(`La colonne '${key}' n'existe pas dans la table vetements et sera ignorée`);

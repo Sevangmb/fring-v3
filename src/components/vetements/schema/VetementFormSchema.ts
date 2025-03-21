@@ -37,8 +37,10 @@ export type WeatherTypeOption = typeof weatherTypeOptions[number]["value"];
 // Schema for vetement form
 export const vetementFormSchema = z.object({
   nom: z.string().min(1, "Le nom est requis"),
-  categorie: z.string().min(1, "La catégorie est requise"),
-  categorie_id: z.number().optional(),
+  categorie_id: z.number({
+    required_error: "La catégorie est requise",
+    invalid_type_error: "La catégorie doit être un nombre",
+  }),
   couleur: z.string().min(1, "La couleur est requise"),
   taille: z.string().min(1, "La taille est requise"),
   marque: z.string().optional(),
