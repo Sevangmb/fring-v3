@@ -1,14 +1,16 @@
 
 import React, { useEffect, useState } from "react";
 import Layout from "@/components/templates/Layout";
-import { Heading, Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
-import { LogIn, UserPlus, Check, X, User, Clock, UserCheck } from "lucide-react";
-import { Link } from "react-router-dom";
+import { UserPlus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchAmis, accepterDemandeAmi, rejeterDemandeAmi, Ami } from "@/services/amiService";
 import { useToast } from "@/hooks/use-toast";
-import Card, { CardHeader, CardTitle, CardFooter } from "@/components/molecules/Card";
+
+import AmisPageHeader from "@/components/organisms/AmisPageHeader";
+import DemandesRecuesSection from "@/components/organisms/DemandesRecuesSection";
+import DemandesEnvoyeesSection from "@/components/organisms/DemandesEnvoyeesSection";
+import AmisAcceptesSection from "@/components/organisms/AmisAcceptesSection";
 
 const MesAmisPage = () => {
   const { user, loading } = useAuth();
@@ -99,27 +101,7 @@ const MesAmisPage = () => {
 
   return (
     <Layout>
-      <div className="pt-24 pb-6 bg-accent/10">
-        <div className="container mx-auto px-4">
-          <Heading className="text-center">Mes Amis</Heading>
-          <Text className="text-center text-muted-foreground max-w-2xl mx-auto mt-4">
-            {user 
-              ? "Retrouvez et gérez tous vos amis dans cette section."
-              : "Connectez-vous pour voir et gérer vos amis."}
-          </Text>
-          
-          {!user && !loading && (
-            <div className="flex justify-center mt-8">
-              <Button asChild>
-                <Link to="/login">
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Se connecter
-                </Link>
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
+      <AmisPageHeader user={user} loading={loading} />
       
       {user && (
         <div className="container mx-auto px-4 py-12">
@@ -133,134 +115,23 @@ const MesAmisPage = () => {
           ) : (
             <div className="space-y-10">
               {/* Demandes d'amis reçues */}
-              <div>
-                <Heading as="h2" variant="h3" className="mb-4">Demandes d'amis reçues</Heading>
-                {demandesRecues.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {demandesRecues.map((demande) => (
-                      <Card key={demande.id} hoverable>
-                        <CardHeader>
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                              <User size={20} />
-                            </div>
-                            <CardTitle>Demande d'ami</CardTitle>
-                          </div>
-                          <Text className="mt-2">
-                            Vous avez reçu une demande d'ami.
-                          </Text>
-                        </CardHeader>
-                        <CardFooter className="flex justify-end gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="destructive"
-                            onClick={() => handleRejeterDemande(demande.id)}
-                          >
-                            <X className="mr-1 h-4 w-4" />
-                            Refuser
-                          </Button>
-                          <Button 
-                            size="sm"
-                            onClick={() => handleAccepterDemande(demande.id)}
-                          >
-                            <Check className="mr-1 h-4 w-4" />
-                            Accepter
-                          </Button>
-                        </CardFooter>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-card rounded-lg shadow-sm p-6 border">
-                    <Text className="font-medium mb-2">Aucune demande reçue</Text>
-                    <Text variant="small" className="text-muted-foreground">
-                      Vous n'avez pas de demande d'ami en attente.
-                    </Text>
-                  </div>
-                )}
-              </div>
+              <DemandesRecuesSection 
+                demandes={demandesRecues} 
+                onAccepter={handleAccepterDemande}
+                onRejeter={handleRejeterDemande}
+              />
               
               {/* Demandes d'amis envoyées */}
-              <div>
-                <Heading as="h2" variant="h3" className="mb-4">Demandes d'amis envoyées</Heading>
-                {demandesEnvoyees.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {demandesEnvoyees.map((demande) => (
-                      <Card key={demande.id} hoverable>
-                        <CardHeader>
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
-                              <Clock size={20} />
-                            </div>
-                            <CardTitle>Demande en attente</CardTitle>
-                          </div>
-                          <Text className="mt-2">
-                            Votre demande d'ami est en attente d'acceptation.
-                          </Text>
-                        </CardHeader>
-                        <CardFooter className="flex justify-end">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleRejeterDemande(demande.id)}
-                          >
-                            <X className="mr-1 h-4 w-4" />
-                            Annuler
-                          </Button>
-                        </CardFooter>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-card rounded-lg shadow-sm p-6 border">
-                    <Text className="font-medium mb-2">Aucune demande envoyée</Text>
-                    <Text variant="small" className="text-muted-foreground">
-                      Vous n'avez pas envoyé de demande d'ami.
-                    </Text>
-                  </div>
-                )}
-              </div>
+              <DemandesEnvoyeesSection 
+                demandes={demandesEnvoyees} 
+                onAnnuler={handleRejeterDemande}
+              />
               
               {/* Amis confirmés */}
-              <div>
-                <Heading as="h2" variant="h3" className="mb-4">Mes amis</Heading>
-                {amisAcceptes.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {amisAcceptes.map((ami) => (
-                      <Card key={ami.id} hoverable>
-                        <CardHeader>
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                              <UserCheck size={20} />
-                            </div>
-                            <CardTitle>Ami</CardTitle>
-                          </div>
-                          <Text className="mt-2">
-                            Vous êtes amis depuis le {new Date(ami.created_at).toLocaleDateString()}.
-                          </Text>
-                        </CardHeader>
-                        <CardFooter className="flex justify-end">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleRejeterDemande(ami.id)}
-                          >
-                            <X className="mr-1 h-4 w-4" />
-                            Retirer
-                          </Button>
-                        </CardFooter>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-card rounded-lg shadow-sm p-6 border">
-                    <Text className="font-medium mb-2">Aucun ami pour le moment</Text>
-                    <Text variant="small" className="text-muted-foreground">
-                      Commencez à ajouter des amis pour les voir apparaître ici.
-                    </Text>
-                  </div>
-                )}
-              </div>
+              <AmisAcceptesSection 
+                amis={amisAcceptes} 
+                onRetirer={handleRejeterDemande}
+              />
 
               {/* Bouton pour ajouter des amis */}
               <div className="flex justify-center mt-8">
