@@ -3,12 +3,13 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { HfInference } from 'https://esm.sh/@huggingface/inference@2.3.2';
 
+// Configuration des en-têtes CORS
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Correspondance entre les couleurs anglaises retournées par l'API et les couleurs françaises disponibles
+// Correspondance entre les couleurs anglaises et françaises
 const colorMapping: Record<string, string> = {
   'white': 'blanc',
   'black': 'noir',
@@ -78,6 +79,8 @@ const availableColors = [
 
 /**
  * Convertit un Blob en Base64
+ * @param blob Blob à convertir
+ * @returns Chaîne Base64
  */
 async function blobToBase64(blob: Blob): Promise<string> {
   const arrayBuffer = await blob.arrayBuffer();
@@ -87,30 +90,39 @@ async function blobToBase64(blob: Blob): Promise<string> {
 }
 
 /**
- * Fonction qui détecte la couleur dominante d'un vêtement en utilisant Hugging Face
+ * Génère la description d'une image à l'aide de Hugging Face
+ * @param imageUrl URL de l'image à analyser
+ * @param hf Client Hugging Face Inference
+ * @returns Description de l'image
  */
-async function detectClothingColor(imageUrl: string): Promise<string> {
+async function generateImageDescription(imageUrl: string, hf: HfInference): Promise<string> {
+  console.log("Generating image description...");
+  
   try {
-    console.log("Detecting clothing color from image:", imageUrl.substring(0, 50) + "...");
-    
-    // Vérifier si l'URL est un data URL ou une URL HTTP
-    const isDataUrl = imageUrl.startsWith('data:');
-    
-    // Initialiser l'API Hugging Face
-    const hf = new HfInference(Deno.env.get('HUGGINGFACE_API_KEY'));
-    
-    // Utiliser un modèle plus précis pour la détection des vêtements
     const visionResult = await hf.imageToText({
       model: "Salesforce/blip-image-captioning-large",
       data: imageUrl,
     });
     
     console.log("Image description:", visionResult);
-    
-    // Extraire une description précise de l'image
-    const imageDescription = visionResult.generated_text;
-    
-    // Utiliser un modèle de langage pour extraire spécifiquement la couleur du vêtement
+    return visionResult.generated_text;
+  } catch (error) {
+    console.error("Error generating image description:", error);
+    throw new Error("Failed to generate image description");
+  }
+}
+
+/**
+ * Extrait la couleur d'un vêtement à partir de sa description
+ * @param imageDescription Description de l'image
+ * @param hf Client Hugging Face Inference
+ * @returns Couleur détectée
+ */
+async function extractClothingColor(imageDescription: string, hf: HfInference): Promise<string> {
+  console.log("Extracting clothing color from description...");
+  
+  try {
+    // Créer un prompt spécifique pour extraire la couleur
     const colorAnalysisPrompt = `
     Image description: "${imageDescription}"
     
@@ -121,48 +133,96 @@ async function detectClothingColor(imageUrl: string): Promise<string> {
     `;
     
     const colorResult = await hf.textGeneration({
-      model: "google/flan-t5-xxl", // Modèle de langage plus grand et plus précis
+      model: "google/flan-t5-xxl",
       inputs: colorAnalysisPrompt,
       parameters: {
         max_new_tokens: 10,
-        temperature: 0.2, // Faible température pour des réponses plus déterministes
+        temperature: 0.2,
       }
     });
     
     console.log("Raw detected color:", colorResult.generated_text);
+    return colorResult.generated_text.toLowerCase().trim();
+  } catch (error) {
+    console.error("Error extracting clothing color:", error);
+    throw new Error("Failed to extract clothing color");
+  }
+}
+
+/**
+ * Effectue une requête directe pour obtenir la couleur si la première méthode échoue
+ * @param imageDescription Description de l'image
+ * @param hf Client Hugging Face Inference
+ * @returns Couleur détectée
+ */
+async function performDirectColorQuery(imageDescription: string, hf: HfInference): Promise<string> {
+  console.log("Performing direct color query...");
+  
+  try {
+    const directColorQuery = await hf.textGeneration({
+      model: "google/flan-t5-xxl",
+      inputs: `What is the MAIN COLOR of the CLOTHING in this image: "${imageDescription}"? Answer with just ONE word.`,
+      parameters: {
+        max_new_tokens: 10,
+        temperature: 0.2,
+      }
+    });
     
-    // Nettoyer la réponse et extraire la couleur
-    let detectedColor = colorResult.generated_text.toLowerCase().trim();
+    const detectedColor = directColorQuery.generated_text.toLowerCase().trim();
+    console.log("Direct query color result:", detectedColor);
+    return detectedColor;
+  } catch (error) {
+    console.error("Error performing direct color query:", error);
+    throw new Error("Failed to perform direct color query");
+  }
+}
+
+/**
+ * Mappe la couleur détectée en anglais vers son équivalent français
+ * @param detectedColor Couleur détectée en anglais
+ * @returns Couleur en français
+ */
+function mapToFrenchColor(detectedColor: string): string {
+  console.log("Mapping detected color to French:", detectedColor);
+  
+  for (const [englishColor, frenchColor] of Object.entries(colorMapping)) {
+    if (detectedColor.includes(englishColor)) {
+      console.log(`Mapped '${detectedColor}' to '${frenchColor}'`);
+      return frenchColor;
+    }
+  }
+  
+  // Si aucune correspondance n'est trouvée
+  console.log("No color mapping found for:", detectedColor);
+  return "multicolore";
+}
+
+/**
+ * Détecte la couleur dominante d'un vêtement dans une image
+ * @param imageUrl URL de l'image à analyser
+ * @returns Couleur du vêtement détectée
+ */
+async function detectClothingColor(imageUrl: string): Promise<string> {
+  try {
+    console.log("Detecting clothing color from image:", imageUrl.substring(0, 50) + "...");
     
-    // Si la détection échoue, essayer directement avec une requête spécifique
+    // Initialiser l'API Hugging Face
+    const hf = new HfInference(Deno.env.get('HUGGINGFACE_API_KEY'));
+    
+    // Étape 1: Générer une description de l'image
+    const imageDescription = await generateImageDescription(imageUrl, hf);
+    
+    // Étape 2: Extraire la couleur du vêtement à partir de la description
+    let detectedColor = await extractClothingColor(imageDescription, hf);
+    
+    // Si la détection échoue, essayer avec une requête directe
     if (!detectedColor || detectedColor.length > 20) {
       console.log("First detection failed, trying with direct query");
-      
-      // Utiliser une requête plus spécifique pour la couleur
-      const directColorQuery = await hf.textGeneration({
-        model: "google/flan-t5-xxl",
-        inputs: `What is the MAIN COLOR of the CLOTHING in this image: "${imageDescription}"? Answer with just ONE word.`,
-        parameters: {
-          max_new_tokens: 10,
-          temperature: 0.2,
-        }
-      });
-      
-      detectedColor = directColorQuery.generated_text.toLowerCase().trim();
-      console.log("Direct query color result:", detectedColor);
+      detectedColor = await performDirectColorQuery(imageDescription, hf);
     }
     
-    // Mapper la couleur détectée vers les couleurs françaises disponibles
-    for (const [englishColor, frenchColor] of Object.entries(colorMapping)) {
-      if (detectedColor.includes(englishColor)) {
-        console.log(`Mapped '${detectedColor}' to '${frenchColor}'`);
-        return frenchColor;
-      }
-    }
-    
-    // Si aucune correspondance n'est trouvée
-    console.log("No color mapping found for:", detectedColor);
-    return "multicolore";
+    // Étape 3: Mapper la couleur détectée vers les couleurs françaises disponibles
+    return mapToFrenchColor(detectedColor);
   } catch (error) {
     console.error("Error detecting clothing color:", error);
     return "multicolore"; // Valeur par défaut en cas d'erreur
@@ -171,6 +231,8 @@ async function detectClothingColor(imageUrl: string): Promise<string> {
 
 /**
  * Valide la couleur détectée par rapport aux couleurs disponibles
+ * @param detectedColor Couleur détectée
+ * @returns Couleur validée
  */
 function validateDetectedColor(detectedColor: string): string {
   // Vérifier si la couleur détectée est dans la liste des couleurs disponibles
@@ -180,6 +242,7 @@ function validateDetectedColor(detectedColor: string): string {
   return detectedColor;
 }
 
+// Fonction principale qui gère les requêtes HTTP
 serve(async (req) => {
   // Gérer les requêtes CORS preflight
   if (req.method === 'OPTIONS') {
