@@ -4,6 +4,7 @@ import { Ami } from "@/services/amis/types";
 import DemandesRecuesCard from "@/components/molecules/DemandesRecuesCard";
 import { Heading } from "@/components/atoms/Typography";
 import DemandesRecuesListItem from "@/components/molecules/DemandesRecuesListItem";
+import { UserPlus } from "lucide-react";
 
 interface DemandesRecuesSectionProps {
   demandes: Ami[];
@@ -18,15 +19,14 @@ const DemandesRecuesSection: React.FC<DemandesRecuesSectionProps> = ({
   onRejeter,
   viewMode
 }) => {
-  if (!demandes.length) {
-    return null;
-  }
-
   return (
     <section>
-      <Heading as="h2" className="text-xl font-bold mb-4">
-        Demandes d'amis reçues ({demandes.length})
-      </Heading>
+      <div className="flex items-center gap-2 mb-4">
+        <UserPlus className="h-5 w-5 text-primary" />
+        <Heading as="h2" variant="h3">
+          Demandes d'amis reçues ({demandes.length})
+        </Heading>
+      </div>
       
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

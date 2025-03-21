@@ -1,9 +1,10 @@
 
 import React from "react";
-import { Heading, Text } from "@/components/atoms/Typography";
+import { Heading } from "@/components/atoms/Typography";
 import DemandesEnvoyeesCard from "@/components/molecules/DemandesEnvoyeesCard";
 import { Ami } from "@/services/amis/types";
 import DemandesEnvoyeesListItem from "@/components/molecules/DemandesEnvoyeesListItem";
+import { UserClock } from "lucide-react";
 
 interface DemandesEnvoyeesSectionProps {
   demandes: Ami[];
@@ -16,15 +17,14 @@ const DemandesEnvoyeesSection: React.FC<DemandesEnvoyeesSectionProps> = ({
   onAnnuler,
   viewMode
 }) => {
-  if (!demandes.length) {
-    return null;
-  }
-
   return (
-    <div>
-      <Heading as="h2" variant="h3" className="mb-4">
-        Demandes d'amis envoyées ({demandes.length})
-      </Heading>
+    <section>
+      <div className="flex items-center gap-2 mb-4">
+        <UserClock className="h-5 w-5 text-amber-500" />
+        <Heading as="h2" variant="h3">
+          Demandes d'amis envoyées ({demandes.length})
+        </Heading>
+      </div>
       
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -47,7 +47,7 @@ const DemandesEnvoyeesSection: React.FC<DemandesEnvoyeesSectionProps> = ({
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 };
 

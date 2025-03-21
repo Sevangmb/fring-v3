@@ -7,22 +7,14 @@ import {
   Search, 
   Users, 
   Layout, 
-  LayoutList, 
-  Filter 
+  LayoutList,
+  UserClock
 } from "lucide-react";
 import DemandesRecuesSection from "@/components/organisms/DemandesRecuesSection";
 import DemandesEnvoyeesSection from "@/components/organisms/DemandesEnvoyeesSection";
 import AmisAcceptesSection from "@/components/organisms/AmisAcceptesSection";
 import AjouterAmiDialog from "@/components/molecules/AjouterAmiDialog";
 import { Ami } from "@/services/amis/types";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuCheckboxItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface AmisPageContentProps {
@@ -55,6 +47,19 @@ const AmisPageContent: React.FC<AmisPageContentProps> = ({
         ami.email?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : amisAcceptes;
+
+  // Filtrer également les demandes
+  const filteredDemandesEnvoyees = searchTerm
+    ? demandesEnvoyees.filter(demande => 
+        demande.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : demandesEnvoyees;
+    
+  const filteredDemandesRecues = searchTerm
+    ? demandesRecues.filter(demande => 
+        demande.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : demandesRecues;
 
   if (loadingAmis) {
     return (
@@ -120,13 +125,26 @@ const AmisPageContent: React.FC<AmisPageContentProps> = ({
           </TabsTrigger>
           
           <TabsTrigger 
-            value="demandes" 
+            value="demandes-recues" 
             className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground relative"
           >
-            Demandes
-            {showBadges && (
+            Demandes reçues
+            {demandesRecues.length > 0 && (
               <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {demandesRecues.length + demandesEnvoyees.length}
+                {demandesRecues.length}
+              </span>
+            )}
+          </TabsTrigger>
+          
+          <TabsTrigger 
+            value="demandes-envoyees" 
+            className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground relative"
+          >
+            <UserClock className="h-4 w-4 mr-2" />
+            Demandes envoyées
+            {demandesEnvoyees.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {demandesEnvoyees.length}
               </span>
             )}
           </TabsTrigger>
@@ -140,32 +158,42 @@ const AmisPageContent: React.FC<AmisPageContentProps> = ({
           />
         </TabsContent>
 
-        <TabsContent value="demandes" className="mt-4 space-y-8">
-          {demandesRecues.length > 0 && (
+        <TabsContent value="demandes-recues" className="mt-4">
+          {filteredDemandesRecues.length > 0 ? (
             <DemandesRecuesSection 
-              demandes={demandesRecues} 
+              demandes={filteredDemandesRecues} 
               onAccepter={onAccepterDemande}
               onRejeter={onRejeterDemande}
               viewMode={viewMode}
             />
-          )}
-          
-          {demandesEnvoyees.length > 0 && (
-            <DemandesEnvoyeesSection 
-              demandes={demandesEnvoyees} 
-              onAnnuler={onRejeterDemande}
-              viewMode={viewMode}
-            />
-          )}
-          
-          {demandesRecues.length === 0 && demandesEnvoyees.length === 0 && (
+          ) : (
             <div className="text-center py-12 bg-muted/30 rounded-lg border">
               <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-4">
                 <Users className="h-6 w-6 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-medium">Aucune demande en attente</h3>
+              <h3 className="text-lg font-medium">Aucune demande reçue</h3>
               <p className="text-muted-foreground mt-2">
                 Vous n'avez pas de demandes d'amis en attente.
+              </p>
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="demandes-envoyees" className="mt-4">
+          {filteredDemandesEnvoyees.length > 0 ? (
+            <DemandesEnvoyeesSection 
+              demandes={filteredDemandesEnvoyees} 
+              onAnnuler={onRejeterDemande}
+              viewMode={viewMode}
+            />
+          ) : (
+            <div className="text-center py-12 bg-muted/30 rounded-lg border">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 mb-4">
+                <UserClock className="h-6 w-6 text-amber-600" />
+              </div>
+              <h3 className="text-lg font-medium">Aucune demande envoyée</h3>
+              <p className="text-muted-foreground mt-2">
+                Vous n'avez pas envoyé de demandes d'amis.
               </p>
             </div>
           )}

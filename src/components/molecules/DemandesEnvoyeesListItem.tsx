@@ -16,12 +16,6 @@ const DemandesEnvoyeesListItem: React.FC<DemandesEnvoyeesListItemProps> = ({
   demande, 
   onAnnuler 
 }) => {
-  // Extraire les initiales de l'email pour l'avatar si disponible
-  const getInitials = (email: string) => {
-    if (!email) return "?";
-    return email.slice(0, 2).toUpperCase();
-  };
-
   const timeAgo = formatDistanceToNow(new Date(demande.created_at), { 
     addSuffix: true,
     locale: fr 
