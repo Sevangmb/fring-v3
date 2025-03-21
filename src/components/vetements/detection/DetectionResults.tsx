@@ -3,10 +3,11 @@ import React from "react";
 import { AlertTriangle, Info, CheckCircle } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Text } from "@/components/atoms/Typography";
+import { DetectionStep } from "@/hooks/useDetection";
 
 interface DetectionResultsProps {
   error: string | null;
-  steps: string[];
+  steps: DetectionStep[];
   currentStep: string | null;
   loading: boolean;
 }
@@ -54,10 +55,12 @@ const DetectionResults: React.FC<DetectionResultsProps> = ({
               <ul className="text-sm space-y-2 mt-1 pl-2">
                 {steps.map((step, index) => {
                   // Déterminer si c'est une étape d'erreur
-                  const isError = step.toLowerCase().includes('erreur');
+                  const isError = step.label.toLowerCase().includes('erreur');
                   // Déterminer si c'est une étape finale réussie
-                  const isSuccess = step.toLowerCase().includes('application des valeurs') || 
-                                   step.toLowerCase().includes('détection terminée');
+                  const isSuccess = step.completed && (
+                    step.label.toLowerCase().includes('terminée') || 
+                    step.id === 'complete'
+                  );
                   
                   return (
                     <li key={index} 
@@ -75,7 +78,7 @@ const DetectionResults: React.FC<DetectionResultsProps> = ({
                           {index + 1}
                         </span>
                       )}
-                      <span>{step}</span>
+                      <span>{step.label}{step.description ? `: ${step.description}` : ''}</span>
                     </li>
                   );
                 })}

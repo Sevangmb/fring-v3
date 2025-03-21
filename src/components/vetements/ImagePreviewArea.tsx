@@ -5,7 +5,7 @@ import { ImagePlus, Loader2 } from "lucide-react";
 
 interface ImagePreviewAreaProps {
   imagePreview: string | null;
-  detectingColor: boolean;
+  loading: boolean;
   onClick: () => void;
 }
 
@@ -14,7 +14,7 @@ interface ImagePreviewAreaProps {
  */
 const ImagePreviewArea: React.FC<ImagePreviewAreaProps> = ({
   imagePreview,
-  detectingColor,
+  loading,
   onClick
 }) => {
   return (
@@ -29,7 +29,7 @@ const ImagePreviewArea: React.FC<ImagePreviewAreaProps> = ({
             alt="Aperçu du vêtement" 
             className="w-full h-full object-cover rounded-lg"
           />
-          {detectingColor && (
+          {loading && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
               <div className="text-center text-white">
                 <Loader2 size={48} className="mx-auto animate-spin" />
