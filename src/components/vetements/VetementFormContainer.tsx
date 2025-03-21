@@ -6,7 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { addVetement } from "@/services/vetement";
-import VetementFormFields, { vetementSchema, VetementFormValues } from "./VetementFormFields";
+import VetementFormFields from "./VetementFormFields";
+import { vetementSchema, VetementFormValues } from "./schema/VetementFormSchema";
 import ImageUploader from "./ImageUploader";
 import FormActions from "./FormActions";
 import { useImagePreview } from "@/hooks/useImagePreview";
@@ -61,6 +62,7 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
   // Mettre à jour l'aperçu de l'image si initialValues contient une image_url
   useEffect(() => {
     if (initialValues?.image_url) {
+      console.log("Initialisation de l'aperçu de l'image:", initialValues.image_url);
       setImagePreview(initialValues.image_url);
     }
   }, [initialValues, setImagePreview]);
@@ -79,12 +81,17 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
     try {
       setIsSubmitting(true);
       
+      // Préparation des données avec l'image_url
+      const vetementData = {
+        ...data,
+        image_url: imagePreview || undefined,
+      };
+      
+      console.log("Données du formulaire soumises:", vetementData);
+      
       if (mode === "update" && onSubmit) {
         // En mode modification, utiliser la fonction onSubmit personnalisée
-        await onSubmit({
-          ...data,
-          image_url: imagePreview || undefined,
-        });
+        await onSubmit(vetementData);
       } else {
         // En mode création, utiliser addVetement
         await addVetement({

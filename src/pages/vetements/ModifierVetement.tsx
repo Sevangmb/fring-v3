@@ -12,6 +12,7 @@ import { fetchMarques } from "@/services/marqueService";
 import { getVetementById, updateVetement } from "@/services/vetement";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import VetementFormContainer from "@/components/vetements/VetementFormContainer";
+import { VetementFormValues } from "@/components/vetements/schema/VetementFormSchema";
 
 const ModifierVetementPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,11 +20,11 @@ const ModifierVetementPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
-  const [vetement, setVetement] = useState(null);
+  const [vetement, setVetement] = useState<VetementFormValues | null>(null);
   const [categories, setCategories] = useState([]);
   const [marques, setMarques] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Charger les données nécessaires
   useEffect(() => {
@@ -57,6 +58,7 @@ const ModifierVetementPage = () => {
           return;
         }
         
+        console.log("Vêtement chargé:", vetementData);
         setVetement(vetementData);
         setCategories(categoriesData);
         setMarques(marquesData);
@@ -76,8 +78,9 @@ const ModifierVetementPage = () => {
     loadData();
   }, [vetementId, user, authLoading, navigate, toast]);
 
-  const handleUpdate = async (updatedData) => {
+  const handleUpdate = async (updatedData: VetementFormValues) => {
     try {
+      console.log("Données à mettre à jour:", updatedData);
       await updateVetement(vetementId, updatedData);
       toast({
         title: "Vêtement mis à jour",
