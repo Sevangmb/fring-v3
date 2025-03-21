@@ -232,6 +232,15 @@ export type Database = {
         }
         Returns: string
       }
+      get_users_by_ids: {
+        Args: {
+          user_ids: string[]
+        }
+        Returns: {
+          id: string
+          email: string
+        }[]
+      }
       gtrgm_compress: {
         Args: {
           "": unknown
