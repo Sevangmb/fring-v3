@@ -1,4 +1,3 @@
-
 import { colorMapping } from "../../utils/colorMapping.ts";
 import { availableColors } from "../../utils/colorMapping.ts";
 
@@ -11,25 +10,17 @@ import { availableColors } from "../../utils/colorMapping.ts";
 export function mapToFrenchColor(detectedColor: string, isBottom: boolean = false): string {
   console.log("Mapping detected color to French:", detectedColor);
   
-  // Si c'est un pantalon/jeans, retourner bleu directement
-  if (isBottom) {
-    console.log("Bottom garment detected, returning blue");
-    return "bleu";
-  }
-  
+  // Tentative de correspondance directe
   for (const [englishColor, frenchColor] of Object.entries(colorMapping)) {
-    if (detectedColor.includes(englishColor)) {
+    if (detectedColor.toLowerCase() === englishColor.toLowerCase()) {
       console.log(`Mapped '${detectedColor}' to '${frenchColor}'`);
       return frenchColor;
     }
   }
   
-  // Si aucune correspondance n'est trouvée, chercher la couleur la plus proche au lieu de renvoyer "multicolore"
-  console.log("No direct color mapping found for:", detectedColor);
-  
-  // Essayer de trouver une correspondance partielle
+  // Tentative de correspondance partielle
   for (const [englishColor, frenchColor] of Object.entries(colorMapping)) {
-    if (detectedColor.includes(englishColor)) {
+    if (detectedColor.toLowerCase().includes(englishColor.toLowerCase())) {
       console.log(`Found partial match '${englishColor}' -> '${frenchColor}'`);
       return frenchColor;
     }
@@ -39,7 +30,7 @@ export function mapToFrenchColor(detectedColor: string, isBottom: boolean = fals
   const words = detectedColor.split(/\s+/);
   for (const word of words) {
     for (const [englishColor, frenchColor] of Object.entries(colorMapping)) {
-      if (word === englishColor) {
+      if (word.toLowerCase() === englishColor.toLowerCase()) {
         console.log(`Found word match '${word}' -> '${frenchColor}'`);
         return frenchColor;
       }
@@ -53,8 +44,9 @@ export function mapToFrenchColor(detectedColor: string, isBottom: boolean = fals
     return "blanc";
   }
   
-  // En dernier recours, retourner la première couleur disponible (souvent bleu)
-  return availableColors[0];
+  // En dernier recours, retourner rouge comme couleur fallback
+  console.log("No mapping found, returning default color 'rouge'");
+  return "rouge";
 }
 
 /**

@@ -8,22 +8,19 @@ import { availableColors, colorPriority } from "./colorMapping.ts";
  * @returns Couleur validée
  */
 export function validateDetectedColor(detectedColor: string, isBottomGarment: boolean = false): string {
-  // Si c'est un pantalon/jeans, on retourne directement bleu
-  if (isBottomGarment) {
-    console.log("Bottom garment detected in validator, returning blue");
-    return "bleu";
-  }
-  
   // Vérifier si la couleur détectée est dans la liste des couleurs disponibles
   if (!availableColors.includes(detectedColor)) {
-    // Au lieu de retourner "multicolore", trouver la couleur la plus proche dans la liste
+    // Au lieu de retourner une couleur par défaut, trouver la plus proche
     const scores = availableColors.map(color => {
+      // Priorité plus basse pour les couleurs par défaut
       const priority = colorPriority[color] || 0;
       return { color, priority };
     });
     
     // Trier par priorité (du plus élevé au plus bas)
     scores.sort((a, b) => b.priority - a.priority);
+    
+    console.log("Color not in available list, closest match:", scores[0].color);
     
     // Retourner la couleur avec la plus haute priorité
     return scores[0].color;

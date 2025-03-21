@@ -15,42 +15,20 @@ export async function analyzeImageDirectly(imageUrl: string, hf: HfInference): P
     // Prétraitement de l'URL pour gérer les images en base64
     const processedUrl = preprocessImageUrl(imageUrl);
     
-    // Vérifier d'abord si c'est un pantalon ou jeans
-    const isPantsQuery = await hf.textGeneration({
+    // Demander directement la couleur du vêtement principal
+    const colorQuery = await hf.textGeneration({
       model: "google/flan-t5-xxl",
-      inputs: `Is the main clothing item in this image pants, jeans, or any lower-body garment? Answer with only yes or no: ${processedUrl}`,
+      inputs: `Analyze this image and tell me what is the main color of the clothing item. Answer with only one word - the color name: ${processedUrl}`,
       parameters: {
-        max_new_tokens: 5,
+        max_new_tokens: 10,
         temperature: 0.1,
       }
     });
     
-    const isPants = isPantsQuery.generated_text.toLowerCase().trim();
-    console.log("Is clothing pants/jeans?", isPants);
+    const detectedColor = colorQuery.generated_text.toLowerCase().trim();
+    console.log("Direct color analysis result:", detectedColor);
     
-    if (isPants === "yes" || isPants.includes("yes")) {
-      console.log("Pants detected, returning blue");
-      return "blue";
-    }
-    
-    // Si ce n'est pas un pantalon, vérifier si c'est bleu
-    const visionQuery = await hf.textGeneration({
-      model: "google/flan-t5-xxl",
-      inputs: `Is the main clothing item in this image blue? Answer with only yes or no: ${processedUrl}`,
-      parameters: {
-        max_new_tokens: 5,
-        temperature: 0.1,
-      }
-    });
-    
-    const isBlue = visionQuery.generated_text.toLowerCase().trim();
-    console.log("Is clothing blue?", isBlue);
-    
-    if (isBlue === "yes" || isBlue.includes("yes")) {
-      return "blue";
-    }
-    
-    return "unknown"; // Si ce n'est pas bleu, on laisse les autres méthodes déterminer la couleur
+    return detectedColor;
   } catch (error) {
     console.error("Error analyzing image directly:", error);
     return "unknown"; // En cas d'erreur, on continue avec les autres méthodes

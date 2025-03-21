@@ -28,61 +28,64 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     const englishClothingType = await detectClothingType(imageUrl, hf);
     console.log("Clothing type detected:", englishClothingType);
     
-    // Vérifier directement si c'est un pantalon/jeans
-    const isBottom = isBottomGarment("", englishClothingType);
-    
     // Étape 2: Générer une description de l'image pour l'analyse
     const imageDescription = await generateImageDescription(imageUrl, hf);
     console.log("Generated image description:", imageDescription);
     
-    // Vérifier si la description indique un pantalon/jeans
-    const isBottomFromDesc = isBottomGarment(imageDescription, englishClothingType);
-    const isBottomGarment = isBottom || isBottomFromDesc;
-    
     // Collecter les résultats de différentes méthodes de détection de couleur
     let detectedColors = [];
     
-    // Vérifier d'abord si c'est bleu par analyse directe
+    // Étape 3: Analyse directe de l'image
     const directColorAnalysis = await analyzeImageDirectly(imageUrl, hf);
-    if (directColorAnalysis === "blue") {
-      console.log("Direct analysis detected blue clothing");
-      detectedColors.push("blue");
+    if (directColorAnalysis && directColorAnalysis !== "unknown") {
+      console.log("Direct analysis detected color:", directColorAnalysis);
+      detectedColors.push(directColorAnalysis);
     }
     
-    // Étape 3: Extraire la couleur du vêtement à partir de la description
-    let detectedColor = await extractClothingColor(imageDescription, hf);
-    if (detectedColor && detectedColor.length < 20) {
-      detectedColors.push(detectedColor);
+    // Étape 4: Extraire la couleur du vêtement à partir de la description
+    const extractedColor = await extractClothingColor(imageDescription, hf);
+    if (extractedColor && extractedColor.length < 20) {
+      console.log("Extracted color from description:", extractedColor);
+      detectedColors.push(extractedColor);
     }
     
-    // Étape 4: Essayer avec une requête directe si nécessaire
+    // Étape 5: Essayer avec une requête directe
     const directQueryColor = await performDirectColorQuery(imageDescription, hf);
     if (directQueryColor && directQueryColor.length < 20) {
+      console.log("Direct query color result:", directQueryColor);
       detectedColors.push(directQueryColor);
     }
     
-    // Étape 5: Détecter la couleur dominante si nécessaire
+    // Étape 6: Détecter la couleur dominante si nécessaire
     if (detectedColors.length === 0) {
       const dominantColor = await detectDominantColor(imageDescription, hf);
       if (dominantColor && dominantColor !== "unknown") {
+        console.log("Dominant color detected:", dominantColor);
         detectedColors.push(dominantColor);
       }
     }
     
-    // Étape 6: Déterminer la couleur la plus probable parmi celles détectées
-    let finalEnglishColor = await determineMostLikelyColor(
+    // Étape 7: Déterminer la couleur la plus probable parmi celles détectées
+    const finalEnglishColor = await determineMostLikelyColor(
       imageDescription, 
       detectedColors, 
-      isBottomGarment,
+      false, // Ne plus considérer automatiquement isBottomGarment
       hf
     );
     
-    // Étape 7: Mapper la couleur et la catégorie détectées vers les equivalents français
-    let frenchColor = mapToFrenchColor(finalEnglishColor, isBottomGarment);
-    let frenchCategory = mapToFrenchCategory(englishClothingType);
+    console.log("Final determined English color:", finalEnglishColor);
     
-    // Étape 8: Valider la couleur finale
-    const validatedColor = validateDetectedColor(frenchColor, isBottomGarment);
+    // Étape 8: Mapper la couleur et la catégorie détectées vers les equivalents français
+    const frenchColor = mapToFrenchColor(finalEnglishColor, false);
+    const frenchCategory = mapToFrenchCategory(englishClothingType);
+    
+    console.log("Mapped to French color:", frenchColor);
+    console.log("Mapped to French category:", frenchCategory);
+    
+    // Étape 9: Valider la couleur finale sans forcer le bleu
+    const validatedColor = validateDetectedColor(frenchColor, false);
+    
+    console.log("Final validated color:", validatedColor);
     
     return {
       color: validatedColor,
@@ -92,7 +95,7 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     console.error("Error detecting clothing info:", error);
     // Retourner des valeurs par défaut en cas d'erreur
     return {
-      color: "bleu", 
+      color: "rouge", // Changer la couleur par défaut de bleu à rouge
       category: "T-shirt"
     };
   }

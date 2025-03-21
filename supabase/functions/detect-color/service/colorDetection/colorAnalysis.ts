@@ -18,20 +18,31 @@ export async function determineMostLikelyColor(
 ): Promise<string> {
   console.log("Determining most likely color from detected colors:", detectedColors);
   
-  // Si c'est un pantalon/jeans, retourner blue directement
-  if (isBottom) {
-    console.log("Bottom garment detected in determineMostLikelyColor, returning blue");
-    return "blue";
-  }
-  
   // Si une seule couleur est détectée, la retourner directement
   if (detectedColors.length === 1) {
     return detectedColors[0];
   }
   
-  // Si "blue" est parmi les couleurs détectées, le prioriser
-  if (detectedColors.includes("blue")) {
-    return "blue";
+  // Compter les occurrences de chaque couleur
+  const colorCounts = detectedColors.reduce((acc, color) => {
+    acc[color] = (acc[color] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  // Trouver la couleur avec le plus d'occurrences
+  let maxCount = 0;
+  let mostLikelyColor = "";
+  
+  for (const [color, count] of Object.entries(colorCounts)) {
+    if (count > maxCount) {
+      maxCount = count;
+      mostLikelyColor = color;
+    }
+  }
+  
+  // Si une couleur est clairement dominante, la retourner
+  if (mostLikelyColor) {
+    return mostLikelyColor;
   }
   
   // Détecter la couleur dominante comme dernier recours
