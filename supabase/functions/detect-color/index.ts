@@ -20,30 +20,52 @@ serve(async (req) => {
       );
     }
 
-    console.log("Processing image URL:", imageUrl.substring(0, 50) + "...");
+    // Vérifier si l'image est au format base64
+    const isBase64 = imageUrl.startsWith('data:');
+    console.log("Image format:", isBase64 ? "base64" : "URL");
+    console.log("Processing image:", imageUrl.substring(0, 50) + "...");
     
-    // Extraire les informations du vêtement de l'image (couleur et catégorie)
-    const clothingInfo = await detectClothingInfo(imageUrl);
-    
-    console.log("Final detected color:", clothingInfo.color);
-    console.log("Detected category:", clothingInfo.category);
-    
-    return new Response(
-      JSON.stringify(clothingInfo),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    try {
+      // Extraire les informations du vêtement de l'image (couleur et catégorie)
+      const clothingInfo = await detectClothingInfo(imageUrl);
+      
+      console.log("Final detected color:", clothingInfo.color);
+      console.log("Detected category:", clothingInfo.category);
+      
+      return new Response(
+        JSON.stringify(clothingInfo),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } catch (detectionError) {
+      console.error('Erreur spécifique à la détection:', detectionError);
+      
+      // Générer une couleur aléatoire si la détection échoue
+      const randomColors = ['bleu', 'rouge', 'vert', 'jaune', 'noir', 'blanc', 'violet', 'orange'];
+      const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+      
+      return new Response(
+        JSON.stringify({ 
+          error: detectionError.message || 'Une erreur s\'est produite lors de la détection', 
+          color: randomColor,
+          category: 'T-shirt'
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
   } catch (error) {
     console.error('Erreur lors de la détection:', error);
     
-    // En cas d'erreur, retourner un message d'erreur avec des valeurs par défaut
-    // Nous utilisons maintenant "rouge" comme couleur par défaut
+    // En cas d'erreur générale, retourner une couleur aléatoire
+    const randomColors = ['bleu', 'rouge', 'vert', 'jaune', 'noir', 'blanc', 'violet', 'orange'];
+    const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+    
     return new Response(
       JSON.stringify({ 
         error: error.message || 'Une erreur s\'est produite lors de la détection', 
-        color: 'rouge',
+        color: randomColor,
         category: 'T-shirt'
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

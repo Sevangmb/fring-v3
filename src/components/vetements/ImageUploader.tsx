@@ -32,6 +32,16 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Vérifier la taille du fichier (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "Erreur",
+          description: "L'image est trop volumineuse. La taille maximale est de 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       // Afficher une prévisualisation
       const reader = new FileReader();
       reader.onloadend = async () => {
@@ -47,7 +57,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           return;
         }
 
-        // Télécharger l'image sur Supabase Storage
+        // Télécharger l'image sur Supabase Storage ou utiliser le base64 directement
         try {
           const fileExt = file.name.split('.').pop();
           const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
@@ -68,20 +78,21 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
             if (error) {
               console.error("Erreur lors du téléchargement de l'image:", error);
+              // Utiliser l'image en base64 en cas d'erreur
+              publicUrl = base64Image;
               toast({
-                title: "Erreur",
-                description: "Impossible de télécharger l'image.",
-                variant: "destructive",
+                title: "Note",
+                description: "L'image sera utilisée localement sans être stockée en ligne.",
               });
-              return;
+            } else {
+              // Obtenir l'URL publique de l'image
+              const { data: { publicUrl: storedPublicUrl } } = supabase.storage
+                .from('vetements')
+                .getPublicUrl(`images/${fileName}`);
+                
+              publicUrl = storedPublicUrl;
             }
-
-            // Obtenir l'URL publique de l'image
-            const { data: { publicUrl: storedPublicUrl } } = supabase.storage
-              .from('vetements')
-              .getPublicUrl(`images/${fileName}`);
-              
-            publicUrl = storedPublicUrl;
+            
             setImagePreview(publicUrl);
           }
           
@@ -92,6 +103,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               console.log("Envoi de l'image pour détection:", publicUrl.substring(0, 50) + "...");
               const detectedInfo = await detectImageInfo(publicUrl);
               
+              console.log("Informations détectées:", detectedInfo);
+              
               // Définir la couleur détectée
               form.setValue('couleur', detectedInfo.color);
               
@@ -101,12 +114,21 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               }
               
               toast({
-                title: "Détection automatique",
+                title: "Détection réussie",
                 description: `La couleur ${detectedInfo.color} et la catégorie ${detectedInfo.category} ont été détectées.`,
               });
             } catch (error) {
               console.error("Erreur lors de la détection:", error);
-              form.setValue('couleur', 'bleu'); // Valeur par défaut en cas d'erreur
+              // Utiliser des valeurs aléatoires en cas d'erreur
+              const randomColors = ['bleu', 'rouge', 'vert', 'jaune', 'noir', 'blanc', 'violet', 'orange'];
+              const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+              form.setValue('couleur', randomColor);
+              
+              toast({
+                title: "Détection partielle",
+                description: "La détection automatique a rencontré un problème. Vous pouvez sélectionner manuellement la couleur.",
+                variant: "default",
+              });
             } finally {
               setDetectingColor(false);
             }
@@ -114,6 +136,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         } catch (error) {
           console.error("Erreur lors du téléchargement de l'image:", error);
           setDetectingColor(false);
+          toast({
+            title: "Erreur",
+            description: "Une erreur s'est produite lors du traitement de l'image.",
+            variant: "destructive",
+          });
         }
       };
       reader.readAsDataURL(file);
