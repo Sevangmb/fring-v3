@@ -6,7 +6,7 @@ import MesVetementsSection from "@/components/organisms/MesVetements";
 import { Heading, Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
 import { Plus, List } from "lucide-react";
-import { initializeDatabase, createStoredProcedure } from "@/services/supabaseService";
+import { initializeDatabase, createVetementsTable } from "@/services/supabaseService";
 import { useToast } from "@/hooks/use-toast";
 
 const MesVetementsPage = () => {
@@ -16,29 +16,36 @@ const MesVetementsPage = () => {
   useEffect(() => {
     const setupDatabase = async () => {
       try {
-        // D'abord créer la procédure stockée si elle n'existe pas
-        await createStoredProcedure();
+        // Essayer d'abord de créer la table directement via SQL
+        const tableCreated = await createVetementsTable();
         
-        // Puis initialiser la base de données
-        const success = await initializeDatabase();
-        
-        if (success) {
-          toast({
-            title: "Base de données initialisée",
-            description: "La connexion à la base de données a été établie avec succès.",
-          });
+        if (!tableCreated) {
+          // Fallback: essayer d'initialiser avec l'ancienne méthode
+          const success = await initializeDatabase();
+          
+          if (success) {
+            toast({
+              title: "Base de données initialisée",
+              description: "La connexion à la base de données a été établie avec succès.",
+            });
+          } else {
+            toast({
+              title: "Base de données non disponible",
+              description: "Utilisation des données de démonstration.",
+              variant: "destructive",
+            });
+          }
         } else {
           toast({
-            title: "Base de données non disponible",
-            description: "Utilisation des données de démonstration.",
-            variant: "destructive",
+            title: "Base de données initialisée",
+            description: "La table a été créée ou existait déjà.",
           });
         }
       } catch (error) {
         console.error("Erreur d'initialisation:", error);
         toast({
           title: "Erreur",
-          description: "Impossible d'initialiser la base de données.",
+          description: "Impossible d'initialiser la base de données. Utilisation des données de démonstration.",
           variant: "destructive",
         });
       }
