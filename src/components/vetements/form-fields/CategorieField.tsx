@@ -22,7 +22,7 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
   const hasDetectedValue = !!categorieId && !loading;
 
   const { 
-    categories,
+    categories = [], // Ensure default empty array
     loadingCategories, 
     addDialogOpen, 
     addingCategory,
@@ -30,6 +30,7 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
     closeAddDialog, 
     handleAddCategory 
   } = useCategories({
+    initialCategories: [], // Add default empty array
     onCategoryAdded: (categoryId) => {
       form.setValue('categorie_id', categoryId, { shouldValidate: true });
     },

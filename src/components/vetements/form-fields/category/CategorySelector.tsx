@@ -22,7 +22,7 @@ interface CategorySelectorProps {
 export const CategorySelector: React.FC<CategorySelectorProps> = ({
   value,
   onChange,
-  categories,
+  categories = [], // Add default empty array here
   displayValue,
   loadingCategories,
   disabled = false,
@@ -34,6 +34,9 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
     onChange(categoryId);
     setOpen(false);
   };
+
+  // Ensure categories is always an array
+  const safeCategories = Array.isArray(categories) ? categories : [];
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -60,9 +63,9 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
           <CommandEmpty>
             <p className="py-2 px-4 text-sm text-muted-foreground">Aucune catégorie trouvée.</p>
           </CommandEmpty>
-          {!loadingCategories && categories && categories.length > 0 ? (
+          {!loadingCategories && safeCategories.length > 0 ? (
             <CommandGroup className="max-h-64 overflow-auto">
-              {categories.map((category) => (
+              {safeCategories.map((category) => (
                 <CommandItem
                   key={String(category.id)}
                   value={String(category.nom)}

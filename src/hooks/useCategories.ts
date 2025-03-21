@@ -14,8 +14,8 @@ export const useCategories = ({
   initialCategories = [],
   onCategoryAdded,
   onCategoriesChange
-}: UseCategoriesProps) => {
-  const [categories, setCategories] = useState<Categorie[]>(initialCategories);
+}: UseCategoriesProps = {}) => {
+  const [categories, setCategories] = useState<Categorie[]>(initialCategories || []);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [addingCategory, setAddingCategory] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(false);
@@ -26,7 +26,7 @@ export const useCategories = ({
     try {
       setLoadingCategories(true);
       const categoriesData = await fetchCategories();
-      setCategories(categoriesData);
+      setCategories(categoriesData || []);
     } catch (error) {
       console.error("Erreur lors du chargement des catégories:", error);
       toast({
@@ -34,6 +34,8 @@ export const useCategories = ({
         description: "Impossible de charger les catégories",
         variant: "destructive"
       });
+      // Ensure categories is at least an empty array on error
+      setCategories([]);
     } finally {
       setLoadingCategories(false);
     }
@@ -72,7 +74,7 @@ export const useCategories = ({
       });
       
       // Update local categories list
-      setCategories((prev) => [...prev, newCategory]);
+      setCategories((prev) => [...(prev || []), newCategory]);
       
       if (onCategoryAdded) {
         onCategoryAdded(Number(newCategory.id));
