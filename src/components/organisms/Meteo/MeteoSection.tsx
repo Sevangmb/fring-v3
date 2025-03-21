@@ -3,12 +3,13 @@ import React from 'react';
 import { useMeteo } from '@/hooks/useMeteo';
 import MeteoActuelle from './MeteoActuelle';
 import PrevisionJour from './PrevisionJour';
+import TenueSuggestion from './TenueSuggestion';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/atoms/Typography";
 import { AlertCircle } from 'lucide-react';
 
 const MeteoSection: React.FC = () => {
-  const { meteo, loading, error } = useMeteo();
+  const { meteo, loading, error, tenueSuggestion } = useMeteo();
 
   if (loading) {
     return (
@@ -21,6 +22,7 @@ const MeteoSection: React.FC = () => {
               <Skeleton key={index} className="h-32 w-full" />
             ))}
           </div>
+          <Skeleton className="h-48 w-full" />
         </div>
       </div>
     );
@@ -40,7 +42,7 @@ const MeteoSection: React.FC = () => {
   return (
     <div className="my-8">
       <Text variant="h3" className="mb-4">Météo pour les 3 prochains jours</Text>
-      <div className="space-y-4">
+      <div className="space-y-6">
         <MeteoActuelle 
           temperature={meteo.current.temperature}
           description={meteo.current.description}
@@ -64,6 +66,15 @@ const MeteoSection: React.FC = () => {
             />
           ))}
         </div>
+        
+        {tenueSuggestion && (
+          <TenueSuggestion 
+            haut={tenueSuggestion.haut}
+            bas={tenueSuggestion.bas}
+            chaussures={tenueSuggestion.chaussures}
+            message={tenueSuggestion.message}
+          />
+        )}
       </div>
     </div>
   );
