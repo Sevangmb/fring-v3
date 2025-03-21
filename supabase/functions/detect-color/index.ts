@@ -168,4 +168,3 @@ async function blobToBase64(blob: Blob): Promise<string> {
   const base64 = btoa(String.fromCharCode(...uint8Array));
   return base64;
 }
-
