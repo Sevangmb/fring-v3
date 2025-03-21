@@ -10,12 +10,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, UserPlus, X, Users } from "lucide-react";
+import { Search, UserPlus, X, Users, AlertCircle } from "lucide-react";
 import { searchUsersByEmail } from "@/services/userService";
 import { envoyerDemandeAmi } from "@/services/amiService";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { User } from "@/services/userService";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface AjouterAmiDialogProps {
   open: boolean;
@@ -30,6 +31,7 @@ const AjouterAmiDialog: React.FC<AjouterAmiDialogProps> = ({ open, onClose, onAm
   const [sendingRequest, setSendingRequest] = useState<Record<string, boolean>>({});
   const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   
   const { toast } = useToast();
 
@@ -43,11 +45,13 @@ const AjouterAmiDialog: React.FC<AjouterAmiDialogProps> = ({ open, onClose, onAm
   const loadSuggestedUsers = async () => {
     try {
       setIsLoadingSuggestions(true);
+      setSearchError(null);
       // Utiliser la même fonction mais sans terme de recherche pour obtenir quelques utilisateurs récents
       const users = await searchUsersByEmail("");
       setSuggestedUsers(users);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors du chargement des suggestions:", error);
+      setSearchError("Impossible de charger les suggestions d'utilisateurs");
     } finally {
       setIsLoadingSuggestions(false);
     }
@@ -67,10 +71,19 @@ const AjouterAmiDialog: React.FC<AjouterAmiDialogProps> = ({ open, onClose, onAm
     
     try {
       setIsSearching(true);
+      setSearchError(null);
       const results = await searchUsersByEmail(searchTerm);
       setSearchResults(results);
-    } catch (error) {
+      
+      if (results.length === 0) {
+        toast({
+          title: "Aucun résultat",
+          description: `Aucun utilisateur trouvé pour "${searchTerm}"`,
+        });
+      }
+    } catch (error: any) {
       console.error("Erreur lors de la recherche:", error);
+      setSearchError(`Erreur de recherche: ${error.message}`);
       toast({
         title: "Erreur",
         description: "Impossible de rechercher des utilisateurs.",
@@ -154,6 +167,13 @@ const AjouterAmiDialog: React.FC<AjouterAmiDialogProps> = ({ open, onClose, onAm
           </DialogDescription>
         </DialogHeader>
         
+        {searchError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{searchError}</AlertDescription>
+          </Alert>
+        )}
+        
         <form onSubmit={handleSearch} className="flex items-center space-x-2 mt-4">
           <Input
             placeholder="Rechercher par email..."
@@ -209,7 +229,7 @@ const AjouterAmiDialog: React.FC<AjouterAmiDialogProps> = ({ open, onClose, onAm
           )}
           
           {/* État vide */}
-          {!isSearching && !isLoadingSuggestions && searchResults.length === 0 && suggestedUsers.length === 0 && (
+          {!isSearching && !isLoadingSuggestions && searchResults.length === 0 && suggestedUsers.length === 0 && !searchError && (
             <div className="text-center py-8 text-muted-foreground">
               <p>Recherchez des utilisateurs pour les ajouter comme amis</p>
             </div>

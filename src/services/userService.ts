@@ -20,13 +20,13 @@ export const searchUsersByEmail = async (searchTerm: string): Promise<User[]> =>
     
     if (error) {
       console.error('Erreur lors de la recherche d\'utilisateurs:', error);
-      return [];
+      throw new Error(`Erreur de recherche: ${error.message}`);
     }
     
     console.log('Utilisateurs trouvés via RPC:', data);
     return data || [];
   } catch (error) {
     console.error('Erreur lors de la recherche d\'utilisateurs:', error);
-    return [];
+    throw error;
   }
 };

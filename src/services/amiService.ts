@@ -21,6 +21,7 @@ export const fetchAmis = async (): Promise<Ami[]> => {
     const userId = sessionData.session?.user?.id;
 
     if (!userId) {
+      console.error('Aucun utilisateur connecté pour récupérer les amis');
       return [];
     }
 
@@ -35,7 +36,7 @@ export const fetchAmis = async (): Promise<Ami[]> => {
     
     if (error) {
       console.error('Erreur lors de la récupération des amis:', error);
-      return [];
+      throw new Error(`Erreur de récupération des amis: ${error.message}`);
     }
 
     console.log('Amis récupérés:', data);
@@ -43,7 +44,7 @@ export const fetchAmis = async (): Promise<Ami[]> => {
     return data as Ami[];
   } catch (error) {
     console.error('Erreur lors de la récupération des amis:', error);
-    return [];
+    throw error;
   }
 };
 
@@ -58,6 +59,13 @@ export const envoyerDemandeAmi = async (amiId: string): Promise<Ami> => {
       throw new Error('Vous devez être connecté pour envoyer une demande d\'ami');
     }
 
+    // Vérifier si l'ID de l'ami est valide
+    if (!amiId) {
+      throw new Error('ID d\'ami invalide');
+    }
+
+    console.log('Envoi d\'une demande d\'ami à:', amiId);
+
     // Vérifier si une demande existe déjà
     const { data: existingRequest, error: checkError } = await supabase
       .from('amis')
@@ -67,7 +75,7 @@ export const envoyerDemandeAmi = async (amiId: string): Promise<Ami> => {
     
     if (checkError) {
       console.error('Erreur lors de la vérification de la demande d\'ami:', checkError);
-      throw checkError;
+      throw new Error(`Erreur de vérification: ${checkError.message}`);
     }
     
     if (existingRequest) {
@@ -89,7 +97,7 @@ export const envoyerDemandeAmi = async (amiId: string): Promise<Ami> => {
     
     if (error) {
       console.error('Erreur lors de l\'envoi de la demande d\'ami:', error);
-      throw error;
+      throw new Error(`Erreur d'envoi: ${error.message}`);
     }
     
     return data as Ami;
@@ -110,6 +118,8 @@ export const accepterDemandeAmi = async (amiId: number): Promise<Ami> => {
       throw new Error('Vous devez être connecté pour accepter une demande d\'ami');
     }
 
+    console.log('Acceptation de la demande d\'ami:', amiId);
+
     // Mise à jour du statut de la demande
     const { data, error } = await supabase
       .from('amis')
@@ -121,7 +131,7 @@ export const accepterDemandeAmi = async (amiId: number): Promise<Ami> => {
     
     if (error) {
       console.error('Erreur lors de l\'acceptation de la demande d\'ami:', error);
-      throw error;
+      throw new Error(`Erreur d'acceptation: ${error.message}`);
     }
     
     return data as Ami;
@@ -142,6 +152,8 @@ export const rejeterDemandeAmi = async (amiId: number): Promise<void> => {
       throw new Error('Vous devez être connecté pour rejeter une demande d\'ami');
     }
 
+    console.log('Rejet/suppression de la demande d\'ami:', amiId);
+
     // Supprimer la demande
     const { error } = await supabase
       .from('amis')
@@ -151,7 +163,7 @@ export const rejeterDemandeAmi = async (amiId: number): Promise<void> => {
     
     if (error) {
       console.error('Erreur lors du rejet de la demande d\'ami:', error);
-      throw error;
+      throw new Error(`Erreur de rejet: ${error.message}`);
     }
   } catch (error) {
     console.error('Erreur lors du rejet de la demande d\'ami:', error);
