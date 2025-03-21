@@ -127,28 +127,40 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
                 <CommandEmpty>
                   <p className="py-2 px-4 text-sm text-muted-foreground">Aucune catégorie trouvée.</p>
                 </CommandEmpty>
-                <CommandGroup className="max-h-64 overflow-auto">
-                  {!loadingCategories && categories.map((category) => (
-                    <CommandItem
-                      key={category.id}
-                      value={category.nom}
-                      onSelect={() => handleCategorySelect(Number(category.id))}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          field.value === Number(category.id) ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {category.nom}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
+                {!loadingCategories && categories && categories.length > 0 ? (
+                  <CommandGroup className="max-h-64 overflow-auto">
+                    {categories.map((category) => (
+                      <CommandItem
+                        key={String(category.id)}
+                        value={String(category.nom)}
+                        onSelect={() => handleCategorySelect(Number(category.id))}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            field.value === Number(category.id) ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        {category.nom}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                ) : (
+                  <div className="py-6 text-center text-sm text-muted-foreground">
+                    {loadingCategories ? "Chargement des catégories..." : "Aucune catégorie disponible"}
+                  </div>
+                )}
                 <CommandSeparator />
                 <CommandGroup>
                   <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
                     <DialogTrigger asChild>
-                      <CommandItem className="text-primary">
+                      <CommandItem
+                        className="text-primary"
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          setAddDialogOpen(true);
+                        }}
+                      >
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Ajouter une nouvelle catégorie
                       </CommandItem>
