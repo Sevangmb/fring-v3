@@ -8,22 +8,22 @@ import { HfInference } from 'https://esm.sh/@huggingface/inference@2.6.1';
  */
 export async function detectClothingInfo(imageUrl: string): Promise<{color: string, category: string}> {
   try {
-    console.log("Starting clothing detection process for image:", imageUrl.substring(0, 50) + "...");
+    console.log("Starting clothing detection process for image");
     
     // Initialiser l'API Hugging Face avec la clé API
     const hfApiKey = Deno.env.get('HUGGINGFACE_API_KEY');
     if (!hfApiKey) {
       console.error("HUGGINGFACE_API_KEY not found in environment variables");
-      throw new Error("API key missing");
+      throw new Error("Configuration API manquante");
     }
     
     const hf = new HfInference(hfApiKey);
     console.log("HuggingFace client initialized");
 
     // Préparer l'image au bon format (gestion du base64)
-    const processedImage = imageUrl.startsWith('data:') ? imageUrl : imageUrl;
+    const processedImage = imageUrl;
     
-    // Utiliser un modèle plus précis pour la détection des vêtements
+    // Utiliser un modèle plus efficace pour la détection
     const imageAnalysisPrompt = `
     Describe precisely what clothing item is in this image. Focus on:
     1. The main COLOR (exactly one word)
@@ -36,13 +36,15 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     Be very specific and accurate.
     `;
     
+    console.log("Sending request to HuggingFace API");
     const response = await hf.textGeneration({
-      model: "stabilityai/stablelm-3b-4e1t",
+      model: "bigscience/bloom-560m", // Modèle plus léger pour réduire le temps de réponse
       inputs: `${imageAnalysisPrompt}\n${processedImage}`,
       parameters: {
         max_new_tokens: 100,
         temperature: 0.2,
         top_p: 0.95,
+        return_full_text: false
       }
     });
     
@@ -51,11 +53,19 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     
     // Extraire la couleur avec regex
     const colorMatch = generatedText.match(/color:\s*([a-z]+)/i);
-    const color = colorMatch?.[1] || "blue";
+    const color = colorMatch?.[1] || null;
+    
+    if (!color) {
+      throw new Error("Impossible de détecter la couleur du vêtement");
+    }
     
     // Extraire la catégorie avec regex
     const categoryMatch = generatedText.match(/category:\s*([a-z\s-]+)/i);
-    const category = categoryMatch?.[1]?.trim() || "t-shirt";
+    const category = categoryMatch?.[1]?.trim() || null;
+    
+    if (!category) {
+      throw new Error("Impossible de détecter la catégorie du vêtement");
+    }
     
     // Mapping couleurs en anglais vers français
     const colorMapping: Record<string, string> = {
@@ -92,7 +102,7 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     };
     
     // Convertir en français
-    const frenchColor = colorMapping[color] || "bleu";
+    const frenchColor = colorMapping[color] || color;
     
     // Pour la catégorie, chercher des correspondances partielles
     let frenchCategory = "T-shirt"; // Valeur par défaut

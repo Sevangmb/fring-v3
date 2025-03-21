@@ -2,9 +2,8 @@
 /**
  * Service principal de détection de couleur pour les vêtements
  */
-import { prepareImageUrl, validateDetectionResults } from './utils';
+import { prepareImageUrl } from './utils';
 import { invokeDetectionFunction } from './edgeDetection';
-import { simulateLocalDetection } from './localDetection';
 
 /**
  * Type pour la fonction de callback des étapes
@@ -30,42 +29,30 @@ export const detectImageInfo = async (
     const preparedImageUrl = prepareImageUrl(imageUrl, onStep);
     
     // Étape 3: Appeler la fonction de détection Edge
+    onStep?.("Appel du service de détection - cela peut prendre jusqu'à 20 secondes...");
     const detectionResults = await invokeDetectionFunction(preparedImageUrl, onStep);
     
     // Vérifier si la détection a réussi
     if (!detectionResults.color || !detectionResults.category) {
-      onStep?.("La détection à distance a échoué, tentative avec la méthode locale...");
-      
-      // Essayer la méthode locale si l'Edge Function échoue
-      const localResults = await simulateLocalDetection(preparedImageUrl, onStep);
-      
-      // Vérifier si la détection locale a réussi
-      if (!localResults.color || !localResults.category) {
-        onStep?.("Échec de la détection. Veuillez réessayer ou saisir les valeurs manuellement.");
-        throw new Error("Impossible de détecter la couleur et la catégorie");
-      }
-      
-      // Retourner les résultats de la détection locale
-      onStep?.(`Détection locale réussie - Couleur: ${localResults.color}, Catégorie: ${localResults.category}`);
-      return localResults;
+      onStep?.("La détection a échoué. Veuillez réessayer ou saisir les valeurs manuellement.");
+      throw new Error("Impossible de détecter la couleur et la catégorie");
     }
     
-    // Étape 4: Valider et normaliser les résultats
-    const validatedResults = validateDetectionResults(detectionResults, onStep);
+    // Étape 4: Afficher les informations détectées dans la console pour déboguer
+    console.log('Couleur détectée:', detectionResults.color);
+    console.log('Catégorie détectée:', detectionResults.category);
+    onStep?.(`Détection terminée - Couleur: ${detectionResults.color}, Catégorie: ${detectionResults.category}`);
     
-    // Étape 5: Afficher les informations détectées dans la console pour déboguer
-    console.log('Couleur détectée:', validatedResults.color);
-    console.log('Catégorie détectée:', validatedResults.category);
-    onStep?.(`Détection terminée - Couleur: ${validatedResults.color}, Catégorie: ${validatedResults.category}`);
-    
-    return validatedResults;
+    return {
+      color: detectionResults.color,
+      category: detectionResults.category
+    };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
     console.error('Erreur lors de la détection:', error);
     onStep?.(`Erreur lors de la détection: ${errorMessage}`);
     
     // Ne pas retourner de valeurs aléatoires mais plutôt une erreur
-    onStep?.("Échec de la détection. Veuillez réessayer ou saisir les valeurs manuellement.");
     throw new Error("Impossible de détecter la couleur et la catégorie");
   }
 };

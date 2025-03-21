@@ -26,9 +26,9 @@ export const invokeDetectionFunction = async (imageUrl: string, onStep?: StepCal
     // Tentative d'appel à la fonction Edge Supabase
     onStep?.("Envoi de la requête à la fonction Edge Supabase 'detect-color'");
     
-    // Timeout pour l'appel à la fonction (30 secondes maximum)
+    // Timeout pour l'appel à la fonction (20 secondes maximum, réduit par rapport à avant)
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Délai d'attente de la fonction dépassé")), 30000)
+      setTimeout(() => reject(new Error("Délai d'attente de la fonction dépassé")), 20000)
     );
     
     // Appel effectif à la fonction Edge

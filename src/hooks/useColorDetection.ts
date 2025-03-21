@@ -44,7 +44,7 @@ export const useColorDetection = (
       toast({
         title: "Détection en cours",
         description: "Analyse de l'image pour identifier la couleur et la catégorie...",
-        duration: 5000,
+        duration: 20000, // Augmenter la durée pour correspondre au timeout de la fonction
       });
       
       addStep("1. Préparation de l'image pour l'analyse");
@@ -77,7 +77,7 @@ export const useColorDetection = (
         ? error.message 
         : "Erreur inconnue lors de la détection";
       
-      setDetectionError("La détection automatique a rencontré un problème. Veuillez vérifier les détails ci-dessous ou saisir les valeurs manuellement.");
+      setDetectionError("La détection automatique a rencontré un problème. Veuillez vérifier votre connexion ou saisir les valeurs manuellement.");
       addStep(`Erreur: ${errorMessage}`);
       
       toast({
@@ -88,7 +88,6 @@ export const useColorDetection = (
       });
     } finally {
       setDetectingColor(false);
-      setCurrentStep(null);
     }
   };
 

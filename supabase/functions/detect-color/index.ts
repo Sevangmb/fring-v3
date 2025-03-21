@@ -26,7 +26,7 @@ serve(async (req) => {
     
     // Ne pas logger toute l'URL/base64 pour éviter de surcharger les logs
     const truncatedUrl = isBase64 
-      ? imageUrl.substring(0, imageUrl.indexOf(",") + 10) + "..." 
+      ? imageUrl.substring(0, Math.min(100, imageUrl.indexOf(",") + 10)) + "..." 
       : imageUrl.substring(0, 50) + "...";
     
     console.log("Processing image:", truncatedUrl);
