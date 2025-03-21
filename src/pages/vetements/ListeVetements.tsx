@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/templates/Layout";
@@ -9,8 +8,8 @@ import Card, { CardHeader, CardTitle, CardDescription, CardFooter } from "@/comp
 import { Shirt, Plus, Search, ArrowLeft, Filter, SlidersHorizontal, TagIcon, Edit, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { fetchVetements, deleteVetement, demoVetements, Vetement } from "@/services/supabaseService";
 
 // Type pour un vêtement
 interface Vetement {
@@ -36,97 +35,34 @@ const ListeVetementsPage = () => {
 
   // Récupérer les vêtements depuis Supabase
   useEffect(() => {
-    const fetchVetements = async () => {
+    const loadVetements = async () => {
       try {
         setIsLoading(true);
         
-        // Exemple: récupérer les données depuis Supabase
-        let query = supabase.from('vetements').select('*');
-        
-        const { data, error } = await query;
-        
-        if (error) throw error;
-        
-        if (data) {
-          setVetements(data as Vetement[]);
-        }
+        // Récupérer les données depuis notre service
+        const data = await fetchVetements();
+        setVetements(data);
       } catch (error) {
         console.error("Erreur lors de la récupération des vêtements:", error);
         toast({
           title: "Erreur",
-          description: "Impossible de charger vos vêtements.",
+          description: "Impossible de charger vos vêtements. Utilisation des données de démonstration.",
           variant: "destructive",
         });
         
-        // Pour le développement, utiliser des données fictives
-        setVetements([
-          {
-            id: 1,
-            nom: "T-shirt blanc",
-            categorie: "t-shirt",
-            couleur: "blanc",
-            taille: "M",
-            marque: "Nike",
-            description: "T-shirt basique en coton bio",
-            created_at: new Date().toISOString(),
-          },
-          {
-            id: 2,
-            nom: "Jean bleu",
-            categorie: "jeans",
-            couleur: "bleu",
-            taille: "40",
-            marque: "Levi's",
-            description: "Jean slim en denim stretch",
-            created_at: new Date().toISOString(),
-          },
-          {
-            id: 3,
-            nom: "Veste noire",
-            categorie: "veste",
-            couleur: "noir",
-            taille: "L",
-            marque: "Zara",
-            description: "Veste légère pour la mi-saison",
-            created_at: new Date().toISOString(),
-          },
-          {
-            id: 4,
-            nom: "Pull gris",
-            categorie: "pull",
-            couleur: "gris",
-            taille: "S",
-            marque: "H&M",
-            description: "Pull chaud en laine mélangée",
-            created_at: new Date().toISOString(),
-          },
-          {
-            id: 5,
-            nom: "Chemise à carreaux",
-            categorie: "chemise",
-            couleur: "multicolore",
-            taille: "M",
-            marque: "Gap",
-            description: "Chemise en flanelle pour l'automne",
-            created_at: new Date().toISOString(),
-          },
-          {
-            id: 6,
-            nom: "Short beige",
-            categorie: "short",
-            couleur: "beige",
-            taille: "M",
-            marque: "Uniqlo",
-            description: "Short en coton léger pour l'été",
-            created_at: new Date().toISOString(),
-          },
-        ]);
+        // Utiliser les données de démonstration
+        // Simuler des IDs et des dates pour les données de démo
+        setVetements(demoVetements.map((v, index) => ({
+          ...v,
+          id: index + 1,
+          created_at: new Date().toISOString()
+        })));
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchVetements();
+    loadVetements();
   }, [toast]);
 
   // Filtrer les vêtements en fonction de la recherche et des filtres
@@ -137,7 +73,7 @@ const ListeVetementsPage = () => {
                          (vetement.description && vetement.description.toLowerCase().includes(searchTerm.toLowerCase()));
     
     // Filtre de catégorie
-    const matchesCategorie = categorieFilter ? vetement.categorie === categorieFilter : true;
+    const matchesCategorie = categorieFilter ? categorieFilter === "all" ? true : vetement.categorie === categorieFilter : true;
     
     // Filtre par onglet
     if (activeTab === "tous") {
@@ -150,13 +86,8 @@ const ListeVetementsPage = () => {
   const handleDelete = async (id: number) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer ce vêtement ?")) {
       try {
-        // Exemple: supprimer depuis Supabase
-        const { error } = await supabase
-          .from('vetements')
-          .delete()
-          .eq('id', id);
-        
-        if (error) throw error;
+        // Utiliser notre service pour supprimer le vêtement
+        await deleteVetement(id);
         
         // Mettre à jour l'état local
         setVetements(vetements.filter(v => v.id !== id));

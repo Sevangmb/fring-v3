@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/templates/Layout";
@@ -12,8 +11,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Shirt, ArrowLeft, ImagePlus, Plus } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { addVetement } from "@/services/supabaseService";
 
 // Définir le schéma de validation pour le formulaire d'ajout de vêtement
 const vetementSchema = z.object({
@@ -62,25 +61,16 @@ const AjouterVetementPage = () => {
     try {
       setIsSubmitting(true);
       
-      // Simuler l'envoi à Supabase (à compléter avec la logique réelle)
-      console.log("Données à envoyer:", data);
-      
-      // Exemple: insérer les données dans Supabase
-      const { error } = await supabase
-        .from('vetements')
-        .insert([
-          { 
-            nom: data.nom,
-            categorie: data.categorie,
-            couleur: data.couleur,
-            taille: data.taille,
-            description: data.description || null,
-            marque: data.marque || null,
-            // Ici, vous pourriez ajouter la logique de téléchargement de l'image vers le stockage Supabase
-          }
-        ]);
-      
-      if (error) throw error;
+      // Utiliser notre service pour ajouter le vêtement
+      await addVetement({
+        nom: data.nom,
+        categorie: data.categorie,
+        couleur: data.couleur,
+        taille: data.taille,
+        description: data.description || null,
+        marque: data.marque || null,
+        image_url: imagePreview || null,
+      });
       
       toast({
         title: "Vêtement ajouté avec succès!",
