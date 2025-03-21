@@ -87,17 +87,16 @@ const ModifierVetementPage = () => {
         throw new Error("ID de vêtement manquant");
       }
       
-      // Convertir les champs vides en null pour les champs optionnels
-      const formattedData = {
-        ...updatedData,
+      // Assurons-nous que les données sont bien formatées avant l'envoi
+      await updateVetement(vetementId, {
+        nom: updatedData.nom,
+        categorie: updatedData.categorie,
+        couleur: updatedData.couleur,
+        taille: updatedData.taille,
         description: updatedData.description || null,
         marque: updatedData.marque || null,
         image_url: updatedData.image_url || null
-      };
-      
-      console.log("Données formatées pour la mise à jour:", formattedData);
-      
-      await updateVetement(vetementId, formattedData);
+      });
       
       toast({
         title: "Vêtement mis à jour",

@@ -34,6 +34,9 @@ const CouleurField: React.FC<CouleurFieldProps> = ({ form, loading }) => {
               placeholder={loading ? "Détection en cours..." : "Entrez la couleur"} 
               {...field}
               disabled={loading}
+              onChange={(e) => {
+                field.onChange(e.target.value);
+              }}
             />
           </FormControl>
           <FormMessage />

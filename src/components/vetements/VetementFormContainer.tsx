@@ -79,7 +79,7 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
       // Préparation des données avec l'image_url
       const vetementData = {
         ...data,
-        image_url: imagePreview || undefined,
+        image_url: imagePreview || null,
       };
       
       console.log("Données du formulaire soumises:", vetementData);

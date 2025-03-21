@@ -41,6 +41,9 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
               placeholder={loading ? "Détection en cours..." : "Entrez la catégorie"} 
               {...field}
               disabled={loading}
+              onChange={(e) => {
+                field.onChange(e.target.value);
+              }}
             />
           </FormControl>
           <FormMessage />

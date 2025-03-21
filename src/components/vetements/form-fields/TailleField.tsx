@@ -18,7 +18,13 @@ const TailleField: React.FC<TailleFieldProps> = ({ form }) => {
         <FormItem>
           <FormLabel>Taille*</FormLabel>
           <FormControl>
-            <Input placeholder="Entrez la taille (ex: M, L, XL, 40, 42)" {...field} />
+            <Input 
+              placeholder="Entrez la taille (ex: M, L, XL, 40, 42)" 
+              {...field}
+              onChange={(e) => {
+                field.onChange(e.target.value);
+              }}
+            />
           </FormControl>
           <FormMessage />
         </FormItem>

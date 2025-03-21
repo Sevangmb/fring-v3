@@ -7,7 +7,8 @@ import { Vetement } from './types';
  */
 export const updateVetement = async (id: number, vetement: Partial<Vetement>): Promise<Vetement> => {
   try {
-    console.log('Mise à jour du vêtement :', id, vetement);
+    console.log('Mise à jour du vêtement avec ID:', id);
+    console.log('Données envoyées pour mise à jour:', vetement);
     
     // Vérifier que l'ID est valide
     if (!id || isNaN(id)) {
@@ -23,16 +24,15 @@ export const updateVetement = async (id: number, vetement: Partial<Vetement>): P
     // Filtrer les propriétés undefined qui pourraient causer des problèmes
     const updateData: Record<string, any> = {};
     
+    // Traiter correctement chaque champ
     for (const [key, value] of Object.entries(vetement)) {
-      // Ne pas inclure les champs non définis ou vides si ce sont des chaînes optionnelles
+      // Ne pas inclure les champs undefined
       if (value !== undefined) {
-        updateData[key] = value === '' && (key === 'description' || key === 'marque' || key === 'image_url') 
-          ? null 
-          : value;
+        updateData[key] = value;
       }
     }
     
-    console.log('Données filtrées pour la mise à jour:', updateData);
+    console.log('Données formatées pour la mise à jour:', updateData);
     
     const { data, error } = await supabase
       .from('vetements')
