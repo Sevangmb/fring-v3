@@ -1,10 +1,11 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
 import { VetementFormValues, Categorie } from "../schema/VetementFormSchema";
 import { CategorySelector } from "./category/CategorySelector";
 import { AddCategoryDialog } from "./category/AddCategoryDialog";
+import { useCategories } from "@/hooks/useCategories";
 
 interface CategorieFieldProps {
   form: UseFormReturn<VetementFormValues>;
@@ -23,11 +24,19 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
 }) => {
   const categorieId = form.watch('categorie_id');
   const hasDetectedValue = !!categorieId && !loading;
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
-  const handleCategorySelect = (categoryId: number) => {
-    form.setValue('categorie_id', categoryId, { shouldValidate: true });
-  };
+  const { 
+    addDialogOpen, 
+    openAddDialog, 
+    closeAddDialog, 
+    handleAddCategory 
+  } = useCategories({
+    initialCategories: categories,
+    onCategoryAdded: (categoryId) => {
+      form.setValue('categorie_id', categoryId, { shouldValidate: true });
+    },
+    onCategoriesChange
+  });
 
   const selectedCategory = categories.find(cat => Number(cat.id) === categorieId);
   const displayValue = selectedCategory ? selectedCategory.nom : "";
@@ -49,19 +58,21 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
           
           <CategorySelector 
             value={field.value}
-            onChange={handleCategorySelect}
+            onChange={(categoryId) => {
+              form.setValue('categorie_id', categoryId, { shouldValidate: true });
+            }}
             categories={categories}
             displayValue={displayValue}
             loadingCategories={loadingCategories}
             disabled={loading}
-            onOpenAddDialog={() => setAddDialogOpen(true)}
+            onOpenAddDialog={openAddDialog}
           />
           
           <AddCategoryDialog 
             open={addDialogOpen}
-            onOpenChange={setAddDialogOpen}
-            onCategoryAdded={handleCategorySelect}
-            onCategoriesChange={onCategoriesChange}
+            onOpenChange={closeAddDialog}
+            onAddCategory={handleAddCategory}
+            addingCategory={false}
           />
           
           <FormMessage />

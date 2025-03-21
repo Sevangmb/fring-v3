@@ -3,61 +3,32 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { addCategorie } from "@/services/categorieService";
 
 interface AddCategoryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCategoryAdded: (categoryId: number) => void;
-  onCategoriesChange?: () => void;
+  onAddCategory: (categoryName: string) => Promise<void>;
+  addingCategory: boolean;
 }
 
 export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
   open,
   onOpenChange,
-  onCategoryAdded,
-  onCategoriesChange
+  onAddCategory,
+  addingCategory
 }) => {
   const [newCategoryValue, setNewCategoryValue] = useState('');
-  const [addingCategory, setAddingCategory] = useState(false);
-  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAddCategory = async () => {
-    if (!newCategoryValue.trim()) {
-      toast({
-        title: "Erreur",
-        description: "Le nom de la catégorie ne peut pas être vide",
-        variant: "destructive"
-      });
-      return;
-    }
-
+    if (!newCategoryValue.trim()) return;
+    
+    setIsSubmitting(true);
     try {
-      setAddingCategory(true);
-      const newCategory = await addCategorie({ nom: newCategoryValue.trim() });
-      
-      toast({
-        title: "Succès",
-        description: `La catégorie ${newCategory.nom} a été ajoutée`
-      });
-      
-      onCategoryAdded(Number(newCategory.id));
-      onOpenChange(false);
+      await onAddCategory(newCategoryValue);
       setNewCategoryValue('');
-      
-      if (onCategoriesChange) {
-        onCategoriesChange();
-      }
-    } catch (error) {
-      console.error("Erreur lors de l'ajout de la catégorie:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'ajouter la catégorie",
-        variant: "destructive"
-      });
     } finally {
-      setAddingCategory(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -79,15 +50,15 @@ export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
           <Button 
             variant="outline" 
             onClick={() => onOpenChange(false)}
-            disabled={addingCategory}
+            disabled={isSubmitting || addingCategory}
           >
             Annuler
           </Button>
           <Button 
             onClick={handleAddCategory}
-            disabled={addingCategory || !newCategoryValue.trim()}
+            disabled={isSubmitting || addingCategory || !newCategoryValue.trim()}
           >
-            {addingCategory ? "Ajout en cours..." : "Ajouter"}
+            {isSubmitting || addingCategory ? "Ajout en cours..." : "Ajouter"}
           </Button>
         </DialogFooter>
       </DialogContent>
