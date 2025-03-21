@@ -46,7 +46,7 @@ export async function detectClothingInfo(imageUrl: string): Promise<{
     console.log("Google AI detection response:", generatedText);
     
     // Extraire et structurer les informations de la réponse
-    const { color, category, description, brand } = parseAIResponse(generatedText);
+    const { color, category, description, brand, rainSuitable } = parseAIResponse(generatedText);
     
     if (!color) {
       console.error("Could not extract color from response:", generatedText);
@@ -62,11 +62,11 @@ export async function detectClothingInfo(imageUrl: string): Promise<{
     const normalizedColor = normalizeColor(color);
     const normalizedCategory = normalizeCategory(category);
     
-    // Déterminer la température en fonction de la catégorie
-    const temperature = determineTemperatureFromCategory(normalizedCategory);
+    // Déterminer la température en fonction de la catégorie et de la description
+    const temperature = determineTemperatureFromCategory(normalizedCategory, description || '');
     
     // Déterminer si le vêtement est adapté à la pluie
-    const weatherType = determineWeatherType(normalizedCategory, description || "");
+    const weatherType = determineWeatherType(normalizedCategory, description || "", rainSuitable);
     
     console.log("Final detection results:", {
       color: normalizedColor,
@@ -94,32 +94,37 @@ export async function detectClothingInfo(imageUrl: string): Promise<{
 /**
  * Détermine la température appropriée pour une catégorie de vêtement
  * @param category Catégorie du vêtement
+ * @param description Description du vêtement pour analyse supplémentaire
  * @returns Température (froid, tempere, chaud)
  */
-function determineTemperatureFromCategory(category: string): string {
+function determineTemperatureFromCategory(category: string, description: string): string {
   const categoryLower = category.toLowerCase();
+  const descriptionLower = description.toLowerCase();
+  const textToCheck = categoryLower + " " + descriptionLower;
   
   // Vêtements pour temps froid
   const coldItems = [
     "pull", "pullover", "sweat", "sweatshirt", "hoodie", "manteau", "veste", "jacket", 
-    "coat", "blouson", "doudoune", "parka", "anorak", "cardigan", "sweater"
+    "coat", "blouson", "doudoune", "parka", "anorak", "cardigan", "sweater", "écharpe", 
+    "bonnet", "gants", "pull-over", "polaire", "laine", "winter"
   ];
   
   // Vêtements pour temps chaud
   const hotItems = [
     "short", "shorts", "t-shirt", "tank", "débardeur", "debardeur", "maillot", 
-    "crop top", "swimsuit", "maillot de bain", "bikini", "bermuda"
+    "crop top", "swimsuit", "maillot de bain", "bikini", "sandales", "claquettes", 
+    "tongs", "bermuda", "été", "summer", "léger", "leger"
   ];
   
-  // Vérifier la catégorie
+  // Vérifier la catégorie et la description
   for (const item of coldItems) {
-    if (categoryLower.includes(item)) {
+    if (textToCheck.includes(item)) {
       return "froid";
     }
   }
   
   for (const item of hotItems) {
-    if (categoryLower.includes(item)) {
+    if (textToCheck.includes(item)) {
       return "chaud";
     }
   }
@@ -129,53 +134,46 @@ function determineTemperatureFromCategory(category: string): string {
 }
 
 /**
- * Détermine si le vêtement est adapté à la pluie
+ * Détermine si le vêtement est adapté à la pluie ou la neige
  * @param category Catégorie du vêtement
  * @param description Description du vêtement
+ * @param rainSuitable Indication si le vêtement est adapté à la pluie
  * @returns Type de météo (pluie, neige, normal)
  */
-function determineWeatherType(category: string, description: string): string {
+function determineWeatherType(category: string, description: string, rainSuitable?: boolean): string {
   const categoryLower = category.toLowerCase();
   const descriptionLower = description.toLowerCase();
   const textToCheck = categoryLower + " " + descriptionLower;
+  
+  // Si explicitement marqué comme adapté à la pluie
+  if (rainSuitable === true) {
+    return "pluie";
+  }
+  
+  // Vêtements pour la neige
+  const snowItems = [
+    "neige", "snow", "après-ski", "apres-ski", "ski", "snowboard",
+    "boots", "moon boots", "boots fourrées", "doudoune d'hiver"
+  ];
   
   // Vêtements pour la pluie
   const rainItems = [
     "imperméable", "impermeable", "k-way", "kway", "ciré", "cire", "parapluie",
     "poncho", "coupe-vent", "coupe vent", "bottes de pluie", "waterproof",
-    "rain jacket", "rain coat", "raincoat"
+    "rain jacket", "rain coat", "raincoat", "étanche", "etanche"
   ];
   
-  // Vêtements pour la neige
-  const snowItems = [
-    "neige", "snow", "après-ski", "apres-ski", "ski", "snowboard",
-    "boots", "moon boots", "boots fourrées", "doudoune"
-  ];
-  
-  // Vêtements à éviter sous la pluie
-  const avoidInRainItems = [
-    "daim", "suede", "suède", "sandales", "tongs", "espadrilles"
-  ];
-  
-  // Vérifier pour la pluie
-  for (const item of rainItems) {
-    if (textToCheck.includes(item)) {
-      return "pluie";
-    }
-  }
-  
-  // Vérifier pour la neige
+  // Vérifier pour la neige d'abord
   for (const item of snowItems) {
     if (textToCheck.includes(item)) {
       return "neige";
     }
   }
   
-  // Vérifier les vêtements à éviter sous la pluie
-  for (const item of avoidInRainItems) {
+  // Vérifier pour la pluie ensuite
+  for (const item of rainItems) {
     if (textToCheck.includes(item)) {
-      // Ces vêtements sont explicitement marqués comme à éviter sous la pluie
-      return "normal";
+      return "pluie";
     }
   }
   

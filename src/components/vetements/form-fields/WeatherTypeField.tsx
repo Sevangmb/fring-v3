@@ -12,17 +12,28 @@ interface WeatherTypeFieldProps {
 }
 
 const WeatherTypeField: React.FC<WeatherTypeFieldProps> = ({ form }) => {
+  // Obtenir la valeur actuelle pour l'afficher dans le label si elle existe
+  const weatherTypeValue = form.watch('weatherType');
+  const hasDetectedValue = !!weatherTypeValue;
+
   return (
     <FormField
       control={form.control}
       name="weatherType"
       render={({ field }) => (
         <FormItem className="space-y-2">
-          <FormLabel>Type de météo</FormLabel>
+          <FormLabel>
+            Type de météo
+            {hasDetectedValue && (
+              <span className="ml-2 text-primary font-normal">
+                (Détecté)
+              </span>
+            )}
+          </FormLabel>
           <FormControl>
             <RadioGroup
               onValueChange={field.onChange}
-              defaultValue={field.value || 'normal'}
+              value={field.value || 'normal'}
               className="flex flex-col space-y-1"
             >
               <div className="flex flex-wrap gap-4 items-center">

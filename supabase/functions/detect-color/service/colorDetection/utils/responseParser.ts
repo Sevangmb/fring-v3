@@ -10,6 +10,8 @@ export function parseAIResponse(response: string): {
   description?: string;
   brand?: string;
   rainSuitable?: boolean;
+  temperature?: string;
+  weatherType?: string;
 } {
   try {
     console.log("Parsing AI response:", response);
@@ -38,9 +40,57 @@ export function parseAIResponse(response: string): {
     const rainSuitable = rainMatch ? 
                         rainMatch[1].trim().toLowerCase() === "oui" : undefined;
     
-    console.log("Parsed information:", { color, category, description, brand, rainSuitable });
+    // Extraire la température
+    const temperatureMatch = response.match(/TEMPÉRATURE:\s*(.*)/i) ||
+                             response.match(/TEMPERATURE:\s*(.*)/i);
+    let temperature = temperatureMatch ? temperatureMatch[1].trim().toLowerCase() : undefined;
     
-    return { color, category, description, brand, rainSuitable };
+    // Normaliser la température
+    if (temperature) {
+      if (temperature.includes("froid")) {
+        temperature = "froid";
+      } else if (temperature.includes("chaud")) {
+        temperature = "chaud";
+      } else {
+        temperature = "tempere";
+      }
+    }
+    
+    // Extraire le type de météo
+    const weatherTypeMatch = response.match(/TYPE DE MÉTÉO:\s*(.*)/i) ||
+                             response.match(/TYPE DE METEO:\s*(.*)/i);
+    let weatherType = weatherTypeMatch ? weatherTypeMatch[1].trim().toLowerCase() : undefined;
+    
+    // Normaliser le type de météo
+    if (weatherType) {
+      if (weatherType.includes("pluie")) {
+        weatherType = "pluie";
+      } else if (weatherType.includes("neige")) {
+        weatherType = "neige";
+      } else {
+        weatherType = "normal";
+      }
+    }
+    
+    console.log("Parsed information:", { 
+      color, 
+      category, 
+      description, 
+      brand, 
+      rainSuitable,
+      temperature,
+      weatherType 
+    });
+    
+    return { 
+      color, 
+      category, 
+      description, 
+      brand, 
+      rainSuitable,
+      temperature,
+      weatherType
+    };
   } catch (error) {
     console.error("Error parsing AI response:", error);
     return { color: "", category: "" };

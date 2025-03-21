@@ -18,17 +18,21 @@ interface TemperatureFieldProps {
 
 const TemperatureField: React.FC<TemperatureFieldProps> = ({ form, autoDetect = true }) => {
   const categorieValue = form.watch('categorie');
+  const currentTemperature = form.watch('temperature');
   
-  // Auto-detect temperature based on clothing category
+  // Auto-detect temperature based on clothing category if not already set
   useEffect(() => {
-    if (autoDetect && categorieValue && !form.getValues('temperature')) {
+    if (autoDetect && categorieValue && !currentTemperature) {
       const temperature = determineTemperatureFromCategory(categorieValue);
       if (temperature) {
         console.log("Auto-détection de la température:", temperature);
         form.setValue('temperature', temperature);
       }
     }
-  }, [categorieValue, form, autoDetect]);
+  }, [categorieValue, form, autoDetect, currentTemperature]);
+
+  // Obtenir la valeur actuelle pour l'afficher dans le label si elle existe
+  const hasDetectedValue = !!currentTemperature;
 
   return (
     <FormField
@@ -36,7 +40,14 @@ const TemperatureField: React.FC<TemperatureFieldProps> = ({ form, autoDetect = 
       name="temperature"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Température</FormLabel>
+          <FormLabel>
+            Température
+            {hasDetectedValue && (
+              <span className="ml-2 text-primary font-normal">
+                (Détectée)
+              </span>
+            )}
+          </FormLabel>
           <FormControl>
             <Select
               value={field.value || ""}
