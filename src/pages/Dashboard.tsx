@@ -2,7 +2,8 @@
 import React from "react";
 import Layout from "@/components/templates/Layout";
 import { Heading, Text } from "@/components/atoms/Typography";
-import Card, { CardHeader, CardTitle, CardDescription, CardContent } from "@/components/molecules/Card";
+import Card, { CardHeader, CardTitle, CardDescription } from "@/components/molecules/Card";
+import { CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
   BarChart, 
