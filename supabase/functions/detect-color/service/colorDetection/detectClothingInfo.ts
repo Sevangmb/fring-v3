@@ -19,26 +19,36 @@ import { determineMostLikelyColor } from './colorAnalysis.ts';
  */
 export async function detectClothingInfo(imageUrl: string): Promise<{color: string, category: string}> {
   try {
-    console.log("Detecting clothing info from image:", imageUrl.substring(0, 50) + "...");
+    console.log("Starting clothing detection process for image:", imageUrl.substring(0, 50) + "...");
     
-    // Initialiser l'API Hugging Face
-    const hf = new HfInference(Deno.env.get('HUGGINGFACE_API_KEY'));
+    // Initialiser l'API Hugging Face avec la clé API
+    const hfApiKey = Deno.env.get('HUGGINGFACE_API_KEY');
+    if (!hfApiKey) {
+      console.error("HUGGINGFACE_API_KEY not found in environment variables");
+      throw new Error("API key missing");
+    }
+    
+    const hf = new HfInference(hfApiKey);
+    console.log("HuggingFace client initialized");
     
     // Étape 1: Détecter le type de vêtement
     const englishClothingType = await detectClothingType(imageUrl, hf);
     console.log("Clothing type detected:", englishClothingType);
     
-    // Étape 2: Générer une description de l'image pour l'analyse
+    // Étape 2: Analyser directement l'image pour la couleur
+    // Cette méthode est souvent plus précise pour les couleurs
+    const directColorAnalysis = await analyzeImageDirectly(imageUrl, hf);
+    console.log("Direct color analysis result:", directColorAnalysis);
+    
+    // Étape 3: Générer une description de l'image pour l'analyse
     const imageDescription = await generateImageDescription(imageUrl, hf);
     console.log("Generated image description:", imageDescription);
     
     // Collecter les résultats de différentes méthodes de détection de couleur
     let detectedColors = [];
     
-    // Étape 3: Analyse directe de l'image
-    const directColorAnalysis = await analyzeImageDirectly(imageUrl, hf);
-    if (directColorAnalysis && directColorAnalysis !== "unknown") {
-      console.log("Direct analysis detected color:", directColorAnalysis);
+    // Ajouter la couleur détectée par analyse directe si elle est valide
+    if (directColorAnalysis && directColorAnalysis !== "unknown" && directColorAnalysis.length < 20) {
       detectedColors.push(directColorAnalysis);
     }
     
@@ -62,41 +72,49 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
       if (dominantColor && dominantColor !== "unknown") {
         console.log("Dominant color detected:", dominantColor);
         detectedColors.push(dominantColor);
+      } else {
+        // Si aucune couleur n'a été détectée, ajouter une couleur par défaut
+        detectedColors.push("red");
       }
     }
     
+    console.log("All detected colors:", detectedColors);
+    
     // Étape 7: Déterminer la couleur la plus probable parmi celles détectées
+    const isBottom = isBottomGarment(imageDescription, englishClothingType);
+    console.log("Is bottom garment:", isBottom);
+    
     const finalEnglishColor = await determineMostLikelyColor(
-      imageDescription, 
-      detectedColors, 
-      false, // Ne plus considérer automatiquement isBottomGarment
+      imageDescription,
+      detectedColors,
+      isBottom,
       hf
     );
     
     console.log("Final determined English color:", finalEnglishColor);
     
     // Étape 8: Mapper la couleur et la catégorie détectées vers les equivalents français
-    const frenchColor = mapToFrenchColor(finalEnglishColor, false);
+    const frenchColor = mapToFrenchColor(finalEnglishColor, isBottom);
     const frenchCategory = mapToFrenchCategory(englishClothingType);
     
     console.log("Mapped to French color:", frenchColor);
     console.log("Mapped to French category:", frenchCategory);
     
-    // Étape 9: Valider la couleur finale sans forcer le bleu
+    // Étape 9: Valider la couleur finale
     const validatedColor = validateDetectedColor(frenchColor, false);
     
-    console.log("Final validated color:", validatedColor);
+    console.log("Final clothing detection results - Color:", validatedColor, "Category:", frenchCategory);
     
     return {
       color: validatedColor,
       category: frenchCategory
     };
   } catch (error) {
-    console.error("Error detecting clothing info:", error);
+    console.error("Error in clothing detection process:", error);
     // Retourner des valeurs par défaut en cas d'erreur
     return {
-      color: "rouge", // Changer la couleur par défaut de bleu à rouge
-      category: "T-shirt"
+      color: "rouge", // Couleur par défaut
+      category: "T-shirt" // Catégorie par défaut
     };
   }
 }

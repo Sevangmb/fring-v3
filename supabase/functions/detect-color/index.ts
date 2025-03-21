@@ -34,10 +34,13 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Erreur lors de la détection:', error);
+    
+    // En cas d'erreur, retourner un message d'erreur avec des valeurs par défaut
+    // Nous utilisons maintenant "rouge" comme couleur par défaut
     return new Response(
       JSON.stringify({ 
         error: error.message || 'Une erreur s\'est produite lors de la détection', 
-        color: 'bleu',
+        color: 'rouge',
         category: 'T-shirt'
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

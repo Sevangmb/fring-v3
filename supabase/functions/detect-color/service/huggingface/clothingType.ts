@@ -1,5 +1,6 @@
 
 import { HfInference } from 'https://esm.sh/@huggingface/inference@2.3.2';
+import { preprocessImageUrl } from './imageDescription.ts';
 
 /**
  * Vérifie si la description concerne un pantalon ou un jeans
@@ -34,9 +35,16 @@ export async function detectClothingType(imageUrl: string, hf: HfInference): Pro
   console.log("Detecting clothing type...");
   
   try {
+    // Prétraitement de l'URL pour gérer les images en base64
+    const processedUrl = preprocessImageUrl(imageUrl);
+    
+    // Prompt amélioré pour une meilleure détection du type de vêtement
     const clothingTypeQuery = await hf.textGeneration({
       model: "google/flan-t5-xxl",
-      inputs: `What type of clothing item is shown in this image? Choose ONE category: shirt, t-shirt, pants, jeans, dress, skirt, jacket, coat, sweater, hoodie, shoes, boots, hat, or other: ${imageUrl}`,
+      inputs: `Analyze this image and tell me EXACTLY what type of clothing item it shows.
+      Choose ONE specific category from this list: t-shirt, shirt, blouse, sweater, hoodie, jacket, coat, 
+      dress, skirt, pants, jeans, shorts, leggings, suit, blazer, vest, tank top, polo shirt, cardigan.
+      Look ONLY at the main garment and reply with JUST ONE WORD: ${processedUrl}`,
       parameters: {
         max_new_tokens: 10,
         temperature: 0.2,
@@ -46,9 +54,28 @@ export async function detectClothingType(imageUrl: string, hf: HfInference): Pro
     const clothingType = clothingTypeQuery.generated_text.toLowerCase().trim();
     console.log("Clothing type detected:", clothingType);
     
-    return clothingType;
+    // Si la réponse est valide, la retourner
+    if (clothingType && clothingType.length < 20 && !clothingType.includes("sorry") && !clothingType.includes("cannot")) {
+      return clothingType;
+    }
+    
+    // Si la réponse n'est pas valide, essayer une seconde tentative avec un prompt différent
+    console.log("First attempt didn't return a clear clothing type, trying again...");
+    const secondAttempt = await hf.textGeneration({
+      model: "google/flan-t5-xxl",
+      inputs: `What clothing item do you see in this image? Reply with just one word: ${processedUrl}`,
+      parameters: {
+        max_new_tokens: 10,
+        temperature: 0.2,
+      }
+    });
+    
+    const secondType = secondAttempt.generated_text.toLowerCase().trim();
+    console.log("Second attempt clothing type:", secondType);
+    
+    return secondType || "t-shirt"; // Fallback to t-shirt if still no valid response
   } catch (error) {
     console.error("Error detecting clothing type:", error);
-    return "unknown";
+    return "t-shirt"; // Valeur par défaut en cas d'erreur
   }
 }
