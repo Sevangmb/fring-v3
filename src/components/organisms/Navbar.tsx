@@ -193,8 +193,8 @@ const Navbar = ({ className }: NavbarProps) => {
                       Profil
                     </Button>
                     <Button 
-                      variant="destructive" 
-                      className="w-full justify-center" 
+                      variant="primary" 
+                      className="w-full justify-center text-white bg-red-600 hover:bg-red-700" 
                       onClick={handleLogout}
                     >
                       Déconnexion

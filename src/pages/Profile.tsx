@@ -85,7 +85,11 @@ const Profile = () => {
                   </div>
                 </div>
                 
-                <Button variant="destructive" onClick={handleLogout} className="w-full md:w-auto">
+                <Button 
+                  variant="primary" 
+                  onClick={handleLogout} 
+                  className="w-full md:w-auto bg-red-600 hover:bg-red-700 text-white"
+                >
                   Se déconnecter
                 </Button>
               </div>
