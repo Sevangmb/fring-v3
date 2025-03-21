@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMessages } from "@/hooks/useMessages";
 import { resolveUserIdentifier, isEmail } from "@/services/amis/userEmail";
@@ -20,6 +20,7 @@ const MessagesPageContent: React.FC<MessagesPageContentProps> = ({ friendIdOrEma
   const [friendId, setFriendId] = useState<string | null>(null);
   const [friendEmail, setFriendEmail] = useState<string | null>(null);
   const [resolving, setResolving] = useState<boolean>(!!friendIdOrEmail);
+  const resolvingRef = useRef(false);
   
   const {
     messages,
@@ -33,14 +34,17 @@ const MessagesPageContent: React.FC<MessagesPageContentProps> = ({ friendIdOrEma
   // Résoudre l'ID ou l'email de l'ami
   useEffect(() => {
     const resolveIdentifier = async () => {
-      if (!friendIdOrEmail) {
-        setFriendId(null);
-        setFriendEmail(null);
-        setResolving(false);
+      if (!friendIdOrEmail || !user || resolvingRef.current) {
+        if (!friendIdOrEmail) {
+          setFriendId(null);
+          setFriendEmail(null);
+          setResolving(false);
+        }
         return;
       }
       
       try {
+        resolvingRef.current = true;
         setResolving(true);
         console.log(`Résolution de l'identifiant: ${friendIdOrEmail}`);
         
@@ -73,11 +77,12 @@ const MessagesPageContent: React.FC<MessagesPageContentProps> = ({ friendIdOrEma
         });
       } finally {
         setResolving(false);
+        resolvingRef.current = false;
       }
     };
     
     resolveIdentifier();
-  }, [friendIdOrEmail, navigate, toast]);
+  }, [friendIdOrEmail, navigate, toast, user]);
 
   // Vérifier si la page est affichée sur mobile
   const isMobile = window.innerWidth < 768;

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import ConversationList from "@/components/molecules/ConversationList";
@@ -37,16 +37,19 @@ const MessagesSidebar: React.FC<MessagesSidebarProps> = ({
   refreshConversations
 }) => {
   const navigate = useNavigate();
-  const { chargerAmis, filteredAmis } = useAmis();
+  const { chargerAmis, filteredAmis, loadingAmis } = useAmis();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const amisLoadedRef = useRef(false);
 
-  // Charger la liste des amis au démarrage
+  // Charger la liste des amis au démarrage et quand le dialogue est ouvert
   useEffect(() => {
-    if (user) {
+    if (user && (isDialogOpen || !amisLoadedRef.current)) {
+      console.log("Chargement des amis pour la liste de conversations");
       chargerAmis();
+      amisLoadedRef.current = true;
     }
-  }, [user, chargerAmis]);
+  }, [user, chargerAmis, isDialogOpen]);
 
   // Démarrer une nouvelle conversation avec un ami
   const startNewConversation = (amiEmail: string) => {
@@ -56,8 +59,11 @@ const MessagesSidebar: React.FC<MessagesSidebarProps> = ({
 
   // Rafraîchir manuellement les conversations
   const handleRefresh = async () => {
+    if (isRefreshing) return;
+    
     setIsRefreshing(true);
     try {
+      console.log("Rafraîchissement manuel des conversations");
       await refreshConversations();
       toast({
         title: "Mise à jour terminée",
@@ -96,6 +102,7 @@ const MessagesSidebar: React.FC<MessagesSidebarProps> = ({
             isOpen={isDialogOpen}
             setIsOpen={setIsDialogOpen}
             filteredAmis={filteredAmis.amisAcceptes}
+            loadingAmis={loadingAmis}
             startNewConversation={startNewConversation}
             user={user}
             navigate={navigate}
@@ -117,6 +124,7 @@ interface NewConversationDialogProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   filteredAmis: any[];
+  loadingAmis: boolean;
   startNewConversation: (amiEmail: string) => void;
   user: User;
   navigate: (path: string) => void;
@@ -126,6 +134,7 @@ const NewConversationDialog: React.FC<NewConversationDialogProps> = ({
   isOpen,
   setIsOpen,
   filteredAmis,
+  loadingAmis,
   startNewConversation,
   user,
   navigate
@@ -144,7 +153,12 @@ const NewConversationDialog: React.FC<NewConversationDialogProps> = ({
         </DialogHeader>
         
         <ScrollArea className="mt-4 max-h-[60vh]">
-          {filteredAmis.length > 0 ? (
+          {loadingAmis ? (
+            <div className="flex justify-center items-center py-8">
+              <RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-sm text-muted-foreground">Chargement des amis...</span>
+            </div>
+          ) : filteredAmis.length > 0 ? (
             <div className="space-y-2">
               {filteredAmis.map((ami) => (
                 <Button

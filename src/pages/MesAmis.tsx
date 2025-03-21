@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import Layout from "@/components/templates/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import AmisPageHeader from "@/components/organisms/AmisPageHeader";
@@ -16,13 +16,16 @@ const MesAmisPage = () => {
     handleRejeterDemande,
     chargerAmis 
   } = useAmis();
+  const amisLoadedRef = useRef(false);
 
   // Charger les amis lorsque l'utilisateur se connecte
   useEffect(() => {
-    if (user && !loadingAmis) {
+    if (user && !loadingAmis && !amisLoadedRef.current) {
+      console.log("Chargement initial des amis dans MesAmisPage");
       chargerAmis();
+      amisLoadedRef.current = true;
     }
-  }, [user]);
+  }, [user, loadingAmis, chargerAmis]);
 
   return (
     <Layout>
