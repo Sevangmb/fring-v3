@@ -34,27 +34,35 @@ export const updateVetement = async (id: number, vetement: Partial<Vetement>): P
     
     console.log('Données existantes:', JSON.stringify(existingData, null, 2));
     
-    // Si le vêtement a une catégorie mais pas de température, déduire la température
-    if (vetement.categorie && !vetement.temperature) {
-      try {
-        // Importer dynamiquement la fonction
-        const { determineTemperatureFromCategory } = await import('../../components/vetements/form-fields/TemperatureField');
-        const temperature = determineTemperatureFromCategory(vetement.categorie);
-        if (temperature) {
-          console.log('Température déduite de la catégorie:', temperature);
-          vetement.temperature = temperature;
-        }
-      } catch (error) {
-        console.error('Erreur lors de la déduction de la température:', error);
-      }
-    }
-    
     // Nettoyer les données avant la mise à jour
     const cleanedData = {};
+    
+    // Vérifier quelles colonnes existent réellement dans la table
+    const { data: columns, error: columnsError } = await supabase
+      .from('information_schema.columns')
+      .select('column_name')
+      .eq('table_name', 'vetements')
+      .eq('table_schema', 'public');
+      
+    if (columnsError) {
+      console.error('Erreur lors de la récupération des colonnes:', columnsError);
+    }
+    
+    // Créer un ensemble de noms de colonnes pour une recherche rapide
+    const columnSet = new Set(columns?.map(col => col.column_name) || [
+      'id', 'nom', 'categorie', 'couleur', 'taille', 'description', 
+      'marque', 'image_url', 'user_id', 'created_at'
+    ]);
+    
+    console.log('Colonnes disponibles:', Array.from(columnSet));
+    
+    // Ne garder que les propriétés qui existent dans la table
     Object.entries(vetement).forEach(([key, value]) => {
-      // Ne pas inclure les propriétés undefined ou null qui ne sont pas explicitement définies à null
-      if (value !== undefined) {
+      // Ne pas inclure les propriétés undefined ou qui n'existent pas dans la table
+      if (value !== undefined && columnSet.has(key)) {
         cleanedData[key] = value;
+      } else if (value !== undefined && !columnSet.has(key)) {
+        console.log(`La colonne '${key}' n'existe pas dans la table vetements et sera ignorée`);
       }
     });
     
