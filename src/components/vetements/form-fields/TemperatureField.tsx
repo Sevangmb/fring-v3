@@ -27,7 +27,7 @@ const TemperatureField: React.FC<TemperatureFieldProps> = ({ form }) => {
           <FormLabel>Température idéale</FormLabel>
           <FormControl>
             <Select
-              value={field.value || ""}
+              value={field.value || "_"}
               onValueChange={field.onChange}
               disabled={field.disabled}
             >
