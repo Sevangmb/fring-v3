@@ -41,7 +41,7 @@ export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]>
   try {
     // Si un ID d'ami spécifique est fourni, filtrer uniquement ses vêtements
     if (friendId) {
-      // Utiliser une jointure avec la table auth.users pour obtenir l'email
+      // Utiliser une jointure avec la table profiles pour obtenir l'email
       const { data: userData, error: userError } = await supabase
         .from('vetements')
         .select('*, profiles:user_id(email)')
