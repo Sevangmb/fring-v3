@@ -18,17 +18,15 @@ export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
   addingCategory
 }) => {
   const [newCategoryValue, setNewCategoryValue] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAddCategory = async () => {
     if (!newCategoryValue.trim()) return;
     
-    setIsSubmitting(true);
     try {
       await onAddCategory(newCategoryValue);
       setNewCategoryValue('');
-    } finally {
-      setIsSubmitting(false);
+    } catch (error) {
+      console.error("Error adding category:", error);
     }
   };
 
@@ -50,15 +48,15 @@ export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
           <Button 
             variant="outline" 
             onClick={() => onOpenChange(false)}
-            disabled={isSubmitting || addingCategory}
+            disabled={addingCategory}
           >
             Annuler
           </Button>
           <Button 
             onClick={handleAddCategory}
-            disabled={isSubmitting || addingCategory || !newCategoryValue.trim()}
+            disabled={addingCategory || !newCategoryValue.trim()}
           >
-            {isSubmitting || addingCategory ? "Ajout en cours..." : "Ajouter"}
+            {addingCategory ? "Ajout en cours..." : "Ajouter"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -26,7 +26,9 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
   const hasDetectedValue = !!categorieId && !loading;
 
   const { 
+    categories: localCategories,
     addDialogOpen, 
+    addingCategory,
     openAddDialog, 
     closeAddDialog, 
     handleAddCategory 
@@ -38,7 +40,7 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
     onCategoriesChange
   });
 
-  const selectedCategory = categories.find(cat => Number(cat.id) === categorieId);
+  const selectedCategory = localCategories.find(cat => Number(cat.id) === categorieId);
   const displayValue = selectedCategory ? selectedCategory.nom : "";
 
   return (
@@ -61,7 +63,7 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
             onChange={(categoryId) => {
               form.setValue('categorie_id', categoryId, { shouldValidate: true });
             }}
-            categories={categories}
+            categories={localCategories}
             displayValue={displayValue}
             loadingCategories={loadingCategories}
             disabled={loading}
@@ -72,7 +74,7 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
             open={addDialogOpen}
             onOpenChange={closeAddDialog}
             onAddCategory={handleAddCategory}
-            addingCategory={false}
+            addingCategory={addingCategory}
           />
           
           <FormMessage />
