@@ -16,8 +16,8 @@ const MeteoSection: React.FC = () => {
         <Text variant="h3" className="mb-4">Météo</Text>
         <div className="space-y-4">
           <Skeleton className="h-40 w-full" />
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-            {[...Array(7)].map((_, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {[...Array(3)].map((_, index) => (
               <Skeleton key={index} className="h-32 w-full" />
             ))}
           </div>
@@ -39,7 +39,7 @@ const MeteoSection: React.FC = () => {
 
   return (
     <div className="my-8">
-      <Text variant="h3" className="mb-4">Météo pour les 7 prochains jours</Text>
+      <Text variant="h3" className="mb-4">Météo pour les 3 prochains jours</Text>
       <div className="space-y-4">
         <MeteoActuelle 
           temperature={meteo.current.temperature}
@@ -51,7 +51,7 @@ const MeteoSection: React.FC = () => {
           city={meteo.city}
         />
         
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {meteo.forecast.map((jour, index) => (
             <PrevisionJour
               key={index}

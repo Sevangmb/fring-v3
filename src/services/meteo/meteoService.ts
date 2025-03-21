@@ -27,7 +27,7 @@ export interface MeteoData {
 }
 
 /**
- * Récupère les données météo pour les 7 prochains jours
+ * Récupère les données météo pour les 3 prochains jours
  * @param latitude - Latitude pour la localisation
  * @param longitude - Longitude pour la localisation
  * @returns Les données météo actuelles et prévisions
@@ -35,8 +35,8 @@ export interface MeteoData {
 export const fetchMeteoData = async (latitude: number, longitude: number): Promise<MeteoData> => {
   try {
     // Utilisation de l'API WeatherAPI.com (gratuite)
-    const API_KEY = '9fbef9d1e1f74aebb8a143124242103'; // Clé gratuite pour WeatherAPI
-    const url = `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${latitude},${longitude}&days=7&lang=fr&aqi=no`;
+    const API_KEY = 'ee37daadb75b4dd79e0165525252103'; // Clé fournie par l'utilisateur
+    const url = `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${latitude},${longitude}&days=3&lang=fr&aqi=no`;
     
     const response = await fetch(url);
     if (!response.ok) {
