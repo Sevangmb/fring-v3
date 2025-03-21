@@ -195,7 +195,7 @@ export type Database = {
         Args: {
           target_user_id: string
         }
-        Returns: number
+        Returns: boolean
       }
       create_table: {
         Args: {

@@ -6,7 +6,7 @@ import MesVetementsSection from "@/components/organisms/MesVetements";
 import { Heading, Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
 import { Plus, List, LogIn } from "lucide-react";
-import { assignVetementsToUser } from "@/services/supabaseService";
+import { assignVetementsToUser } from "@/services/databaseService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
