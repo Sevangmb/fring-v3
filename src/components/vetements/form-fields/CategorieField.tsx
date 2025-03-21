@@ -1,16 +1,10 @@
+
 import React, { useState } from "react";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
 import { VetementFormValues, Categorie } from "../schema/VetementFormSchema";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Check, ChevronsUpDown, PlusCircle } from "lucide-react";
-import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandSeparator } from "@/components/ui/command";
-import { cn } from "@/lib/utils";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { addCategorie } from "@/services/categorieService";
-import { useToast } from "@/hooks/use-toast";
+import { CategorySelector } from "./category/CategorySelector";
+import { AddCategoryDialog } from "./category/AddCategoryDialog";
 
 interface CategorieFieldProps {
   form: UseFormReturn<VetementFormValues>;
@@ -29,54 +23,10 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
 }) => {
   const categorieId = form.watch('categorie_id');
   const hasDetectedValue = !!categorieId && !loading;
-  const [open, setOpen] = useState(false);
-  const [newCategorieValue, setNewCategorieValue] = useState('');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [addingCategory, setAddingCategory] = useState(false);
-  const { toast } = useToast();
 
   const handleCategorySelect = (categoryId: number) => {
     form.setValue('categorie_id', categoryId, { shouldValidate: true });
-    setOpen(false);
-  };
-
-  const handleAddCategory = async () => {
-    if (!newCategorieValue.trim()) {
-      toast({
-        title: "Erreur",
-        description: "Le nom de la catégorie ne peut pas être vide",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      setAddingCategory(true);
-      const newCategory = await addCategorie({ nom: newCategorieValue.trim() });
-      
-      toast({
-        title: "Succès",
-        description: `La catégorie ${newCategory.nom} a été ajoutée`
-      });
-      
-      form.setValue('categorie_id', Number(newCategory.id), { shouldValidate: true });
-      
-      setAddDialogOpen(false);
-      setNewCategorieValue('');
-      
-      if (onCategoriesChange) {
-        onCategoriesChange();
-      }
-    } catch (error) {
-      console.error("Erreur lors de l'ajout de la catégorie:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'ajouter la catégorie",
-        variant: "destructive"
-      });
-    } finally {
-      setAddingCategory(false);
-    }
   };
 
   const selectedCategory = categories.find(cat => Number(cat.id) === categorieId);
@@ -96,100 +46,24 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
               </span>
             )}
           </FormLabel>
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <FormControl>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={open}
-                  className={cn(
-                    "w-full justify-between",
-                    !displayValue && "text-muted-foreground"
-                  )}
-                  disabled={loading}
-                >
-                  {displayValue || "Sélectionner une catégorie"}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </FormControl>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0">
-              <Command>
-                <CommandInput placeholder="Rechercher une catégorie..." />
-                <CommandEmpty>
-                  <p className="py-2 px-4 text-sm text-muted-foreground">Aucune catégorie trouvée.</p>
-                </CommandEmpty>
-                {!loadingCategories && categories && categories.length > 0 ? (
-                  <CommandGroup className="max-h-64 overflow-auto">
-                    {categories.map((category) => (
-                      <CommandItem
-                        key={String(category.id)}
-                        value={String(category.nom)}
-                        onSelect={() => handleCategorySelect(Number(category.id))}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            field.value === Number(category.id) ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {category.nom}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                ) : (
-                  <div className="py-6 text-center text-sm text-muted-foreground">
-                    {loadingCategories ? "Chargement des catégories..." : "Aucune catégorie disponible"}
-                  </div>
-                )}
-                <CommandSeparator />
-                <CommandGroup>
-                  <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-                    <DialogTrigger asChild>
-                      <CommandItem
-                        className="text-primary"
-                        onSelect={() => {
-                          setAddDialogOpen(true);
-                        }}
-                      >
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Ajouter une nouvelle catégorie
-                      </CommandItem>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Ajouter une nouvelle catégorie</DialogTitle>
-                        <DialogDescription>
-                          Entrez le nom de la nouvelle catégorie de vêtement.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <Input
-                        placeholder="Nom de la catégorie"
-                        value={newCategorieValue}
-                        onChange={(e) => setNewCategorieValue(e.target.value)}
-                      />
-                      <DialogFooter>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => setAddDialogOpen(false)}
-                          disabled={addingCategory}
-                        >
-                          Annuler
-                        </Button>
-                        <Button 
-                          onClick={handleAddCategory}
-                          disabled={addingCategory || !newCategorieValue.trim()}
-                        >
-                          {addingCategory ? "Ajout en cours..." : "Ajouter"}
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                </CommandGroup>
-              </Command>
-            </PopoverContent>
-          </Popover>
+          
+          <CategorySelector 
+            value={field.value}
+            onChange={handleCategorySelect}
+            categories={categories}
+            displayValue={displayValue}
+            loadingCategories={loadingCategories}
+            disabled={loading}
+            onOpenAddDialog={() => setAddDialogOpen(true)}
+          />
+          
+          <AddCategoryDialog 
+            open={addDialogOpen}
+            onOpenChange={setAddDialogOpen}
+            onCategoryAdded={handleCategorySelect}
+            onCategoriesChange={onCategoriesChange}
+          />
+          
           <FormMessage />
         </FormItem>
       )}
