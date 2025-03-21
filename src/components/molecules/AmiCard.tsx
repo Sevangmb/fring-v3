@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { UserCheck, X } from "lucide-react";
 import Card, { CardHeader, CardTitle, CardFooter } from "@/components/molecules/Card";
 import { Ami } from "@/services/amis/types";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface AmiCardProps {
   ami: Ami;
@@ -12,14 +13,25 @@ interface AmiCardProps {
 }
 
 const AmiCard: React.FC<AmiCardProps> = ({ ami, onRetirer }) => {
+  // Extraire les initiales de l'email pour l'avatar
+  const getInitials = (email: string) => {
+    if (!email) return "?";
+    return email.slice(0, 2).toUpperCase();
+  };
+
   return (
     <Card hoverable>
       <CardHeader>
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-            <UserCheck size={20} />
+          <Avatar className="h-10 w-10 bg-green-100">
+            <AvatarFallback className="text-green-600">{getInitials(ami.email || '')}</AvatarFallback>
+          </Avatar>
+          <div>
+            <CardTitle>Ami</CardTitle>
+            <Text className="text-muted-foreground">
+              {ami.email || 'Email inconnu'}
+            </Text>
           </div>
-          <CardTitle>Ami</CardTitle>
         </div>
         <Text className="mt-2">
           Vous êtes amis depuis le {new Date(ami.created_at).toLocaleDateString()}.

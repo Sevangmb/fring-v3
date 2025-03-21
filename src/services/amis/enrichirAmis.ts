@@ -1,6 +1,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { Ami } from './types';
+import { searchUsersByEmail } from '@/services/userService';
 
 // Function to enrich friend data with user emails
 export const enrichirAmisAvecEmails = async (amis: Ami[]): Promise<Ami[]> => {
@@ -11,15 +12,12 @@ export const enrichirAmisAvecEmails = async (amis: Ami[]): Promise<Ami[]> => {
     
     if (!currentUserId || amis.length === 0) return amis;
     
-    // Get user information in a single request
-    const userIds = amis.map(ami => 
-      ami.user_id === currentUserId ? ami.ami_id : ami.user_id
-    );
-    
-    const { data: userData, error } = await supabase
-      .from('auth.users')  // Note: this might not work directly
-      .select('id, email')
-      .in('id', userIds);
+    // Utiliser une fonction RPC sécurisée pour récupérer les emails
+    const { data, error } = await supabase.rpc('get_users_by_ids', {
+      user_ids: amis.map(ami => 
+        ami.user_id === currentUserId ? ami.ami_id : ami.user_id
+      )
+    });
     
     if (error) {
       console.error('Erreur lors de la récupération des données utilisateurs:', error);
@@ -27,7 +25,7 @@ export const enrichirAmisAvecEmails = async (amis: Ami[]): Promise<Ami[]> => {
     }
     
     // Create an email dictionary by ID
-    const emailsById = (userData || []).reduce((acc, user) => {
+    const emailsById = (data || []).reduce((acc, user) => {
       acc[user.id] = user.email;
       return acc;
     }, {} as Record<string, string>);
