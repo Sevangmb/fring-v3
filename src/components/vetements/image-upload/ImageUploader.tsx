@@ -4,7 +4,7 @@ import { UseFormReturn } from "react-hook-form";
 import { VetementFormValues } from "../schema/VetementFormSchema";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useDetection } from "@/hooks/useDetection";
-import ImagePreviewArea from "./ImagePreviewArea";
+import ImagePreviewArea from "../ImagePreviewArea";
 import { Button } from "@/components/ui/button";
 import DetectionButton from "../detection/DetectionButton";
 import DetectionResults from "../detection/DetectionResults";

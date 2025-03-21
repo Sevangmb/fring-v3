@@ -35,7 +35,7 @@ const TemperatureField: React.FC<TemperatureFieldProps> = ({ form }) => {
                 <SelectValue placeholder="Sélectionnez une température" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Non spécifiée</SelectItem>
+                <SelectItem value="_">Non spécifiée</SelectItem>
                 {temperatureOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}

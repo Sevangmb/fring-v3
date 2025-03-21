@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -40,7 +39,6 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Initialiser le formulaire avec react-hook-form
   const form = useForm<VetementFormValues>({
     resolver: zodResolver(vetementFormSchema),
     defaultValues: initialValues || {
@@ -54,27 +52,23 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
       image_url: "",
     },
   });
-  
-  // Synchroniser les valeurs initiales lorsqu'elles changent
+
   useEffect(() => {
     if (initialValues) {
       console.log("Initialisation du formulaire avec:", initialValues);
       
-      // Réinitialiser le formulaire avec les nouvelles valeurs
       Object.entries(initialValues).forEach(([key, value]) => {
         if (value !== undefined && key !== 'id' && key !== 'created_at' && key !== 'user_id') {
           form.setValue(key as keyof VetementFormValues, value === null ? "" : value);
         }
       });
       
-      // Mise à jour de l'aperçu de l'image si disponible
       if (initialValues.image_url) {
         setImagePreview(initialValues.image_url);
       }
     }
   }, [initialValues, form]);
-  
-  // Debug des valeurs du formulaire
+
   useEffect(() => {
     const subscription = form.watch((value, { name, type }) => {
       console.log("Form value changed:", name, value);
@@ -98,7 +92,6 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
       console.log("===== DÉBUT SOUMISSION FORMULAIRE =====");
       console.log("Données brutes du formulaire:", data);
       
-      // S'assurer que l'image_url est correctement définie
       const formDataWithImage = {
         ...data,
         image_url: imagePreview || data.image_url || null,
@@ -107,10 +100,8 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
       console.log("Données complètes avec image:", formDataWithImage);
       
       if (mode === "update" && onSubmit) {
-        // En mode modification, utiliser la fonction onSubmit personnalisée
         await onSubmit(formDataWithImage);
       } else {
-        // En mode création, utiliser addVetement
         await addVetement({
           nom: formDataWithImage.nom,
           categorie_id: formDataWithImage.categorie_id,
@@ -128,7 +119,6 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
           description: "Votre nouveau vêtement a été ajouté à votre collection.",
         });
         
-        // Rediriger vers la liste des vêtements
         navigate("/mes-vetements/liste");
       }
       
@@ -147,7 +137,6 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-      {/* Colonne de gauche: Image */}
       <div className="md:col-span-1">
         <ImageUploader
           form={form}
@@ -157,7 +146,6 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
         />
       </div>
       
-      {/* Colonne de droite: Formulaire */}
       <div className="md:col-span-2">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">

@@ -1,6 +1,7 @@
 
 import React from "react";
-import { Camera, Image } from "lucide-react";
+import { Text } from "@/components/atoms/Typography";
+import { ImagePlus, Loader2 } from "lucide-react";
 
 interface ImagePreviewAreaProps {
   imagePreview: string | null;
@@ -8,6 +9,9 @@ interface ImagePreviewAreaProps {
   onClick: () => void;
 }
 
+/**
+ * Composant pour afficher une prévisualisation d'image avec état de chargement
+ */
 const ImagePreviewArea: React.FC<ImagePreviewAreaProps> = ({ 
   imagePreview, 
   loading,
@@ -15,8 +19,7 @@ const ImagePreviewArea: React.FC<ImagePreviewAreaProps> = ({
 }) => {
   return (
     <div 
-      className={`relative border-2 border-dashed rounded-lg aspect-square flex flex-col items-center justify-center cursor-pointer
-        ${imagePreview ? 'border-transparent' : 'border-muted-foreground/25 hover:border-muted-foreground/50'}`}
+      className="w-full aspect-square rounded-lg border-2 border-dashed border-primary/20 hover:border-primary/50 transition-colors bg-background flex flex-col items-center justify-center cursor-pointer relative"
       onClick={onClick}
     >
       {imagePreview ? (
@@ -24,24 +27,25 @@ const ImagePreviewArea: React.FC<ImagePreviewAreaProps> = ({
           <img 
             src={imagePreview} 
             alt="Aperçu du vêtement" 
-            className={`w-full h-full object-cover rounded-lg ${loading ? 'opacity-50' : ''}`}
+            className="w-full h-full object-cover rounded-lg"
           />
           {loading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
-              <div className="animate-spin h-10 w-10 border-4 border-white border-t-transparent rounded-full"></div>
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
+              <div className="text-center text-white">
+                <Loader2 size={48} className="mx-auto animate-spin" />
+                <Text className="mt-4 text-white">Détection en cours...</Text>
+              </div>
             </div>
           )}
         </>
       ) : (
-        <>
-          <Camera className="w-10 h-10 text-muted-foreground/50 mb-2" />
-          <p className="text-muted-foreground text-center px-4">
-            Cliquez pour ajouter une image du vêtement
-          </p>
-          <p className="text-xs text-muted-foreground/70 mt-2 text-center px-4">
-            Format JPG ou PNG, max 5MB
-          </p>
-        </>
+        <div className="text-center p-8">
+          <ImagePlus size={48} className="mx-auto text-muted-foreground" />
+          <Text className="mt-4">Cliquez pour ajouter une image</Text>
+          <Text variant="subtle" className="mt-2">
+            JPG, PNG ou GIF. Max 5MB.
+          </Text>
+        </div>
       )}
     </div>
   );
