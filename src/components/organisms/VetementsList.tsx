@@ -47,6 +47,7 @@ const VetementsList: React.FC<VetementsListProps> = ({
     }
   };
 
+  // Vérifions qu'un utilisateur est connecté pour voir ses vêtements
   if (!isAuthenticated) {
     return (
       <div className="text-center py-16">

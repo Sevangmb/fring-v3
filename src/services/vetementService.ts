@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 
 // Type pour un vêtement
@@ -29,10 +30,12 @@ export const fetchVetements = async (): Promise<Vetement[]> => {
 
     console.log('Récupération des vêtements pour l\'utilisateur:', userId);
 
-    // La politique RLS s'assurera que seuls les vêtements de l'utilisateur sont retournés
+    // Explicitement filtrer par user_id pour s'assurer que seuls les vêtements de l'utilisateur sont retournés
+    // Même si RLS est en place, cette contrainte supplémentaire renforce la sécurité
     const { data, error } = await supabase
       .from('vetements')
       .select('*')
+      .eq('user_id', userId)
       .order('created_at', { ascending: false });
     
     if (error) {
