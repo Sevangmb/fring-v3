@@ -9,11 +9,11 @@ export const generateOutfitMessage = (temperature: number, description: string, 
 
   if (isRaining) {
     if (temperature <= 5) {
-      return `${baseMessage}Portez des vêtements chauds et imperméables, avec de bonnes chaussures étanches.`;
+      return `${baseMessage}Portez des vêtements chauds et imperméables, avec de bonnes chaussures étanches pour garder vos pieds au sec.`;
     } else if (temperature <= 15) {
-      return `${baseMessage}Un imperméable ou une veste résistante à l'eau est recommandé, ainsi que des chaussures qui ne craignent pas l'eau.`;
+      return `${baseMessage}Un imperméable ou une veste résistante à l'eau est recommandé, ainsi que des chaussures qui ne craignent pas l'eau. Évitez les tissus qui absorbent l'humidité.`;
     } else {
-      return `${baseMessage}Optez pour une tenue légère mais résistante à l'eau, et évitez les tissus qui absorbent l'humidité.`;
+      return `${baseMessage}Optez pour une tenue légère mais imperméable ou déperlante. Privilégiez des chaussures fermées et évitez les matières comme le daim ou la toile.`;
     }
   } else {
     if (temperature <= 5) {

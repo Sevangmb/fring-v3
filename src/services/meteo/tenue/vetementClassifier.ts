@@ -43,25 +43,35 @@ export const determinerTypeVetement = async (vetement: Vetement): Promise<Veteme
 };
 
 /**
- * Vérifie si un vêtement est adapté à la pluie en fonction de sa catégorie
+ * Vérifie si un vêtement est adapté à la pluie en fonction de sa catégorie ou de son type de météo
  */
 export const estAdaptePluie = (vetement: Vetement): boolean => {
   // Vérifier si le type de météo du vêtement est explicitement "pluie"
   if (vetement.weatherType === 'pluie') return true;
   
-  // Sinon, vérifier par le nom ou la catégorie
+  // Vérifier dans le nom et la description
   const categorieLower = vetement.categorie.toLowerCase();
-  return VETEMENTS_PLUIE.some(v => categorieLower.includes(v));
+  const descriptionLower = vetement.description ? vetement.description.toLowerCase() : '';
+  const textToCheck = categorieLower + ' ' + descriptionLower;
+  
+  // Vérifier les mots-clés associés aux vêtements imperméables
+  return VETEMENTS_PLUIE.some(v => textToCheck.includes(v));
 };
 
 /**
  * Vérifie si un vêtement est à éviter sous la pluie en fonction de sa catégorie
  */
 export const estAEviterPluie = (vetement: Vetement): boolean => {
-  // Si le type de météo du vêtement est explicitement autre chose que "pluie"
+  // Si le type de météo du vêtement est explicitement "neige", c'est généralement bon pour la pluie aussi
+  if (vetement.weatherType === 'neige') return false;
+  
+  // Si le type de météo est autre chose que "pluie"
   if (vetement.weatherType && vetement.weatherType !== 'pluie') return true;
   
   // Sinon, vérifier par le nom ou la catégorie
   const categorieLower = vetement.categorie.toLowerCase();
-  return VETEMENTS_A_EVITER_PLUIE.some(v => categorieLower.includes(v));
+  const descriptionLower = vetement.description ? vetement.description.toLowerCase() : '';
+  const textToCheck = categorieLower + ' ' + descriptionLower;
+  
+  return VETEMENTS_A_EVITER_PLUIE.some(v => textToCheck.includes(v));
 };

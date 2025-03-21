@@ -26,12 +26,16 @@ export const VETEMENTS_CHAUSSURES = [
 export const VETEMENTS_PLUIE = [
   'imperméable', 'impermeable', 'k-way', 'kway', 'ciré', 'cire',
   'coupe-vent', 'coupe vent', 'poncho', 'parapluie', 'bottes de pluie', 
-  'bottines imperméables', 'veste imperméable', 'anorak'
+  'bottines imperméables', 'veste imperméable', 'anorak', 'gore-tex',
+  'déperlant', 'deperlant', 'étanche', 'etanche', 'waterproof',
+  'rain', 'pluie', 'rain jacket', 'imperméabilisé', 'impermeabilise'
 ];
 
 // Liste des vêtements à éviter sous la pluie
 export const VETEMENTS_A_EVITER_PLUIE = [
-  'short', 'shorts', 'sandales', 'tongs', 'espadrilles', 'suède', 'daim'
+  'short', 'shorts', 'sandales', 'tongs', 'espadrilles', 'suède', 'daim',
+  'suede', 'cuir non traité', 'cuir non traite', 'lin', 'coton léger',
+  'coton leger', 'tissu fin', 'chaussures en toile', 'toile', 'canvas'
 ];
 
 export interface TenueSuggestion {
