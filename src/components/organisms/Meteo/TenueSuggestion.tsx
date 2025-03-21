@@ -27,60 +27,60 @@ const TenueSuggestion: React.FC<TenueSuggestionProps> = ({
       {/* Affichage principal de la tenue avec images */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         {/* Photos des vêtements */}
-        <div className="flex-1 flex flex-col items-center justify-center">
-          <div className="grid grid-cols-3 gap-2 w-full">
+        <div className="flex-1 flex justify-center">
+          <div className="grid grid-cols-3 gap-4 w-full">
             {/* Haut */}
             <div className="flex flex-col items-center">
-              <div className="h-32 w-32 bg-white/80 dark:bg-white/10 rounded-lg border border-amber-200 dark:border-amber-800 overflow-hidden shadow-sm mb-2">
+              <div className="h-40 w-40 bg-white/80 dark:bg-white/10 rounded-lg border border-amber-200 dark:border-amber-800 overflow-hidden shadow-md mb-2">
                 {haut?.image_url ? (
                   <img 
                     src={haut.image_url} 
                     alt={haut.nom} 
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain p-1"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-amber-100/50 dark:bg-amber-900/20">
-                    <Shirt className="h-12 w-12 text-amber-600 dark:text-amber-400" />
+                    <Shirt className="h-16 w-16 text-amber-600 dark:text-amber-400" />
                   </div>
                 )}
               </div>
-              <Text variant="subtle" className="text-xs text-center">Haut</Text>
+              <Text variant="subtle" className="text-center font-medium">{haut?.nom || "Haut"}</Text>
             </div>
             
             {/* Bas */}
             <div className="flex flex-col items-center">
-              <div className="h-32 w-32 bg-white/80 dark:bg-white/10 rounded-lg border border-amber-200 dark:border-amber-800 overflow-hidden shadow-sm mb-2">
+              <div className="h-40 w-40 bg-white/80 dark:bg-white/10 rounded-lg border border-amber-200 dark:border-amber-800 overflow-hidden shadow-md mb-2">
                 {bas?.image_url ? (
                   <img 
                     src={bas.image_url} 
                     alt={bas.nom} 
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain p-1"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-amber-100/50 dark:bg-amber-900/20">
-                    <ShoppingBag className="h-12 w-12 text-amber-600 dark:text-amber-400" />
+                    <ShoppingBag className="h-16 w-16 text-amber-600 dark:text-amber-400" />
                   </div>
                 )}
               </div>
-              <Text variant="subtle" className="text-xs text-center">Bas</Text>
+              <Text variant="subtle" className="text-center font-medium">{bas?.nom || "Bas"}</Text>
             </div>
             
             {/* Chaussures */}
             <div className="flex flex-col items-center">
-              <div className="h-32 w-32 bg-white/80 dark:bg-white/10 rounded-lg border border-amber-200 dark:border-amber-800 overflow-hidden shadow-sm mb-2">
+              <div className="h-40 w-40 bg-white/80 dark:bg-white/10 rounded-lg border border-amber-200 dark:border-amber-800 overflow-hidden shadow-md mb-2">
                 {chaussures?.image_url ? (
                   <img 
                     src={chaussures.image_url} 
                     alt={chaussures.nom} 
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain p-1"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-amber-100/50 dark:bg-amber-900/20">
-                    <Footprints className="h-12 w-12 text-amber-600 dark:text-amber-400" />
+                    <Footprints className="h-16 w-16 text-amber-600 dark:text-amber-400" />
                   </div>
                 )}
               </div>
-              <Text variant="subtle" className="text-xs text-center">Chaussures</Text>
+              <Text variant="subtle" className="text-center font-medium">{chaussures?.nom || "Chaussures"}</Text>
             </div>
           </div>
         </div>
