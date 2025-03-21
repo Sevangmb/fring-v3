@@ -1,7 +1,12 @@
 
 /**
- * Utilise l'API Google AI (Gemini) pour analyser les images
+ * Utilise l'API Google AI (Gemini) pour analyser les images de vêtements
  */
+import { buildClothingAnalysisPrompt } from "./utils/promptBuilder.ts";
+import { parseAIResponse } from "./utils/responseParser.ts";
+import { normalizeColor } from "./utils/colorNormalizer.ts";
+import { normalizeCategory } from "./utils/categoryNormalizer.ts";
+import { requestGoogleAIAnalysis } from "./services/googleAIService.ts";
 
 /**
  * Détecte la couleur et la catégorie d'un vêtement dans une image
@@ -26,208 +31,47 @@ export async function detectClothingInfo(imageUrl: string): Promise<{
     
     console.log("Google AI API key retrieved from environment");
 
-    // Vérifier si l'image est au format base64 ou URL
-    const isBase64Image = imageUrl.startsWith('data:');
-    console.log(`Image format: ${isBase64Image ? 'base64' : 'URL'}`);
-    
-    // Préparer l'image - pour Gemini, on peut passer directement les données base64
-    const processedImage = imageUrl;
-    
     // Créer un prompt pour l'analyse d'image
-    const imageAnalysisPrompt = `
-    Observe attentivement cette image de vêtement et réponds à ces questions:
-    1. Quelle est la COULEUR PRINCIPALE du vêtement? (un seul mot)
-    2. De quelle CATÉGORIE de vêtement s'agit-il? (t-shirt, chemise, pantalon, etc.)
-    3. Décris ce vêtement en 1-2 phrases, en mentionnant son style, sa texture et autres caractéristiques notables.
-    4. Si tu peux identifier une marque probable, indique-la. Sinon, réponds "Inconnue".
+    const imageAnalysisPrompt = buildClothingAnalysisPrompt();
     
-    Format de ta réponse (EXACTEMENT):
-    COULEUR: [couleur]
-    CATÉGORIE: [catégorie]
-    DESCRIPTION: [description]
-    MARQUE: [marque]
-    
-    Sois très précis et réponds UNIQUEMENT dans ce format.
-    `;
-    
-    console.log("Preparing request to Google AI Gemini API");
-    
-    // Construction du payload pour l'API Gemini
-    const requestPayload = {
-      contents: [
-        {
-          parts: [
-            { text: imageAnalysisPrompt },
-            {
-              inline_data: {
-                mime_type: "image/jpeg",
-                data: isBase64Image 
-                  ? processedImage.split(',')[1] // Extraire la partie base64 sans le préfixe
-                  : processedImage // URL directe si ce n'est pas du base64
-              }
-            }
-          ]
-        }
-      ],
-      generationConfig: {
-        temperature: 0.1,
-        maxOutputTokens: 200,
-      }
-    };
-    
-    // Si l'image est une URL et non du base64, ajuster le payload
-    if (!isBase64Image) {
-      requestPayload.contents[0].parts[1] = {
-        file_data: {
-          mime_type: "image/jpeg",
-          file_uri: processedImage
-        }
-      };
-    }
-    
-    console.log("Sending request to Google AI Gemini API...");
-    
-    // Faire une requête à l'API Gemini
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${googleApiKey}`, 
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(requestPayload)
-      }
+    // Envoyer la requête à l'API Google AI
+    const generatedText = await requestGoogleAIAnalysis(
+      imageUrl,
+      imageAnalysisPrompt,
+      googleApiKey
     );
-    
-    // Vérifier le statut de la réponse
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Google AI API error ${response.status}:`, errorText);
-      throw new Error(`Erreur API Google AI: ${response.status} - ${errorText}`);
-    }
-    
-    // Traiter la réponse
-    const result = await response.json();
-    console.log("Google AI API response received successfully");
-    
-    if (!result.candidates || !result.candidates[0] || !result.candidates[0].content || !result.candidates[0].content.parts) {
-      console.error("Invalid response structure from Google AI:", JSON.stringify(result));
-      throw new Error("Structure de réponse Google AI invalide");
-    }
-    
-    // Extraire le texte généré
-    const generatedText = result.candidates[0].content.parts[0].text.toLowerCase();
+
     console.log("Google AI detection response:", generatedText);
     
-    // Extraire la couleur avec regex
-    const colorMatch = generatedText.match(/couleur:\s*([a-zéèêëàâäôöùûüç]+)/i);
-    const color = colorMatch?.[1] || null;
+    // Extraire et structurer les informations de la réponse
+    const { color, category, description, brand } = parseAIResponse(generatedText);
     
     if (!color) {
       console.error("Could not extract color from response:", generatedText);
       throw new Error("Impossible de détecter la couleur du vêtement");
     }
     
-    // Extraire la catégorie avec regex
-    const categoryMatch = generatedText.match(/catégorie:\s*([a-zéèêëàâäôöùûüç\s-]+)/i);
-    const category = categoryMatch?.[1]?.trim() || null;
-    
     if (!category) {
       console.error("Could not extract category from response:", generatedText);
       throw new Error("Impossible de détecter la catégorie du vêtement");
     }
     
-    // Extraire la description avec regex
-    const descriptionMatch = generatedText.match(/description:\s*(.*?)(?=\n|$)/is);
-    const description = descriptionMatch?.[1]?.trim() || null;
+    // Normaliser la couleur et la catégorie
+    const normalizedColor = normalizeColor(color);
+    const normalizedCategory = normalizeCategory(category);
     
-    // Extraire la marque avec regex
-    const brandMatch = generatedText.match(/marque:\s*([a-zéèêëàâäôöùûüç\s-]+)/i);
-    let brand = brandMatch?.[1]?.trim() || null;
-    
-    // Ne pas retourner "inconnue" comme marque
-    if (brand && (brand.toLowerCase() === "inconnue" || brand.toLowerCase() === "unknown" || brand.toLowerCase() === "inconnu")) {
-      brand = null;
-    }
-    
-    // Normalisation des couleurs en français
-    const colorMapping: Record<string, string> = {
-      "bleu": "bleu",
-      "rouge": "rouge",
-      "vert": "vert", 
-      "jaune": "jaune",
-      "noir": "noir",
-      "blanc": "blanc",
-      "gris": "gris",
-      "violet": "violet",
-      "rose": "rose",
-      "orange": "orange",
-      "marron": "marron",
-      "beige": "beige",
-      "blue": "bleu",
-      "red": "rouge",
-      "green": "vert",
-      "yellow": "jaune",
-      "black": "noir", 
-      "white": "blanc",
-      "gray": "gris",
-      "grey": "gris",
-      "purple": "violet",
-      "pink": "rose",
-      "brown": "marron"
-    };
-    
-    // Normalisation des catégories en français
-    const categoryMapping: Record<string, string> = {
-      "t-shirt": "T-shirt",
-      "tshirt": "T-shirt",
-      "t shirt": "T-shirt",
-      "shirt": "Chemise", 
-      "chemise": "Chemise",
-      "pants": "Pantalon",
-      "pantalon": "Pantalon",
-      "jeans": "Jeans",
-      "jean": "Jeans",
-      "shorts": "Short",
-      "short": "Short",
-      "dress": "Robe",
-      "robe": "Robe",
-      "skirt": "Jupe",
-      "jupe": "Jupe",
-      "jacket": "Veste",
-      "veste": "Veste",
-      "coat": "Manteau",
-      "manteau": "Manteau",
-      "sweater": "Pull",
-      "pull": "Pull",
-      "hoodie": "Pull",
-      "sweatshirt": "Pull"
-    };
-    
-    // Normaliser la couleur
-    const normalizedColor = colorMapping[color] || color;
-    
-    // Normaliser la catégorie
-    let normalizedCategory = "T-shirt"; // Valeur par défaut
-    for (const [key, value] of Object.entries(categoryMapping)) {
-      if (category.includes(key)) {
-        normalizedCategory = value;
-        break;
-      }
-    }
-    
-    console.log("Detected color:", color);
-    console.log("Normalized color:", normalizedColor);
-    console.log("Detected category:", category);
-    console.log("Normalized category:", normalizedCategory);
-    console.log("Description:", description);
-    console.log("Brand:", brand);
+    console.log("Final detection results:", {
+      color: normalizedColor,
+      category: normalizedCategory,
+      description,
+      brand
+    });
     
     return {
       color: normalizedColor,
       category: normalizedCategory,
-      description: description,
-      brand: brand
+      description: description || undefined,
+      brand: brand || undefined
     };
   } catch (error) {
     console.error("Critical error in detectClothingInfo:", error);
