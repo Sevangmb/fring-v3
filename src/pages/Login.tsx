@@ -7,10 +7,10 @@ import Card from "@/components/molecules/Card";
 import { Heading, Text } from "@/components/atoms/Typography";
 import Input from "@/components/atoms/Input";
 import Button from "@/components/atoms/Button";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
-  const { toast } = useToast();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -24,13 +24,13 @@ const Login = () => {
     const newErrors: { email?: string; password?: string } = {};
     
     if (!email) {
-      newErrors.email = "Email is required";
+      newErrors.email = "Email requis";
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Please enter a valid email";
+      newErrors.email = "Veuillez entrer un email valide";
     }
     
     if (!password) {
-      newErrors.password = "Password is required";
+      newErrors.password = "Mot de passe requis";
     }
     
     setErrors(newErrors);
@@ -44,19 +44,13 @@ const Login = () => {
     
     setIsLoading(true);
     
-    // Simulating API call
-    setTimeout(() => {
+    try {
+      await signIn(email, password);
+    } catch (error) {
+      console.error("Erreur de connexion:", error);
+    } finally {
       setIsLoading(false);
-      
-      // Temporary login simulation
-      toast({
-        title: "Success",
-        description: "You have successfully logged in",
-      });
-      
-      // In a real app, redirect to dashboard after authentication
-      // navigate("/dashboard");
-    }, 1500);
+    }
   };
 
   return (
@@ -65,15 +59,15 @@ const Login = () => {
         <div className="w-full max-w-md animate-fade-in">
           <Card className="p-8">
             <div className="text-center mb-8">
-              <Heading variant="h4" className="mb-2">Welcome back</Heading>
-              <Text variant="subtle">Sign in to your account to continue</Text>
+              <Heading variant="h4" className="mb-2">Bienvenue</Heading>
+              <Text variant="subtle">Connectez-vous à votre compte</Text>
             </div>
             
             <form onSubmit={handleLogin} className="space-y-6">
               <Input
                 label="Email"
                 type="email"
-                placeholder="name@example.com"
+                placeholder="nom@exemple.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 error={errors.email}
@@ -83,7 +77,7 @@ const Login = () => {
               
               <div>
                 <Input
-                  label="Password"
+                  label="Mot de passe"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
@@ -102,11 +96,11 @@ const Login = () => {
                     >
                       {showPassword ? (
                         <span className="flex items-center">
-                          <EyeOff size={14} className="mr-1" /> Hide
+                          <EyeOff size={14} className="mr-1" /> Masquer
                         </span>
                       ) : (
                         <span className="flex items-center">
-                          <Eye size={14} className="mr-1" /> Show
+                          <Eye size={14} className="mr-1" /> Afficher
                         </span>
                       )}
                     </button>
@@ -116,7 +110,7 @@ const Login = () => {
                     to="/forgot-password"
                     className="text-xs text-primary hover:underline"
                   >
-                    Forgot password?
+                    Mot de passe oublié?
                   </Link>
                 </div>
               </div>
@@ -126,15 +120,15 @@ const Login = () => {
                 className="w-full"
                 disabled={isLoading}
               >
-                {isLoading ? "Signing in..." : "Sign in"}
+                {isLoading ? "Connexion en cours..." : "Se connecter"}
               </Button>
             </form>
             
             <div className="mt-6 text-center">
               <Text variant="small" className="text-muted-foreground">
-                Don't have an account?{" "}
+                Vous n'avez pas de compte ?{" "}
                 <Link to="/register" className="text-primary hover:underline">
-                  Sign up
+                  S'inscrire
                 </Link>
               </Text>
             </div>

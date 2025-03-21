@@ -1,23 +1,14 @@
 
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import Layout from "@/components/templates/Layout";
 import { Heading, Text } from "@/components/atoms/Typography";
 import Button from "@/components/atoms/Button";
 import Card, { CardHeader, CardTitle, CardDescription } from "@/components/molecules/Card";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 const Dashboard = () => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-
-  // Simulated user data
-  const user = {
-    name: "Jane Doe",
-    email: "jane@example.com",
-    role: "Administrator"
-  };
+  const { user, signOut } = useAuth();
 
   // Sample data for the chart
   const chartData = [
@@ -36,15 +27,8 @@ const Dashboard = () => {
     { id: 3, name: "Marketing Campaign", status: "Completed", progress: 100 },
   ];
 
-  const handleLogout = () => {
-    // Simulate logout
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out",
-    });
-    
-    // Redirect to homepage
-    navigate("/");
+  const handleLogout = async () => {
+    await signOut();
   };
 
   return (
@@ -52,36 +36,36 @@ const Dashboard = () => {
       <div className="container mx-auto px-4 py-24">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <div>
-            <Heading variant="h3" className="mb-2">Welcome back, {user.name}</Heading>
-            <Text variant="subtle">{user.email} • {user.role}</Text>
+            <Heading variant="h3" className="mb-2">Bienvenue, {user?.user_metadata?.name || 'Utilisateur'}</Heading>
+            <Text variant="subtle">{user?.email} • {user?.user_metadata?.role || 'Utilisateur'}</Text>
           </div>
           <Button 
             variant="outline" 
             className="mt-4 md:mt-0"
             onClick={handleLogout}
           >
-            Sign out
+            Déconnexion
           </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {[
             {
-              title: "Total Users",
+              title: "Total Utilisateurs",
               value: "2,540",
-              description: "↑ 12% from last month",
+              description: "↑ 12% depuis le mois dernier",
               color: "bg-primary/10 text-primary",
             },
             {
-              title: "Active Projects",
+              title: "Projets Actifs",
               value: "12",
-              description: "↑ 3 new this week",
+              description: "↑ 3 nouveaux cette semaine",
               color: "bg-green-500/10 text-green-500",
             },
             {
-              title: "Conversion Rate",
+              title: "Taux de Conversion",
               value: "5.25%",
-              description: "↓ 0.5% from last month",
+              description: "↓ 0.5% depuis le mois dernier",
               color: "bg-orange-500/10 text-orange-500",
             },
           ].map((stat, index) => (
@@ -98,8 +82,8 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>User Growth</CardTitle>
-              <CardDescription>Monthly active users over time</CardDescription>
+              <CardTitle>Croissance des Utilisateurs</CardTitle>
+              <CardDescription>Utilisateurs actifs mensuels</CardDescription>
             </CardHeader>
 
             <div className="h-72 w-full p-4">
@@ -120,8 +104,8 @@ const Dashboard = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Recent Projects</CardTitle>
-              <CardDescription>Status of your latest projects</CardDescription>
+              <CardTitle>Projets Récents</CardTitle>
+              <CardDescription>Statut de vos derniers projets</CardDescription>
             </CardHeader>
 
             <div className="p-4">
