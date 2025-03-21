@@ -14,6 +14,8 @@ import FormActions from "./FormActions";
 interface VetementFormContainerProps {
   user: any;
   marques: any[];
+  categories?: any[]; // Added this prop to match what's being passed in ModifierVetement.tsx
+  loadingCategories?: boolean;
   initialValues?: VetementFormValues;
   onSubmit?: (data: VetementFormValues) => Promise<void>;
   submitLabel?: string;
@@ -24,6 +26,8 @@ interface VetementFormContainerProps {
 const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
   user,
   marques,
+  categories, // Added to props
+  loadingCategories = false,
   initialValues,
   onSubmit,
   submitLabel,
@@ -150,6 +154,7 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
               form={form}
               marques={marques}
               loading={loading}
+              onCategoriesChange={() => {}} // Pass empty function as default
             />
             
             <FormActions

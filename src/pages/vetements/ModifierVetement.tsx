@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/templates/Layout";
@@ -7,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { fetchCategories } from "@/services/categorieService";
 import { fetchMarques } from "@/services/marqueService";
 import { getVetementById, updateVetement } from "@/services/vetement";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -21,7 +19,6 @@ const ModifierVetementPage = () => {
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const [vetement, setVetement] = useState<VetementFormValues | null>(null);
-  const [categories, setCategories] = useState([]);
   const [marques, setMarques] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,10 +41,9 @@ const ModifierVetementPage = () => {
       try {
         setIsLoading(true);
         
-        // Charger le vêtement, les catégories et les marques en parallèle
-        const [vetementData, categoriesData, marquesData] = await Promise.all([
+        // Charger le vêtement et les marques en parallèle
+        const [vetementData, marquesData] = await Promise.all([
           getVetementById(vetementId),
-          fetchCategories(),
           fetchMarques()
         ]);
         
@@ -60,7 +56,6 @@ const ModifierVetementPage = () => {
         
         console.log("Vêtement chargé:", vetementData);
         setVetement(vetementData);
-        setCategories(categoriesData);
         setMarques(marquesData);
       } catch (error) {
         console.error("Erreur lors du chargement des données:", error);
@@ -166,9 +161,7 @@ const ModifierVetementPage = () => {
           !error && vetement && (
             <VetementFormContainer
               user={user}
-              categories={categories}
               marques={marques}
-              loadingCategories={false}
               initialValues={vetement}
               onSubmit={handleUpdate}
               submitLabel="Enregistrer les modifications"

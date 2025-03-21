@@ -1,7 +1,7 @@
 
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
-import { VetementFormValues, Categorie } from "./schema/VetementFormSchema";
+import { VetementFormValues } from "./schema/VetementFormSchema";
 import NomField from "./form-fields/NomField";
 import CategorieField from "./form-fields/CategorieField";
 import CouleurField from "./form-fields/CouleurField";
