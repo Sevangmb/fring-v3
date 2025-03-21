@@ -13,4 +13,5 @@ export interface Vetement {
   user_id?: string;
   owner_email?: string;
   temperature?: "froid" | "tempere" | "chaud";
+  weatherType?: "pluie" | "neige" | "normal";
 }

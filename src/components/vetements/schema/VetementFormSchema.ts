@@ -24,6 +24,15 @@ export const temperatureOptions = [
 
 export type TemperatureOption = typeof temperatureOptions[number]["value"];
 
+// Weather type options
+export const weatherTypeOptions = [
+  { value: "normal", label: "Normal" },
+  { value: "pluie", label: "Pluie" },
+  { value: "neige", label: "Neige" },
+] as const;
+
+export type WeatherTypeOption = typeof weatherTypeOptions[number]["value"];
+
 // Schema for vetement form
 export const vetementFormSchema = z.object({
   nom: z.string().min(1, "Le nom est requis"),
@@ -33,6 +42,7 @@ export const vetementFormSchema = z.object({
   marque: z.string().optional(),
   description: z.string().optional(),
   temperature: z.enum(["froid", "tempere", "chaud"]).optional(),
+  weatherType: z.enum(["normal", "pluie", "neige"]).optional(),
   image_url: z.string().optional(),
 });
 

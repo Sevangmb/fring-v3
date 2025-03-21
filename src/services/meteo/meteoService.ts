@@ -10,6 +10,8 @@ export interface PrevisionJour {
   temperatureMax: number;
   humidity: number;
   windSpeed: number;
+  isRaining: boolean;
+  precipitationChance: number;
 }
 
 export interface MeteoData {
@@ -22,9 +24,38 @@ export interface MeteoData {
     humidity: number;
     windSpeed: number;
     feelsLike: number;
+    isRaining: boolean;
+    precipitationChance: number;
   };
   forecast: PrevisionJour[];
 }
+
+/**
+ * Vérifie si la description météo indique de la pluie
+ * @param description Description météo
+ * @param conditionCode Code de condition météo (si disponible)
+ * @returns Vrai si la description indique de la pluie
+ */
+export const isRainDescription = (description: string, conditionCode?: number): boolean => {
+  const lowerDesc = description.toLowerCase();
+  
+  // Termes français indiquant de la pluie
+  const rainTerms = [
+    'pluie', 'pluvieux', 'averse', 'précipitation', 'bruine', 
+    'crachin', 'ondée', 'déluge', 'mouillé'
+  ];
+  
+  // Vérifier les codes de condition WeatherAPI pour la pluie (1063 à 1201)
+  if (conditionCode) {
+    if ((conditionCode >= 1063 && conditionCode <= 1201) || 
+        (conditionCode >= 1240 && conditionCode <= 1246)) {
+      return true;
+    }
+  }
+  
+  // Vérifier si la description contient des termes liés à la pluie
+  return rainTerms.some(term => lowerDesc.includes(term));
+};
 
 /**
  * Récupère les données météo pour les 3 prochains jours
@@ -45,6 +76,12 @@ export const fetchMeteoData = async (latitude: number, longitude: number): Promi
     
     const data = await response.json();
     
+    // Vérifier s'il pleut actuellement
+    const currentConditionCode = data.current.condition.code;
+    const currentDesc = data.current.condition.text;
+    const isCurrentlyRaining = isRainDescription(currentDesc, currentConditionCode) || 
+                              data.current.precip_mm > 0;
+    
     // Formater les données depuis WeatherAPI pour notre application
     const meteoData: MeteoData = {
       city: data.location.name,
@@ -55,18 +92,29 @@ export const fetchMeteoData = async (latitude: number, longitude: number): Promi
         icon: data.current.condition.icon,
         humidity: data.current.humidity,
         windSpeed: Math.round(data.current.wind_kph),
-        feelsLike: Math.round(data.current.feelslike_c)
+        feelsLike: Math.round(data.current.feelslike_c),
+        isRaining: isCurrentlyRaining,
+        precipitationChance: data.forecast.forecastday[0].day.daily_chance_of_rain
       },
-      forecast: data.forecast.forecastday.map((day: any) => ({
-        date: day.date,
-        temperature: Math.round(day.day.avgtemp_c),
-        description: day.day.condition.text,
-        icon: day.day.condition.icon,
-        temperatureMin: Math.round(day.day.mintemp_c),
-        temperatureMax: Math.round(day.day.maxtemp_c),
-        humidity: day.day.avghumidity,
-        windSpeed: Math.round(day.day.maxwind_kph)
-      }))
+      forecast: data.forecast.forecastday.map((day: any) => {
+        const dayConditionCode = day.day.condition.code;
+        const dayDesc = day.day.condition.text;
+        const isDayRaining = isRainDescription(dayDesc, dayConditionCode) || 
+                            day.day.totalprecip_mm > 0;
+        
+        return {
+          date: day.date,
+          temperature: Math.round(day.day.avgtemp_c),
+          description: day.day.condition.text,
+          icon: day.day.condition.icon,
+          temperatureMin: Math.round(day.day.mintemp_c),
+          temperatureMax: Math.round(day.day.maxtemp_c),
+          humidity: day.day.avghumidity,
+          windSpeed: Math.round(day.day.maxwind_kph),
+          isRaining: isDayRaining,
+          precipitationChance: day.day.daily_chance_of_rain
+        };
+      })
     };
     
     return meteoData;

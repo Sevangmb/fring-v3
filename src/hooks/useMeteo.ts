@@ -36,10 +36,14 @@ export const useMeteo = () => {
           const vetementsData = await fetchVetements();
           setVetements(vetementsData);
           
+          // Vérifier s'il pleut
+          const isRaining = data.current.isRaining;
+          console.log(`Conditions météo actuelles: ${isRaining ? 'Il pleut' : 'Pas de pluie'}`);
+          
           // Générer une suggestion de tenue
           if (data && vetementsData.length > 0) {
-            const suggestion = suggestVetements(vetementsData, data.current.temperature);
-            const message = generateOutfitMessage(data.current.temperature, data.current.description);
+            const suggestion = suggestVetements(vetementsData, data.current.temperature, isRaining);
+            const message = generateOutfitMessage(data.current.temperature, data.current.description, isRaining);
             setTenueSuggestion({
               ...suggestion,
               message
