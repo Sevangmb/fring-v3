@@ -1,14 +1,14 @@
 
 import React, { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, User, Mail } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import NavItem from "../molecules/NavItem";
 import { useIsMobile } from "@/hooks/use-mobile";
-import Button from "../atoms/Button";
 import { useAuth } from "@/contexts/AuthContext";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useMessages } from "@/hooks/useMessages";
+import NavLinks from "../molecules/NavLinks";
+import AuthButtons from "../molecules/AuthButtons";
+import MobileMenu from "../molecules/MobileMenu";
 
 interface NavbarProps {
   className?: string;
@@ -16,31 +16,11 @@ interface NavbarProps {
 
 const Navbar = ({ className }: NavbarProps) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isMobile = useIsMobile();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { unreadCount, refreshUnreadCount } = useMessages();
-
-  const navLinks = [
-    { href: "/", label: "Home" },
-    { href: "/mes-vetements", label: "Mes Vêtements" },
-    { href: "/mes-amis", label: "Mes Amis" },
-    { href: "/about", label: "About" },
-  ];
-
-  // Liens supplémentaires pour les utilisateurs connectés
-  const authLinks = user ? [
-    { href: "/dashboard", label: "Tableau de bord" },
-    { href: "/profile", label: "Profil" },
-    { 
-      href: "/messages", 
-      label: "Messages", 
-      icon: <Mail className="h-4 w-4 mr-2" />,
-      badge: unreadCount > 0 ? unreadCount : undefined
-    },
-  ] : [];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -69,27 +49,6 @@ const Navbar = ({ className }: NavbarProps) => {
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
-  const handleLogin = () => navigate("/login");
-  const handleSignUp = () => navigate("/register");
-  const handleProfile = () => navigate("/profile");
-  const handleLogout = async () => {
-    await signOut();
-    navigate("/");
-  };
-
-  // Obtenir les initiales de l'utilisateur pour l'avatar
-  const getUserInitials = () => {
-    const name = user?.user_metadata?.name || user?.email || "";
-    if (name) {
-      const parts = name.split(/\s+/);
-      if (parts.length > 1) {
-        return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-      }
-      return name[0].toUpperCase();
-    }
-    return "U";
-  };
-
   return (
     <header
       className={cn(
@@ -105,59 +64,12 @@ const Navbar = ({ className }: NavbarProps) => {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-1">
-          {navLinks.map((link) => (
-            <NavItem
-              key={link.href}
-              href={link.href}
-              label={link.label}
-              isActive={location.pathname === link.href}
-            />
-          ))}
-          
-          {/* Liens authentifiés pour desktop */}
-          {user && authLinks.map((link) => (
-            <NavItem
-              key={link.href}
-              href={link.href}
-              label={link.label}
-              icon={link.icon}
-              isActive={location.pathname.startsWith(link.href)}
-              badge={link.badge}
-            />
-          ))}
+          <NavLinks unreadCount={unreadCount} user={user} />
         </nav>
 
         {/* Auth Buttons - Desktop */}
         <div className="hidden md:flex items-center space-x-4">
-          {user ? (
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={handleProfile}
-                className="flex items-center gap-2"
-              >
-                <Avatar className="w-8 h-8">
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                    {getUserInitials()}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="hidden lg:inline">{user.user_metadata?.name || user.email?.split('@')[0]}</span>
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                Déconnexion
-              </Button>
-            </div>
-          ) : (
-            <>
-              <Button variant="ghost" size="sm" onClick={handleLogin}>
-                Login
-              </Button>
-              <Button size="sm" onClick={handleSignUp}>
-                Sign up
-              </Button>
-            </>
-          )}
+          <AuthButtons user={user} />
         </div>
 
         {/* Mobile Menu Button */}
@@ -172,71 +84,12 @@ const Navbar = ({ className }: NavbarProps) => {
 
       {/* Mobile Menu */}
       {isMobile && (
-        <div
-          className={cn(
-            "fixed inset-0 z-40 bg-background transform transition-transform duration-300 ease-in-out",
-            isMenuOpen ? "translate-x-0" : "translate-x-full",
-            isScrolled ? "pt-16" : "pt-20"
-          )}
-        >
-          <div className="container mx-auto px-4 py-6">
-            <nav className="flex flex-col space-y-4">
-              {navLinks.map((link) => (
-                <NavItem
-                  key={link.href}
-                  href={link.href}
-                  label={link.label}
-                  isActive={location.pathname === link.href}
-                  className="px-4 py-3"
-                />
-              ))}
-              
-              {/* Liens authentifiés pour mobile */}
-              {user && authLinks.map((link) => (
-                <NavItem
-                  key={link.href}
-                  href={link.href}
-                  label={link.label}
-                  icon={link.icon}
-                  isActive={location.pathname.startsWith(link.href)}
-                  className="px-4 py-3"
-                  badge={link.badge}
-                />
-              ))}
-              
-              <div className="mt-6 space-y-3">
-                {user ? (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-center flex items-center gap-2" 
-                      onClick={handleProfile}
-                    >
-                      <User size={18} />
-                      Profil
-                    </Button>
-                    <Button 
-                      variant="primary" 
-                      className="w-full justify-center text-white bg-red-600 hover:bg-red-700" 
-                      onClick={handleLogout}
-                    >
-                      Déconnexion
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button variant="outline" className="w-full justify-center" onClick={handleLogin}>
-                      Login
-                    </Button>
-                    <Button className="w-full justify-center" onClick={handleSignUp}>
-                      Sign up
-                    </Button>
-                  </>
-                )}
-              </div>
-            </nav>
-          </div>
-        </div>
+        <MobileMenu 
+          isMenuOpen={isMenuOpen} 
+          isScrolled={isScrolled} 
+          unreadCount={unreadCount}
+          toggleMenu={toggleMenu}
+        />
       )}
     </header>
   );
