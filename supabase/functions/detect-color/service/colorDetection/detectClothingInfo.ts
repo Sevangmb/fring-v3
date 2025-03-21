@@ -6,9 +6,14 @@
 /**
  * Détecte la couleur et la catégorie d'un vêtement dans une image
  * @param imageUrl URL de l'image à analyser
- * @returns Informations du vêtement détecté (couleur et catégorie)
+ * @returns Informations du vêtement détecté (couleur, catégorie, description et marque)
  */
-export async function detectClothingInfo(imageUrl: string): Promise<{color: string, category: string, description?: string}> {
+export async function detectClothingInfo(imageUrl: string): Promise<{
+  color: string,
+  category: string,
+  description?: string,
+  brand?: string
+}> {
   try {
     console.log("Starting clothing detection process with Google AI (Gemini)");
     
@@ -34,11 +39,13 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     1. Quelle est la COULEUR PRINCIPALE du vêtement? (un seul mot)
     2. De quelle CATÉGORIE de vêtement s'agit-il? (t-shirt, chemise, pantalon, etc.)
     3. Décris ce vêtement en 1-2 phrases, en mentionnant son style, sa texture et autres caractéristiques notables.
+    4. Si tu peux identifier une marque probable, indique-la. Sinon, réponds "Inconnue".
     
     Format de ta réponse (EXACTEMENT):
     COULEUR: [couleur]
     CATÉGORIE: [catégorie]
     DESCRIPTION: [description]
+    MARQUE: [marque]
     
     Sois très précis et réponds UNIQUEMENT dans ce format.
     `;
@@ -134,6 +141,15 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     const descriptionMatch = generatedText.match(/description:\s*(.*?)(?=\n|$)/is);
     const description = descriptionMatch?.[1]?.trim() || null;
     
+    // Extraire la marque avec regex
+    const brandMatch = generatedText.match(/marque:\s*([a-zéèêëàâäôöùûüç\s-]+)/i);
+    let brand = brandMatch?.[1]?.trim() || null;
+    
+    // Ne pas retourner "inconnue" comme marque
+    if (brand && (brand.toLowerCase() === "inconnue" || brand.toLowerCase() === "unknown" || brand.toLowerCase() === "inconnu")) {
+      brand = null;
+    }
+    
     // Normalisation des couleurs en français
     const colorMapping: Record<string, string> = {
       "bleu": "bleu",
@@ -205,11 +221,13 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     console.log("Detected category:", category);
     console.log("Normalized category:", normalizedCategory);
     console.log("Description:", description);
+    console.log("Brand:", brand);
     
     return {
       color: normalizedColor,
       category: normalizedCategory,
-      description: description
+      description: description,
+      brand: brand
     };
   } catch (error) {
     console.error("Critical error in detectClothingInfo:", error);

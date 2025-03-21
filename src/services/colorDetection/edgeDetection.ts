@@ -18,7 +18,8 @@ type StepCallback = (step: string) => void;
 export const invokeDetectionFunction = async (imageUrl: string, onStep?: StepCallback): Promise<{
   color: string | null, 
   category: string | null,
-  description?: string | null
+  description?: string | null,
+  brand?: string | null
 }> => {
   onStep?.("Tentative d'appel à la fonction Edge de détection avec Google AI Gemini...");
   console.log('Appel de la fonction Edge de détection avec Google AI Gemini...');
@@ -47,7 +48,7 @@ export const invokeDetectionFunction = async (imageUrl: string, onStep?: StepCal
     if (error) {
       onStep?.(`Erreur lors de l'appel à la fonction Edge: ${error.message}`);
       console.error('Erreur lors de l\'appel à la fonction Edge:', error);
-      return { color: null, category: null, description: null };
+      return { color: null, category: null, description: null, brand: null };
     }
 
     onStep?.("Réponse reçue de la fonction Edge avec Google AI Gemini");
@@ -57,20 +58,25 @@ export const invokeDetectionFunction = async (imageUrl: string, onStep?: StepCal
     if (data && data.error) {
       onStep?.(`Erreur interne dans la fonction Edge: ${data.error}`);
       console.warn('La fonction Edge a retourné une erreur:', data.error);
-      return { color: null, category: null, description: null };
+      return { color: null, category: null, description: null, brand: null };
     }
     
     if (!data || !data.color || !data.category) {
       onStep?.("La fonction a retourné des données incomplètes");
       console.warn('Données incomplètes:', data);
-      return { color: null, category: null, description: null };
+      return { color: null, category: null, description: null, brand: null };
     }
     
-    return data;
+    return {
+      color: data.color,
+      category: data.category,
+      description: data.description || null,
+      brand: data.brand || null
+    };
   } catch (connectionError) {
     const errorMessage = connectionError instanceof Error ? connectionError.message : "Erreur inconnue";
     onStep?.(`Erreur de connexion: ${errorMessage}`);
     console.error('Erreur de connexion:', connectionError);
-    return { color: null, category: null, description: null };
+    return { color: null, category: null, description: null, brand: null };
   }
 };

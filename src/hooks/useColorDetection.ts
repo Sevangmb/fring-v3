@@ -62,35 +62,45 @@ export const useColorDetection = (
       addStep(`3. Informations détectées: couleur=${detectedInfo.color}, catégorie=${detectedInfo.category}`);
       console.log("Informations détectées:", detectedInfo);
       
-      // Définir la couleur détectée
+      // Remplir tous les champs du formulaire avec les données détectées
+      
+      // 1. Définir la couleur détectée
       form.setValue('couleur', detectedInfo.color);
       
-      // Définir la catégorie détectée
+      // 2. Définir la catégorie détectée
       form.setValue('categorie', detectedInfo.category);
       
-      // Définir la description si elle est disponible
+      // 3. Définir la description si elle est disponible
       if (detectedInfo.description) {
         form.setValue('description', detectedInfo.description);
         addStep(`4. Description détectée: ${detectedInfo.description}`);
       }
       
-      // Définir les autres champs disponibles si possible
-      if (detectedInfo.category === "T-shirt") {
-        // Pré-remplir les tailles communes pour les T-shirts
-        form.setValue('taille', 'M');
-      } else if (detectedInfo.category === "Pantalon" || detectedInfo.category === "Jeans") {
-        // Pré-remplir les tailles communes pour les pantalons
-        form.setValue('taille', '40');
-      }
-      
-      // Suggérer un nom basé sur la couleur et la catégorie
+      // 4. Suggérer un nom basé sur la couleur et la catégorie
       const suggestedName = `${detectedInfo.color.charAt(0).toUpperCase() + detectedInfo.color.slice(1)} ${detectedInfo.category.toLowerCase()}`;
       form.setValue('nom', suggestedName);
       
-      addStep("5. Application des valeurs détectées au formulaire");
+      // 5. Pré-remplir la taille en fonction de la catégorie
+      if (detectedInfo.category === "T-shirt" || detectedInfo.category === "Chemise" || detectedInfo.category === "Pull") {
+        form.setValue('taille', 'M');
+      } else if (detectedInfo.category === "Pantalon" || detectedInfo.category === "Jeans") {
+        form.setValue('taille', '40');
+      } else if (detectedInfo.category === "Chaussures") {
+        form.setValue('taille', '42');
+      } else {
+        form.setValue('taille', 'M'); // Taille par défaut
+      }
+      
+      // 6. Pré-remplir la marque si elle est détectée
+      if (detectedInfo.brand) {
+        form.setValue('marque', detectedInfo.brand);
+        addStep(`5. Marque détectée: ${detectedInfo.brand}`);
+      }
+      
+      addStep("6. Application des valeurs détectées au formulaire");
       toast({
         title: "Détection réussie",
-        description: `La couleur ${detectedInfo.color}, la catégorie ${detectedInfo.category} et d'autres champs ont été pré-remplis`,
+        description: `Tous les champs ont été pré-remplis avec les informations détectées`,
         duration: 5000,
       });
     } catch (error) {
