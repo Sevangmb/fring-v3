@@ -29,20 +29,20 @@ serve(async (req) => {
       ? imageUrl.substring(0, Math.min(100, imageUrl.indexOf(",") + 10)) + "..." 
       : imageUrl.substring(0, 50) + "...";
     
-    console.log("Processing image with Mistral AI:", truncatedUrl);
+    console.log("Processing image with Google AI Gemini:", truncatedUrl);
     
     try {
       // Extraire les informations du vêtement de l'image (couleur et catégorie)
       const clothingInfo = await detectClothingInfo(imageUrl);
       
-      console.log("Mistral AI detection results:", clothingInfo);
+      console.log("Google AI Gemini detection results:", clothingInfo);
       
       return new Response(
         JSON.stringify(clothingInfo),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } catch (detectionError) {
-      console.error('Erreur spécifique à la détection avec Mistral AI:', detectionError);
+      console.error('Erreur spécifique à la détection avec Google AI Gemini:', detectionError);
       
       // Retourner une erreur avec un message clair
       return new Response(

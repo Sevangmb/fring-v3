@@ -16,8 +16,8 @@ type StepCallback = (step: string) => void;
  * @returns Résultat de la détection
  */
 export const invokeDetectionFunction = async (imageUrl: string, onStep?: StepCallback): Promise<{color: string | null, category: string | null}> => {
-  onStep?.("Tentative d'appel à la fonction Edge de détection avec Mistral AI...");
-  console.log('Appel de la fonction Edge de détection avec Mistral AI...');
+  onStep?.("Tentative d'appel à la fonction Edge de détection avec Google AI Gemini...");
+  console.log('Appel de la fonction Edge de détection avec Google AI Gemini...');
   
   try {
     // Vérification de la connexion à Supabase
@@ -26,7 +26,7 @@ export const invokeDetectionFunction = async (imageUrl: string, onStep?: StepCal
     // Tentative d'appel à la fonction Edge Supabase
     onStep?.("Envoi de la requête à la fonction Edge Supabase 'detect-color'");
     
-    // Timeout pour l'appel à la fonction (30 secondes maximum, car Mistral peut prendre un peu plus de temps)
+    // Timeout pour l'appel à la fonction (30 secondes maximum, car Gemini peut prendre un peu plus de temps)
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error("Délai d'attente de la fonction dépassé")), 30000)
     );
@@ -46,7 +46,7 @@ export const invokeDetectionFunction = async (imageUrl: string, onStep?: StepCal
       return { color: null, category: null };
     }
 
-    onStep?.("Réponse reçue de la fonction Edge avec Mistral AI");
+    onStep?.("Réponse reçue de la fonction Edge avec Google AI Gemini");
     console.log('Résultat brut de la fonction Edge:', data);
     
     // Vérifier si la réponse contient une erreur interne

@@ -35,7 +35,7 @@ const ImageActions: React.FC<ImageActionsProps> = ({
         disabled={detectingColor}
         className="flex items-center gap-2"
       >
-        <Palette size={16} /> Détecter couleur et catégorie
+        <Palette size={16} /> Détecter avec Google AI
       </Button>
     </div>
   );

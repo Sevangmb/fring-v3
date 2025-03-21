@@ -44,14 +44,14 @@ export const useColorDetection = (
       // Créer le toast pour notification
       const toastNotification = toast({
         title: "Détection en cours",
-        description: "Analyse de l'image avec Mistral AI (peut prendre jusqu'à 30 secondes)...",
+        description: "Analyse de l'image avec Google AI Gemini (peut prendre jusqu'à 30 secondes)...",
         duration: 30000, // Augmenter la durée pour correspondre au timeout de la fonction
       });
       
-      addStep("1. Préparation de l'image pour l'analyse avec Mistral AI");
+      addStep("1. Préparation de l'image pour l'analyse avec Google AI Gemini");
       console.log("Envoi de l'image pour détection:", imagePreview.substring(0, 50) + "...");
       
-      addStep("2. Appel du service de détection Mistral AI");
+      addStep("2. Appel du service de détection Google AI Gemini");
       const detectedInfo = await detectImageInfo(imagePreview, (step) => {
         addStep(step);
       });

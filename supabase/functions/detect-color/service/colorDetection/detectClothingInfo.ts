@@ -1,7 +1,6 @@
 
 /**
- * Utilise l'API Mistral pour analyser les images via une implémentation directe de l'API
- * plutôt que d'utiliser la bibliothèque client qui n'est pas compatible avec Deno
+ * Utilise l'API Google AI (Gemini) pour analyser les images
  */
 
 /**
@@ -11,25 +10,25 @@
  */
 export async function detectClothingInfo(imageUrl: string): Promise<{color: string, category: string}> {
   try {
-    console.log("Starting clothing detection process with Mistral AI");
+    console.log("Starting clothing detection process with Google AI (Gemini)");
     
-    // Récupérer la clé API Mistral de l'environnement
-    const mistralApiKey = Deno.env.get('MISTRAL_API_KEY');
-    if (!mistralApiKey) {
-      console.error("MISTRAL_API_KEY not found in environment variables");
-      throw new Error("Configuration API Mistral manquante");
+    // Récupérer la clé API Google AI de l'environnement
+    const googleApiKey = Deno.env.get('GOOGLE_API_KEY');
+    if (!googleApiKey) {
+      console.error("GOOGLE_API_KEY not found in environment variables");
+      throw new Error("Configuration API Google AI manquante");
     }
     
-    console.log("Mistral AI API key retrieved from environment");
+    console.log("Google AI API key retrieved from environment");
 
     // Vérifier si l'image est au format base64 ou URL
     const isBase64Image = imageUrl.startsWith('data:');
     console.log(`Image format: ${isBase64Image ? 'base64' : 'URL'}`);
     
-    // Préparer l'image au bon format
+    // Préparer l'image - pour Gemini, on peut passer directement les données base64
     const processedImage = imageUrl;
     
-    // Utiliser l'API Mistral directement au lieu d'utiliser la bibliothèque client
+    // Créer un prompt pour l'analyse d'image
     const imageAnalysisPrompt = `
     Observe attentivement cette image de vêtement et réponds UNIQUEMENT à ces deux questions:
     1. Quelle est la COULEUR PRINCIPALE du vêtement? (un seul mot)
@@ -42,59 +41,74 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     Sois très précis et réponds UNIQUEMENT dans ce format.
     `;
     
-    console.log("Preparing request to Mistral AI API");
+    console.log("Preparing request to Google AI Gemini API");
     
-    // Construction du payload pour l'API
+    // Construction du payload pour l'API Gemini
     const requestPayload = {
-      model: "mistral-large-latest", // Utilisation du modèle Mistral le plus récent
-      messages: [
+      contents: [
         {
-          role: "user",
-          content: [
+          parts: [
+            { text: imageAnalysisPrompt },
             {
-              type: "text",
-              text: imageAnalysisPrompt
-            },
-            {
-              type: "image_url",
-              image_url: processedImage
+              inline_data: {
+                mime_type: "image/jpeg",
+                data: isBase64Image 
+                  ? processedImage.split(',')[1] // Extraire la partie base64 sans le préfixe
+                  : processedImage // URL directe si ce n'est pas du base64
+              }
             }
           ]
         }
       ],
-      temperature: 0.1 // Température réduite pour plus de précision
+      generationConfig: {
+        temperature: 0.1,
+        maxOutputTokens: 100,
+      }
     };
     
-    console.log("Sending request to Mistral AI API...");
+    // Si l'image est une URL et non du base64, ajuster le payload
+    if (!isBase64Image) {
+      requestPayload.contents[0].parts[1] = {
+        file_data: {
+          mime_type: "image/jpeg",
+          file_uri: processedImage
+        }
+      };
+    }
     
-    // Faire une requête directe à l'API Mistral
-    const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${mistralApiKey}`
-      },
-      body: JSON.stringify(requestPayload)
-    });
+    console.log("Sending request to Google AI Gemini API...");
+    
+    // Faire une requête à l'API Gemini
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${googleApiKey}`, 
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestPayload)
+      }
+    );
     
     // Vérifier le statut de la réponse
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Mistral AI API error ${response.status}:`, errorText);
-      throw new Error(`Erreur API Mistral: ${response.status} - ${errorText}`);
+      console.error(`Google AI API error ${response.status}:`, errorText);
+      throw new Error(`Erreur API Google AI: ${response.status} - ${errorText}`);
     }
     
     // Traiter la réponse
     const result = await response.json();
-    console.log("Mistral AI API response received successfully");
+    console.log("Google AI API response received successfully");
     
-    if (!result.choices || !result.choices[0] || !result.choices[0].message || !result.choices[0].message.content) {
-      console.error("Invalid response structure from Mistral AI:", JSON.stringify(result));
-      throw new Error("Structure de réponse Mistral AI invalide");
+    if (!result.candidates || !result.candidates[0] || !result.candidates[0].content || !result.candidates[0].content.parts) {
+      console.error("Invalid response structure from Google AI:", JSON.stringify(result));
+      throw new Error("Structure de réponse Google AI invalide");
     }
     
-    const generatedText = result.choices[0].message.content.toLowerCase();
-    console.log("Mistral AI detection response:", generatedText);
+    // Extraire le texte généré
+    const generatedText = result.candidates[0].content.parts[0].text.toLowerCase();
+    console.log("Google AI detection response:", generatedText);
     
     // Extraire la couleur avec regex
     const colorMatch = generatedText.match(/couleur:\s*([a-zéèêëàâäôöùûüç]+)/i);
