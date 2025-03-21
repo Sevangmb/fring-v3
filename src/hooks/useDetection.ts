@@ -99,8 +99,20 @@ export const useDetection = (
         form.setValue('marque', result.brand);
         addStep(`5. Marque détectée: ${result.brand}`);
       }
+
+      // 7. Définir la température si détectée
+      if (result.temperature) {
+        form.setValue('temperature', result.temperature);
+        addStep(`6. Température détectée: ${result.temperature}`);
+      }
       
-      addStep("6. Application des valeurs détectées au formulaire");
+      // 8. Définir le type de météo si détecté
+      if (result.weatherType) {
+        form.setValue('weatherType', result.weatherType);
+        addStep(`7. Type de météo détecté: ${result.weatherType}`);
+      }
+      
+      addStep("8. Application des valeurs détectées au formulaire");
       
       // Notification de succès
       toast({

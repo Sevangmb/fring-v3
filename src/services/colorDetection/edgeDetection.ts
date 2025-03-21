@@ -19,7 +19,9 @@ export const invokeDetectionFunction = async (imageUrl: string, onStep?: StepCal
   color: string | null, 
   category: string | null,
   description?: string | null,
-  brand?: string | null
+  brand?: string | null,
+  temperature?: string | null,
+  weatherType?: string | null
 }> => {
   onStep?.("Tentative d'appel à la fonction Edge de détection avec Google AI Gemini...");
   console.log('Appel de la fonction Edge de détection avec Google AI Gemini...');
@@ -71,7 +73,9 @@ export const invokeDetectionFunction = async (imageUrl: string, onStep?: StepCal
       color: data.color,
       category: data.category,
       description: data.description || null,
-      brand: data.brand || null
+      brand: data.brand || null,
+      temperature: data.temperature || null,
+      weatherType: data.weatherType || null
     };
   } catch (connectionError) {
     const errorMessage = connectionError instanceof Error ? connectionError.message : "Erreur inconnue";

@@ -14,6 +14,8 @@ export interface DetectionResult {
   category: string;
   description?: string;
   brand?: string;
+  temperature?: "froid" | "tempere" | "chaud";
+  weatherType?: "pluie" | "neige" | "normal";
 }
 
 /**
@@ -84,7 +86,9 @@ export class DetectionService {
         color: data.color.toLowerCase().trim(),
         category: data.category,
         description: data.description || undefined,
-        brand: data.brand || undefined
+        brand: data.brand || undefined,
+        temperature: data.temperature || undefined,
+        weatherType: data.weatherType || undefined
       };
       
       onStep?.(`Détection terminée - Couleur: ${result.color}, Catégorie: ${result.category}`);
@@ -94,6 +98,8 @@ export class DetectionService {
       console.log('Catégorie détectée:', result.category);
       console.log('Description détectée:', result.description || 'Non disponible');
       console.log('Marque détectée:', result.brand || 'Non disponible');
+      console.log('Température détectée:', result.temperature || 'Non disponible');
+      console.log('Type de météo détecté:', result.weatherType || 'Non disponible');
       
       return result;
     } catch (error) {
