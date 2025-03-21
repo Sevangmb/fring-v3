@@ -57,7 +57,7 @@ export const loadConversationPreviewsWithEmail = async (
     console.log(`Chargement des aperçus de conversation pour ${userId}`);
     const previews = await fetchConversationPreviews();
     
-    return enrichMessagesWithEmail(previews);
+    return await enrichMessagesWithEmail(previews);
   } catch (error) {
     console.error('Erreur lors du chargement des aperçus de conversation:', error);
     return [];

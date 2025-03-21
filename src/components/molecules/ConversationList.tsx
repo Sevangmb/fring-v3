@@ -54,9 +54,9 @@ const ConversationList: React.FC<ConversationListProps> = ({
         
         const isUnread = !conversation.read && conversation.receiver_id === user?.id;
         
-        // Utiliser l'email au lieu de l'ID pour les liens
+        // Utiliser l'email au lieu de l'ID pour les liens et l'affichage
         const email = conversation.sender_email || 'Utilisateur inconnu';
-        // Utiliser l'ID seulement si l'email ne ressemble pas à un email
+        // Utiliser l'email pour le lien, pas l'ID
         const linkTo = isEmail(email) ? `/messages/${email}` : `/messages/${otherUserId}`;
         
         // Calculer les initiales correctement

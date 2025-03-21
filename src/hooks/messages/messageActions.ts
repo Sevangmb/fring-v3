@@ -65,6 +65,8 @@ export const sendNewMessage = async (
     
     console.log(`Envoi d'un message de ${userId} à ${friendId}: ${content}`);
     const newMessage = await apiSendMessage(friendId, content.trim());
+    
+    // Enrichir le message avec l'email de l'expéditeur
     const email = await getUserEmailById(newMessage.sender_id);
     
     if (newMessage.sender_id) {

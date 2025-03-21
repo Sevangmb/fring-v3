@@ -14,10 +14,12 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({
   friendEmail,
   friendId
 }) => {
-  // Extraire les initiales de l'email pour l'avatar seulement si l'email existe
-  const initials = friendEmail ? friendEmail.substring(0, 2).toUpperCase() : "UN";
+  // Extraire les initiales de l'email pour l'avatar
+  const initials = friendEmail && friendEmail.includes('@')
+    ? friendEmail.split('@')[0].substring(0, 2).toUpperCase()
+    : "UN";
   
-  // Définir un nom d'affichage par défaut si l'email n'est pas disponible
+  // Définir un nom d'affichage basé sur l'email ou un texte par défaut
   const displayName = friendEmail || "Chargement...";
 
   return (
