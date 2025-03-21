@@ -22,7 +22,11 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     
     console.log("Mistral AI API key retrieved from environment");
 
-    // Préparer l'image au bon format (gestion du base64)
+    // Vérifier si l'image est au format base64 ou URL
+    const isBase64Image = imageUrl.startsWith('data:');
+    console.log(`Image format: ${isBase64Image ? 'base64' : 'URL'}`);
+    
+    // Préparer l'image au bon format
     const processedImage = imageUrl;
     
     // Utiliser l'API Mistral directement au lieu d'utiliser la bibliothèque client
@@ -40,42 +44,54 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     
     console.log("Preparing request to Mistral AI API");
     
-    // Faire une requête directe à l'API Mistral au lieu d'utiliser la bibliothèque
+    // Construction du payload pour l'API
+    const requestPayload = {
+      model: "mistral-large-latest", // Utilisation du modèle Mistral le plus récent
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: imageAnalysisPrompt
+            },
+            {
+              type: "image_url",
+              image_url: processedImage
+            }
+          ]
+        }
+      ],
+      temperature: 0.1 // Température réduite pour plus de précision
+    };
+    
+    console.log("Sending request to Mistral AI API...");
+    
+    // Faire une requête directe à l'API Mistral
     const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${mistralApiKey}`
       },
-      body: JSON.stringify({
-        model: "mistral-large-latest", // Utilisation du modèle Mistral le plus récent
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: imageAnalysisPrompt
-              },
-              {
-                type: "image_url",
-                image_url: processedImage
-              }
-            ]
-          }
-        ],
-        temperature: 0.1 // Température réduite pour plus de précision
-      })
+      body: JSON.stringify(requestPayload)
     });
     
+    // Vérifier le statut de la réponse
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Mistral AI API error:", response.status, errorText);
-      throw new Error(`Erreur API Mistral: ${response.status} ${errorText}`);
+      console.error(`Mistral AI API error ${response.status}:`, errorText);
+      throw new Error(`Erreur API Mistral: ${response.status} - ${errorText}`);
     }
     
+    // Traiter la réponse
     const result = await response.json();
-    console.log("Mistral AI API response received");
+    console.log("Mistral AI API response received successfully");
+    
+    if (!result.choices || !result.choices[0] || !result.choices[0].message || !result.choices[0].message.content) {
+      console.error("Invalid response structure from Mistral AI:", JSON.stringify(result));
+      throw new Error("Structure de réponse Mistral AI invalide");
+    }
     
     const generatedText = result.choices[0].message.content.toLowerCase();
     console.log("Mistral AI detection response:", generatedText);
@@ -85,6 +101,7 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     const color = colorMatch?.[1] || null;
     
     if (!color) {
+      console.error("Could not extract color from response:", generatedText);
       throw new Error("Impossible de détecter la couleur du vêtement");
     }
     
@@ -93,6 +110,7 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     const category = categoryMatch?.[1]?.trim() || null;
     
     if (!category) {
+      console.error("Could not extract category from response:", generatedText);
       throw new Error("Impossible de détecter la catégorie du vêtement");
     }
     
