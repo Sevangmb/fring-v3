@@ -97,7 +97,8 @@ const ModifierVetementPage = () => {
         taille: formData.taille,
         description: formData.description || null,
         marque: formData.marque || null,
-        image_url: formData.image_url || null
+        image_url: formData.image_url || null,
+        temperature: formData.temperature || null
       };
       
       console.log("Données préparées pour mise à jour:", updateData);

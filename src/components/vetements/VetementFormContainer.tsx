@@ -7,7 +7,7 @@ import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { addVetement } from "@/services/vetement";
 import VetementFormFields from "./VetementFormFields";
-import { vetementSchema, VetementFormValues } from "./schema/VetementFormSchema";
+import { vetementFormSchema, VetementFormValues } from "./schema/VetementFormSchema";
 import ImageUploader from "./ImageUploader";
 import FormActions from "./FormActions";
 
@@ -42,7 +42,7 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
 
   // Initialiser le formulaire avec react-hook-form
   const form = useForm<VetementFormValues>({
-    resolver: zodResolver(vetementSchema),
+    resolver: zodResolver(vetementFormSchema),
     defaultValues: initialValues || {
       nom: "",
       categorie: "",
@@ -50,6 +50,7 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
       taille: "",
       description: "",
       marque: "",
+      temperature: undefined,
       image_url: "",
     },
   });
@@ -118,6 +119,7 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
           description: formDataWithImage.description || null,
           marque: formDataWithImage.marque || null,
           image_url: formDataWithImage.image_url || null,
+          temperature: formDataWithImage.temperature || null,
         });
         
         toast({

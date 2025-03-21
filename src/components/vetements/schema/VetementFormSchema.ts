@@ -7,6 +7,14 @@ export interface Categorie {
   nom: string;
 }
 
+// Define marques
+export interface Marque {
+  id: number;
+  nom: string;
+  site_web?: string | null;
+  logo_url?: string | null;
+}
+
 // Température options
 export const temperatureOptions = [
   { value: "froid", label: "Froid" },
@@ -25,6 +33,7 @@ export const vetementFormSchema = z.object({
   marque: z.string().optional(),
   description: z.string().optional(),
   temperature: z.enum(["froid", "tempere", "chaud"]).optional(),
+  image_url: z.string().optional(),
 });
 
 // Type for form values
