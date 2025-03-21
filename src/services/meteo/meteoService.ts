@@ -34,9 +34,9 @@ export interface MeteoData {
  */
 export const fetchMeteoData = async (latitude: number, longitude: number): Promise<MeteoData> => {
   try {
-    // Utilisation de l'API OpenWeatherMap avec une clé API valide
-    const API_KEY = '8c392324f00c94f09e2d41b913021a3d'; // Clé d'API mise à jour
-    const url = `https://api.openweathermap.org/data/2.5/onecall?lat=${latitude}&lon=${longitude}&exclude=minutely,hourly,alerts&units=metric&lang=fr&appid=${API_KEY}`;
+    // Utilisation de l'API WeatherAPI.com (gratuite)
+    const API_KEY = '9fbef9d1e1f74aebb8a143124242103'; // Clé gratuite pour WeatherAPI
+    const url = `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${latitude},${longitude}&days=7&lang=fr&aqi=no`;
     
     const response = await fetch(url);
     if (!response.ok) {
@@ -45,27 +45,27 @@ export const fetchMeteoData = async (latitude: number, longitude: number): Promi
     
     const data = await response.json();
     
-    // Formater les données pour notre application
+    // Formater les données depuis WeatherAPI pour notre application
     const meteoData: MeteoData = {
-      city: data.timezone.split('/')[1]?.replace('_', ' ') || 'Ville inconnue',
-      country: 'France', // Par défaut, à améliorer avec geocoding inverse
+      city: data.location.name,
+      country: data.location.country,
       current: {
-        temperature: Math.round(data.current.temp),
-        description: data.current.weather[0].description,
-        icon: data.current.weather[0].icon,
+        temperature: Math.round(data.current.temp_c),
+        description: data.current.condition.text,
+        icon: data.current.condition.icon,
         humidity: data.current.humidity,
-        windSpeed: Math.round(data.current.wind_speed * 3.6), // Conversion en km/h
-        feelsLike: Math.round(data.current.feels_like)
+        windSpeed: Math.round(data.current.wind_kph),
+        feelsLike: Math.round(data.current.feelslike_c)
       },
-      forecast: data.daily.slice(0, 7).map((day: any) => ({
-        date: new Date(day.dt * 1000).toISOString().split('T')[0],
-        temperature: Math.round(day.temp.day),
-        description: day.weather[0].description,
-        icon: day.weather[0].icon,
-        temperatureMin: Math.round(day.temp.min),
-        temperatureMax: Math.round(day.temp.max),
-        humidity: day.humidity,
-        windSpeed: Math.round(day.wind_speed * 3.6) // Conversion en km/h
+      forecast: data.forecast.forecastday.map((day: any) => ({
+        date: day.date,
+        temperature: Math.round(day.day.avgtemp_c),
+        description: day.day.condition.text,
+        icon: day.day.condition.icon,
+        temperatureMin: Math.round(day.day.mintemp_c),
+        temperatureMax: Math.round(day.day.maxtemp_c),
+        humidity: day.day.avghumidity,
+        windSpeed: Math.round(day.day.maxwind_kph)
       }))
     };
     
