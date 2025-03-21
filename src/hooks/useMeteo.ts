@@ -1,69 +1,35 @@
 
-import { useState, useEffect } from 'react';
-import { fetchMeteoData, getUserLocation, MeteoData } from '@/services/meteo/meteoService';
-import { fetchVetements, Vetement } from '@/services/vetement';
-import { suggestVetements, generateOutfitMessage } from '@/services/meteo/tenueService';
+import { useLocation } from './useLocation';
+import { useWeatherData } from './useWeatherData';
+import { useVetements } from './useVetements';
+import { useTenueSuggestion } from './useTenueSuggestion';
 
 export const useMeteo = () => {
-  const [meteo, setMeteo] = useState<MeteoData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [vetements, setVetements] = useState<Vetement[]>([]);
-  const [tenueSuggestion, setTenueSuggestion] = useState<{
-    haut: Vetement | null,
-    bas: Vetement | null,
-    chaussures: Vetement | null,
-    message: string
-  } | null>(null);
+  // Get user location
+  const { location, locationLoading, locationError } = useLocation();
+  
+  // Fetch weather data based on location
+  const { meteo, weatherLoading, weatherError } = useWeatherData(
+    location?.latitude,
+    location?.longitude
+  );
+  
+  // Fetch user's clothing items
+  const { vetements, vetementsLoading, vetementsError } = useVetements();
+  
+  // Generate outfit suggestion based on weather and available clothing
+  const { tenueSuggestion } = useTenueSuggestion(meteo, vetements);
+  
+  // Combine loading states
+  const loading = locationLoading || weatherLoading || vetementsLoading;
+  
+  // Prioritize weather errors over location errors
+  const error = weatherError || locationError;
 
-  useEffect(() => {
-    const getMeteoData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Récupérer la localisation de l'utilisateur
-        const { latitude, longitude } = await getUserLocation();
-        console.log(`Localisation récupérée: ${latitude}, ${longitude}`);
-        
-        // Récupérer les données météo
-        const data = await fetchMeteoData(latitude, longitude);
-        console.log('Données météo récupérées avec succès');
-        setMeteo(data);
-        
-        // Récupérer les vêtements de l'utilisateur
-        try {
-          const vetementsData = await fetchVetements();
-          setVetements(vetementsData);
-          
-          // Vérifier s'il pleut
-          const isRaining = data.current.isRaining;
-          console.log(`Conditions météo actuelles: ${isRaining ? 'Il pleut' : 'Pas de pluie'}`);
-          
-          // Générer une suggestion de tenue
-          if (data && vetementsData.length > 0) {
-            const suggestion = suggestVetements(vetementsData, data.current.temperature, isRaining);
-            const message = generateOutfitMessage(data.current.temperature, data.current.description, isRaining);
-            setTenueSuggestion({
-              ...suggestion,
-              message
-            });
-          }
-        } catch (vetementsError) {
-          console.warn('Impossible de récupérer les vêtements:', vetementsError);
-          // Ne pas définir d'erreur globale, on affiche juste la météo sans suggestion
-        }
-      } catch (err) {
-        console.error('Erreur lors du chargement de la météo:', err);
-        const errorMessage = err instanceof Error ? err.message : 'Impossible de charger les données météo';
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getMeteoData();
-  }, []);
-
-  return { meteo, loading, error, tenueSuggestion };
+  return { 
+    meteo, 
+    loading, 
+    error, 
+    tenueSuggestion 
+  };
 };
