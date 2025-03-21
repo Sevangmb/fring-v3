@@ -10,23 +10,37 @@ interface CategorieFieldProps {
   form: UseFormReturn<VetementFormValues>;
   categories: Categorie[];
   loadingCategories: boolean;
+  detectingColor: boolean;
 }
 
 const CategorieField: React.FC<CategorieFieldProps> = ({ 
   form, 
   categories, 
-  loadingCategories 
+  loadingCategories,
+  detectingColor
 }) => {
+  // Récupérer la valeur actuelle pour l'afficher dans le label si elle existe
+  const categorieValue = form.watch('categorie');
+  const hasDetectedValue = !!categorieValue && detectingColor === false;
+
   return (
     <FormField
       control={form.control}
       name="categorie"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Catégorie*</FormLabel>
+          <FormLabel>
+            Catégorie*
+            {hasDetectedValue && (
+              <span className="ml-2 text-primary font-normal">
+                {categorieValue}
+              </span>
+            )}
+          </FormLabel>
           <Select 
             onValueChange={field.onChange} 
             defaultValue={field.value}
+            value={field.value}
             disabled={loadingCategories}
           >
             <FormControl>

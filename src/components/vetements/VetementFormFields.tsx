@@ -35,6 +35,7 @@ const VetementFormFields: React.FC<VetementFormFieldsProps> = ({
           form={form}
           categories={categories}
           loadingCategories={loadingCategories}
+          detectingColor={detectingColor}
         />
         <CouleurField 
           form={form}

@@ -24,6 +24,10 @@ const CouleurField: React.FC<CouleurFieldProps> = ({ form, detectingColor }) => 
   const [nouvelleCouleur, setNouvelleCouleur] = useState("");
   const [couleurs, setCouleurs] = useState<string[]>(COULEURS_PREDEFINIES);
   
+  // Récupérer la valeur actuelle pour l'afficher dans le label si elle existe
+  const couleurValue = form.watch('couleur');
+  const hasDetectedValue = !!couleurValue && detectingColor === false;
+  
   const handleAddCouleur = () => {
     if (nouvelleCouleur.trim() !== "") {
       const couleurNormalisee = nouvelleCouleur.trim().toLowerCase();
@@ -57,7 +61,14 @@ const CouleurField: React.FC<CouleurFieldProps> = ({ form, detectingColor }) => 
         name="couleur"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Couleur*</FormLabel>
+            <FormLabel>
+              Couleur*
+              {hasDetectedValue && (
+                <span className="ml-2 text-primary font-normal">
+                  {couleurValue}
+                </span>
+              )}
+            </FormLabel>
             <Select 
               onValueChange={handleSelectChange} 
               defaultValue={field.value}
