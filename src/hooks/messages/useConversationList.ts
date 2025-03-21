@@ -11,7 +11,8 @@ export const useConversationList = () => {
   const [conversations, setConversations] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const lastLoadedRef = useRef<string | null>(null);
-  const loadingRef = useRef(false); // Référence pour suivre l'état de chargement
+  const loadingRef = useRef(false);
+  const conversationsJsonRef = useRef<string>('');
 
   // Charger les aperçus de conversation
   const loadConversationPreviews = useCallback(async (silent = false) => {
@@ -37,9 +38,9 @@ export const useConversationList = () => {
       
       // Ne mettre à jour les conversations que si elles sont différentes
       const newPreviewsJson = JSON.stringify(enrichedPreviews);
-      const currentPreviewsJson = JSON.stringify(conversations);
       
-      if (newPreviewsJson !== currentPreviewsJson) {
+      if (newPreviewsJson !== conversationsJsonRef.current) {
+        conversationsJsonRef.current = newPreviewsJson;
         console.log("Mise à jour des aperçus de conversation:", enrichedPreviews.length);
         setConversations(enrichedPreviews);
       }
@@ -57,7 +58,7 @@ export const useConversationList = () => {
       loadingRef.current = false;
       if (!silent) setLoading(false);
     }
-  }, [user, toast, conversations]);
+  }, [user, toast]);  // Supprimer 'conversations' de la liste des dépendances
 
   // Charger uniquement au démarrage, sans intervalle de rafraîchissement
   useEffect(() => {
@@ -67,7 +68,7 @@ export const useConversationList = () => {
       setConversations([]);
       setLoading(false);
     }
-  }, [user, loadConversationPreviews]);
+  }, [user]);  // Supprimer 'loadConversationPreviews' de la liste des dépendances pour éviter les rechargements en boucle
 
   return {
     conversations,

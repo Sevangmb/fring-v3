@@ -1,77 +1,92 @@
 
 import { getUserEmailById, getUserIdByEmail, isEmail } from '@/services/amis/userEmail';
 
-// Cache pour les résolutions d'ID/email
-export const resolutionCache: Record<string, {id: string, email: string}> = {};
+// Cache pour les résolutions d'identifiants
+export interface ResolvedUser {
+  id: string;
+  email: string;
+}
+
+export const resolutionCache: Record<string, ResolvedUser> = {};
 
 /**
- * Résout un identifiant (email ou ID) en retournant à la fois l'ID et l'email
+ * Résout un email en identifiant utilisateur
  */
-export const resolveIdentifier = async (identifier: string): Promise<{id: string | null, email: string | null}> => {
+export const resolveToId = async (email: string): Promise<string | null> => {
+  if (!email) return null;
+  
+  // Vérifier si l'email est déjà dans le cache
+  if (resolutionCache[email] && resolutionCache[email].id) {
+    console.log(`Résolution depuis le cache: ${email} -> ${resolutionCache[email].id}`);
+    return resolutionCache[email].id;
+  }
+  
+  try {
+    console.log(`Tentative de résolution de l'email ${email} en ID`);
+    const id = await getUserIdByEmail(email);
+    
+    if (id) {
+      // Mettre en cache la résolution dans les deux sens
+      resolutionCache[email] = { id, email };
+      resolutionCache[id] = { id, email };
+      console.log(`Email ${email} résolu en ID ${id}`);
+      return id;
+    }
+    
+    console.log(`Impossible de résoudre l'email ${email}`);
+    return null;
+  } catch (error) {
+    console.error(`Erreur lors de la résolution de l'email ${email}:`, error);
+    return null;
+  }
+};
+
+/**
+ * Résout un identifiant utilisateur (id ou email) en email et ID
+ */
+export const resolveIdentifier = async (
+  identifier: string
+): Promise<{ id: string | null; email: string | null }> => {
   if (!identifier) return { id: null, email: null };
   
-  // Vérifier le cache
+  // Vérifier si l'identifiant est déjà dans le cache
   if (resolutionCache[identifier]) {
-    return {
-      id: resolutionCache[identifier].id,
-      email: resolutionCache[identifier].email
-    };
+    console.log(`Identifiant résolu depuis le cache: ${identifier}`);
+    return resolutionCache[identifier];
   }
   
   try {
-    // Si c'est un email
+    console.log(`Résolution de l'identifiant: ${identifier}`);
+    let userId: string | null = null;
+    let userEmail: string | null = null;
+    
+    // Si c'est un email, résoudre l'ID
     if (isEmail(identifier)) {
-      const id = await getUserIdByEmail(identifier);
-      if (id) {
-        resolutionCache[identifier] = { id, email: identifier };
-        resolutionCache[id] = { id, email: identifier };
-        return { id, email: identifier };
-      }
+      userId = await getUserIdByEmail(identifier);
+      userEmail = identifier;
+      console.log(`Email ${identifier} résolu en ID ${userId}`);
+    } 
+    // Si c'est un ID, résoudre l'email
+    else {
+      userEmail = await getUserEmailById(identifier);
+      userId = identifier;
+      console.log(`ID ${identifier} résolu en email ${userEmail}`);
     }
     
-    // Si c'est un ID
-    else if (identifier.includes('-') && identifier.length > 30) {
-      const email = await getUserEmailById(identifier);
-      if (email) {
-        resolutionCache[identifier] = { id: identifier, email };
-        if (isEmail(email)) resolutionCache[email] = { id: identifier, email };
-        return { id: identifier, email };
-      }
+    // Si une résolution a réussi, mettre à jour le cache
+    if (userId && userEmail) {
+      const result = { id: userId, email: userEmail };
+      resolutionCache[userId] = result;
+      resolutionCache[userEmail] = result;
+      return result;
     }
     
+    console.log(`Impossible de résoudre complètement l'identifiant ${identifier}`);
+    
+    // Retourner les informations partielles
+    return { id: userId, email: userEmail };
+  } catch (error) {
+    console.error(`Erreur lors de la résolution de l'identifiant ${identifier}:`, error);
     return { id: null, email: null };
-  } catch (error) {
-    console.error('Erreur lors de la résolution de l\'identifiant:', error);
-    return { id: null, email: null };
-  }
-};
-
-/**
- * Résout un identifiant en ID uniquement
- */
-export const resolveToId = async (identifierOrEmail: string): Promise<string | null> => {
-  if (!identifierOrEmail) return null;
-  
-  try {
-    const { id } = await resolveIdentifier(identifierOrEmail);
-    return id;
-  } catch (error) {
-    console.error('Erreur lors de la résolution vers ID:', error);
-    return null;
-  }
-};
-
-/**
- * Résout un identifiant en email uniquement
- */
-export const resolveToEmail = async (idOrEmail: string): Promise<string | null> => {
-  if (!idOrEmail) return null;
-  
-  try {
-    const { email } = await resolveIdentifier(idOrEmail);
-    return email;
-  } catch (error) {
-    console.error('Erreur lors de la résolution vers email:', error);
-    return null;
   }
 };

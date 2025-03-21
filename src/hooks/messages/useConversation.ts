@@ -15,6 +15,7 @@ export const useConversation = (friendId?: string | null) => {
   const [sending, setSending] = useState(false);
   const lastLoadedRef = useRef<string | null>(null);
   const loadingRef = useRef(false);
+  const messagesJsonRef = useRef<string>('');
 
   // Charger les messages d'une conversation spécifique
   const loadConversation = useCallback(async (silent = false) => {
@@ -38,9 +39,9 @@ export const useConversation = (friendId?: string | null) => {
       
       // Ne mettre à jour les messages que s'ils sont différents pour éviter le re-rendu
       const newMessagesJson = JSON.stringify(enrichedMessages);
-      const currentMessagesJson = JSON.stringify(messages);
       
-      if (newMessagesJson !== currentMessagesJson) {
+      if (newMessagesJson !== messagesJsonRef.current) {
+        messagesJsonRef.current = newMessagesJson;
         setMessages(enrichedMessages);
       }
       
@@ -59,7 +60,7 @@ export const useConversation = (friendId?: string | null) => {
       loadingRef.current = false;
       if (!silent) setLoading(false);
     }
-  }, [user, friendId, toast, messages, loading]);
+  }, [user, friendId, toast, loading]);
 
   // Envoyer un message
   const handleSendMessage = async (content: string) => {
@@ -77,8 +78,11 @@ export const useConversation = (friendId?: string | null) => {
         console.log("Message envoyé avec succès:", enrichedMessage);
         setMessages(prev => [...prev, enrichedMessage]);
         
+        // Mettre à jour le cache de messages JSON
+        messagesJsonRef.current = JSON.stringify([...messages, enrichedMessage]);
+        
         // Rafraîchir la conversation après l'envoi d'un message
-        await loadConversation(true);
+        setTimeout(() => loadConversation(true), 300);
       }
     } catch (error: any) {
       console.error('Erreur lors de l\'envoi du message:', error);
@@ -100,7 +104,7 @@ export const useConversation = (friendId?: string | null) => {
       setMessages([]);
       setLoading(false);
     }
-  }, [friendId, user, loadConversation]);
+  }, [friendId, user]);  // Retirer loadConversation de la liste des dépendances
 
   return {
     messages,
