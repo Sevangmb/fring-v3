@@ -81,17 +81,26 @@ export class DetectionService {
         throw new Error("Données de détection incomplètes");
       }
       
+      // Journaliser tous les champs retournés
+      console.log('Tous les champs retournés par la fonction:', Object.keys(data));
+      
       // Normaliser les résultats
       const result: DetectionResult = {
         color: data.color.toLowerCase().trim(),
         category: data.category,
         description: data.description || undefined,
         brand: data.brand || undefined,
-        temperature: data.temperature || undefined,
-        weatherType: data.weatherType || undefined
+        temperature: data.temperature as "froid" | "tempere" | "chaud" || undefined,
+        weatherType: data.weatherType as "pluie" | "neige" | "normal" || undefined
       };
       
-      onStep?.(`Détection terminée - Couleur: ${result.color}, Catégorie: ${result.category}`);
+      // Log spécifique pour température et type de météo
+      console.log('Température détectée (brut):', data.temperature);
+      console.log('Type de météo détecté (brut):', data.weatherType);
+      console.log('Température normalisée:', result.temperature);
+      console.log('Type de météo normalisé:', result.weatherType);
+      
+      onStep?.(`Détection terminée - Couleur: ${result.color}, Catégorie: ${result.category}, Météo: ${result.weatherType || 'Non détecté'}`);
       
       // Journaliser les résultats
       console.log('Couleur détectée:', result.color);

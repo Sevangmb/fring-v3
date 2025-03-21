@@ -84,11 +84,14 @@ export const useDetection = (
       form.setValue('nom', suggestedName);
       
       // 5. Pré-remplir la taille en fonction de la catégorie
-      if (result.category === "T-shirt" || result.category === "Chemise" || result.category === "Pull") {
+      if (result.category.toLowerCase().includes("t-shirt") || 
+          result.category.toLowerCase().includes("chemise") || 
+          result.category.toLowerCase().includes("pull")) {
         form.setValue('taille', 'M');
-      } else if (result.category === "Pantalon" || result.category === "Jeans") {
+      } else if (result.category.toLowerCase().includes("pantalon") || 
+                result.category.toLowerCase().includes("jeans")) {
         form.setValue('taille', '40');
-      } else if (result.category === "Chaussures") {
+      } else if (result.category.toLowerCase().includes("chaussures")) {
         form.setValue('taille', '42');
       } else {
         form.setValue('taille', 'M'); // Taille par défaut
@@ -102,22 +105,24 @@ export const useDetection = (
 
       // 7. Définir la température si détectée
       if (result.temperature) {
+        console.log("Setting temperature value:", result.temperature);
         form.setValue('temperature', result.temperature);
         addStep(`6. Température détectée: ${result.temperature}`);
       }
       
       // 8. Définir le type de météo si détecté
       if (result.weatherType) {
+        console.log("Setting weather type value:", result.weatherType);
         form.setValue('weatherType', result.weatherType);
         addStep(`7. Type de météo détecté: ${result.weatherType}`);
       }
       
       addStep("8. Application des valeurs détectées au formulaire");
       
-      // Notification de succès
+      // Notification de succès avec plus d'informations
       toast({
         title: "Détection réussie",
-        description: `Catégorie: ${result.category}, Couleur: ${result.color}`,
+        description: `Catégorie: ${result.category}, Couleur: ${result.color}${result.weatherType ? `, Météo: ${result.weatherType}` : ''}`,
         duration: 5000,
       });
     } catch (error) {

@@ -51,7 +51,10 @@ export function parseAIResponse(response: string): {
         temperature = "froid";
       } else if (temperature.includes("chaud")) {
         temperature = "chaud";
+      } else if (temperature.includes("tempéré") || temperature.includes("tempere")) {
+        temperature = "tempere";
       } else {
+        // Par défaut si la valeur n'est pas reconnue
         temperature = "tempere";
       }
     }
@@ -67,7 +70,10 @@ export function parseAIResponse(response: string): {
         weatherType = "pluie";
       } else if (weatherType.includes("neige")) {
         weatherType = "neige";
+      } else if (weatherType.includes("normal")) {
+        weatherType = "normal";
       } else {
+        // Par défaut si la valeur n'est pas reconnue
         weatherType = "normal";
       }
     }

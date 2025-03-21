@@ -46,7 +46,7 @@ export async function detectClothingInfo(imageUrl: string): Promise<{
     console.log("Google AI detection response:", generatedText);
     
     // Extraire et structurer les informations de la réponse
-    const { color, category, description, brand, rainSuitable } = parseAIResponse(generatedText);
+    const { color, category, description, brand, rainSuitable, temperature, weatherType } = parseAIResponse(generatedText);
     
     if (!color) {
       console.error("Could not extract color from response:", generatedText);
@@ -62,19 +62,17 @@ export async function detectClothingInfo(imageUrl: string): Promise<{
     const normalizedColor = normalizeColor(color);
     const normalizedCategory = normalizeCategory(category);
     
-    // Déterminer la température en fonction de la catégorie et de la description
-    const temperature = determineTemperatureFromCategory(normalizedCategory, description || '');
-    
-    // Déterminer si le vêtement est adapté à la pluie
-    const weatherType = determineWeatherType(normalizedCategory, description || "", rainSuitable);
+    // Obtenir la température et le type de météo depuis la réponse ou les déduire
+    const finalTemperature = temperature || determineTemperatureFromCategory(normalizedCategory, description || '');
+    const finalWeatherType = weatherType || determineWeatherType(normalizedCategory, description || "", rainSuitable);
     
     console.log("Final detection results:", {
       color: normalizedColor,
       category: normalizedCategory,
       description,
       brand,
-      temperature,
-      weatherType
+      temperature: finalTemperature,
+      weatherType: finalWeatherType
     });
     
     return {
@@ -82,8 +80,8 @@ export async function detectClothingInfo(imageUrl: string): Promise<{
       category: normalizedCategory,
       description: description || undefined,
       brand: brand || undefined,
-      temperature,
-      weatherType
+      temperature: finalTemperature,
+      weatherType: finalWeatherType
     };
   } catch (error) {
     console.error("Critical error in detectClothingInfo:", error);
@@ -106,14 +104,15 @@ function determineTemperatureFromCategory(category: string, description: string)
   const coldItems = [
     "pull", "pullover", "sweat", "sweatshirt", "hoodie", "manteau", "veste", "jacket", 
     "coat", "blouson", "doudoune", "parka", "anorak", "cardigan", "sweater", "écharpe", 
-    "bonnet", "gants", "pull-over", "polaire", "laine", "winter"
+    "bonnet", "gants", "pull-over", "polaire", "laine", "winter", "hiver", "épais", "épais",
+    "isolé", "isolant", "chaud", "thermique"
   ];
   
   // Vêtements pour temps chaud
   const hotItems = [
     "short", "shorts", "t-shirt", "tank", "débardeur", "debardeur", "maillot", 
     "crop top", "swimsuit", "maillot de bain", "bikini", "sandales", "claquettes", 
-    "tongs", "bermuda", "été", "summer", "léger", "leger"
+    "tongs", "bermuda", "été", "summer", "léger", "leger", "fin"
   ];
   
   // Vérifier la catégorie et la description
@@ -153,14 +152,18 @@ function determineWeatherType(category: string, description: string, rainSuitabl
   // Vêtements pour la neige
   const snowItems = [
     "neige", "snow", "après-ski", "apres-ski", "ski", "snowboard",
-    "boots", "moon boots", "boots fourrées", "doudoune d'hiver"
+    "boots", "moon boots", "boots fourrées", "doudoune", "doudoune d'hiver",
+    "manteau d'hiver", "veste d'hiver", "veste de ski", "parka", "anorak",
+    "polaire", "vêtement de ski", "vetement de ski", "blouson d'hiver",
+    "duvet", "plumes", "isolant", "isolé", "thermique", "thermo"
   ];
   
   // Vêtements pour la pluie
   const rainItems = [
     "imperméable", "impermeable", "k-way", "kway", "ciré", "cire", "parapluie",
     "poncho", "coupe-vent", "coupe vent", "bottes de pluie", "waterproof",
-    "rain jacket", "rain coat", "raincoat", "étanche", "etanche"
+    "rain jacket", "rain coat", "raincoat", "étanche", "etanche", "déperlant",
+    "deperlant", "gore-tex", "goretex", "membrane", "imperméabilité", "impermeabilite"
   ];
   
   // Vérifier pour la neige d'abord
