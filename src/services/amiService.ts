@@ -8,7 +8,7 @@ export interface Ami {
   ami_id: string;
   status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
   // Données supplémentaires pour l'affichage
   email?: string;
 }
@@ -126,15 +126,18 @@ export const accepterDemandeAmi = async (amiId: number): Promise<Ami> => {
       .update({ status: 'accepted' })
       .eq('id', amiId)
       .eq('ami_id', userId) // S'assure que l'utilisateur est bien le destinataire
-      .select()
-      .single();
+      .select();
     
     if (error) {
       console.error('Erreur lors de l\'acceptation de la demande d\'ami:', error);
       throw new Error(`Erreur d'acceptation: ${error.message}`);
     }
     
-    return data as Ami;
+    if (!data || data.length === 0) {
+      throw new Error('Demande d\'ami non trouvée ou vous n\'êtes pas autorisé à l\'accepter');
+    }
+    
+    return data[0] as Ami;
   } catch (error) {
     console.error('Erreur lors de l\'acceptation de la demande d\'ami:', error);
     throw error;
