@@ -5,8 +5,9 @@ import { VetementFormValues } from "./schema/VetementFormSchema";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useDetection } from "@/hooks/useDetection";
 import ImagePreviewArea from "./image-upload/ImagePreviewArea";
-import ImageActions from "./image-upload/ImageActions";
 import DetectionResults from "./detection/DetectionResults";
+import { Button } from "@/components/ui/button";
+import DetectionButton from "./detection/DetectionButton";
 
 interface ImageUploaderProps {
   form: UseFormReturn<VetementFormValues>;
