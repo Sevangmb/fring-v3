@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import NavItem from "../molecules/NavItem";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Button from "../atoms/Button";
 import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface NavbarProps {
   className?: string;
@@ -27,6 +28,12 @@ const Navbar = ({ className }: NavbarProps) => {
     { href: "/about", label: "About" },
   ];
 
+  // Liens supplémentaires pour les utilisateurs connectés
+  const authLinks = user ? [
+    { href: "/dashboard", label: "Tableau de bord" },
+    { href: "/profile", label: "Profil" },
+  ] : [];
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -45,9 +52,23 @@ const Navbar = ({ className }: NavbarProps) => {
 
   const handleLogin = () => navigate("/login");
   const handleSignUp = () => navigate("/register");
+  const handleProfile = () => navigate("/profile");
   const handleLogout = async () => {
     await signOut();
     navigate("/");
+  };
+
+  // Obtenir les initiales de l'utilisateur pour l'avatar
+  const getUserInitials = () => {
+    const name = user?.user_metadata?.name || user?.email || "";
+    if (name) {
+      const parts = name.split(/\s+/);
+      if (parts.length > 1) {
+        return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+      }
+      return name[0].toUpperCase();
+    }
+    return "U";
   };
 
   return (
@@ -73,14 +94,39 @@ const Navbar = ({ className }: NavbarProps) => {
               isActive={location.pathname === link.href}
             />
           ))}
+          
+          {/* Liens authentifiés pour desktop */}
+          {user && authLinks.map((link) => (
+            <NavItem
+              key={link.href}
+              href={link.href}
+              label={link.label}
+              isActive={location.pathname === link.href}
+            />
+          ))}
         </nav>
 
         {/* Auth Buttons - Desktop */}
         <div className="hidden md:flex items-center space-x-4">
           {user ? (
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              Déconnexion
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={handleProfile}
+                className="flex items-center gap-2"
+              >
+                <Avatar className="w-8 h-8">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                    {getUserInitials()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="hidden lg:inline">{user.user_metadata?.name || user.email?.split('@')[0]}</span>
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                Déconnexion
+              </Button>
+            </div>
           ) : (
             <>
               <Button variant="ghost" size="sm" onClick={handleLogin}>
@@ -123,11 +169,37 @@ const Navbar = ({ className }: NavbarProps) => {
                   className="px-4 py-3"
                 />
               ))}
+              
+              {/* Liens authentifiés pour mobile */}
+              {user && authLinks.map((link) => (
+                <NavItem
+                  key={link.href}
+                  href={link.href}
+                  label={link.label}
+                  isActive={location.pathname === link.href}
+                  className="px-4 py-3"
+                />
+              ))}
+              
               <div className="mt-6 space-y-3">
                 {user ? (
-                  <Button variant="outline" className="w-full justify-center" onClick={handleLogout}>
-                    Déconnexion
-                  </Button>
+                  <>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-center flex items-center gap-2" 
+                      onClick={handleProfile}
+                    >
+                      <User size={18} />
+                      Profil
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      className="w-full justify-center" 
+                      onClick={handleLogout}
+                    >
+                      Déconnexion
+                    </Button>
+                  </>
                 ) : (
                   <>
                     <Button variant="outline" className="w-full justify-center" onClick={handleLogin}>

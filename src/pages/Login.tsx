@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import Layout from "@/components/templates/Layout";
 import Card from "@/components/molecules/Card";
@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const { signIn } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -46,6 +47,8 @@ const Login = () => {
     
     try {
       await signIn(email, password);
+      // Rediriger vers la page de profil après connexion
+      navigate("/profile");
     } catch (error) {
       console.error("Erreur de connexion:", error);
     } finally {
