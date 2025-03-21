@@ -2,14 +2,14 @@
 import { supabase } from '@/lib/supabase';
 
 /**
- * Service pour détecter la couleur dominante d'une image de vêtement en utilisant Hugging Face
+ * Service pour détecter la couleur et la catégorie dominante d'une image de vêtement
  * @param imageUrl URL de l'image à analyser
- * @returns La couleur dominante du vêtement détectée
+ * @returns Les informations détectées (couleur et catégorie)
  */
-export const detectImageColor = async (imageUrl: string): Promise<string> => {
+export const detectImageInfo = async (imageUrl: string): Promise<{color: string, category: string}> => {
   try {
-    // Afficher un message indiquant que la détection de couleur est en cours
-    console.log('Détection de couleur du vêtement en cours avec Hugging Face...');
+    // Afficher un message indiquant que la détection est en cours
+    console.log('Détection des informations du vêtement en cours...');
     
     // S'assurer que l'URL de l'image est correctement formatée pour l'API
     const imageUrlToSend = imageUrl.startsWith('data:') 
@@ -21,17 +21,23 @@ export const detectImageColor = async (imageUrl: string): Promise<string> => {
     });
 
     if (error) {
-      console.error('Erreur lors de la détection de couleur:', error);
+      console.error('Erreur lors de la détection:', error);
       throw error;
     }
 
-    // Afficher la couleur détectée dans la console pour déboguer
+    // Afficher les informations détectées dans la console pour déboguer
     console.log('Couleur détectée:', data?.color);
+    console.log('Catégorie détectée:', data?.category);
     
-    // Si c'est un pantalon/jeans (détecté par la fonction), on retourne toujours bleu
-    return data?.color || 'bleu';
+    return {
+      color: data?.color || 'bleu',
+      category: data?.category || 'T-shirt'
+    };
   } catch (error) {
-    console.error('Erreur lors de la détection de couleur:', error);
-    return 'bleu'; // Valeur par défaut en cas d'erreur (souvent les vêtements sont bleus)
+    console.error('Erreur lors de la détection:', error);
+    return {
+      color: 'bleu',
+      category: 'T-shirt'
+    };
   }
 };

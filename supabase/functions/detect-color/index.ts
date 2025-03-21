@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "./utils/cors.ts";
-import { detectClothingColor } from "./service/colorDetection.ts";
+import { detectClothingInfo } from "./service/colorDetection.ts";
 
 // Fonction principale qui gère les requêtes HTTP
 serve(async (req) => {
@@ -22,19 +22,24 @@ serve(async (req) => {
 
     console.log("Processing image URL:", imageUrl.substring(0, 50) + "...");
     
-    // Extraire la couleur du vêtement de l'image
-    let color = await detectClothingColor(imageUrl);
+    // Extraire les informations du vêtement de l'image (couleur et catégorie)
+    const clothingInfo = await detectClothingInfo(imageUrl);
     
-    console.log("Final detected color:", color);
+    console.log("Final detected color:", clothingInfo.color);
+    console.log("Detected category:", clothingInfo.category);
     
     return new Response(
-      JSON.stringify({ color }),
+      JSON.stringify(clothingInfo),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Erreur lors de la détection de couleur:', error);
+    console.error('Erreur lors de la détection:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Une erreur s\'est produite lors de la détection de couleur', color: 'bleu' }),
+      JSON.stringify({ 
+        error: error.message || 'Une erreur s\'est produite lors de la détection', 
+        color: 'bleu',
+        category: 'T-shirt'
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

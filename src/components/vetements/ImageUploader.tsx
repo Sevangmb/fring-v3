@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ImagePlus, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { detectImageColor } from "@/services/colorDetectionService";
+import { detectImageInfo } from "@/services/colorDetectionService";
 import { UseFormReturn } from "react-hook-form";
 import { VetementFormValues } from "./VetementFormFields";
 
@@ -85,19 +85,27 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             setImagePreview(publicUrl);
           }
           
-          // Détecter la couleur de l'image
+          // Détecter les informations de l'image (couleur et catégorie)
           if (publicUrl) {
             setDetectingColor(true);
             try {
               console.log("Envoi de l'image pour détection:", publicUrl.substring(0, 50) + "...");
-              const detectedColor = await detectImageColor(publicUrl);
-              form.setValue('couleur', detectedColor);
+              const detectedInfo = await detectImageInfo(publicUrl);
+              
+              // Définir la couleur détectée
+              form.setValue('couleur', detectedInfo.color);
+              
+              // Définir la catégorie détectée si disponible
+              if (detectedInfo.category) {
+                form.setValue('categorie', detectedInfo.category);
+              }
+              
               toast({
-                title: "Couleur détectée",
-                description: `La couleur ${detectedColor} a été détectée et sélectionnée automatiquement.`,
+                title: "Détection automatique",
+                description: `La couleur ${detectedInfo.color} et la catégorie ${detectedInfo.category} ont été détectées.`,
               });
             } catch (error) {
-              console.error("Erreur lors de la détection de couleur:", error);
+              console.error("Erreur lors de la détection:", error);
               form.setValue('couleur', 'bleu'); // Valeur par défaut en cas d'erreur
             } finally {
               setDetectingColor(false);
@@ -129,7 +137,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
                 <div className="text-center text-white">
                   <Loader2 size={48} className="mx-auto animate-spin" />
-                  <Text className="mt-4 text-white">Détection de la couleur...</Text>
+                  <Text className="mt-4 text-white">Détection en cours...</Text>
                 </div>
               </div>
             )}
@@ -158,6 +166,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           onClick={() => {
             setImagePreview(null);
             form.setValue('couleur', '');
+            form.setValue('categorie', '');
           }}
         >
           Supprimer l'image

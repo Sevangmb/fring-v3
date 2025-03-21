@@ -69,6 +69,64 @@ function mapToFrenchColor(detectedColor: string, isBottom: boolean = false): str
 }
 
 /**
+ * Mappe la catégorie de vêtement en anglais vers son équivalent français
+ * @param category Catégorie en anglais
+ * @returns Catégorie en français
+ */
+function mapToFrenchCategory(category: string): string {
+  const categoryMapping: Record<string, string> = {
+    'shirt': 'Chemise',
+    't-shirt': 'T-shirt',
+    'tshirt': 'T-shirt',
+    'pants': 'Pantalon',
+    'jeans': 'Jeans',
+    'dress': 'Robe',
+    'skirt': 'Jupe',
+    'jacket': 'Veste',
+    'coat': 'Manteau',
+    'sweater': 'Pull',
+    'hoodie': 'Sweat',
+    'shoes': 'Chaussures',
+    'boots': 'Bottes',
+    'hat': 'Chapeau',
+    'socks': 'Chaussettes',
+    'shorts': 'Short',
+    'top': 'Haut',
+    'blouse': 'Blouse',
+    'suit': 'Costume',
+    'underwear': 'Sous-vêtement',
+    'lingerie': 'Lingerie',
+    'swimwear': 'Maillot de bain',
+    'scarf': 'Écharpe',
+    'gloves': 'Gants',
+    'belt': 'Ceinture',
+    'tie': 'Cravate',
+    'bag': 'Sac',
+    'jewelry': 'Bijou'
+  };
+
+  // Convertir en minuscules pour la comparaison
+  const lowerCategory = category.toLowerCase();
+  
+  // Trouver une correspondance exacte
+  for (const [englishCategory, frenchCategory] of Object.entries(categoryMapping)) {
+    if (lowerCategory === englishCategory) {
+      return frenchCategory;
+    }
+  }
+  
+  // Chercher une correspondance partielle
+  for (const [englishCategory, frenchCategory] of Object.entries(categoryMapping)) {
+    if (lowerCategory.includes(englishCategory)) {
+      return frenchCategory;
+    }
+  }
+  
+  // Si aucune correspondance n'est trouvée
+  return category.charAt(0).toUpperCase() + category.slice(1);
+}
+
+/**
  * Analyse plusieurs approches pour déterminer la couleur et sélectionne la plus probable
  * @param imageDescription Description de l'image
  * @param detectedColors Tableau de couleurs détectées par différentes méthodes
@@ -105,58 +163,41 @@ async function determineMostLikelyColor(
 }
 
 /**
- * Détecte la couleur dominante d'un vêtement dans une image
+ * Détecte la couleur et la catégorie d'un vêtement dans une image
  * @param imageUrl URL de l'image à analyser
- * @returns Couleur du vêtement détectée
+ * @returns Informations du vêtement détecté (couleur et catégorie)
  */
-export async function detectClothingColor(imageUrl: string): Promise<string> {
+export async function detectClothingInfo(imageUrl: string): Promise<{color: string, category: string}> {
   try {
-    console.log("Detecting clothing color from image:", imageUrl.substring(0, 50) + "...");
+    console.log("Detecting clothing info from image:", imageUrl.substring(0, 50) + "...");
     
     // Initialiser l'API Hugging Face
     const hf = new HfInference(Deno.env.get('HUGGINGFACE_API_KEY'));
     
-    // Étape 1: Détecter le type de vêtement pour savoir si c'est un pantalon/jeans
-    const clothingType = await detectClothingType(imageUrl, hf);
-    console.log("Clothing type detected:", clothingType);
+    // Étape 1: Détecter le type de vêtement
+    const englishClothingType = await detectClothingType(imageUrl, hf);
+    console.log("Clothing type detected:", englishClothingType);
     
     // Vérifier directement si c'est un pantalon/jeans
-    const isBottom = isBottomGarment("", clothingType);
-    if (isBottom) {
-      console.log("Bottom garment detected from type, returning blue");
-      return "bleu";
-    }
+    const isBottom = isBottomGarment("", englishClothingType);
+    
+    // Étape 2: Générer une description de l'image pour l'analyse
+    const imageDescription = await generateImageDescription(imageUrl, hf);
+    console.log("Generated image description:", imageDescription);
+    
+    // Vérifier si la description indique un pantalon/jeans
+    const isBottomFromDesc = isBottomGarment(imageDescription, englishClothingType);
+    const isBottomGarment = isBottom || isBottomFromDesc;
+    
+    // Collecter les résultats de différentes méthodes de détection de couleur
+    let detectedColors = [];
     
     // Vérifier d'abord si c'est bleu par analyse directe
     const directColorAnalysis = await analyzeImageDirectly(imageUrl, hf);
     if (directColorAnalysis === "blue") {
       console.log("Direct analysis detected blue clothing");
-      return "bleu";
+      detectedColors.push("blue");
     }
-    
-    // Étape 2: Générer une description de l'image
-    const imageDescription = await generateImageDescription(imageUrl, hf);
-    console.log("Generated image description:", imageDescription);
-    
-    // Vérifier si la description indique un pantalon/jeans
-    const isBottomFromDesc = isBottomGarment(imageDescription, clothingType);
-    if (isBottomFromDesc) {
-      console.log("Bottom garment detected from description, returning blue");
-      return "bleu";
-    }
-    
-    // Vérifier si la description contient des mots-clés de jeans/pantalons bleus
-    if (imageDescription.toLowerCase().includes("blue jeans") || 
-        imageDescription.toLowerCase().includes("denim") ||
-        (imageDescription.toLowerCase().includes("blue") && 
-        (imageDescription.toLowerCase().includes("pants") || 
-         imageDescription.toLowerCase().includes("trousers")))) {
-      console.log("Description suggests blue jeans/pants");
-      return "bleu";
-    }
-    
-    // Collecter les résultats de différentes méthodes de détection
-    let detectedColors = [];
     
     // Étape 3: Extraire la couleur du vêtement à partir de la description
     let detectedColor = await extractClothingColor(imageDescription, hf);
@@ -179,21 +220,30 @@ export async function detectClothingColor(imageUrl: string): Promise<string> {
     }
     
     // Étape 6: Déterminer la couleur la plus probable parmi celles détectées
-    let finalDetectedColor = await determineMostLikelyColor(
+    let finalEnglishColor = await determineMostLikelyColor(
       imageDescription, 
       detectedColors, 
-      isBottomFromDesc || isBottom,
+      isBottomGarment,
       hf
     );
     
-    // Étape 7: Mapper la couleur détectée vers les couleurs françaises disponibles
-    let frenchColor = mapToFrenchColor(finalDetectedColor, isBottomFromDesc || isBottom);
+    // Étape 7: Mapper la couleur et la catégorie détectées vers les equivalents français
+    let frenchColor = mapToFrenchColor(finalEnglishColor, isBottomGarment);
+    let frenchCategory = mapToFrenchCategory(englishClothingType);
     
     // Étape 8: Valider la couleur finale
-    return validateDetectedColor(frenchColor, isBottomFromDesc || isBottom);
+    const validatedColor = validateDetectedColor(frenchColor, isBottomGarment);
+    
+    return {
+      color: validatedColor,
+      category: frenchCategory
+    };
   } catch (error) {
-    console.error("Error detecting clothing color:", error);
-    // Retourner une couleur par défaut au lieu de "multicolore"
-    return "bleu"; // Couleur par défaut car souvent les vêtements sont bleus
+    console.error("Error detecting clothing info:", error);
+    // Retourner des valeurs par défaut en cas d'erreur
+    return {
+      color: "bleu", 
+      category: "T-shirt"
+    };
   }
 }
