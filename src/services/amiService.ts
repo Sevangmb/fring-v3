@@ -120,10 +120,13 @@ export const accepterDemandeAmi = async (amiId: number): Promise<Ami> => {
 
     console.log('Acceptation de la demande d\'ami:', amiId);
 
-    // Mise à jour du statut de la demande
+    // Mise à jour du statut de la demande sans spécifier updated_at
+    // (sera géré par le trigger de la base de données)
     const { data, error } = await supabase
       .from('amis')
-      .update({ status: 'accepted' })
+      .update({ 
+        status: 'accepted'
+      })
       .eq('id', amiId)
       .eq('ami_id', userId) // S'assure que l'utilisateur est bien le destinataire
       .select();
@@ -137,6 +140,7 @@ export const accepterDemandeAmi = async (amiId: number): Promise<Ami> => {
       throw new Error('Demande d\'ami non trouvée ou vous n\'êtes pas autorisé à l\'accepter');
     }
     
+    console.log('Demande acceptée avec succès:', data[0]);
     return data[0] as Ami;
   } catch (error) {
     console.error('Erreur lors de l\'acceptation de la demande d\'ami:', error);
