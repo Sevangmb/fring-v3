@@ -1,18 +1,12 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-// Default to empty strings if env variables are not defined
-// This will allow the app to at least render rather than crashing
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+// Configuration des variables Supabase
+const supabaseUrl = 'https://scogbjfwcpdwzkeejgsx.supabase.co'
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjb2diamZ3Y3Bkd3prZWVqZ3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1NDQ3NDUsImV4cCI6MjA1ODEyMDc0NX0.vTGxoFGFUrUW0eO5_vbTZgPhSTWKXPL5vrwY4bZt_YU'
 
-// Log a warning instead of an error
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Les variables d\'environnement Supabase ne sont pas définies. L\'authentification ne fonctionnera pas correctement.')
-}
+// Création du client Supabase
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Create a mock client if credentials are missing to prevent crashes
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder-url.supabase.co',
-  supabaseAnonKey || 'placeholder-key'
-)
+// Log pour confirmer l'initialisation
+console.log('Client Supabase initialisé avec succès')
