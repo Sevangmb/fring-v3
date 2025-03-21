@@ -9,8 +9,18 @@ import MessageInput from "@/components/atoms/MessageInput";
 import ConversationHeader from "@/components/organisms/ConversationHeader";
 import { getUserEmailById } from "@/services/amis/userEmail";
 import { Button } from "@/components/ui/button";
-import { Mail, Plus } from "lucide-react";
+import { Mail, Plus, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAmis } from "@/hooks/useAmis";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const MessagesPageContent: React.FC = () => {
   const { friendId } = useParams<{ friendId: string }>();
@@ -22,8 +32,20 @@ const MessagesPageContent: React.FC = () => {
     conversations,
     loading,
     sending,
-    sendMessage
+    sendMessage,
+    refreshConversations
   } = useMessages(friendId);
+
+  // Récupérer la liste des amis pour le sélecteur
+  const { chargerAmis, filteredAmis } = useAmis();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // Charger la liste des amis au démarrage
+  useEffect(() => {
+    if (user) {
+      chargerAmis();
+    }
+  }, [user, chargerAmis]);
 
   // Récupérer l'email de l'ami sélectionné
   useEffect(() => {
@@ -41,6 +63,12 @@ const MessagesPageContent: React.FC = () => {
       fetchFriendEmail();
     }
   }, [friendId]);
+
+  // Démarrer une nouvelle conversation avec un ami
+  const startNewConversation = (amiId: string) => {
+    setIsDialogOpen(false);
+    navigate(`/messages/${amiId}`);
+  };
 
   // Vérifier si la page est affichée sur mobile
   const isMobile = window.innerWidth < 768;
@@ -70,10 +98,58 @@ const MessagesPageContent: React.FC = () => {
       >
         <div className="p-3 flex items-center justify-between border-b">
           <h2 className="font-semibold text-lg">Messages</h2>
-          <Button variant="outline" size="sm">
-            <Plus className="h-4 w-4 mr-1" />
-            Nouveau
-          </Button>
+          
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Plus className="h-4 w-4 mr-1" />
+                Nouveau
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Démarrer une nouvelle conversation</DialogTitle>
+              </DialogHeader>
+              
+              <ScrollArea className="mt-4 max-h-[60vh]">
+                {filteredAmis.amisAcceptes.length > 0 ? (
+                  <div className="space-y-2">
+                    {filteredAmis.amisAcceptes.map((ami) => (
+                      <Button
+                        key={ami.id}
+                        variant="ghost"
+                        className="w-full justify-start p-2 h-auto"
+                        onClick={() => startNewConversation(ami.ami_id === user.id ? ami.user_id : ami.ami_id)}
+                      >
+                        <Avatar className="h-8 w-8 mr-2">
+                          <AvatarFallback>
+                            {ami.ami_email ? ami.ami_email.substring(0, 2).toUpperCase() : 'UN'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{ami.ami_email || "Utilisateur inconnu"}</span>
+                      </Button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-10">
+                    <Users className="h-10 w-10 mx-auto text-muted-foreground" />
+                    <p className="mt-2">Vous n'avez pas encore d'amis</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-4"
+                      onClick={() => {
+                        setIsDialogOpen(false);
+                        navigate("/mes-amis");
+                      }}
+                    >
+                      Ajouter des amis
+                    </Button>
+                  </div>
+                )}
+              </ScrollArea>
+            </DialogContent>
+          </Dialog>
         </div>
         <div className="p-3 overflow-y-auto flex-1">
           <ConversationList 
