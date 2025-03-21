@@ -56,10 +56,43 @@ export const updateVetement = async (id: number, vetement: Partial<Vetement>): P
     
     console.log('Colonnes disponibles:', Array.from(columnSet));
     
+    // Traitement spécial pour categorie et categorie_id
+    if (vetement.categorie_id) {
+      cleanedData['categorie_id'] = vetement.categorie_id;
+      
+      // Récupérer le nom de la catégorie pour maintenir la cohérence
+      const { data: categorieData } = await supabase
+        .from('categories')
+        .select('nom')
+        .eq('id', vetement.categorie_id)
+        .single();
+      
+      if (categorieData && categorieData.nom) {
+        cleanedData['categorie'] = categorieData.nom;
+      }
+    } else if (vetement.categorie && vetement.categorie !== existingData.categorie) {
+      cleanedData['categorie'] = vetement.categorie;
+      
+      // Essayer de trouver l'ID de catégorie correspondant
+      const { data: categorieData } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('nom', vetement.categorie)
+        .maybeSingle();
+      
+      if (categorieData && categorieData.id) {
+        cleanedData['categorie_id'] = categorieData.id;
+      } else {
+        // Si la catégorie n'existe pas, supprimer la référence à l'ancienne catégorie
+        cleanedData['categorie_id'] = null;
+      }
+    }
+    
     // Ne garder que les propriétés qui existent dans la table
     Object.entries(vetement).forEach(([key, value]) => {
       // Ne pas inclure les propriétés undefined ou qui n'existent pas dans la table
-      if (value !== undefined && columnSet.has(key)) {
+      // Éviter également de redéfinir categorie et categorie_id qui ont déjà été traités
+      if (value !== undefined && columnSet.has(key) && key !== 'categorie' && key !== 'categorie_id') {
         cleanedData[key] = value;
       } else if (value !== undefined && !columnSet.has(key)) {
         console.log(`La colonne '${key}' n'existe pas dans la table vetements et sera ignorée`);

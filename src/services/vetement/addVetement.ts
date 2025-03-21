@@ -35,9 +35,43 @@ export const addVetement = async (vetement: Omit<Vetement, 'id' | 'created_at'>)
     
     // Ne garder que les propriétés qui existent dans la table
     const cleanedData = { user_id: userId };
+    
+    // Si categorie_id est présent, l'utiliser de préférence
+    if (vetement.categorie_id) {
+      cleanedData['categorie_id'] = vetement.categorie_id;
+      
+      // Récupérer le nom de la catégorie pour le stockage redondant
+      const { data: categorieData } = await supabase
+        .from('categories')
+        .select('nom')
+        .eq('id', vetement.categorie_id)
+        .single();
+      
+      if (categorieData && categorieData.nom) {
+        cleanedData['categorie'] = categorieData.nom;
+      } else {
+        cleanedData['categorie'] = vetement.categorie || 'Inconnu';
+      }
+    } else if (vetement.categorie) {
+      cleanedData['categorie'] = vetement.categorie;
+      
+      // Essayer de trouver l'ID de catégorie correspondant
+      const { data: categorieData } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('nom', vetement.categorie)
+        .maybeSingle();
+      
+      if (categorieData && categorieData.id) {
+        cleanedData['categorie_id'] = categorieData.id;
+      }
+    }
+    
+    // Ajouter les autres propriétés qui existent dans la table
     Object.entries(vetement).forEach(([key, value]) => {
       // Ne pas inclure les propriétés undefined ou qui n'existent pas dans la table
-      if (value !== undefined && columnSet.has(key)) {
+      // Éviter également de redéfinir categorie et categorie_id qui ont déjà été traités
+      if (value !== undefined && columnSet.has(key) && key !== 'categorie' && key !== 'categorie_id') {
         cleanedData[key] = value;
       } else if (value !== undefined && !columnSet.has(key)) {
         console.log(`La colonne '${key}' n'existe pas dans la table vetements et sera ignorée`);

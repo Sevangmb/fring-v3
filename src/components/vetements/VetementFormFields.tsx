@@ -17,6 +17,7 @@ interface VetementFormFieldsProps {
   marques: any[];
   loadingCategories: boolean;
   loading: boolean;
+  onCategoriesChange?: () => void;
 }
 
 /**
@@ -27,7 +28,8 @@ const VetementFormFields: React.FC<VetementFormFieldsProps> = ({
   categories,
   marques,
   loadingCategories,
-  loading
+  loading,
+  onCategoriesChange
 }) => {
   return (
     <div className="space-y-4">
@@ -39,6 +41,7 @@ const VetementFormFields: React.FC<VetementFormFieldsProps> = ({
           categories={categories} 
           loadingCategories={loadingCategories} 
           loading={loading}
+          onCategoriesChange={onCategoriesChange}
         />
         <CouleurField 
           form={form} 
