@@ -30,6 +30,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const { 
     detectionError, 
     detectionSteps,
+    currentStep,
     handleDetectImage 
   } = useColorDetection(form, imagePreview);
 
@@ -67,6 +68,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       <DetectionErrorMessage 
         error={detectionError}
         steps={detectionSteps}
+        currentStep={currentStep}
       />
     </div>
   );

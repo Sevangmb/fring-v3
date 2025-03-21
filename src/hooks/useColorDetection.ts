@@ -16,16 +16,12 @@ export const useColorDetection = (
   const [detectingColor, setDetectingColor] = useState(false);
   const [detectionError, setDetectionError] = useState<string | null>(null);
   const [detectionSteps, setDetectionSteps] = useState<string[]>([]);
+  const [currentStep, setCurrentStep] = useState<string | null>(null);
 
   const addStep = (step: string) => {
     setDetectionSteps(prev => [...prev, step]);
+    setCurrentStep(step);
     console.log(`Étape de détection: ${step}`);
-    // Afficher chaque étape dans un toast pour plus de visibilité
-    toast({
-      title: "Étape de détection",
-      description: step,
-      duration: 3000,
-    });
   };
 
   const handleDetectImage = async () => {
@@ -42,6 +38,7 @@ export const useColorDetection = (
     setDetectionError(null);
     setDetectingColor(true);
     setDetectionSteps([]);
+    setCurrentStep(null);
     
     try {
       toast({
@@ -108,6 +105,7 @@ export const useColorDetection = (
       });
     } finally {
       setDetectingColor(false);
+      setCurrentStep(null);
     }
   };
 
@@ -116,6 +114,7 @@ export const useColorDetection = (
     setDetectingColor,
     detectionError,
     detectionSteps,
+    currentStep,
     handleDetectImage
   };
 };

@@ -1,18 +1,24 @@
 
 import React from "react";
 import { Text } from "@/components/atoms/Typography";
-import { AlertTriangle, Info, CheckCircle } from "lucide-react";
+import { AlertTriangle, Info, CheckCircle, Loader2 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 interface DetectionErrorMessageProps {
   error: string | null;
   steps?: string[];
+  currentStep?: string;
 }
 
 /**
  * Composant pour afficher un message d'erreur de détection et les étapes du processus
+ * avec des indicateurs visuels d'avancement
  */
-const DetectionErrorMessage: React.FC<DetectionErrorMessageProps> = ({ error, steps = [] }) => {
+const DetectionErrorMessage: React.FC<DetectionErrorMessageProps> = ({ 
+  error, 
+  steps = [],
+  currentStep
+}) => {
   const hasSteps = steps && steps.length > 0;
   const hasError = error !== null;
   
@@ -28,11 +34,22 @@ const DetectionErrorMessage: React.FC<DetectionErrorMessageProps> = ({ error, st
       )}
       
       {hasSteps && (
-        <Accordion type="single" collapsible className="w-full border rounded-md">
+        <Accordion type="single" collapsible className="w-full border rounded-md" defaultValue="steps">
           <AccordionItem value="steps">
             <AccordionTrigger className="text-sm font-medium flex items-center gap-2 px-3 py-2">
-              <Info size={16} />
-              Détails du processus de détection ({steps.length} étapes)
+              {currentStep ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Info size={16} />
+              )}
+              <span>
+                Détails du processus de détection ({steps.length} étapes)
+                {currentStep && (
+                  <span className="ml-2 text-muted-foreground font-normal">
+                    - {currentStep}
+                  </span>
+                )}
+              </span>
             </AccordionTrigger>
             <AccordionContent className="px-3 pb-2">
               <ul className="text-sm space-y-2 mt-1 pl-2">
@@ -42,22 +59,25 @@ const DetectionErrorMessage: React.FC<DetectionErrorMessageProps> = ({ error, st
                   // Déterminer si c'est une étape finale réussie
                   const isSuccess = step.toLowerCase().includes('application des valeurs') || 
                                    step.toLowerCase().includes('détection terminée');
+                  // Déterminer si c'est l'étape actuelle
+                  const isCurrent = currentStep === step;
                   
                   return (
                     <li key={index} 
                         className={`flex items-start gap-2 py-1 px-2 rounded-sm ${
                           isError ? 'text-destructive bg-destructive/5' : 
                           isSuccess ? 'text-green-600 bg-green-50' : 
+                          isCurrent ? 'text-primary bg-primary/5' :
                           'text-muted-foreground'
                         }`}>
                       {isError ? (
                         <AlertTriangle size={14} className="mt-0.5 shrink-0" />
                       ) : isSuccess ? (
                         <CheckCircle size={14} className="mt-0.5 shrink-0" />
+                      ) : isCurrent ? (
+                        <Loader2 size={14} className="mt-0.5 shrink-0 animate-spin" />
                       ) : (
-                        <span className="inline-block w-4 h-4 rounded-full bg-muted text-[10px] flex items-center justify-center font-semibold shrink-0 mt-0.5">
-                          {index + 1}
-                        </span>
+                        <CheckCircle size={14} className="mt-0.5 shrink-0 text-muted" />
                       )}
                       <span>{step}</span>
                     </li>
