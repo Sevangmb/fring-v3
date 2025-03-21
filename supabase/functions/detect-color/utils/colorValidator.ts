@@ -10,6 +10,12 @@ import { availableColors, colorPriority } from "./colorMapping.ts";
 export function validateDetectedColor(detectedColor: string, isBottomGarment: boolean = false): string {
   console.log("Validating detected color:", detectedColor);
   
+  // Si la couleur est vide ou non définie, retourner une couleur par défaut
+  if (!detectedColor) {
+    console.log("No color detected, returning default color");
+    return isBottomGarment ? "bleu" : "blanc";
+  }
+  
   // Nettoyage de la couleur détectée
   const cleanColor = detectedColor.toLowerCase().trim();
   
@@ -28,6 +34,26 @@ export function validateDetectedColor(detectedColor: string, isBottomGarment: bo
   }
   
   // Si la couleur n'est pas dans la liste, trouver la plus proche
+  // en fonction du type de vêtement (haut ou bas)
+  
+  // Pour les pantalons et jeans, privilégier le bleu et les couleurs sombres
+  if (isBottomGarment) {
+    console.log("Bottom garment detected, prioritizing blue and dark colors");
+    const bottomPriorities = ["bleu", "noir", "gris", "marron", "beige"];
+    
+    for (const priorityColor of bottomPriorities) {
+      if (cleanColor.includes(priorityColor) || priorityColor.includes(cleanColor)) {
+        console.log(`Bottom garment priority match: '${cleanColor}' -> '${priorityColor}'`);
+        return priorityColor;
+      }
+    }
+    
+    // Par défaut pour les pantalons, retourner bleu
+    console.log("No match found for bottom garment, defaulting to blue");
+    return "bleu";
+  }
+  
+  // Pour les autres vêtements, utiliser les priorités standard
   const scores = availableColors.map(color => {
     // Priorité plus basse pour les couleurs par défaut
     const priority = colorPriority[color] || 0;
@@ -56,13 +82,15 @@ export function isBottomGarment(description: string, clothingType: string): bool
   const bottomKeywords = [
     "pants", "jeans", "denim", "trousers", "slacks", "pantalon", 
     "leggings", "capris", "chinos", "khakis", "corduroys",
-    "jean", "pant", "trouser", "bottom", "shorts"
+    "jean", "pant", "trouser", "bottom", "shorts", "skirt", "jupe"
   ];
   
   // Vérifier le type de vêtement
   if (lowerType.includes("pant") || 
       lowerType.includes("jean") || 
       lowerType.includes("trouser") || 
+      lowerType.includes("skirt") || 
+      lowerType.includes("jupe") || 
       lowerType === "pants" || 
       lowerType === "jeans" ||
       lowerType === "shorts" ||

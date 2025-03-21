@@ -10,9 +10,18 @@ export function preprocessImageUrl(imageUrl: string): string {
   // Vérifier si l'URL est déjà une chaîne base64
   if (imageUrl.startsWith('data:')) {
     console.log("L'image est au format base64, prétraitement en cours...");
-    // Nous tronquons la base64 pour le log mais utilisons la valeur complète
+    
+    // Vérifions si l'URL base64 est trop longue pour l'API
+    if (imageUrl.length > 100000) {
+      console.log("L'image base64 est très grande, elle pourrait être tronquée par l'API");
+    }
+    
+    // Pour les images base64, nous les renvoyons telles quelles
+    // Les APIs modernes peuvent généralement gérer les chaînes base64
     return imageUrl;
   }
+  
+  // Pour les URLs normales, retourner l'URL telle quelle
   return imageUrl;
 }
 
@@ -29,13 +38,13 @@ export async function generateImageDescription(imageUrl: string, hf: HfInference
     // Prétraitement de l'URL pour gérer les images en base64
     const processedUrl = preprocessImageUrl(imageUrl);
     
-    // Utiliser un modèle de vision pour générer une description
+    // Utiliser un modèle de vision plus adapté à la description d'images
     const result = await hf.textGeneration({
       model: "Salesforce/blip-image-captioning-large",
       inputs: processedUrl,
       parameters: {
-        max_new_tokens: 100,
-        temperature: 0.2,
+        max_new_tokens: 150,  // Augmenter pour des descriptions plus détaillées
+        temperature: 0.1,     // Réduire pour des descriptions plus précises
       }
     });
     
@@ -46,7 +55,7 @@ export async function generateImageDescription(imageUrl: string, hf: HfInference
   } catch (error) {
     console.error("Error generating image description:", error);
     
-    // En cas d'erreur, retourner une description générique qui forcera une détection visuelle
-    return "A clothing item.";
+    // En cas d'erreur, retourner une description générique plus précise
+    return "An unidentified clothing item, possibly casual wear.";
   }
 }

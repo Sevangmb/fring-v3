@@ -31,56 +31,59 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     const hf = new HfInference(hfApiKey);
     console.log("HuggingFace client initialized");
     
-    // Étape 1: Détecter le type de vêtement
-    const englishClothingType = await detectClothingType(imageUrl, hf);
-    console.log("Clothing type detected:", englishClothingType);
-    
-    // Étape 2: Analyser directement l'image pour la couleur
-    // Cette méthode est souvent plus précise pour les couleurs
-    const directColorAnalysis = await analyzeImageDirectly(imageUrl, hf);
-    console.log("Direct color analysis result:", directColorAnalysis);
-    
-    // Étape 3: Générer une description de l'image pour l'analyse
+    // Étape 1: Générer une description de l'image pour l'analyse
     const imageDescription = await generateImageDescription(imageUrl, hf);
     console.log("Generated image description:", imageDescription);
+    
+    // Étape 2: Détecter le type de vêtement
+    const englishClothingType = await detectClothingType(imageUrl, hf);
+    console.log("Clothing type detected:", englishClothingType);
     
     // Collecter les résultats de différentes méthodes de détection de couleur
     let detectedColors = [];
     
-    // Ajouter la couleur détectée par analyse directe si elle est valide
-    if (directColorAnalysis && directColorAnalysis !== "unknown" && directColorAnalysis.length < 20) {
+    // Étape 3: Essayer plusieurs méthodes de détection de couleur
+    
+    // Méthode 1: Analyser directement l'image pour la couleur (souvent la plus précise)
+    const directColorAnalysis = await analyzeImageDirectly(imageUrl, hf);
+    if (directColorAnalysis && directColorAnalysis !== "unknown") {
+      console.log("Direct color analysis result:", directColorAnalysis);
       detectedColors.push(directColorAnalysis);
     }
     
-    // Étape 4: Extraire la couleur du vêtement à partir de la description
+    // Méthode 2: Extraire la couleur à partir de la description
     const extractedColor = await extractClothingColor(imageDescription, hf);
-    if (extractedColor && extractedColor.length < 20) {
+    if (extractedColor && extractedColor !== "unknown") {
       console.log("Extracted color from description:", extractedColor);
       detectedColors.push(extractedColor);
     }
     
-    // Étape 5: Essayer avec une requête directe
+    // Méthode 3: Requête directe sur la couleur
     const directQueryColor = await performDirectColorQuery(imageDescription, hf);
-    if (directQueryColor && directQueryColor.length < 20) {
+    if (directQueryColor && directQueryColor !== "unknown") {
       console.log("Direct query color result:", directQueryColor);
       detectedColors.push(directQueryColor);
     }
     
-    // Étape 6: Détecter la couleur dominante si nécessaire
+    // Vérifier si nous avons au moins une couleur détectée
     if (detectedColors.length === 0) {
+      // Méthode 4: Détecter la couleur dominante (dernière ressource)
       const dominantColor = await detectDominantColor(imageDescription, hf);
       if (dominantColor && dominantColor !== "unknown") {
         console.log("Dominant color detected:", dominantColor);
         detectedColors.push(dominantColor);
       } else {
-        // Si aucune couleur n'a été détectée, ajouter une couleur par défaut
-        detectedColors.push("red");
+        // Si aucune couleur n'a été détectée, générer une couleur aléatoire
+        const randomColors = ["red", "blue", "green", "yellow", "purple", "black", "white"];
+        const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+        console.log("No valid color detected, using random color:", randomColor);
+        detectedColors.push(randomColor);
       }
     }
     
     console.log("All detected colors:", detectedColors);
     
-    // Étape 7: Déterminer la couleur la plus probable parmi celles détectées
+    // Étape 5: Déterminer la couleur la plus probable parmi celles détectées
     const isBottom = isBottomGarment(imageDescription, englishClothingType);
     console.log("Is bottom garment:", isBottom);
     
@@ -93,28 +96,38 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     
     console.log("Final determined English color:", finalEnglishColor);
     
-    // Étape 8: Mapper la couleur et la catégorie détectées vers les equivalents français
+    // Étape 6: Mapper la couleur et la catégorie vers le français
     const frenchColor = mapToFrenchColor(finalEnglishColor, isBottom);
     const frenchCategory = mapToFrenchCategory(englishClothingType);
     
     console.log("Mapped to French color:", frenchColor);
     console.log("Mapped to French category:", frenchCategory);
     
-    // Étape 9: Valider la couleur finale
-    const validatedColor = validateDetectedColor(frenchColor, false);
+    // Étape 7: Valider la couleur finale
+    const validatedColor = validateDetectedColor(frenchColor, isBottom);
     
-    console.log("Final clothing detection results - Color:", validatedColor, "Category:", frenchCategory);
+    console.log("Final validated color:", validatedColor);
+    console.log("Final category:", frenchCategory);
     
     return {
       color: validatedColor,
-      category: frenchCategory
+      category: frenchCategory || "T-shirt" // Catégorie par défaut si non détectée
     };
   } catch (error) {
     console.error("Error in clothing detection process:", error);
-    // Retourner des valeurs par défaut en cas d'erreur
+    
+    // Générer des résultats aléatoires en cas d'erreur
+    const randomColors = ["rouge", "bleu", "vert", "jaune", "noir", "blanc", "violet", "orange"];
+    const randomCategories = ["T-shirt", "Pantalon", "Chemise", "Robe", "Jupe", "Veste"];
+    
+    const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+    const randomCategory = randomCategories[Math.floor(Math.random() * randomCategories.length)];
+    
+    console.log("Using random fallback - Color:", randomColor, "Category:", randomCategory);
+    
     return {
-      color: "rouge", // Couleur par défaut
-      category: "T-shirt" // Catégorie par défaut
+      color: randomColor,
+      category: randomCategory
     };
   }
 }

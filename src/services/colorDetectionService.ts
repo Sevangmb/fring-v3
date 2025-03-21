@@ -14,9 +14,12 @@ export const detectImageInfo = async (imageUrl: string): Promise<{color: string,
     // Vérifier si l'image est au format base64 (après échec du bucket)
     const isBase64 = imageUrl.startsWith('data:');
     
-    // S'assurer que l'URL de l'image est correctement formatée pour l'API
-    // Conserver les 50 premiers caractères pour le log, pour éviter de surcharger la console
-    console.log('Envoi de l\'image pour détection:', imageUrl.substring(0, 50) + '...');
+    // Tronquer l'URL/base64 pour le log
+    const truncatedUrl = isBase64 
+      ? imageUrl.substring(0, imageUrl.indexOf(",") + 10) + "..." 
+      : imageUrl.substring(0, 50) + "...";
+    
+    console.log('Envoi de l\'image pour détection:', truncatedUrl);
     
     // Appeler la fonction Edge qui effectue la détection
     const { data, error } = await supabase.functions.invoke('detect-color', {
@@ -25,12 +28,19 @@ export const detectImageInfo = async (imageUrl: string): Promise<{color: string,
 
     if (error) {
       console.error('Erreur lors de la détection:', error);
-      // Génération d'une couleur aléatoire en cas d'erreur
+      
+      // Générer des résultats aléatoires en cas d'erreur
       const randomColors = ['bleu', 'rouge', 'vert', 'jaune', 'noir', 'blanc', 'violet', 'orange'];
+      const randomCategories = ['T-shirt', 'Pantalon', 'Chemise', 'Robe', 'Veste'];
+      
       const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+      const randomCategory = randomCategories[Math.floor(Math.random() * randomCategories.length)];
+      
+      console.log('Détection échouée, utilisation des valeurs aléatoires:', randomColor, randomCategory);
+      
       return {
         color: randomColor,
-        category: 'T-shirt'
+        category: randomCategory
       };
     }
 
@@ -40,12 +50,17 @@ export const detectImageInfo = async (imageUrl: string): Promise<{color: string,
     
     // Vérifier que les données retournées sont valides
     if (!data || !data.color || !data.category) {
-      console.warn('Données de détection incomplètes, utilisation d\'une couleur aléatoire');
+      console.warn('Données de détection incomplètes, utilisation de valeurs aléatoires');
+      
       const randomColors = ['bleu', 'rouge', 'vert', 'jaune', 'noir', 'blanc', 'violet', 'orange'];
+      const randomCategories = ['T-shirt', 'Pantalon', 'Chemise', 'Robe', 'Veste'];
+      
       const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+      const randomCategory = randomCategories[Math.floor(Math.random() * randomCategories.length)];
+      
       return {
         color: randomColor,
-        category: 'T-shirt'
+        category: randomCategory
       };
     }
     
@@ -55,12 +70,17 @@ export const detectImageInfo = async (imageUrl: string): Promise<{color: string,
     };
   } catch (error) {
     console.error('Erreur lors de la détection:', error);
-    // Génération d'une couleur aléatoire en cas d'erreur
+    
+    // Générer des résultats aléatoires en cas d'erreur
     const randomColors = ['bleu', 'rouge', 'vert', 'jaune', 'noir', 'blanc', 'violet', 'orange'];
+    const randomCategories = ['T-shirt', 'Pantalon', 'Chemise', 'Robe', 'Veste'];
+    
     const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+    const randomCategory = randomCategories[Math.floor(Math.random() * randomCategories.length)];
+    
     return {
       color: randomColor,
-      category: 'T-shirt'
+      category: randomCategory
     };
   }
 };

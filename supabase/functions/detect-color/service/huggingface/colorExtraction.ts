@@ -9,15 +9,16 @@ import { preprocessImageUrl } from './imageDescription.ts';
  * @returns Couleur détectée
  */
 export async function extractClothingColor(imageDescription: string, hf: HfInference): Promise<string> {
-  console.log("Extracting clothing color from description...");
+  console.log("Extracting clothing color from description:", imageDescription);
   
   try {
     // Créer un prompt optimisé pour extraire la couleur
     const colorAnalysisPrompt = `
-    Image description: "${imageDescription}"
+    Description: "${imageDescription}"
     
-    Task: What is the MAIN COLOR of the clothing item in this image description?
+    Task: Based only on this description, what is the MAIN COLOR of the clothing item described?
     Answer with ONLY ONE word - the exact color name. For example: red, blue, green, black, white, etc.
+    If you cannot determine the color, answer "unknown".
     `;
     
     const colorResult = await hf.textGeneration({
@@ -25,7 +26,7 @@ export async function extractClothingColor(imageDescription: string, hf: HfInfer
       inputs: colorAnalysisPrompt,
       parameters: {
         max_new_tokens: 10,
-        temperature: 0.2,
+        temperature: 0.1,
       }
     });
     
@@ -33,8 +34,8 @@ export async function extractClothingColor(imageDescription: string, hf: HfInfer
     console.log("Extracted color from description:", detectedColor);
     
     // Vérifier si la réponse semble être une couleur valide
-    if (detectedColor.length > 15 || detectedColor.includes("sorry") || detectedColor.includes("cannot")) {
-      console.log("Invalid color result detected, trying alternative approach");
+    if (detectedColor.length > 20 || detectedColor.includes("sorry") || detectedColor.includes("cannot") || detectedColor.includes("unknown")) {
+      console.log("Invalid color result detected");
       return "unknown";
     }
     
@@ -52,16 +53,25 @@ export async function extractClothingColor(imageDescription: string, hf: HfInfer
  * @returns Couleur détectée
  */
 export async function performDirectColorQuery(imageDescription: string, hf: HfInference): Promise<string> {
-  console.log("Performing direct color query...");
+  console.log("Performing direct color query for:", imageDescription);
   
   try {
-    // Prompt optimisé pour une meilleure détection de couleur
+    // Prompt spécifique pour la détection de couleur
+    const directColorPrompt = `
+    Given this description: "${imageDescription}"
+    
+    What is the MAIN COLOR of the clothing item? Choose from these options:
+    red, blue, green, yellow, purple, pink, orange, black, white, gray, brown, beige
+    
+    Answer with just ONE WORD - the color name.
+    `;
+    
     const directColorQuery = await hf.textGeneration({
       model: "google/flan-t5-xxl",
-      inputs: `Based on this description: "${imageDescription}", what is the MAIN COLOR of the clothing item? Answer with just ONE WORD - the exact color name.`,
+      inputs: directColorPrompt,
       parameters: {
         max_new_tokens: 10,
-        temperature: 0.2,
+        temperature: 0.1,
       }
     });
     
@@ -69,8 +79,7 @@ export async function performDirectColorQuery(imageDescription: string, hf: HfIn
     console.log("Direct query color result:", detectedColor);
     
     // Vérifier que la couleur détectée est valide
-    if (detectedColor.length > 15 || detectedColor.includes(" ") || 
-        detectedColor.includes("sorry") || detectedColor.includes("cannot")) {
+    if (detectedColor.length > 20 || detectedColor.includes("sorry") || detectedColor.includes("cannot") || detectedColor.includes("unknown")) {
       console.log("Invalid color detected from direct query");
       return "unknown";
     }
@@ -89,14 +98,14 @@ export async function performDirectColorQuery(imageDescription: string, hf: HfIn
  * @returns Couleur dominante détectée
  */
 export async function detectDominantColor(imageDescription: string, hf: HfInference): Promise<string> {
-  console.log("Detecting dominant color...");
+  console.log("Detecting dominant color from:", imageDescription);
   
   try {
-    // Liste de couleurs pour guider le modèle
-    const colorOptions = "red, blue, green, yellow, purple, pink, orange, black, white, gray, brown, beige, teal, navy, maroon, lavender, turquoise, olive, crimson, burgundy, tan";
+    // Liste de couleurs précises pour guider le modèle
+    const colorOptions = "red, blue, green, yellow, purple, pink, orange, black, white, gray, brown, beige";
     
     const dominantColorPrompt = `
-    Image description: "${imageDescription}"
+    Description: "${imageDescription}"
     
     Task: What is the DOMINANT COLOR of the CLOTHING in this description?
     Consider only the main clothing item, not accessories or background.
@@ -117,14 +126,15 @@ export async function detectDominantColor(imageDescription: string, hf: HfInfere
     console.log("Dominant color detected:", detectedColor);
     
     // Si la réponse semble valide
-    if (detectedColor.length < 15 && !detectedColor.includes(" ") && 
-        !detectedColor.includes("sorry") && !detectedColor.includes("cannot")) {
+    if (detectedColor.length < 20 && !detectedColor.includes("sorry") && !detectedColor.includes("cannot") && !detectedColor.includes("unknown")) {
       return detectedColor;
     }
     
-    // Si la réponse n'est pas valide, essayer avec un prompt plus simple
+    // Si aucune couleur n'est détectée, essayer avec un prompt simplifié
     console.log("First attempt didn't yield a valid color, trying a simpler approach");
-    const simpleColorPrompt = `What's the main color in this: "${imageDescription}"? Just say the color name.`;
+    
+    const simpleColorPrompt = `What color is the clothing in this description: "${imageDescription}"? 
+    Answer with just one word - the color name.`;
     
     const simpleResult = await hf.textGeneration({
       model: "google/flan-t5-xxl",
@@ -138,13 +148,16 @@ export async function detectDominantColor(imageDescription: string, hf: HfInfere
     const simpleColor = simpleResult.generated_text.toLowerCase().trim();
     console.log("Simple color detection result:", simpleColor);
     
-    if (simpleColor.length < 15 && !simpleColor.includes(" ") &&
-        !simpleColor.includes("sorry") && !simpleColor.includes("cannot")) {
+    if (simpleColor.length < 20 && !simpleColor.includes("sorry") && !simpleColor.includes("cannot") && !simpleColor.includes("unknown")) {
       return simpleColor;
     }
     
-    // Si tout échoue, retourner une couleur par défaut
-    return "red";
+    // Fallback - générer une couleur aléatoire si aucune détection n'a fonctionné
+    const randomColors = ["red", "blue", "green", "yellow", "purple", "pink", "orange", "black", "white"];
+    const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+    console.log("Fallback to random color:", randomColor);
+    
+    return randomColor;
   } catch (error) {
     console.error("Error detecting dominant color:", error);
     return "unknown";

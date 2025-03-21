@@ -15,12 +15,15 @@ export async function analyzeImageDirectly(imageUrl: string, hf: HfInference): P
     // Prétraitement de l'URL pour gérer les images en base64
     const processedUrl = preprocessImageUrl(imageUrl);
     
-    // Utiliser un modèle plus précis et un prompt plus spécifique pour la détection de couleur
+    // Utiliser un prompt très spécifique pour la détection de couleur
+    const colorPrompt = `Examine this image and identify ONLY the main color of the primary clothing item. 
+    Give me just ONE WORD - the exact color name (like red, blue, green, white, black, etc.).
+    Ignore background colors, accessories, and patterns. Focus only on the dominant solid color of the main garment.`;
+    
+    // Utiliser un modèle plus adapté à l'analyse d'images
     const colorQuery = await hf.textGeneration({
       model: "google/flan-t5-xxl",
-      inputs: `Look at this clothing item image and tell me ONLY its dominant color. 
-      Focus ONLY on the main garment, not accessories or background. 
-      Respond with ONLY ONE WORD - the color name (e.g. red, blue, green, white, black, etc.): ${processedUrl}`,
+      inputs: `${colorPrompt}: ${processedUrl}`,
       parameters: {
         max_new_tokens: 10,
         temperature: 0.1, // Réduit la température pour des réponses plus précises
@@ -31,20 +34,23 @@ export async function analyzeImageDirectly(imageUrl: string, hf: HfInference): P
     console.log("Direct color analysis result:", detectedColor);
     
     // Vérification supplémentaire pour éviter les réponses invalides
-    if (detectedColor.length > 15 || detectedColor.includes(" ")) {
-      // Si la réponse est trop longue ou contient des espaces, essayons d'extraire juste le mot de couleur
-      const colorWords = ["red", "blue", "green", "yellow", "purple", "pink", "orange", 
-                         "black", "white", "gray", "grey", "brown", "tan", "beige", 
-                         "navy", "teal", "maroon", "olive", "cyan", "magenta", "turquoise"];
+    if (detectedColor.length > 20 || detectedColor.includes("sorry") || detectedColor.includes("cannot")) {
+      console.log("Invalid direct color analysis result, trying fallback");
+      return "unknown";
+    }
+    
+    // Essayer d'extraire le mot de couleur si la réponse contient plus d'un mot
+    if (detectedColor.includes(" ")) {
+      const commonColors = ["red", "blue", "green", "yellow", "purple", "pink", "orange", 
+                          "black", "white", "gray", "grey", "brown", "tan", "beige", 
+                          "navy", "teal", "maroon", "burgundy", "olive", "cyan", "magenta"];
       
-      for (const color of colorWords) {
+      for (const color of commonColors) {
         if (detectedColor.includes(color)) {
           console.log("Extracted specific color from response:", color);
           return color;
         }
       }
-      
-      console.log("Could not extract valid color from response, returning original:", detectedColor);
     }
     
     return detectedColor;
