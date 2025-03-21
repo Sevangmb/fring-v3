@@ -16,6 +16,7 @@ import { addVetement } from "@/services/supabaseService";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
+import { detectImageColor } from "@/services/colorDetectionService";
 
 // Type pour les catégories
 interface Categorie {
@@ -50,6 +51,7 @@ const AjouterVetementPage = () => {
   const { user, loading: authLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [imagePreview, setImagePreview] = React.useState<string | null>(null);
+  const [detectingColor, setDetectingColor] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [categories, setCategories] = useState<Categorie[]>([]);
   const [marques, setMarques] = useState<Marque[]>([]);
@@ -157,34 +159,55 @@ const AjouterVetementPage = () => {
         // Vérifier si le bucket "vetements" existe, sinon on utilise une URL locale
         const { data: bucketData, error: bucketError } = await supabase.storage.getBucket('vetements');
         
+        let publicUrl = '';
+        
         if (bucketError) {
           console.warn("Le bucket 'vetements' n'existe pas, l'image sera stockée localement", bucketError);
-          return; // On garde l'image en local avec le dataURL
+          // On garde l'image en local avec le dataURL
+          publicUrl = reader.result as string;
+        } else {
+          const { data, error } = await supabase.storage
+            .from('vetements')
+            .upload(`images/${fileName}`, file);
+
+          if (error) {
+            console.error("Erreur lors du téléchargement de l'image:", error);
+            toast({
+              title: "Erreur",
+              description: "Impossible de télécharger l'image.",
+              variant: "destructive",
+            });
+            return;
+          }
+
+          // Obtenir l'URL publique de l'image
+          const { data: { publicUrl: storedPublicUrl } } = supabase.storage
+            .from('vetements')
+            .getPublicUrl(`images/${fileName}`);
+            
+          publicUrl = storedPublicUrl;
+          setImagePreview(publicUrl);
         }
         
-        const { data, error } = await supabase.storage
-          .from('vetements')
-          .upload(`images/${fileName}`, file);
-
-        if (error) {
-          console.error("Erreur lors du téléchargement de l'image:", error);
-          toast({
-            title: "Erreur",
-            description: "Impossible de télécharger l'image.",
-            variant: "destructive",
-          });
-          return;
+        // Détecter la couleur de l'image
+        if (publicUrl) {
+          setDetectingColor(true);
+          try {
+            const detectedColor = await detectImageColor(publicUrl);
+            form.setValue('couleur', detectedColor);
+            toast({
+              title: "Couleur détectée",
+              description: `La couleur ${detectedColor} a été détectée et sélectionnée automatiquement.`,
+            });
+          } catch (error) {
+            console.error("Erreur lors de la détection de couleur:", error);
+          } finally {
+            setDetectingColor(false);
+          }
         }
-
-        // Obtenir l'URL publique de l'image
-        const { data: { publicUrl } } = supabase.storage
-          .from('vetements')
-          .getPublicUrl(`images/${fileName}`);
-
-        // Remplacer la prévisualisation par l'URL de Supabase
-        setImagePreview(publicUrl);
       } catch (error) {
         console.error("Erreur lors du téléchargement de l'image:", error);
+        setDetectingColor(false);
       }
     }
   };
@@ -296,15 +319,25 @@ const AjouterVetementPage = () => {
           {/* Colonne de gauche: Image */}
           <div className="md:col-span-1 flex flex-col items-center">
             <div 
-              className="w-full aspect-square rounded-lg border-2 border-dashed border-primary/20 hover:border-primary/50 transition-colors bg-background flex flex-col items-center justify-center cursor-pointer"
+              className="w-full aspect-square rounded-lg border-2 border-dashed border-primary/20 hover:border-primary/50 transition-colors bg-background flex flex-col items-center justify-center cursor-pointer relative"
               onClick={() => fileInputRef.current?.click()}
             >
               {imagePreview ? (
-                <img 
-                  src={imagePreview} 
-                  alt="Aperçu du vêtement" 
-                  className="w-full h-full object-cover rounded-lg"
-                />
+                <>
+                  <img 
+                    src={imagePreview} 
+                    alt="Aperçu du vêtement" 
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                  {detectingColor && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
+                      <div className="text-center text-white">
+                        <Loader2 size={48} className="mx-auto animate-spin" />
+                        <Text className="mt-4 text-white">Détection de la couleur...</Text>
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center p-8">
                   <ImagePlus size={48} className="mx-auto text-muted-foreground" />
@@ -326,7 +359,10 @@ const AjouterVetementPage = () => {
               <Button 
                 variant="outline" 
                 className="mt-4"
-                onClick={() => setImagePreview(null)}
+                onClick={() => {
+                  setImagePreview(null);
+                  form.setValue('couleur', '');
+                }}
               >
                 Supprimer l'image
               </Button>
@@ -401,10 +437,11 @@ const AjouterVetementPage = () => {
                         <Select 
                           onValueChange={field.onChange} 
                           defaultValue={field.value}
+                          value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Sélectionner une couleur" />
+                              <SelectValue placeholder={detectingColor ? "Détection en cours..." : "Sélectionner une couleur"} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
