@@ -9,13 +9,17 @@ export const useUnreadCount = () => {
 
   // Compter les messages non lus
   const loadUnreadCount = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setUnreadCount(0);
+      return;
+    }
     
     try {
       const count = await countUnreadMessages();
       setUnreadCount(count);
     } catch (error) {
       console.error('Erreur lors du comptage des messages non lus:', error);
+      setUnreadCount(0);
     }
   }, [user]);
 
@@ -24,9 +28,11 @@ export const useUnreadCount = () => {
     if (user) {
       loadUnreadCount();
       
-      // Rafraîchir le compteur toutes les 30 secondes
-      const interval = setInterval(loadUnreadCount, 30000);
+      // Rafraîchir le compteur toutes les 15 secondes
+      const interval = setInterval(loadUnreadCount, 15000);
       return () => clearInterval(interval);
+    } else {
+      setUnreadCount(0);
     }
   }, [user, loadUnreadCount]);
 

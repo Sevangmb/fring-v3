@@ -26,13 +26,15 @@ const MessagesContent: React.FC<MessagesContentProps> = ({
   sendMessage,
   isMobile
 }) => {
+  // Déterminer si le composant doit être affiché
+  const shouldDisplay = !isMobile || (isMobile && friendId);
+
+  if (!shouldDisplay) {
+    return null;
+  }
+
   return (
-    <div 
-      className={cn(
-        "w-full md:w-2/3 flex flex-col",
-        !friendId && isMobile ? "hidden" : "flex flex-col h-full"
-      )}
-    >
+    <div className="w-full md:w-2/3 flex flex-col h-full">
       {friendId ? (
         <>
           <ConversationHeader 

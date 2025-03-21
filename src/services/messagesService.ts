@@ -34,7 +34,7 @@ export const fetchConversation = async (userId: string): Promise<Message[]> => {
       throw error;
     }
 
-    return data as Message[];
+    return data as Message[] || [];
   } catch (error) {
     console.error('Erreur lors de la récupération des messages:', error);
     throw error;
@@ -115,46 +115,51 @@ export const fetchConversationPreviews = async (): Promise<Message[]> => {
       throw new Error('Vous devez être connecté pour voir les conversations');
     }
 
-    // Récupérer les derniers messages pour chaque conversation
-    // Ceci utilise une requête SQL brute via RPC pour obtenir le dernier message de chaque conversation
-    const { data, error } = await supabase.rpc('get_conversation_previews');
-    
-    if (error) {
-      console.error('Erreur lors de la récupération des aperçus de conversation:', error);
+    // Essayer d'abord d'utiliser la fonction RPC si elle existe
+    try {
+      const { data, error } = await supabase.rpc('get_conversation_previews');
       
-      // Méthode de secours si la RPC n'existe pas encore
-      console.log('Utilisation de la méthode de secours pour les aperçus de conversation');
-      
-      // Récupérer tous les messages où l'utilisateur est impliqué
-      const { data: messagesData, error: messagesError } = await supabase
-        .from('messages')
-        .select('*')
-        .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
-        .order('created_at', { ascending: false });
-      
-      if (messagesError) {
-        console.error('Erreur lors de la récupération des messages:', messagesError);
-        throw messagesError;
+      if (!error && data) {
+        return data as Message[];
       }
-      
-      // Créer un ensemble d'IDs d'utilisateurs uniques
-      const userIds = new Set<string>();
-      const conversationPreviews: Message[] = [];
-      
-      // Filtrer pour ne garder que le dernier message de chaque conversation
-      messagesData?.forEach(message => {
-        const otherId = message.sender_id === userId ? message.receiver_id : message.sender_id;
-        
-        if (!userIds.has(otherId)) {
-          userIds.add(otherId);
-          conversationPreviews.push(message);
-        }
-      });
-      
-      return conversationPreviews as Message[];
+    } catch (rpcError) {
+      console.error('Erreur RPC, utilisation de la méthode de secours:', rpcError);
     }
-
-    return data as Message[];
+    
+    // Méthode de secours si la RPC n'existe pas ou échoue
+    console.log('Utilisation de la méthode de secours pour les aperçus de conversation');
+    
+    // Récupérer tous les messages où l'utilisateur est impliqué
+    const { data: messagesData, error: messagesError } = await supabase
+      .from('messages')
+      .select('*')
+      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+      .order('created_at', { ascending: false });
+    
+    if (messagesError) {
+      console.error('Erreur lors de la récupération des messages:', messagesError);
+      throw messagesError;
+    }
+    
+    if (!messagesData || messagesData.length === 0) {
+      return [];
+    }
+    
+    // Créer un ensemble d'IDs d'utilisateurs uniques
+    const userIds = new Set<string>();
+    const conversationPreviews: Message[] = [];
+    
+    // Filtrer pour ne garder que le dernier message de chaque conversation
+    messagesData.forEach(message => {
+      const otherId = message.sender_id === userId ? message.receiver_id : message.sender_id;
+      
+      if (!userIds.has(otherId)) {
+        userIds.add(otherId);
+        conversationPreviews.push(message);
+      }
+    });
+    
+    return conversationPreviews as Message[];
   } catch (error) {
     console.error('Erreur lors de la récupération des aperçus de conversation:', error);
     throw error;

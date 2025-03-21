@@ -14,7 +14,11 @@ export const useConversation = (friendId?: string) => {
 
   // Charger les messages d'une conversation spécifique
   const loadConversation = useCallback(async () => {
-    if (!user || !friendId) return;
+    if (!user || !friendId) {
+      setMessages([]);
+      setLoading(false);
+      return;
+    }
     
     try {
       setLoading(true);
@@ -58,10 +62,14 @@ export const useConversation = (friendId?: string) => {
     }
   };
 
-  // Charger au démarrage
+  // Charger au démarrage et lors du changement de friendId
   useEffect(() => {
+    loadConversation();
+    
+    // Configurer l'intervalle de rafraîchissement
     if (friendId) {
-      loadConversation();
+      const interval = setInterval(loadConversation, 5000);
+      return () => clearInterval(interval);
     }
   }, [friendId, loadConversation]);
 
