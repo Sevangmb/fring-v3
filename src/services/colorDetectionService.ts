@@ -23,9 +23,9 @@ export const detectImageColor = async (imageUrl: string): Promise<string> => {
     // Afficher la couleur détectée dans la console pour déboguer
     console.log('Couleur détectée:', data?.color);
     
-    return data?.color || 'multicolore';
+    return data?.color || 'bleu';
   } catch (error) {
     console.error('Erreur lors de la détection de couleur:', error);
-    return 'multicolore'; // Valeur par défaut en cas d'erreur
+    return 'bleu'; // Valeur par défaut en cas d'erreur
   }
 };
