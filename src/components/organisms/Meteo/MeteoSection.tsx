@@ -17,12 +17,12 @@ const MeteoSection: React.FC = () => {
         <Text variant="h3" className="mb-4">Météo</Text>
         <div className="space-y-4">
           <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-48 w-full" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {[...Array(3)].map((_, index) => (
               <Skeleton key={index} className="h-32 w-full" />
             ))}
           </div>
-          <Skeleton className="h-48 w-full" />
         </div>
       </div>
     );
@@ -53,6 +53,15 @@ const MeteoSection: React.FC = () => {
           city={meteo.city}
         />
         
+        {tenueSuggestion && (
+          <TenueSuggestion 
+            haut={tenueSuggestion.haut}
+            bas={tenueSuggestion.bas}
+            chaussures={tenueSuggestion.chaussures}
+            message={tenueSuggestion.message}
+          />
+        )}
+        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {meteo.forecast.map((jour, index) => (
             <PrevisionJour
@@ -66,15 +75,6 @@ const MeteoSection: React.FC = () => {
             />
           ))}
         </div>
-        
-        {tenueSuggestion && (
-          <TenueSuggestion 
-            haut={tenueSuggestion.haut}
-            bas={tenueSuggestion.bas}
-            chaussures={tenueSuggestion.chaussures}
-            message={tenueSuggestion.message}
-          />
-        )}
       </div>
     </div>
   );
