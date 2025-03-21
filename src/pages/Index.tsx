@@ -9,51 +9,48 @@ import Hero from "@/components/organisms/Hero";
 import Features from "@/components/organisms/Features";
 
 const Index = () => {
-  const { user, signOut, loading } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   const handleNavigateToDashboard = () => navigate("/dashboard");
   const handleLogin = () => navigate("/login");
   const handleRegister = () => navigate("/register");
-  const handleLogout = async () => {
-    await signOut();
-  };
 
   return (
     <Layout>
       <Hero />
       <Features />
       
-      <div className="container mx-auto px-4 py-12">
-        <Heading variant="h2" className="mb-6 text-center">
-          Bienvenue sur Multi-User App
-        </Heading>
-        <Text className="text-center mb-8">
-          Ceci est un modèle de démarrage pour créer des applications multi-utilisateurs avec React, Atomic Design et Supabase.
-        </Text>
+      <div className="container mx-auto px-4 py-16 bg-accent/10">
+        <div className="max-w-3xl mx-auto text-center">
+          <Heading variant="h2" className="mb-6">
+            Commencez dès aujourd'hui
+          </Heading>
+          <Text className="mb-8 text-lg">
+            Une application complète avec authentification, tableau de bord et profil utilisateur.
+            Construite avec React, Atomic Design et Supabase.
+          </Text>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-          {loading ? (
-            <Text>Chargement...</Text>
-          ) : user ? (
-            <>
-              <Button onClick={handleNavigateToDashboard}>
-                Tableau de bord
-              </Button>
-              <Button variant="outline" onClick={handleLogout}>
-                Déconnexion
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button onClick={handleLogin}>
-                Connexion
-              </Button>
-              <Button variant="outline" onClick={handleRegister}>
-                S'inscrire
-              </Button>
-            </>
-          )}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+            {loading ? (
+              <div className="animate-pulse p-4">Chargement...</div>
+            ) : user ? (
+              <>
+                <Button onClick={handleNavigateToDashboard} size="lg">
+                  Mon tableau de bord
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button onClick={handleLogin} size="lg">
+                  Connexion
+                </Button>
+                <Button variant="outline" onClick={handleRegister} size="lg">
+                  S'inscrire
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </Layout>

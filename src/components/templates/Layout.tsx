@@ -1,6 +1,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import MainNavigation from "./MainNavigation";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -17,13 +18,7 @@ const Layout = ({
 }: LayoutProps) => {
   return (
     <div className="flex flex-col min-h-screen">
-      {header || (
-        <header className="bg-background p-4 border-b">
-          <div className="container mx-auto">
-            <h1 className="text-xl font-bold">Multi-User App</h1>
-          </div>
-        </header>
-      )}
+      {header || <MainNavigation />}
       <main 
         className={cn(
           "flex-grow", 

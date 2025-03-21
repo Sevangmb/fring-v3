@@ -6,9 +6,11 @@ import Button from "@/components/atoms/Button";
 import Card, { CardHeader, CardTitle, CardDescription } from "@/components/molecules/Card";
 import { useAuth } from "@/contexts/AuthContext";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Sample data for the chart
   const chartData = [
@@ -27,10 +29,6 @@ const Dashboard = () => {
     { id: 3, name: "Marketing Campaign", status: "Completed", progress: 100 },
   ];
 
-  const handleLogout = async () => {
-    await signOut();
-  };
-
   return (
     <Layout>
       <div className="container mx-auto px-4 py-24">
@@ -42,9 +40,9 @@ const Dashboard = () => {
           <Button 
             variant="outline" 
             className="mt-4 md:mt-0"
-            onClick={handleLogout}
+            onClick={() => navigate("/profile")}
           >
-            Déconnexion
+            Voir mon profil
           </Button>
         </div>
 
