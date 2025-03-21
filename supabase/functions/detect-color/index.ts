@@ -92,57 +92,70 @@ async function detectDominantColor(imageUrl: string): Promise<string> {
     }
 
     // Utiliser l'API Hugging Face pour la détection de couleur
-    // Nous utilisons le modèle de vision pour décrire l'image
     const hf = new HfInference(Deno.env.get('HUGGINGFACE_API_KEY'));
     
-    const result = await hf.imageToText({
-      model: "nlpconnect/vit-gpt2-image-captioning",
-      data: imageToAnalyze,
+    // Demande spécifique pour se concentrer sur le vêtement
+    const result = await hf.textGeneration({
+      model: "gpt2",
+      inputs: "Describe the color of the clothing item in this image, focus ONLY on the main clothing item and NOT the background. Respond with ONLY the color name:",
+      parameters: {
+        max_new_tokens: 20,
+        temperature: 0.1
+      }
     });
-
-    console.log("Hugging Face API result:", result);
     
-    // Extraire les termes de couleur à partir de la description générée
-    const description = result.generated_text.toLowerCase();
-    console.log("Generated description:", description);
+    console.log("Color query result:", result);
     
-    // Rechercher la couleur dans la description
+    const generatedColor = result.generated_text.toLowerCase().trim();
+    console.log("Generated color text:", generatedColor);
+    
+    // Rechercher la couleur dans la réponse générée
     let detectedColor = 'multicolore';
     
     for (const [englishColor, frenchColor] of Object.entries(colorMapping)) {
-      // Recherche simple du terme de couleur dans la description
-      if (description.includes(englishColor)) {
+      if (generatedColor.includes(englishColor)) {
         detectedColor = frenchColor;
         break;
       }
     }
     
-    // Si aucune couleur n'est détectée dans la description, on fait une requête spécifique 
-    // pour demander la couleur dominante
+    // Si aucune couleur spécifique n'est détectée, essayons une approche différente avec image-to-text
     if (detectedColor === 'multicolore') {
       try {
+        const captionResult = await hf.imageToText({
+          model: "nlpconnect/vit-gpt2-image-captioning",
+          data: imageToAnalyze,
+        });
+        
+        console.log("Image caption result:", captionResult);
+        
+        // Extraire les termes de couleur à partir de la description générée
+        const description = captionResult.generated_text.toLowerCase();
+        console.log("Generated description:", description);
+        
+        // Créer une requête plus spécifique basée sur la description
         const colorQuery = await hf.textGeneration({
           model: "gpt2",
-          inputs: `What is the dominant color of this image described as: ${description}? Answer with just one color name.`,
+          inputs: `The image shows: "${description}". What is the main color of the clothing item in this image? Answer with just one color name.`,
           parameters: {
             max_new_tokens: 10,
             temperature: 0.1
           }
         });
         
-        console.log("Color query result:", colorQuery);
+        console.log("Refined color query result:", colorQuery);
         
-        const generatedColor = colorQuery.generated_text.toLowerCase().trim();
+        const refinedColor = colorQuery.generated_text.toLowerCase().trim();
         
-        // Rechercher la couleur dans la réponse générée
+        // Rechercher la couleur dans la réponse raffinée
         for (const [englishColor, frenchColor] of Object.entries(colorMapping)) {
-          if (generatedColor.includes(englishColor)) {
+          if (refinedColor.includes(englishColor)) {
             detectedColor = frenchColor;
             break;
           }
         }
       } catch (error) {
-        console.error("Error querying for specific color:", error);
+        console.error("Error in secondary color detection:", error);
       }
     }
     
