@@ -12,4 +12,5 @@ export interface Vetement {
   created_at?: string;
   user_id?: string;
   owner_email?: string;
+  temperature?: "froid" | "tempere" | "chaud";
 }

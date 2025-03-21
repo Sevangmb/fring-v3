@@ -8,6 +8,7 @@ import CouleurField from "./form-fields/CouleurField";
 import TailleField from "./form-fields/TailleField";
 import MarqueField from "./form-fields/MarqueField";
 import DescriptionField from "./form-fields/DescriptionField";
+import TemperatureField from "./form-fields/TemperatureField";
 
 interface VetementFormFieldsProps {
   form: UseFormReturn<VetementFormValues>;
@@ -46,6 +47,10 @@ const VetementFormFields: React.FC<VetementFormFieldsProps> = ({
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <TailleField form={form} />
+        <TemperatureField form={form} />
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <MarqueField form={form} marques={marques} />
       </div>
       

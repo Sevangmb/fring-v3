@@ -17,7 +17,8 @@ export async function detectClothingInfo(imageUrl: string): Promise<{
   color: string,
   category: string,
   description?: string,
-  brand?: string
+  brand?: string,
+  temperature?: string
 }> {
   try {
     console.log("Starting clothing detection process with Google AI (Gemini)");
@@ -60,21 +61,63 @@ export async function detectClothingInfo(imageUrl: string): Promise<{
     const normalizedColor = normalizeColor(color);
     const normalizedCategory = normalizeCategory(category);
     
+    // Déterminer la température en fonction de la catégorie
+    const temperature = determineTemperatureFromCategory(normalizedCategory);
+    
     console.log("Final detection results:", {
       color: normalizedColor,
       category: normalizedCategory,
       description,
-      brand
+      brand,
+      temperature
     });
     
     return {
       color: normalizedColor,
       category: normalizedCategory,
       description: description || undefined,
-      brand: brand || undefined
+      brand: brand || undefined,
+      temperature
     };
   } catch (error) {
     console.error("Critical error in detectClothingInfo:", error);
     throw new Error("La détection d'image a échoué: " + (error instanceof Error ? error.message : "Erreur inconnue"));
   }
+}
+
+/**
+ * Détermine la température appropriée pour une catégorie de vêtement
+ * @param category Catégorie du vêtement
+ * @returns Température (froid, tempere, chaud)
+ */
+function determineTemperatureFromCategory(category: string): string {
+  const categoryLower = category.toLowerCase();
+  
+  // Vêtements pour temps froid
+  const coldItems = [
+    "pull", "pullover", "sweat", "sweatshirt", "hoodie", "manteau", "veste", "jacket", 
+    "coat", "blouson", "doudoune", "parka", "anorak", "cardigan", "sweater"
+  ];
+  
+  // Vêtements pour temps chaud
+  const hotItems = [
+    "short", "shorts", "t-shirt", "tank", "débardeur", "debardeur", "maillot", 
+    "crop top", "swimsuit", "maillot de bain", "bikini", "bermuda"
+  ];
+  
+  // Vérifier la catégorie
+  for (const item of coldItems) {
+    if (categoryLower.includes(item)) {
+      return "froid";
+    }
+  }
+  
+  for (const item of hotItems) {
+    if (categoryLower.includes(item)) {
+      return "chaud";
+    }
+  }
+  
+  // Par défaut
+  return "tempere";
 }

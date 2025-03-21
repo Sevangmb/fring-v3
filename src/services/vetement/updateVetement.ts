@@ -34,6 +34,21 @@ export const updateVetement = async (id: number, vetement: Partial<Vetement>): P
     
     console.log('Données existantes:', JSON.stringify(existingData, null, 2));
     
+    // Si le vêtement a une catégorie mais pas de température, déduire la température
+    if (vetement.categorie && !vetement.temperature) {
+      try {
+        // Importer dynamiquement la fonction
+        const { determineTemperatureFromCategory } = await import('../../components/vetements/form-fields/TemperatureField');
+        const temperature = determineTemperatureFromCategory(vetement.categorie);
+        if (temperature) {
+          console.log('Température déduite de la catégorie:', temperature);
+          vetement.temperature = temperature;
+        }
+      } catch (error) {
+        console.error('Erreur lors de la déduction de la température:', error);
+      }
+    }
+    
     // Nettoyer les données avant la mise à jour
     const cleanedData = {};
     Object.entries(vetement).forEach(([key, value]) => {
