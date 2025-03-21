@@ -137,9 +137,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       console.log("Tentative de déconnexion");
+      
+      // Nettoyer l'état local avant de tenter la déconnexion côté serveur
+      // Cela assure que l'interface reflète immédiatement la déconnexion
+      setUser(null)
+      setSession(null)
+      
+      // Tenter la déconnexion côté serveur
       const { error } = await supabase.auth.signOut()
       
       if (error) {
+        // Si l'erreur est 'Session not found', ce n'est pas grave puisqu'on veut se déconnecter
+        // et nous avons déjà nettoyé l'état local
+        if (error.message.includes('Session not found')) {
+          console.log("Session déjà expirée, déconnexion locale effectuée");
+          toast({
+            title: "Déconnexion réussie",
+            description: "Vous avez été déconnecté avec succès",
+          })
+          return Promise.resolve()
+        }
+        
+        // Pour les autres types d'erreurs, on les signale
         console.error("Erreur de déconnexion:", error.message);
         toast({
           title: "Erreur de déconnexion",
