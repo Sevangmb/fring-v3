@@ -1,13 +1,14 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, User } from "lucide-react";
+import { Menu, X, User, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import NavItem from "../molecules/NavItem";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Button from "../atoms/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useMessages } from "@/hooks/useMessages";
 
 interface NavbarProps {
   className?: string;
@@ -20,6 +21,7 @@ const Navbar = ({ className }: NavbarProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const { user, signOut } = useAuth();
+  const { unreadCount, refreshUnreadCount } = useMessages();
 
   const navLinks = [
     { href: "/", label: "Home" },
@@ -32,6 +34,12 @@ const Navbar = ({ className }: NavbarProps) => {
   const authLinks = user ? [
     { href: "/dashboard", label: "Tableau de bord" },
     { href: "/profile", label: "Profil" },
+    { 
+      href: "/messages", 
+      label: "Messages", 
+      icon: <Mail className="h-4 w-4 mr-2" />,
+      badge: unreadCount > 0 ? unreadCount : undefined
+    },
   ] : [];
 
   useEffect(() => {
@@ -47,6 +55,17 @@ const Navbar = ({ className }: NavbarProps) => {
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location.pathname]);
+
+  // Rafraîchir le compteur de messages non lus
+  useEffect(() => {
+    if (user) {
+      refreshUnreadCount();
+      
+      // Rafraîchir le compteur toutes les 30 secondes
+      const interval = setInterval(refreshUnreadCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user, refreshUnreadCount]);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -101,7 +120,9 @@ const Navbar = ({ className }: NavbarProps) => {
               key={link.href}
               href={link.href}
               label={link.label}
-              isActive={location.pathname === link.href}
+              icon={link.icon}
+              isActive={location.pathname.startsWith(link.href)}
+              badge={link.badge}
             />
           ))}
         </nav>
@@ -176,8 +197,10 @@ const Navbar = ({ className }: NavbarProps) => {
                   key={link.href}
                   href={link.href}
                   label={link.label}
-                  isActive={location.pathname === link.href}
+                  icon={link.icon}
+                  isActive={location.pathname.startsWith(link.href)}
                   className="px-4 py-3"
+                  badge={link.badge}
                 />
               ))}
               

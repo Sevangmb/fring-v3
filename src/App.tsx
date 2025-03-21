@@ -19,6 +19,7 @@ import AjouterVetement from "./pages/vetements/AjouterVetement";
 import ListeVetements from "./pages/vetements/ListeVetements";
 import ModifierVetement from "./pages/vetements/ModifierVetement";
 import MesAmis from "./pages/MesAmis";
+import Messages from "./pages/Messages";
 import About from "./pages/About";
 
 // Create a new query client instance
@@ -49,6 +50,8 @@ const App = () => {
               <Route path="/mes-vetements/liste" element={<ListeVetements />} />
               <Route path="/mes-vetements/modifier/:id" element={<ModifierVetement />} />
               <Route path="/mes-amis" element={<MesAmis />} />
+              <Route path="/messages" element={<Messages />} />
+              <Route path="/messages/:friendId" element={<Messages />} />
               <Route path="/about" element={<About />} />
               
               {/* Protected Routes */}
