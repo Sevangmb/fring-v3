@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import Layout from "@/components/templates/Layout";
 import { Heading, Text } from "@/components/atoms/Typography";
 import Button from "@/components/atoms/Button";
@@ -7,11 +7,41 @@ import Card from "@/components/molecules/Card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit, LogOut } from "lucide-react";
+import { ArrowLeft, Edit, LogOut, User, Mail, Calendar, Shield, Check, X } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
+
+// Schéma de validation pour le formulaire de profil
+const profileSchema = z.object({
+  name: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères" }),
+  email: z.string().email({ message: "Format d'email invalide" }).optional(),
+  avatar_url: z.string().optional(),
+});
+
+type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const Profile = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  // Initialisation du formulaire avec les valeurs actuelles
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      name: user?.user_metadata?.name || "",
+      email: user?.email || "",
+      avatar_url: user?.user_metadata?.avatar_url || "",
+    },
+  });
 
   const handleLogout = async () => {
     await signOut();
@@ -20,6 +50,125 @@ const Profile = () => {
 
   const handleBack = () => {
     navigate("/dashboard");
+  };
+
+  const toggleEdit = () => {
+    if (isEditing) {
+      // Si on quitte le mode édition, on réinitialise le formulaire
+      form.reset({
+        name: user?.user_metadata?.name || "",
+        email: user?.email || "",
+        avatar_url: user?.user_metadata?.avatar_url || "",
+      });
+      setAvatarPreview(null);
+    }
+    setIsEditing(!isEditing);
+  };
+
+  const onSubmit = async (data: ProfileFormValues) => {
+    setIsLoading(true);
+    try {
+      // Préparer les métadonnées à mettre à jour
+      const updates = {
+        data: {
+          name: data.name,
+        },
+        avatar_url: data.avatar_url,
+      };
+
+      // Mettre à jour les métadonnées de l'utilisateur
+      const { error } = await supabase.auth.updateUser({
+        data: updates.data,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Gérer l'upload d'avatar si un nouveau fichier a été sélectionné
+      if (avatarPreview && avatarPreview !== user?.user_metadata?.avatar_url) {
+        // Extraire le fichier Base64 et le convertir en Blob
+        try {
+          const base64Data = avatarPreview.split(',')[1];
+          const blob = await fetch(`data:image/jpeg;base64,${base64Data}`).then(res => res.blob());
+          
+          // Générer un nom de fichier unique
+          const fileExt = "jpg";
+          const fileName = `${user?.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+          
+          // Créer le bucket s'il n'existe pas (Supabase Storage)
+          const { data: bucketData, error: bucketError } = await supabase.storage.getBucket('avatars');
+          
+          if (bucketError && bucketError.message.includes('does not exist')) {
+            await supabase.storage.createBucket('avatars', {
+              public: true,
+            });
+          }
+          
+          // Uploader le fichier
+          const { error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(fileName, blob);
+            
+          if (uploadError) {
+            throw uploadError;
+          }
+          
+          // Récupérer l'URL publique
+          const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+          
+          // Mettre à jour l'URL de l'avatar dans les métadonnées utilisateur
+          if (urlData) {
+            await supabase.auth.updateUser({
+              data: {
+                avatar_url: urlData.publicUrl,
+              },
+            });
+          }
+        } catch (uploadError) {
+          console.error("Erreur lors de l'upload de l'avatar:", uploadError);
+          toast({
+            title: "Erreur lors de l'upload de l'avatar",
+            description: "Impossible de télécharger votre avatar. Veuillez réessayer.",
+            variant: "destructive",
+          });
+        }
+      }
+
+      toast({
+        title: "Profil mis à jour",
+        description: "Vos informations ont été mises à jour avec succès",
+      });
+      
+      setIsEditing(false);
+    } catch (error: any) {
+      toast({
+        title: "Erreur de mise à jour",
+        description: error.message || "Une erreur est survenue lors de la mise à jour du profil",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fonction pour gérer l'upload d'avatar
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) {
+      return;
+    }
+    
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        setAvatarPreview(reader.result);
+        form.setValue('avatar_url', reader.result);
+      }
+    };
+    
+    reader.readAsDataURL(file);
   };
 
   // Fonction pour obtenir les initiales de l'utilisateur
@@ -64,59 +213,170 @@ const Profile = () => {
           <Heading variant="h3" className="mb-6">Mon profil</Heading>
           
           <Card className="p-8">
-            <div className="flex flex-col items-center md:flex-row md:items-start gap-8">
-              <div className="flex flex-col items-center">
-                <Avatar className="w-24 h-24 text-2xl mb-3">
-                  <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.name || "Utilisateur"} />
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {getUserInitials()}
-                  </AvatarFallback>
-                </Avatar>
-                <Button variant="outline" size="sm" className="mt-2 text-xs flex items-center gap-1">
-                  <Edit size={12} />
-                  Modifier
-                </Button>
-              </div>
-              
-              <div className="flex-1 text-center md:text-left">
-                <Heading variant="h4" className="mb-1">
-                  {user?.user_metadata?.name || user?.email?.split('@')[0] || "Utilisateur"}
-                </Heading>
-                <Text variant="subtle" className="mb-6">
-                  {user?.email}
-                </Text>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  <div>
-                    <Text variant="small" className="text-muted-foreground">ID Utilisateur</Text>
-                    <Text className="font-medium truncate">{user?.id}</Text>
+            {isEditing ? (
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <div className="flex flex-col md:flex-row gap-8">
+                    <div className="flex flex-col items-center">
+                      <Avatar className="w-24 h-24 text-2xl mb-3">
+                        <AvatarImage 
+                          src={avatarPreview || user?.user_metadata?.avatar_url} 
+                          alt={form.getValues("name")} 
+                        />
+                        <AvatarFallback className="bg-primary text-primary-foreground">
+                          {getUserInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                      
+                      <div className="mt-3">
+                        <Input
+                          type="file"
+                          id="avatar"
+                          accept="image/*"
+                          onChange={handleAvatarChange}
+                          className="w-full text-xs"
+                        />
+                        <Text variant="small" className="text-muted-foreground mt-1">
+                          JPG, PNG ou GIF. Max 2MB.
+                        </Text>
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1 space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nom complet</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Votre nom" 
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="email"
+                                placeholder="Votre email" 
+                                {...field} 
+                                disabled
+                              />
+                            </FormControl>
+                            <Text variant="small" className="text-muted-foreground">
+                              L'email ne peut pas être modifié ici.
+                            </Text>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Text variant="small" className="text-muted-foreground">Inscrit le</Text>
-                    <Text className="font-medium">{formatJoinDate()}</Text>
+                  
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={toggleEdit}
+                      className="flex items-center gap-1"
+                    >
+                      <X size={16} />
+                      Annuler
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      disabled={isLoading}
+                      className="flex items-center gap-1"
+                    >
+                      <Check size={16} />
+                      Enregistrer
+                    </Button>
                   </div>
-                  <div>
-                    <Text variant="small" className="text-muted-foreground">Rôle</Text>
-                    <Text className="font-medium">{user?.role || "Utilisateur"}</Text>
-                  </div>
-                  <div>
-                    <Text variant="small" className="text-muted-foreground">Email vérifié</Text>
-                    <Text className="font-medium">
-                      {user?.email_confirmed_at ? "Oui" : "Non"}
-                    </Text>
-                  </div>
+                </form>
+              </Form>
+            ) : (
+              <div className="flex flex-col items-center md:flex-row md:items-start gap-8">
+                <div className="flex flex-col items-center">
+                  <Avatar className="w-24 h-24 text-2xl mb-3">
+                    <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.name || "Utilisateur"} />
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {getUserInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-2 text-xs flex items-center gap-1"
+                    onClick={toggleEdit}
+                  >
+                    <Edit size={12} />
+                    Modifier
+                  </Button>
                 </div>
                 
-                <Button 
-                  variant="primary" 
-                  onClick={handleLogout} 
-                  className="w-full md:w-auto bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
-                >
-                  <LogOut size={16} />
-                  Se déconnecter
-                </Button>
+                <div className="flex-1 text-center md:text-left">
+                  <Heading variant="h4" className="mb-1">
+                    {user?.user_metadata?.name || user?.email?.split('@')[0] || "Utilisateur"}
+                  </Heading>
+                  <Text variant="subtle" className="mb-6">
+                    {user?.email}
+                  </Text>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div className="flex items-start gap-2">
+                      <User size={16} className="mt-1 text-muted-foreground" />
+                      <div>
+                        <Text variant="small" className="text-muted-foreground">ID Utilisateur</Text>
+                        <Text className="font-medium truncate">{user?.id}</Text>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Calendar size={16} className="mt-1 text-muted-foreground" />
+                      <div>
+                        <Text variant="small" className="text-muted-foreground">Inscrit le</Text>
+                        <Text className="font-medium">{formatJoinDate()}</Text>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Shield size={16} className="mt-1 text-muted-foreground" />
+                      <div>
+                        <Text variant="small" className="text-muted-foreground">Rôle</Text>
+                        <Text className="font-medium">{user?.role || "Utilisateur"}</Text>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Mail size={16} className="mt-1 text-muted-foreground" />
+                      <div>
+                        <Text variant="small" className="text-muted-foreground">Email vérifié</Text>
+                        <Text className="font-medium">
+                          {user?.email_confirmed_at ? "Oui" : "Non"}
+                        </Text>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    variant="primary" 
+                    onClick={handleLogout} 
+                    className="w-full md:w-auto bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
+                  >
+                    <LogOut size={16} />
+                    Se déconnecter
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
           </Card>
         </div>
       </div>
