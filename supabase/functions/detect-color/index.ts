@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { HfInference } from 'https://esm.sh/@huggingface/inference@2.3.2';
@@ -87,11 +86,27 @@ const colorMapping: Record<string, string> = {
   'light grey': 'gris'
 };
 
-// Liste des couleurs disponibles dans l'application
+// Liste des couleurs disponibles dans l'application avec priorité (du plus spécifique au plus général)
 const availableColors = [
-  'blanc', 'noir', 'gris', 'bleu', 'rouge', 'vert', 
-  'jaune', 'orange', 'violet', 'rose', 'marron', 'beige', 'multicolore'
+  'bleu', 'noir', 'blanc', 'rouge', 'vert', 
+  'jaune', 'orange', 'violet', 'rose', 'marron', 'gris', 'beige'
 ];
+
+// Priorité des couleurs pour la détection (du plus important au moins important)
+const colorPriority = {
+  'bleu': 10,
+  'noir': 9,
+  'blanc': 8,
+  'rouge': 7,
+  'vert': 6,
+  'jaune': 5,
+  'orange': 4,
+  'violet': 3,
+  'rose': 2,
+  'marron': 1,
+  'gris': 0,
+  'beige': 0
+};
 
 /**
  * Convertit un Blob en Base64
@@ -229,6 +244,67 @@ async function analyzeImageDirectly(imageUrl: string, hf: HfInference): Promise<
 }
 
 /**
+ * Effectue une analyse approfondie pour détecter la couleur dominante
+ * @param imageDescription Description de l'image
+ * @param hf Client Hugging Face Inference
+ * @returns Couleur dominante détectée
+ */
+async function detectDominantColor(imageDescription: string, hf: HfInference): Promise<string> {
+  console.log("Detecting dominant color...");
+  
+  try {
+    const dominantColorPrompt = `
+    Image description: "${imageDescription}"
+    
+    Task: What is the DOMINANT COLOR of the CLOTHING in this image?
+    Ignore background colors or accessories. Focus only on the main clothing item.
+    You MUST choose only ONE of these color options: white, black, gray, blue, red, green, yellow, orange, purple, pink, brown, beige.
+    Return ONLY the color name - just one word, no explanation.
+    `;
+    
+    const dominantResult = await hf.textGeneration({
+      model: "google/flan-t5-xxl",
+      inputs: dominantColorPrompt,
+      parameters: {
+        max_new_tokens: 10,
+        temperature: 0.1,
+      }
+    });
+    
+    const detectedColor = dominantResult.generated_text.toLowerCase().trim();
+    console.log("Dominant color detected:", detectedColor);
+    return detectedColor;
+  } catch (error) {
+    console.error("Error detecting dominant color:", error);
+    return "unknown";
+  }
+}
+
+/**
+ * Analyse plusieurs approches pour déterminer la couleur et sélectionne la plus probable
+ * @param imageDescription Description de l'image
+ * @param detectedColors Tableau de couleurs détectées par différentes méthodes
+ * @param hf Client Hugging Face Inference
+ * @returns Couleur la plus probable
+ */
+async function determineMostLikelyColor(imageDescription: string, detectedColors: string[], hf: HfInference): Promise<string> {
+  console.log("Determining most likely color from detected colors:", detectedColors);
+  
+  // Si une seule couleur est détectée, la retourner directement
+  if (detectedColors.length === 1) {
+    return detectedColors[0];
+  }
+  
+  // Si "blue" est parmi les couleurs détectées, le prioriser
+  if (detectedColors.includes("blue")) {
+    return "blue";
+  }
+  
+  // Détecter la couleur dominante comme dernier recours
+  return await detectDominantColor(imageDescription, hf);
+}
+
+/**
  * Mappe la couleur détectée en anglais vers son équivalent français
  * @param detectedColor Couleur détectée en anglais
  * @returns Couleur en français
@@ -250,9 +326,37 @@ function mapToFrenchColor(detectedColor: string): string {
     }
   }
   
-  // Si aucune correspondance n'est trouvée
-  console.log("No color mapping found for:", detectedColor);
-  return "multicolore";
+  // Si aucune correspondance n'est trouvée, chercher la couleur la plus proche au lieu de renvoyer "multicolore"
+  console.log("No direct color mapping found for:", detectedColor);
+  
+  // Essayer de trouver une correspondance partielle
+  for (const [englishColor, frenchColor] of Object.entries(colorMapping)) {
+    if (detectedColor.includes(englishColor)) {
+      console.log(`Found partial match '${englishColor}' -> '${frenchColor}'`);
+      return frenchColor;
+    }
+  }
+  
+  // Si toujours pas de correspondance, chercher le mot le plus proche dans le texte
+  const words = detectedColor.split(/\s+/);
+  for (const word of words) {
+    for (const [englishColor, frenchColor] of Object.entries(colorMapping)) {
+      if (word === englishColor) {
+        console.log(`Found word match '${word}' -> '${frenchColor}'`);
+        return frenchColor;
+      }
+    }
+  }
+  
+  // Si on arrive ici, retourner une couleur par défaut basée sur les mots clés
+  if (detectedColor.includes("dark")) {
+    return "noir";
+  } else if (detectedColor.includes("light")) {
+    return "blanc";
+  }
+  
+  // En dernier recours, retourner la première couleur disponible (souvent bleu)
+  return availableColors[0];
 }
 
 /**
@@ -287,20 +391,38 @@ async function detectClothingColor(imageUrl: string): Promise<string> {
       return "bleu";
     }
     
+    // Collecter les résultats de différentes méthodes de détection
+    let detectedColors = [];
+    
     // Étape 2: Extraire la couleur du vêtement à partir de la description
     let detectedColor = await extractClothingColor(imageDescription, hf);
-    
-    // Si la détection échoue, essayer avec une requête directe
-    if (!detectedColor || detectedColor.length > 20) {
-      console.log("First detection failed, trying with direct query");
-      detectedColor = await performDirectColorQuery(imageDescription, hf);
+    if (detectedColor && detectedColor.length < 20) {
+      detectedColors.push(detectedColor);
     }
     
-    // Étape 3: Mapper la couleur détectée vers les couleurs françaises disponibles
-    return mapToFrenchColor(detectedColor);
+    // Étape 3: Essayer avec une requête directe si nécessaire
+    const directQueryColor = await performDirectColorQuery(imageDescription, hf);
+    if (directQueryColor && directQueryColor.length < 20) {
+      detectedColors.push(directQueryColor);
+    }
+    
+    // Étape 4: Détecter la couleur dominante si nécessaire
+    if (detectedColors.length === 0) {
+      const dominantColor = await detectDominantColor(imageDescription, hf);
+      if (dominantColor && dominantColor !== "unknown") {
+        detectedColors.push(dominantColor);
+      }
+    }
+    
+    // Étape 5: Déterminer la couleur la plus probable parmi celles détectées
+    let finalDetectedColor = await determineMostLikelyColor(imageDescription, detectedColors, hf);
+    
+    // Étape 6: Mapper la couleur détectée vers les couleurs françaises disponibles
+    return mapToFrenchColor(finalDetectedColor);
   } catch (error) {
     console.error("Error detecting clothing color:", error);
-    return "multicolore"; // Valeur par défaut en cas d'erreur
+    // Retourner une couleur par défaut au lieu de "multicolore"
+    return "bleu"; // Couleur par défaut car souvent les vêtements sont bleus
   }
 }
 
@@ -312,7 +434,17 @@ async function detectClothingColor(imageUrl: string): Promise<string> {
 function validateDetectedColor(detectedColor: string): string {
   // Vérifier si la couleur détectée est dans la liste des couleurs disponibles
   if (!availableColors.includes(detectedColor)) {
-    return 'multicolore';
+    // Au lieu de retourner "multicolore", trouver la couleur la plus proche dans la liste
+    const scores = availableColors.map(color => {
+      const priority = colorPriority[color] || 0;
+      return { color, priority };
+    });
+    
+    // Trier par priorité (du plus élevé au plus bas)
+    scores.sort((a, b) => b.priority - a.priority);
+    
+    // Retourner la couleur avec la plus haute priorité
+    return scores[0].color;
   }
   return detectedColor;
 }
