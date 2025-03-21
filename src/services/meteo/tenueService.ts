@@ -7,6 +7,8 @@ export {
   estAdaptePluie,
   estAEviterPluie,
   suggestVetements,
-  generateOutfitMessage,
-  TenueSuggestion
+  generateOutfitMessage
 } from './tenue';
+
+// Use 'export type' for type re-exports when isolatedModules is enabled
+export type { TenueSuggestion } from './tenue';
