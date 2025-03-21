@@ -191,6 +191,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_all_clothes_to_user: {
+        Args: {
+          target_user_id: string
+        }
+        Returns: number
+      }
       create_table: {
         Args: {
           table_name: string
@@ -203,6 +209,12 @@ export type Database = {
           query: string
         }
         Returns: undefined
+      }
+      get_user_id_by_email: {
+        Args: {
+          email_param: string
+        }
+        Returns: string
       }
     }
     Enums: {

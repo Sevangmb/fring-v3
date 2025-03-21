@@ -6,7 +6,7 @@ import MesVetementsSection from "@/components/organisms/MesVetements";
 import { Heading, Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
 import { Plus, List, LogIn } from "lucide-react";
-import { createVetementsTable, assignVetementsToUser } from "@/services/supabaseService";
+import { assignVetementsToUser } from "@/services/supabaseService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -23,9 +23,6 @@ const MesVetementsPage = () => {
     if (!alreadyInitialized && !initialized) {
       const setupDatabase = async () => {
         try {
-          // Essayer de créer la table directement via SQL, silencieusement
-          await createVetementsTable();
-          
           // Attribuer tous les vêtements existants à l'utilisateur sevans@hotmail.fr
           const targetUserEmail = 'sevans@hotmail.fr';
           const assignResult = await assignVetementsToUser(targetUserEmail);
@@ -38,6 +35,11 @@ const MesVetementsPage = () => {
             });
           } else {
             console.warn(`Impossible d'attribuer les vêtements à ${targetUserEmail}`);
+            toast({
+              title: "Attention",
+              description: `Impossible d'attribuer les vêtements à ${targetUserEmail}`,
+              variant: "destructive",
+            });
           }
           
           // Marquer comme initialisé
@@ -45,6 +47,11 @@ const MesVetementsPage = () => {
           setInitialized(true);
         } catch (error) {
           console.error("Erreur d'initialisation:", error);
+          toast({
+            title: "Erreur",
+            description: "Une erreur est survenue lors de l'initialisation",
+            variant: "destructive",
+          });
           // Même en cas d'erreur, on marque comme initialisé pour ne pas réessayer
           sessionStorage.setItem('dbInitialized', 'true');
           setInitialized(true);

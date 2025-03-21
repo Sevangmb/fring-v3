@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 // Type pour un vêtement
 export interface Vetement {
@@ -114,38 +114,34 @@ export const initializeDatabase = async () => {
 // Fonction pour attribuer tous les vêtements existants à un utilisateur spécifique
 export const assignVetementsToUser = async (userEmail: string): Promise<boolean> => {
   try {
-    // Récupérer l'ID de l'utilisateur à partir de son email
-    const { data: userData, error: userError } = await supabase
-      .from('auth.users')
-      .select('id')
-      .eq('email', userEmail)
-      .single();
+    // Récupérer l'ID de l'utilisateur à partir de son email en utilisant la fonction SQL
+    const { data: userId, error: userError } = await supabase.rpc('get_user_id_by_email', {
+      email_param: userEmail
+    });
     
     if (userError) {
-      console.error('Erreur lors de la récupération de l\'utilisateur:', userError);
+      console.error('Erreur lors de la récupération de l\'ID utilisateur:', userError);
       return false;
     }
     
-    if (!userData) {
+    if (!userId) {
       console.error('Utilisateur non trouvé:', userEmail);
       return false;
     }
     
-    const userId = userData.id;
     console.log('ID de l\'utilisateur récupéré:', userId);
     
-    // Mettre à jour tous les vêtements sans propriétaire pour les attribuer à cet utilisateur
-    const { error: updateError } = await supabase
-      .from('vetements')
-      .update({ user_id: userId })
-      .is('user_id', null);
+    // Utiliser la fonction RPC pour attribuer tous les vêtements sans propriétaire à cet utilisateur
+    const { data: affectedRows, error: updateError } = await supabase.rpc('assign_all_clothes_to_user', {
+      target_user_id: userId
+    });
     
     if (updateError) {
-      console.error('Erreur lors de la mise à jour des vêtements:', updateError);
+      console.error('Erreur lors de l\'attribution des vêtements:', updateError);
       return false;
     }
     
-    console.log('Tous les vêtements ont été attribués à l\'utilisateur:', userEmail);
+    console.log(`${affectedRows} vêtements ont été attribués à l'utilisateur ${userEmail}`);
     return true;
   } catch (error) {
     console.error('Erreur lors de l\'attribution des vêtements:', error);
@@ -517,7 +513,7 @@ export const envoyerDemandeAmi = async (amiId: string): Promise<Ami> => {
       throw new Error('Vous devez être connecté pour envoyer une demande d\'ami');
     }
 
-    // Vérifier si une demande existe déjà
+    // V��rifier si une demande existe déjà
     const { data: existingRequest, error: checkError } = await supabase
       .from('amis')
       .select('*')
