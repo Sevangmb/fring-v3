@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMessages } from "@/hooks/useMessages";
-import { resolveIdentifier, resolveToId } from "@/hooks/messages/index";
+import { resolveIdentifier } from "@/hooks/messages/identifierResolver";
 import { isEmail } from "@/services/amis/userEmail";
 import { useAuth } from "@/contexts/AuthContext";
 import { Mail } from "lucide-react";
@@ -32,7 +33,7 @@ const MessagesPageContent: React.FC<MessagesPageContentProps> = ({ friendIdOrEma
   } = useMessages(friendId);
 
   useEffect(() => {
-    const resolveIdentifier = async () => {
+    const resolveUserIdentifier = async () => {
       if (!friendIdOrEmail || !user || resolvingRef.current) {
         if (!friendIdOrEmail) {
           setFriendId(null);
@@ -47,15 +48,15 @@ const MessagesPageContent: React.FC<MessagesPageContentProps> = ({ friendIdOrEma
         setResolving(true);
         console.log(`Résolution de l'identifiant: ${friendIdOrEmail}`);
         
-        const { id, email } = await resolveIdentifier(friendIdOrEmail);
+        const result = await resolveIdentifier(friendIdOrEmail);
         
-        if (id) {
-          setFriendId(id);
-          setFriendEmail(email);
-          console.log(`Identifiant résolu: ID=${id}, Email=${email}`);
+        if (result.id) {
+          setFriendId(result.id);
+          setFriendEmail(result.email);
+          console.log(`Identifiant résolu: ID=${result.id}, Email=${result.email}`);
           
-          if (friendIdOrEmail.includes('-') && email && isEmail(email) && friendIdOrEmail !== email) {
-            navigate(`/messages/${email}`, { replace: true });
+          if (friendIdOrEmail.includes('-') && result.email && isEmail(result.email) && friendIdOrEmail !== result.email) {
+            navigate(`/messages/${result.email}`, { replace: true });
           }
         } else {
           console.error("Impossible de trouver l'utilisateur avec cet identifiant", friendIdOrEmail);
@@ -79,7 +80,7 @@ const MessagesPageContent: React.FC<MessagesPageContentProps> = ({ friendIdOrEma
       }
     };
     
-    resolveIdentifier();
+    resolveUserIdentifier();
   }, [friendIdOrEmail, navigate, toast, user]);
 
   const isMobile = window.innerWidth < 768;
