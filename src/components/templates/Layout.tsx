@@ -2,6 +2,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import MainNavigation from "./MainNavigation";
+import LayoutFooter from "../organisms/LayoutFooter";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -27,13 +28,7 @@ const Layout = ({
       >
         {children}
       </main>
-      {footer && (
-        <footer className="bg-muted/30 p-4 border-t">
-          <div className="container mx-auto text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Multi-User App. All rights reserved.
-          </div>
-        </footer>
-      )}
+      {footer && <LayoutFooter />}
     </div>
   );
 };
