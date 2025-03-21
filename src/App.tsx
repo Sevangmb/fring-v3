@@ -16,6 +16,7 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import MesVetements from "./pages/MesVetements";
 import MesAmis from "./pages/MesAmis";
+import About from "./pages/About";
 
 // Create a new query client instance
 const queryClient = new QueryClient({
@@ -42,6 +43,7 @@ const App = () => {
               <Route path="/register" element={<Register />} />
               <Route path="/mes-vetements" element={<MesVetements />} />
               <Route path="/mes-amis" element={<MesAmis />} />
+              <Route path="/about" element={<About />} />
               
               {/* Protected Routes */}
               <Route path="/dashboard" element={
