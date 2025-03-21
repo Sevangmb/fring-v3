@@ -3,6 +3,7 @@
  * Service de détection locale pour l'analyse des couleurs via Canvas
  */
 import { simplifyColor } from './utils';
+import { generateFallbackResults } from './fallbackGenerator';
 
 /**
  * Type pour la fonction de callback des étapes
@@ -90,7 +91,6 @@ export const simulateLocalDetection = async (imageUrl: string, onStep?: StepCall
     onStep?.(`Erreur lors de l'analyse via Canvas: ${canvasError instanceof Error ? canvasError.message : "Erreur inconnue"}`);
   }
   
-  // Si l'analyse via Canvas échoue, importer et utiliser la fonction de secours
-  const { generateFallbackResults } = await import('./fallbackGenerator');
+  // Si l'analyse via Canvas échoue, utiliser la fonction de secours
   return generateFallbackResults(onStep);
 };

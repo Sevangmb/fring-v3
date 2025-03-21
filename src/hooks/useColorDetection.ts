@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { detectImageInfo } from "@/services/colorDetection";
 import { UseFormReturn } from "react-hook-form";
-import { VetementFormValues } from "@/components/vetements/VetementFormFields";
+import { VetementFormValues } from "@/components/vetements/schema/VetementFormSchema";
 
 /**
  * Hook personnalisé pour gérer la détection de couleur et de catégorie

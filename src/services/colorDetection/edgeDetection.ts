@@ -24,14 +24,6 @@ export const invokeDetectionFunction = async (imageUrl: string, onStep?: StepCal
   try {
     // Vérification de la connexion à Supabase
     onStep?.("Vérification de la connexion à Supabase...");
-    const { data: testData, error: testError } = await supabase.auth.getSession();
-    
-    if (testError) {
-      onStep?.(`Erreur de connexion à Supabase: ${testError.message}`);
-      throw new Error(`Erreur de connexion: ${testError.message}`);
-    }
-
-    onStep?.("Connexion à Supabase OK. Préparation de la requête...");
     
     // Tentative d'appel à la fonction Edge Supabase
     onStep?.("Envoi de la requête à la fonction Edge Supabase 'detect-color'");
