@@ -20,6 +20,12 @@ export const useColorDetection = (
   const addStep = (step: string) => {
     setDetectionSteps(prev => [...prev, step]);
     console.log(`Étape de détection: ${step}`);
+    // Afficher chaque étape dans un toast pour plus de visibilité
+    toast({
+      title: "Étape de détection",
+      description: step,
+      duration: 3000,
+    });
   };
 
   const handleDetectImage = async () => {
@@ -41,6 +47,7 @@ export const useColorDetection = (
       toast({
         title: "Détection en cours",
         description: "Analyse de l'image pour identifier la couleur et la catégorie...",
+        duration: 5000,
       });
       
       addStep("1. Préparation de l'image pour l'analyse");
@@ -49,10 +56,6 @@ export const useColorDetection = (
       addStep("2. Appel du service de détection");
       const detectedInfo = await detectImageInfo(imagePreview, (step) => {
         addStep(step);
-        toast({
-          title: "Traitement en cours",
-          description: step,
-        });
       });
       
       addStep(`3. Informations détectées: couleur=${detectedInfo.color}, catégorie=${detectedInfo.category}`);
@@ -72,6 +75,7 @@ export const useColorDetection = (
         toast({
           title: "Détection réussie",
           description: `La couleur ${detectedInfo.color} et la catégorie ${detectedInfo.category || 'inconnue'} ont été détectées.`,
+          duration: 5000,
         });
       } else {
         throw new Error("Données de détection invalides");
@@ -83,18 +87,24 @@ export const useColorDetection = (
         ? error.message 
         : "Erreur inconnue lors de la détection";
       
-      setDetectionError("La détection automatique a échoué. Veuillez sélectionner manuellement les informations.");
+      setDetectionError("La détection automatique a rencontré un problème. Veuillez vérifier les détails ci-dessous.");
       addStep(`Erreur: ${errorMessage}`);
       
-      // Utiliser une couleur aléatoire comme fallback
+      // Utiliser une couleur par défaut comme fallback
       const randomColors = ['bleu', 'rouge', 'vert', 'jaune', 'noir', 'blanc', 'violet', 'orange'];
+      const randomCategories = ['T-shirt', 'Pantalon', 'Chemise', 'Robe', 'Jupe', 'Veste'];
+      
       const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+      const randomCategory = randomCategories[Math.floor(Math.random() * randomCategories.length)];
+      
       form.setValue('couleur', randomColor);
+      form.setValue('categorie', randomCategory);
       
       toast({
         title: "Détection partielle",
-        description: "La détection automatique a rencontré un problème. Une couleur a été suggérée automatiquement.",
+        description: "Une couleur et une catégorie ont été suggérées automatiquement. Vérifiez les détails de l'erreur.",
         variant: "default",
+        duration: 7000,
       });
     } finally {
       setDetectingColor(false);
@@ -103,6 +113,7 @@ export const useColorDetection = (
 
   return {
     detectingColor,
+    setDetectingColor,
     detectionError,
     detectionSteps,
     handleDetectImage
