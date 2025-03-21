@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Type pour un vêtement
@@ -317,8 +316,6 @@ export const demoVetements: Omit<Vetement, 'id' | 'created_at'>[] = [
   },
 ];
 
-// Fonctions pour les nouvelles tables
-
 // Fonction pour récupérer toutes les catégories
 export const fetchCategories = async (): Promise<Categorie[]> => {
   try {
@@ -359,40 +356,8 @@ export const fetchMarques = async (): Promise<Marque[]> => {
   }
 };
 
-// Fonction pour créer un bucket de stockage si nécessaire
+// Fonction pour créer un bucket de stockage si nécessaire - Désactivée à cause des problèmes de RLS
 export const createStorageBucket = async () => {
-  try {
-    // Vérifier si le bucket existe déjà
-    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-    
-    if (bucketsError) {
-      console.error('Erreur lors de la récupération des buckets:', bucketsError);
-      return false;
-    }
-    
-    // Vérifier si le bucket 'vetements' existe
-    const vetementsBucket = buckets.find(b => b.name === 'vetements');
-    
-    if (!vetementsBucket) {
-      // Créer le bucket 'vetements'
-      const { error } = await supabase.storage.createBucket('vetements', {
-        public: true,
-        fileSizeLimit: 5242880, // 5MB
-      });
-      
-      if (error) {
-        console.error('Erreur lors de la création du bucket:', error);
-        return false;
-      }
-      
-      console.log('Bucket "vetements" créé avec succès');
-      return true;
-    }
-    
-    console.log('Le bucket "vetements" existe déjà');
-    return true;
-  } catch (error) {
-    console.error('Erreur lors de la création du bucket:', error);
-    return false;
-  }
+  console.log('Création du bucket désactivée pour éviter les erreurs RLS');
+  return false;
 };

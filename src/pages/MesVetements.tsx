@@ -1,26 +1,26 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/templates/Layout";
 import MesVetementsSection from "@/components/organisms/MesVetements";
 import { Heading, Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
-import { Plus, List, Database } from "lucide-react";
-import { initializeDatabase, createVetementsTable, createStorageBucket } from "@/services/supabaseService";
+import { Plus, List } from "lucide-react";
+import { initializeDatabase, createVetementsTable } from "@/services/supabaseService";
 import { useToast } from "@/hooks/use-toast";
 
 const MesVetementsPage = () => {
   const { toast } = useToast();
+  const [initialized, setInitialized] = useState(false);
 
   // Initialiser la base de données au chargement de la page
   useEffect(() => {
     const setupDatabase = async () => {
+      if (initialized) return; // Éviter les initialisations multiples
+      
       try {
         // Essayer d'abord de créer la table directement via SQL
         const tableCreated = await createVetementsTable();
-        
-        // Créer le bucket de stockage pour les images
-        const bucketCreated = await createStorageBucket();
         
         if (!tableCreated) {
           // Fallback: essayer d'initialiser avec l'ancienne méthode
@@ -39,18 +39,14 @@ const MesVetementsPage = () => {
             });
           }
         } else {
-          if (bucketCreated) {
-            toast({
-              title: "Initialisation réussie",
-              description: "La base de données et le stockage ont été initialisés avec succès.",
-            });
-          } else {
-            toast({
-              title: "Base de données initialisée",
-              description: "La table a été créée ou existait déjà, mais le bucket de stockage n'a pas pu être créé.",
-            });
-          }
+          // La table existe, pas besoin d'afficher un message pour le bucket de stockage
+          toast({
+            title: "Base de données initialisée",
+            description: "La table a été créée ou existait déjà.",
+          });
         }
+        
+        setInitialized(true);
       } catch (error) {
         console.error("Erreur d'initialisation:", error);
         toast({
@@ -58,11 +54,12 @@ const MesVetementsPage = () => {
           description: "Impossible d'initialiser la base de données. Utilisation des données de démonstration.",
           variant: "destructive",
         });
+        setInitialized(true);
       }
     };
     
     setupDatabase();
-  }, [toast]);
+  }, [toast, initialized]);
 
   return (
     <Layout>

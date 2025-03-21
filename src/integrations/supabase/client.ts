@@ -14,39 +14,4 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 // Vérifier la connexion avec un log
 console.log('Supabase client initialisé');
 
-// Créer le bucket de stockage au démarrage de l'application si nécessaire
-export const initStorage = async () => {
-  try {
-    // Vérifier si le bucket existe déjà
-    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-    
-    if (bucketsError) {
-      console.error('Erreur lors de la récupération des buckets:', bucketsError);
-      return;
-    }
-    
-    // Vérifier si le bucket 'vetements' existe
-    const vetementsBucket = buckets.find(b => b.name === 'vetements');
-    
-    if (!vetementsBucket) {
-      // Créer le bucket 'vetements'
-      const { error } = await supabase.storage.createBucket('vetements', {
-        public: true,
-        fileSizeLimit: 5242880, // 5MB
-      });
-      
-      if (error) {
-        console.error('Erreur lors de la création du bucket:', error);
-      } else {
-        console.log('Bucket "vetements" créé avec succès');
-      }
-    } else {
-      console.log('Le bucket "vetements" existe déjà');
-    }
-  } catch (error) {
-    console.error('Erreur lors de l\'initialisation du stockage:', error);
-  }
-};
-
-// Initialiser le stockage
-initStorage();
+// L'initialisation du bucket de stockage a été supprimée pour éviter les erreurs RLS
