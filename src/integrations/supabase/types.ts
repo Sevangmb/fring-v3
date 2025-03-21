@@ -9,13 +9,174 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: number
+          nom: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          nom: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          nom?: string
+        }
+        Relationships: []
+      }
+      marques: {
+        Row: {
+          created_at: string
+          id: number
+          logo_url: string | null
+          nom: string
+          site_web: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          logo_url?: string | null
+          nom: string
+          site_web?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          logo_url?: string | null
+          nom?: string
+          site_web?: string | null
+        }
+        Relationships: []
+      }
+      tenues: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: number
+          image_url: string | null
+          nom: string
+          occasion: string | null
+          saison: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          image_url?: string | null
+          nom: string
+          occasion?: string | null
+          saison?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          image_url?: string | null
+          nom?: string
+          occasion?: string | null
+          saison?: string | null
+        }
+        Relationships: []
+      }
+      tenues_vetements: {
+        Row: {
+          created_at: string
+          id: number
+          position_ordre: number | null
+          tenue_id: number | null
+          vetement_id: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          position_ordre?: number | null
+          tenue_id?: number | null
+          vetement_id?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          position_ordre?: number | null
+          tenue_id?: number | null
+          vetement_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenues_vetements_tenue_id_fkey"
+            columns: ["tenue_id"]
+            isOneToOne: false
+            referencedRelation: "tenues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenues_vetements_vetement_id_fkey"
+            columns: ["vetement_id"]
+            isOneToOne: false
+            referencedRelation: "vetements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vetements: {
+        Row: {
+          categorie: string
+          couleur: string
+          created_at: string
+          description: string | null
+          id: number
+          image_url: string | null
+          marque: string | null
+          nom: string
+          taille: string
+        }
+        Insert: {
+          categorie: string
+          couleur: string
+          created_at?: string
+          description?: string | null
+          id?: number
+          image_url?: string | null
+          marque?: string | null
+          nom: string
+          taille: string
+        }
+        Update: {
+          categorie?: string
+          couleur?: string
+          created_at?: string
+          description?: string | null
+          id?: number
+          image_url?: string | null
+          marque?: string | null
+          nom?: string
+          taille?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_table: {
+        Args: {
+          table_name: string
+          columns: string
+        }
+        Returns: undefined
+      }
+      exec_sql: {
+        Args: {
+          query: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

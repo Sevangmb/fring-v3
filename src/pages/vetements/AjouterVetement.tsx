@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/templates/Layout";
 import { Heading, Text } from "@/components/atoms/Typography";
@@ -10,9 +11,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Shirt, ArrowLeft, ImagePlus, Plus } from "lucide-react";
+import { Shirt, ArrowLeft, ImagePlus, Plus, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { addVetement } from "@/services/supabaseService";
+import { supabase } from "@/lib/supabase";
+
+// Type pour les catégories
+interface Categorie {
+  id: number;
+  nom: string;
+  description: string | null;
+}
+
+// Type pour les marques
+interface Marque {
+  id: number;
+  nom: string;
+  site_web: string | null;
+  logo_url: string | null;
+}
 
 // Définir le schéma de validation pour le formulaire d'ajout de vêtement
 const vetementSchema = z.object({
@@ -32,6 +49,9 @@ const AjouterVetementPage = () => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [imagePreview, setImagePreview] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [categories, setCategories] = useState<Categorie[]>([]);
+  const [marques, setMarques] = useState<Marque[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   // Initialiser le formulaire avec react-hook-form
   const form = useForm<VetementFormValues>({
@@ -46,14 +66,102 @@ const AjouterVetementPage = () => {
     },
   });
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    // Charger les catégories depuis Supabase
+    const fetchCategories = async () => {
+      setLoadingCategories(true);
+      try {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*')
+          .order('nom');
+        
+        if (error) {
+          console.error("Erreur lors du chargement des catégories:", error);
+          toast({
+            title: "Erreur",
+            description: "Impossible de charger les catégories.",
+            variant: "destructive",
+          });
+        } else {
+          setCategories(data || []);
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement des catégories:", error);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    // Charger les marques depuis Supabase
+    const fetchMarques = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('marques')
+          .select('*')
+          .order('nom');
+        
+        if (error) {
+          console.error("Erreur lors du chargement des marques:", error);
+        } else {
+          setMarques(data || []);
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement des marques:", error);
+      }
+    };
+
+    fetchCategories();
+    fetchMarques();
+  }, [toast]);
+
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Afficher une prévisualisation
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+
+      // Télécharger l'image sur Supabase Storage
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+        
+        // Vérifier si le bucket "vetements" existe, sinon on utilise une URL locale
+        const { data: bucketData, error: bucketError } = await supabase.storage.getBucket('vetements');
+        
+        if (bucketError) {
+          console.warn("Le bucket 'vetements' n'existe pas, l'image sera stockée localement", bucketError);
+          return; // On garde l'image en local avec le dataURL
+        }
+        
+        const { data, error } = await supabase.storage
+          .from('vetements')
+          .upload(`images/${fileName}`, file);
+
+        if (error) {
+          console.error("Erreur lors du téléchargement de l'image:", error);
+          toast({
+            title: "Erreur",
+            description: "Impossible de télécharger l'image.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Obtenir l'URL publique de l'image
+        const { data: { publicUrl } } = supabase.storage
+          .from('vetements')
+          .getPublicUrl(`images/${fileName}`);
+
+        // Remplacer la prévisualisation par l'URL de Supabase
+        setImagePreview(publicUrl);
+      } catch (error) {
+        console.error("Erreur lors du téléchargement de l'image:", error);
+      }
     }
   };
 
@@ -185,25 +293,26 @@ const AjouterVetementPage = () => {
                         <Select 
                           onValueChange={field.onChange} 
                           defaultValue={field.value}
+                          disabled={loadingCategories}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Sélectionner une catégorie" />
+                              <SelectValue placeholder={loadingCategories ? "Chargement..." : "Sélectionner une catégorie"} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="t-shirt">T-shirt</SelectItem>
-                            <SelectItem value="chemise">Chemise</SelectItem>
-                            <SelectItem value="pantalon">Pantalon</SelectItem>
-                            <SelectItem value="jeans">Jeans</SelectItem>
-                            <SelectItem value="veste">Veste</SelectItem>
-                            <SelectItem value="pull">Pull</SelectItem>
-                            <SelectItem value="robe">Robe</SelectItem>
-                            <SelectItem value="jupe">Jupe</SelectItem>
-                            <SelectItem value="short">Short</SelectItem>
-                            <SelectItem value="manteau">Manteau</SelectItem>
-                            <SelectItem value="chaussures">Chaussures</SelectItem>
-                            <SelectItem value="accessoire">Accessoire</SelectItem>
+                            {loadingCategories ? (
+                              <div className="flex items-center justify-center p-2">
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                <span>Chargement...</span>
+                              </div>
+                            ) : (
+                              categories.map((cat) => (
+                                <SelectItem key={cat.id} value={cat.nom}>
+                                  {cat.nom}
+                                </SelectItem>
+                              ))
+                            )}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -294,9 +403,36 @@ const AjouterVetementPage = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Marque</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Nom de la marque" {...field} />
-                        </FormControl>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionner une marque (optionnel)" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {marques.length > 0 ? (
+                              marques.map((marque) => (
+                                <SelectItem key={marque.id} value={marque.nom}>
+                                  {marque.nom}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <>
+                                <SelectItem value="Nike">Nike</SelectItem>
+                                <SelectItem value="Adidas">Adidas</SelectItem>
+                                <SelectItem value="Zara">Zara</SelectItem>
+                                <SelectItem value="H&M">H&M</SelectItem>
+                                <SelectItem value="Levi's">Levi's</SelectItem>
+                                <SelectItem value="Uniqlo">Uniqlo</SelectItem>
+                                <SelectItem value="Gap">Gap</SelectItem>
+                                <SelectItem value="Autre">Autre</SelectItem>
+                              </>
+                            )}
+                          </SelectContent>
+                        </Select>
                         <FormDescription>Optionnel</FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -335,7 +471,10 @@ const AjouterVetementPage = () => {
                   </Button>
                   <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting ? (
-                      <>Traitement en cours...</>
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Traitement en cours...
+                      </>
                     ) : (
                       <>
                         <Plus className="mr-2 h-4 w-4" />

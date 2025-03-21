@@ -5,8 +5,8 @@ import Layout from "@/components/templates/Layout";
 import MesVetementsSection from "@/components/organisms/MesVetements";
 import { Heading, Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
-import { Plus, List } from "lucide-react";
-import { initializeDatabase, createVetementsTable } from "@/services/supabaseService";
+import { Plus, List, Database } from "lucide-react";
+import { initializeDatabase, createVetementsTable, createStorageBucket } from "@/services/supabaseService";
 import { useToast } from "@/hooks/use-toast";
 
 const MesVetementsPage = () => {
@@ -18,6 +18,9 @@ const MesVetementsPage = () => {
       try {
         // Essayer d'abord de créer la table directement via SQL
         const tableCreated = await createVetementsTable();
+        
+        // Créer le bucket de stockage pour les images
+        const bucketCreated = await createStorageBucket();
         
         if (!tableCreated) {
           // Fallback: essayer d'initialiser avec l'ancienne méthode
@@ -36,10 +39,17 @@ const MesVetementsPage = () => {
             });
           }
         } else {
-          toast({
-            title: "Base de données initialisée",
-            description: "La table a été créée ou existait déjà.",
-          });
+          if (bucketCreated) {
+            toast({
+              title: "Initialisation réussie",
+              description: "La base de données et le stockage ont été initialisés avec succès.",
+            });
+          } else {
+            toast({
+              title: "Base de données initialisée",
+              description: "La table a été créée ou existait déjà, mais le bucket de stockage n'a pas pu être créé.",
+            });
+          }
         }
       } catch (error) {
         console.error("Erreur d'initialisation:", error);

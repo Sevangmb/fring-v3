@@ -149,23 +149,13 @@ export const addVetement = async (vetement: Omit<Vetement, 'id' | 'created_at'>)
     
     if (error) {
       console.error('Erreur lors de l\'ajout d\'un vêtement:', error);
-      // Simulation d'un ajout réussi avec des données fictives
-      return {
-        ...vetement,
-        id: Math.floor(Math.random() * 1000),
-        created_at: new Date().toISOString()
-      } as Vetement;
+      throw error;
     }
     
     return data as Vetement;
   } catch (error) {
     console.error('Erreur lors de l\'ajout d\'un vêtement:', error);
-    // Simulation d'un ajout réussi avec des données fictives
-    return {
-      ...vetement,
-      id: Math.floor(Math.random() * 1000),
-      created_at: new Date().toISOString()
-    } as Vetement;
+    throw error;
   }
 };
 
@@ -179,9 +169,11 @@ export const deleteVetement = async (id: number): Promise<void> => {
     
     if (error) {
       console.error('Erreur lors de la suppression d\'un vêtement:', error);
+      throw error;
     }
   } catch (error) {
     console.error('Erreur lors de la suppression d\'un vêtement:', error);
+    throw error;
   }
 };
 
@@ -307,3 +299,83 @@ export const demoVetements: Omit<Vetement, 'id' | 'created_at'>[] = [
     description: "Short en coton léger pour l'été",
   },
 ];
+
+// Fonctions pour les nouvelles tables
+
+// Fonction pour récupérer toutes les catégories
+export const fetchCategories = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('nom');
+    
+    if (error) {
+      console.error('Erreur lors de la récupération des catégories:', error);
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Erreur lors de la récupération des catégories:', error);
+    throw error;
+  }
+};
+
+// Fonction pour récupérer toutes les marques
+export const fetchMarques = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('marques')
+      .select('*')
+      .order('nom');
+    
+    if (error) {
+      console.error('Erreur lors de la récupération des marques:', error);
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Erreur lors de la récupération des marques:', error);
+    throw error;
+  }
+};
+
+// Fonction pour créer un bucket de stockage si nécessaire
+export const createStorageBucket = async () => {
+  try {
+    // Vérifier si le bucket existe déjà
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    
+    if (bucketsError) {
+      console.error('Erreur lors de la récupération des buckets:', bucketsError);
+      return false;
+    }
+    
+    // Vérifier si le bucket 'vetements' existe
+    const vetementsBucket = buckets.find(b => b.name === 'vetements');
+    
+    if (!vetementsBucket) {
+      // Créer le bucket 'vetements'
+      const { error } = await supabase.storage.createBucket('vetements', {
+        public: true,
+        fileSizeLimit: 5242880, // 5MB
+      });
+      
+      if (error) {
+        console.error('Erreur lors de la création du bucket:', error);
+        return false;
+      }
+      
+      console.log('Bucket "vetements" créé avec succès');
+      return true;
+    }
+    
+    console.log('Le bucket "vetements" existe déjà');
+    return true;
+  } catch (error) {
+    console.error('Erreur lors de la création du bucket:', error);
+    return false;
+  }
+};
