@@ -32,6 +32,8 @@ export const updateVetement = async (id: number, vetement: Partial<Vetement>): P
       }
     }
     
+    console.log('Données filtrées pour la mise à jour:', updateData);
+    
     const { data, error } = await supabase
       .from('vetements')
       .update(updateData)

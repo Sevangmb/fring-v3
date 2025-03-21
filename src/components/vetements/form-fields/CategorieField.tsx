@@ -1,9 +1,8 @@
 
 import React from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
-import { Loader2 } from "lucide-react";
 import { VetementFormValues, Categorie } from "../schema/VetementFormSchema";
 
 interface CategorieFieldProps {
@@ -37,43 +36,13 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
               </span>
             )}
           </FormLabel>
-          <Select 
-            onValueChange={field.onChange} 
-            defaultValue={field.value}
-            value={field.value}
-            disabled={loadingCategories || loading}
-          >
-            <FormControl>
-              <SelectTrigger>
-                <SelectValue placeholder={
-                  loading 
-                    ? "Détection en cours..." 
-                    : loadingCategories 
-                      ? "Chargement..." 
-                      : "Sélectionner une catégorie"
-                } />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              {loading ? (
-                <div className="flex items-center justify-center p-2">
-                  <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full mr-2" />
-                  <span>Détection en cours...</span>
-                </div>
-              ) : loadingCategories ? (
-                <div className="flex items-center justify-center p-2">
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  <span>Chargement...</span>
-                </div>
-              ) : (
-                categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.nom}>
-                    {cat.nom}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+          <FormControl>
+            <Input 
+              placeholder={loading ? "Détection en cours..." : "Entrez la catégorie"} 
+              {...field}
+              disabled={loading}
+            />
+          </FormControl>
           <FormMessage />
         </FormItem>
       )}
