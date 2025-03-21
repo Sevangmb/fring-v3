@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Text } from '@/components/atoms/Typography';
-import { Shirt, Pants, SandwichIcon } from 'lucide-react';
+import { Shirt, Shoe, ShoppingBag } from 'lucide-react';
 import { Vetement } from '@/services/vetement/types';
 import { VetementType } from '@/services/meteo/tenueService';
 
@@ -61,7 +61,7 @@ const TenueSuggestion: React.FC<TenueSuggestionProps> = ({
         {/* Bas */}
         <div className="border border-amber-200 dark:border-amber-800 rounded-lg p-3 bg-white/50 dark:bg-white/5">
           <div className="flex items-center mb-2">
-            <Pants className="h-5 w-5 text-amber-600 dark:text-amber-400 mr-2" />
+            <ShoppingBag className="h-5 w-5 text-amber-600 dark:text-amber-400 mr-2" />
             <Text variant="subtle" weight="medium">Bas</Text>
           </div>
           {bas ? (
@@ -76,7 +76,7 @@ const TenueSuggestion: React.FC<TenueSuggestionProps> = ({
                 </div>
               ) : (
                 <div className="h-10 w-10 bg-amber-100 dark:bg-amber-800/30 rounded-full flex items-center justify-center mr-3">
-                  <Pants className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                  <ShoppingBag className="h-6 w-6 text-amber-600 dark:text-amber-400" />
                 </div>
               )}
               <div>
@@ -94,7 +94,7 @@ const TenueSuggestion: React.FC<TenueSuggestionProps> = ({
         {/* Chaussures */}
         <div className="border border-amber-200 dark:border-amber-800 rounded-lg p-3 bg-white/50 dark:bg-white/5">
           <div className="flex items-center mb-2">
-            <SandwichIcon className="h-5 w-5 text-amber-600 dark:text-amber-400 mr-2" />
+            <Shoe className="h-5 w-5 text-amber-600 dark:text-amber-400 mr-2" />
             <Text variant="subtle" weight="medium">Chaussures</Text>
           </div>
           {chaussures ? (
@@ -109,7 +109,7 @@ const TenueSuggestion: React.FC<TenueSuggestionProps> = ({
                 </div>
               ) : (
                 <div className="h-10 w-10 bg-amber-100 dark:bg-amber-800/30 rounded-full flex items-center justify-center mr-3">
-                  <SandwichIcon className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                  <Shoe className="h-6 w-6 text-amber-600 dark:text-amber-400" />
                 </div>
               )}
               <div>
