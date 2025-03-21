@@ -1,5 +1,5 @@
 
-import { HfInference } from 'https://esm.sh/@huggingface/inference@2.6.1';
+import { createClient } from 'https://esm.sh/@mistralai/mistralai@0.0.9';
 
 /**
  * Détecte la couleur et la catégorie d'un vêtement dans une image
@@ -8,17 +8,17 @@ import { HfInference } from 'https://esm.sh/@huggingface/inference@2.6.1';
  */
 export async function detectClothingInfo(imageUrl: string): Promise<{color: string, category: string}> {
   try {
-    console.log("Starting clothing detection process for image");
+    console.log("Starting clothing detection process with Mistral AI");
     
-    // Initialiser l'API Hugging Face avec la clé API
-    const hfApiKey = Deno.env.get('HUGGINGFACE_API_KEY');
-    if (!hfApiKey) {
-      console.error("HUGGINGFACE_API_KEY not found in environment variables");
-      throw new Error("Configuration API manquante");
+    // Initialiser l'API Mistral avec la clé API
+    const mistralApiKey = Deno.env.get('MISTRAL_API_KEY');
+    if (!mistralApiKey) {
+      console.error("MISTRAL_API_KEY not found in environment variables");
+      throw new Error("Configuration API Mistral manquante");
     }
     
-    const hf = new HfInference(hfApiKey);
-    console.log("HuggingFace client initialized");
+    const mistral = createClient(mistralApiKey);
+    console.log("Mistral AI client initialized");
 
     // Préparer l'image au bon format (gestion du base64)
     const processedImage = imageUrl;
@@ -36,20 +36,29 @@ export async function detectClothingInfo(imageUrl: string): Promise<{color: stri
     Sois très précis et réponds UNIQUEMENT dans ce format.
     `;
     
-    console.log("Sending request to HuggingFace API with Mistral model");
-    const response = await hf.textGeneration({
-      model: "mistralai/Mistral-7B-Instruct-v0.2", // Utilisation du modèle Mistral
-      inputs: `${imageAnalysisPrompt}\n${processedImage}`,
-      parameters: {
-        max_new_tokens: 100,
-        temperature: 0.1, // Température réduite pour plus de précision
-        top_p: 0.95,
-        return_full_text: false
-      }
+    console.log("Sending request to Mistral AI API");
+    const response = await mistral.chat({
+      model: "mistral-large-latest", // Utilisation du modèle Mistral le plus récent
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: imageAnalysisPrompt
+            },
+            {
+              type: "image_url",
+              image_url: processedImage
+            }
+          ]
+        }
+      ],
+      temperature: 0.1 // Température réduite pour plus de précision
     });
     
-    const generatedText = response.generated_text.toLowerCase();
-    console.log("Model detection response:", generatedText);
+    const generatedText = response.choices[0].message.content.toLowerCase();
+    console.log("Mistral AI detection response:", generatedText);
     
     // Extraire la couleur avec regex
     const colorMatch = generatedText.match(/couleur:\s*([a-zéèêëàâäôöùûüç]+)/i);
