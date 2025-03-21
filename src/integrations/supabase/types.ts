@@ -213,6 +213,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_user_has_vetements: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: number
+      }
       create_table: {
         Args: {
           table_name: string
@@ -225,6 +231,22 @@ export type Database = {
           query: string
         }
         Returns: undefined
+      }
+      get_friends_vetements: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: number
+          nom: string
+          categorie: string
+          couleur: string
+          taille: string
+          description: string
+          marque: string
+          image_url: string
+          created_at: string
+          user_id: string
+          owner_email: string
+        }[]
       }
       get_user_id_by_email: {
         Args: {

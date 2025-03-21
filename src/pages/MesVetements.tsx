@@ -10,6 +10,7 @@ import { assignVetementsToUser } from "@/services/databaseService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { createDemoVetementsForUser } from "@/services/vetementService";
+import { supabase } from "@/lib/supabase"; // Ajout de l'import manquant
 
 const MesVetementsPage = () => {
   const [initialized, setInitialized] = useState(false);
