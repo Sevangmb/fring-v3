@@ -34,10 +34,21 @@ export const updateVetement = async (id: number, vetement: Partial<Vetement>): P
     
     console.log('Données existantes:', JSON.stringify(existingData, null, 2));
     
+    // Nettoyer les données avant la mise à jour
+    const cleanedData = {};
+    Object.entries(vetement).forEach(([key, value]) => {
+      // Ne pas inclure les propriétés undefined ou null qui ne sont pas explicitement définies à null
+      if (value !== undefined) {
+        cleanedData[key] = value;
+      }
+    });
+    
+    console.log('Données nettoyées pour mise à jour:', JSON.stringify(cleanedData, null, 2));
+    
     // Faire la mise à jour avec les nouvelles données
     const { data, error } = await supabase
       .from('vetements')
-      .update(vetement)
+      .update(cleanedData)
       .eq('id', id)
       .select('*')
       .single();

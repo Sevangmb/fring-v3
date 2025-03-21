@@ -61,8 +61,8 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
       
       // Réinitialiser le formulaire avec les nouvelles valeurs
       Object.entries(initialValues).forEach(([key, value]) => {
-        if (value !== undefined) {
-          form.setValue(key as keyof VetementFormValues, value);
+        if (value !== undefined && key !== 'id' && key !== 'created_at' && key !== 'user_id') {
+          form.setValue(key as keyof VetementFormValues, value === null ? "" : value);
         }
       });
       

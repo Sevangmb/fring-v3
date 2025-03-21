@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/templates/Layout";
@@ -77,27 +78,32 @@ const ModifierVetementPage = () => {
     loadData();
   }, [vetementId, user, authLoading, navigate, toast]);
 
-  // Fonction de mise à jour avec gestion d'erreur simplifiée
-  const handleUpdate = async (updatedData: VetementFormValues) => {
+  // Fonction de mise à jour simplifiée
+  const handleUpdate = async (formData: VetementFormValues) => {
     try {
-      setIsLoading(true);
-      console.log("====== DÉBUT SOUMISSION DU FORMULAIRE ======");
-      console.log("Données complètes du formulaire:", updatedData);
-      
       if (!vetementId) {
         throw new Error("ID de vêtement manquant");
       }
       
-      // Envoi direct des données au service de mise à jour
-      const result = await updateVetement(vetementId, {
-        nom: updatedData.nom,
-        categorie: updatedData.categorie,
-        couleur: updatedData.couleur,
-        taille: updatedData.taille,
-        description: updatedData.description,
-        marque: updatedData.marque,
-        image_url: updatedData.image_url
-      });
+      setIsLoading(true);
+      console.log("====== DÉBUT SOUMISSION DU FORMULAIRE ======");
+      console.log("Données du formulaire avant envoi:", formData);
+      
+      // Préparation des données pour la mise à jour
+      const updateData = {
+        nom: formData.nom,
+        categorie: formData.categorie,
+        couleur: formData.couleur,
+        taille: formData.taille,
+        description: formData.description || null,
+        marque: formData.marque || null,
+        image_url: formData.image_url || null
+      };
+      
+      console.log("Données préparées pour mise à jour:", updateData);
+      
+      // Envoyer les données au service de mise à jour
+      const result = await updateVetement(vetementId, updateData);
       
       console.log("Résultat de la mise à jour:", result);
       console.log("====== FIN SOUMISSION DU FORMULAIRE ======");
@@ -149,7 +155,7 @@ const ModifierVetementPage = () => {
           </Alert>
         )}
         
-        {isLoading ? (
+        {isLoading && !vetement ? (
           <div className="flex justify-center items-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <span className="ml-2">Chargement des données...</span>
