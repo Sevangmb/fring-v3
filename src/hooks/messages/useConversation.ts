@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Message } from '@/services/messagesService';
-import { loadConversationMessages, markAsRead, sendNewMessage } from './messageOperations';
+import { loadConversationMessages, markAsRead, sendNewMessage } from './index';
 
 export const useConversation = (friendId?: string | null) => {
   const { user } = useAuth();

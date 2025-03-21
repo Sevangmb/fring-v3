@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Message } from '@/services/messagesService';
-import { loadConversationPreviewsWithEmail } from './messageOperations';
+import { loadConversationPreviewsWithEmail } from './conversationLoader';
 
 export const useConversationList = () => {
   const { user } = useAuth();

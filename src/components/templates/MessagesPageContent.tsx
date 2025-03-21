@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMessages } from "@/hooks/useMessages";
-import { resolveUserIdentifier, isEmail } from "@/services/amis/userEmail";
+import { resolveIdentifier, resolveToId } from "@/hooks/messages/index";
+import { isEmail } from "@/services/amis/userEmail";
 import { useAuth } from "@/contexts/AuthContext";
 import { Mail } from "lucide-react";
 import MessagesSidebar from "@/components/organisms/MessagesSidebar";
@@ -31,7 +31,6 @@ const MessagesPageContent: React.FC<MessagesPageContentProps> = ({ friendIdOrEma
     refreshConversations
   } = useMessages(friendId);
 
-  // Résoudre l'ID ou l'email de l'ami
   useEffect(() => {
     const resolveIdentifier = async () => {
       if (!friendIdOrEmail || !user || resolvingRef.current) {
@@ -48,14 +47,13 @@ const MessagesPageContent: React.FC<MessagesPageContentProps> = ({ friendIdOrEma
         setResolving(true);
         console.log(`Résolution de l'identifiant: ${friendIdOrEmail}`);
         
-        const { id, email } = await resolveUserIdentifier(friendIdOrEmail);
+        const { id, email } = await resolveIdentifier(friendIdOrEmail);
         
         if (id) {
           setFriendId(id);
           setFriendEmail(email);
           console.log(`Identifiant résolu: ID=${id}, Email=${email}`);
           
-          // Si l'URL contient un UUID et que nous avons un email, rediriger vers l'URL avec l'email
           if (friendIdOrEmail.includes('-') && email && isEmail(email) && friendIdOrEmail !== email) {
             navigate(`/messages/${email}`, { replace: true });
           }
@@ -84,7 +82,6 @@ const MessagesPageContent: React.FC<MessagesPageContentProps> = ({ friendIdOrEma
     resolveIdentifier();
   }, [friendIdOrEmail, navigate, toast, user]);
 
-  // Vérifier si la page est affichée sur mobile
   const isMobile = window.innerWidth < 768;
   
   if (!user) {
@@ -103,7 +100,6 @@ const MessagesPageContent: React.FC<MessagesPageContentProps> = ({ friendIdOrEma
 
   return (
     <div className="h-[calc(100vh-12rem)] flex border rounded-md bg-card overflow-hidden">
-      {/* Liste des conversations (masquée sur mobile si une conversation est sélectionnée) */}
       <MessagesSidebar 
         conversations={conversations}
         loading={loading || resolving}
@@ -113,7 +109,6 @@ const MessagesPageContent: React.FC<MessagesPageContentProps> = ({ friendIdOrEma
         refreshConversations={refreshConversations}
       />
       
-      {/* Conversation active (masquée sur mobile si aucune conversation n'est sélectionnée) */}
       <MessagesContent
         friendId={friendId}
         friendEmail={friendEmail}
