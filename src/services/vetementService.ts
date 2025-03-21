@@ -92,6 +92,27 @@ export const addVetement = async (vetement: Omit<Vetement, 'id' | 'created_at'>)
   }
 };
 
+// Fonction pour récupérer un vêtement par son ID
+export const getVetementById = async (id: number): Promise<Vetement> => {
+  try {
+    const { data, error } = await supabase
+      .from('vetements')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error('Erreur lors de la récupération du vêtement:', error);
+      throw error;
+    }
+    
+    return data as Vetement;
+  } catch (error) {
+    console.error('Erreur lors de la récupération du vêtement:', error);
+    throw error;
+  }
+};
+
 // Fonction pour mettre à jour un vêtement
 export const updateVetement = async (id: number, vetement: Partial<Vetement>): Promise<Vetement> => {
   try {

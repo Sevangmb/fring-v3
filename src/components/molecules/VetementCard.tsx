@@ -1,11 +1,11 @@
 
 import React from 'react';
+import { useNavigate } from "react-router-dom";
 import Card, { CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/molecules/Card";
 import { Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
 import { Shirt, Edit, Trash2, TagIcon, User } from "lucide-react";
 import { Vetement } from '@/services/vetementService';
-import { useToast } from "@/hooks/use-toast";
 
 interface VetementCardProps {
   vetement: Vetement;
@@ -14,13 +14,10 @@ interface VetementCardProps {
 }
 
 const VetementCard: React.FC<VetementCardProps> = ({ vetement, onDelete, showOwner = false }) => {
-  const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleEdit = () => {
-    toast({
-      title: "Fonctionnalité à venir",
-      description: "L'édition des vêtements sera bientôt disponible.",
-    });
+    navigate(`/mes-vetements/modifier/${vetement.id}`);
   };
 
   const handleDelete = async () => {

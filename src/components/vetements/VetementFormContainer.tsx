@@ -1,11 +1,11 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { addVetement } from "@/services/supabaseService";
+import { addVetement } from "@/services/vetementService";
 import VetementFormFields, { vetementSchema, VetementFormValues } from "./VetementFormFields";
 import ImageUploader from "./ImageUploader";
 import FormActions from "./FormActions";
@@ -16,6 +16,11 @@ interface VetementFormContainerProps {
   categories: any[];
   marques: any[];
   loadingCategories: boolean;
+  initialValues?: VetementFormValues;
+  onSubmit?: (data: VetementFormValues) => Promise<void>;
+  submitLabel?: string;
+  submitIcon?: React.ReactNode;
+  mode?: "create" | "update";
 }
 
 const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
@@ -23,6 +28,11 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
   categories,
   marques,
   loadingCategories,
+  initialValues,
+  onSubmit,
+  submitLabel,
+  submitIcon,
+  mode = "create"
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -37,7 +47,7 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
   // Initialiser le formulaire avec react-hook-form
   const form = useForm<VetementFormValues>({
     resolver: zodResolver(vetementSchema),
-    defaultValues: {
+    defaultValues: initialValues || {
       nom: "",
       categorie: "",
       couleur: "",
@@ -47,11 +57,18 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
     },
   });
 
-  const onSubmit = async (data: VetementFormValues) => {
+  // Mettre à jour l'aperçu de l'image si initialValues contient une image_url
+  useEffect(() => {
+    if (initialValues?.image_url) {
+      setImagePreview(initialValues.image_url);
+    }
+  }, [initialValues, setImagePreview]);
+
+  const handleSubmit = async (data: VetementFormValues) => {
     if (!user) {
       toast({
         title: "Non autorisé",
-        description: "Vous devez être connecté pour ajouter un vêtement.",
+        description: "Vous devez être connecté pour gérer vos vêtements.",
         variant: "destructive",
       });
       navigate("/login");
@@ -61,29 +78,37 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
     try {
       setIsSubmitting(true);
       
-      // Utiliser notre service pour ajouter le vêtement (avec user_id ajouté dans le service)
-      await addVetement({
-        nom: data.nom,
-        categorie: data.categorie,
-        couleur: data.couleur,
-        taille: data.taille,
-        description: data.description || null,
-        marque: data.marque || null,
-        image_url: imagePreview || null,
-      });
-      
-      toast({
-        title: "Vêtement ajouté avec succès!",
-        description: "Votre nouveau vêtement a été ajouté à votre collection.",
-      });
-      
-      // Rediriger vers la liste des vêtements
-      navigate("/mes-vetements/liste");
+      if (mode === "update" && onSubmit) {
+        // En mode modification, utiliser la fonction onSubmit personnalisée
+        await onSubmit({
+          ...data,
+          image_url: imagePreview || undefined,
+        });
+      } else {
+        // En mode création, utiliser addVetement
+        await addVetement({
+          nom: data.nom,
+          categorie: data.categorie,
+          couleur: data.couleur,
+          taille: data.taille,
+          description: data.description || null,
+          marque: data.marque || null,
+          image_url: imagePreview || null,
+        });
+        
+        toast({
+          title: "Vêtement ajouté avec succès!",
+          description: "Votre nouveau vêtement a été ajouté à votre collection.",
+        });
+        
+        // Rediriger vers la liste des vêtements
+        navigate("/mes-vetements/liste");
+      }
     } catch (error) {
-      console.error("Erreur lors de l'ajout du vêtement:", error);
+      console.error("Erreur lors de la gestion du vêtement:", error);
       toast({
         title: "Erreur",
-        description: "Une erreur s'est produite lors de l'ajout du vêtement.",
+        description: "Une erreur s'est produite lors de la gestion du vêtement.",
         variant: "destructive",
       });
     } finally {
@@ -108,7 +133,7 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
       {/* Colonne de droite: Formulaire */}
       <div className="md:col-span-2">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             <VetementFormFields
               form={form}
               categories={categories}
@@ -120,6 +145,8 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
             <FormActions
               isSubmitting={isSubmitting}
               onCancel={() => navigate("/mes-vetements")}
+              submitLabel={submitLabel || (mode === "create" ? "Ajouter le vêtement" : "Enregistrer les modifications")}
+              submitIcon={submitIcon}
             />
           </form>
         </Form>
