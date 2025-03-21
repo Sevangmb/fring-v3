@@ -3,7 +3,11 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { Vetement } from "@/services/vetementService";
-import { Ami } from "@/services/amis/types";
+import { fetchVetementsStats } from "@/utils/statsUtils";
+import { fetchTenutesCount } from "@/utils/statsUtils";
+import { fetchAmisCount } from "@/utils/statsUtils";
+import { calculateDistributions } from "@/utils/statsUtils";
+import { prepareRecentActivity } from "@/utils/statsUtils";
 
 interface DashboardStats {
   totalVetements: number;
@@ -43,77 +47,30 @@ export const useDashboardStats = () => {
       setIsLoading(true);
       setError(null);
 
-      // Récupérer les statistiques de vêtements
-      const { data: vetements, error: vetementsError } = await supabase
-        .from('vetements')
-        .select('*')
-        .eq('user_id', user.id);
+      // Fetch all required data
+      const vetements = await fetchVetementsStats(user.id);
+      const totalTenues = await fetchTenutesCount();
+      const totalAmis = await fetchAmisCount(user.id);
+      
+      // Calculate distributions
+      const { 
+        categoriesDistribution, 
+        couleursDistribution, 
+        marquesDistribution 
+      } = calculateDistributions(vetements);
+      
+      // Prepare recent activity
+      const recentActivity = prepareRecentActivity(vetements);
 
-      if (vetementsError) throw vetementsError;
-
-      // Récupérer le nombre de tenues
-      const { count: totalTenues, error: tenuesError } = await supabase
-        .from('tenues')
-        .select('*', { count: 'exact', head: true });
-
-      if (tenuesError) throw tenuesError;
-
-      // Récupérer le nombre d'amis
-      const { data: amis, error: amisError } = await supabase
-        .from('amis')
-        .select('*')
-        .or(`user_id.eq.${user.id},ami_id.eq.${user.id}`)
-        .eq('status', 'accepted');
-
-      if (amisError) throw amisError;
-
-      // Calculer les distributions
-      const categories: Record<string, number> = {};
-      const couleurs: Record<string, number> = {};
-      const marques: Record<string, number> = {};
-
-      vetements?.forEach((vetement: Vetement) => {
-        // Catégories
-        if (vetement.categorie) {
-          categories[vetement.categorie] = (categories[vetement.categorie] || 0) + 1;
-        }
-
-        // Couleurs
-        if (vetement.couleur) {
-          couleurs[vetement.couleur] = (couleurs[vetement.couleur] || 0) + 1;
-        }
-
-        // Marques
-        if (vetement.marque) {
-          marques[vetement.marque] = (marques[vetement.marque] || 0) + 1;
-        }
-      });
-
-      // Transformer en tableaux pour les graphiques
-      const categoriesDistribution = Object.entries(categories).map(([name, count]) => ({ name, count }));
-      const couleursDistribution = Object.entries(couleurs).map(([name, count]) => ({ name, count }));
-      const marquesDistribution = Object.entries(marques).map(([name, count]) => ({ name, count }));
-
-      // Récupérer l'activité récente (les 5 derniers vêtements ajoutés)
-      const recentActivity = vetements
-        ?.sort((a: Vetement, b: Vetement) => {
-          return new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime();
-        })
-        .slice(0, 5)
-        .map((vetement: Vetement) => ({
-          type: "vêtement",
-          date: vetement.created_at || "",
-          description: `Ajout de ${vetement.nom}`,
-        }));
-
+      // Update state with all fetched data
       setStats({
-        totalVetements: vetements?.length || 0,
-        totalTenues: totalTenues || 0,
-        totalAmis: amis?.length || 0,
-        categoriesDistribution: categoriesDistribution.sort((a, b) => b.count - a.count).slice(0, 5),
-        couleursDistribution: couleursDistribution.sort((a, b) => b.count - a.count).slice(0, 5),
-        marquesDistribution: marquesDistribution.sort((a, b) => b.count - a.count).slice(0, 5),
-        recentActivity: recentActivity || []
+        totalVetements: vetements.length || 0,
+        totalTenues,
+        totalAmis,
+        categoriesDistribution,
+        couleursDistribution,
+        marquesDistribution,
+        recentActivity
       });
     } catch (error: any) {
       console.error("Erreur lors de la récupération des statistiques:", error);
