@@ -19,7 +19,7 @@ const Index = () => {
   return (
     <Layout>
       <Hero />
-      <MesVetements />
+      <MesVetements isAuthenticated={!!user} />
       
       <div className="container mx-auto px-4 py-16 bg-accent/10">
         <div className="max-w-3xl mx-auto text-center">
