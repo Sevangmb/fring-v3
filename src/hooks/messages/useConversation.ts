@@ -3,7 +3,9 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Message } from '@/services/messagesService';
-import { loadConversationMessages, markAsRead, sendNewMessage } from './index';
+import { loadConversationMessages } from './conversationLoader';
+import { markAsRead } from './messageActions';
+import { sendNewMessage } from './messageActions';
 
 export const useConversation = (friendId?: string | null) => {
   const { user } = useAuth();
@@ -13,6 +15,7 @@ export const useConversation = (friendId?: string | null) => {
   const [sending, setSending] = useState(false);
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastLoadedRef = useRef<string | null>(null);
+  const loadingRef = useRef(false);
 
   // Charger les messages d'une conversation spécifique
   const loadConversation = useCallback(async (silent = false) => {
@@ -22,12 +25,13 @@ export const useConversation = (friendId?: string | null) => {
       return;
     }
     
-    // Éviter les rafraîchissements inutiles pour le même ID
-    if (lastLoadedRef.current === friendId && messages.length > 0 && !silent) {
+    // Éviter les rafraîchissements inutiles pour le même ID et éviter les chargements simultanés
+    if ((lastLoadedRef.current === friendId && messages.length > 0 && !silent) || loadingRef.current) {
       return;
     }
     
     try {
+      loadingRef.current = true;
       if (!silent) setLoading(true);
       console.log(`Chargement des messages pour la conversation avec ${friendId}`);
       const enrichedMessages = await loadConversationMessages(user.id, friendId);
@@ -53,6 +57,7 @@ export const useConversation = (friendId?: string | null) => {
         });
       }
     } finally {
+      loadingRef.current = false;
       if (!silent) setLoading(false);
     }
   }, [user, friendId, toast, messages, loading]);
@@ -87,23 +92,24 @@ export const useConversation = (friendId?: string | null) => {
 
   // Charger au démarrage et lors du changement de friendId
   useEffect(() => {
-    if (friendId) {
-      loadConversation();
-    } else {
-      setMessages([]);
-      setLoading(false);
-    }
-    
     // Nettoyer l'intervalle précédent
     if (refreshTimerRef.current) {
       clearInterval(refreshTimerRef.current);
       refreshTimerRef.current = null;
     }
     
-    // Configurer l'intervalle de rafraîchissement silencieux
-    if (friendId && user) {
-      console.log(`Configuration de l'intervalle de rafraîchissement pour la conversation avec ${friendId}`);
-      refreshTimerRef.current = setInterval(() => loadConversation(true), 5000);
+    if (friendId) {
+      // Charger les messages une seule fois au démarrage
+      loadConversation();
+      
+      // Configurer l'intervalle de rafraîchissement silencieux seulement si friendId est défini
+      if (user) {
+        console.log(`Configuration de l'intervalle de rafraîchissement pour la conversation avec ${friendId}`);
+        refreshTimerRef.current = setInterval(() => loadConversation(true), 5000);
+      }
+    } else {
+      setMessages([]);
+      setLoading(false);
     }
     
     return () => {
