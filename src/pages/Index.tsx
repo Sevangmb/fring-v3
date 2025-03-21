@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Layout from "@/components/templates/Layout";
 import { Heading, Text } from "@/components/atoms/Typography";
 import Button from "@/components/atoms/Button";
@@ -10,6 +10,14 @@ import Features from "@/components/organisms/Features";
 
 const Index = () => {
   const { user, signOut, loading } = useAuth();
+  const navigate = useNavigate();
+
+  const handleNavigateToDashboard = () => navigate("/dashboard");
+  const handleLogin = () => navigate("/login");
+  const handleRegister = () => navigate("/register");
+  const handleLogout = async () => {
+    await signOut();
+  };
 
   return (
     <Layout>
@@ -29,20 +37,20 @@ const Index = () => {
             <Text>Chargement...</Text>
           ) : user ? (
             <>
-              <Button asChild>
-                <Link to="/dashboard">Tableau de bord</Link>
+              <Button onClick={handleNavigateToDashboard}>
+                Tableau de bord
               </Button>
-              <Button variant="outline" onClick={() => signOut()}>
+              <Button variant="outline" onClick={handleLogout}>
                 Déconnexion
               </Button>
             </>
           ) : (
             <>
-              <Button asChild>
-                <Link to="/login">Connexion</Link>
+              <Button onClick={handleLogin}>
+                Connexion
               </Button>
-              <Button variant="outline" asChild>
-                <Link to="/register">S'inscrire</Link>
+              <Button variant="outline" onClick={handleRegister}>
+                S'inscrire
               </Button>
             </>
           )}

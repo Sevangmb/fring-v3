@@ -4,13 +4,18 @@ import { cn } from "@/lib/utils";
 import { Heading, Text } from "../atoms/Typography";
 import Button from "../atoms/Button";
 import { ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 interface HeroProps {
   className?: string;
 }
 
 const Hero = ({ className }: HeroProps) => {
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => navigate("/register");
+  const handleLearnMore = () => navigate("/features");
+
   return (
     <section className={cn("relative overflow-hidden pt-20 md:pt-24 lg:pt-32", className)}>
       <div className="absolute inset-0 bg-gradient-to-b from-background to-background/80 -z-10"></div>
@@ -39,14 +44,12 @@ const Hero = ({ className }: HeroProps) => {
             className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto animate-slide-up"
             style={{ animationDelay: "200ms" }}
           >
-            <Button size="lg" asChild>
-              <Link to="/register">
-                Get started
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
+            <Button size="lg" onClick={handleGetStarted}>
+              Get started
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
-            <Button variant="outline" size="lg" asChild>
-              <Link to="/login">Learn more</Link>
+            <Button variant="outline" size="lg" onClick={handleLearnMore}>
+              Learn more
             </Button>
           </div>
           

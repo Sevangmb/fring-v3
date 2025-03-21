@@ -3,7 +3,6 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { Session, User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { useToast } from "@/hooks/use-toast"
-import { useNavigate } from 'react-router-dom'
 
 interface AuthContextProps {
   session: Session | null
@@ -21,14 +20,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
-  const navigate = useNavigate()
 
   useEffect(() => {
+    console.log("AuthProvider initializing...");
     const setData = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession()
         if (error) {
           console.warn('Erreur lors de la récupération de la session:', error.message)
+        } else {
+          console.log("Session récupérée:", session ? "Connecté" : "Pas de session");
         }
         setSession(session)
         setUser(session?.user ?? null)
@@ -44,6 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
+          console.log("Auth state changed:", event, session ? "Session présente" : "Pas de session");
           setSession(session)
           setUser(session?.user ?? null)
           setLoading(false)
@@ -62,9 +64,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      console.log("Tentative de connexion avec email:", email);
+      const { error, data } = await supabase.auth.signInWithPassword({ email, password })
       
       if (error) {
+        console.error("Erreur de connexion:", error.message);
         toast({
           title: "Erreur de connexion",
           description: error.message,
@@ -73,15 +77,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return Promise.reject(error)
       }
       
+      console.log("Connexion réussie:", data.user?.id);
       toast({
         title: "Connexion réussie",
         description: "Vous êtes maintenant connecté",
       })
       
-      navigate('/dashboard')
       return Promise.resolve()
     } catch (error) {
-      console.error(error)
+      console.error("Exception lors de la connexion:", error)
       toast({
         title: "Erreur de connexion",
         description: "Une erreur est survenue lors de la connexion",
@@ -93,6 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, name: string) => {
     try {
+      console.log("Tentative d'inscription avec email:", email);
       const { error } = await supabase.auth.signUp({ 
         email, 
         password,
@@ -102,6 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       })
       
       if (error) {
+        console.error("Erreur d'inscription:", error.message);
         toast({
           title: "Erreur d'inscription",
           description: error.message,
@@ -110,15 +116,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return Promise.reject(error)
       }
       
+      console.log("Inscription réussie pour:", email);
       toast({
         title: "Inscription réussie",
         description: "Veuillez vérifier votre email pour confirmer votre compte",
       })
       
-      navigate('/login')
       return Promise.resolve()
     } catch (error) {
-      console.error(error)
+      console.error("Exception lors de l'inscription:", error)
       toast({
         title: "Erreur d'inscription",
         description: "Une erreur est survenue lors de l'inscription",
@@ -130,9 +136,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
+      console.log("Tentative de déconnexion");
       const { error } = await supabase.auth.signOut()
       
       if (error) {
+        console.error("Erreur de déconnexion:", error.message);
         toast({
           title: "Erreur de déconnexion",
           description: error.message,
@@ -141,15 +149,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return Promise.reject(error)
       }
       
+      console.log("Déconnexion réussie");
       toast({
         title: "Déconnexion réussie",
         description: "Vous avez été déconnecté avec succès",
       })
       
-      navigate('/')
       return Promise.resolve()
     } catch (error) {
-      console.error(error)
+      console.error("Exception lors de la déconnexion:", error)
       toast({
         title: "Erreur de déconnexion",
         description: "Une erreur est survenue lors de la déconnexion",

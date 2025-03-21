@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import NavItem from "../molecules/NavItem";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Button from "../atoms/Button";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NavbarProps {
   className?: string;
@@ -13,9 +14,11 @@ interface NavbarProps {
 
 const Navbar = ({ className }: NavbarProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isMobile = useIsMobile();
+  const { user, signOut } = useAuth();
 
   const navLinks = [
     { href: "/", label: "Home" },
@@ -39,6 +42,13 @@ const Navbar = ({ className }: NavbarProps) => {
   }, [location.pathname]);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  const handleLogin = () => navigate("/login");
+  const handleSignUp = () => navigate("/register");
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <header
@@ -67,12 +77,20 @@ const Navbar = ({ className }: NavbarProps) => {
 
         {/* Auth Buttons - Desktop */}
         <div className="hidden md:flex items-center space-x-4">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/login">Login</Link>
-          </Button>
-          <Button size="sm" asChild>
-            <Link to="/register">Sign up</Link>
-          </Button>
+          {user ? (
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              Déconnexion
+            </Button>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" onClick={handleLogin}>
+                Login
+              </Button>
+              <Button size="sm" onClick={handleSignUp}>
+                Sign up
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -106,12 +124,20 @@ const Navbar = ({ className }: NavbarProps) => {
                 />
               ))}
               <div className="mt-6 space-y-3">
-                <Button variant="outline" className="w-full justify-center" asChild>
-                  <Link to="/login">Login</Link>
-                </Button>
-                <Button className="w-full justify-center" asChild>
-                  <Link to="/register">Sign up</Link>
-                </Button>
+                {user ? (
+                  <Button variant="outline" className="w-full justify-center" onClick={handleLogout}>
+                    Déconnexion
+                  </Button>
+                ) : (
+                  <>
+                    <Button variant="outline" className="w-full justify-center" onClick={handleLogin}>
+                      Login
+                    </Button>
+                    <Button className="w-full justify-center" onClick={handleSignUp}>
+                      Sign up
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </div>
