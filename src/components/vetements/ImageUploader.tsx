@@ -34,78 +34,81 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     if (file) {
       // Afficher une prévisualisation
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+      reader.onloadend = async () => {
+        const base64Image = reader.result as string;
+        setImagePreview(base64Image);
+        
+        if (!user) {
+          toast({
+            title: "Erreur",
+            description: "Vous devez être connecté pour télécharger des images.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Télécharger l'image sur Supabase Storage
+        try {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+          
+          // Vérifier si le bucket "vetements" existe, sinon on utilise une URL locale
+          const { data: bucketData, error: bucketError } = await supabase.storage.getBucket('vetements');
+          
+          let publicUrl = '';
+          
+          if (bucketError) {
+            console.warn("Le bucket 'vetements' n'existe pas, l'image sera stockée localement", bucketError);
+            // On garde l'image en local avec le dataURL
+            publicUrl = base64Image;
+          } else {
+            const { data, error } = await supabase.storage
+              .from('vetements')
+              .upload(`images/${fileName}`, file);
+
+            if (error) {
+              console.error("Erreur lors du téléchargement de l'image:", error);
+              toast({
+                title: "Erreur",
+                description: "Impossible de télécharger l'image.",
+                variant: "destructive",
+              });
+              return;
+            }
+
+            // Obtenir l'URL publique de l'image
+            const { data: { publicUrl: storedPublicUrl } } = supabase.storage
+              .from('vetements')
+              .getPublicUrl(`images/${fileName}`);
+              
+            publicUrl = storedPublicUrl;
+            setImagePreview(publicUrl);
+          }
+          
+          // Détecter la couleur de l'image
+          if (publicUrl) {
+            setDetectingColor(true);
+            try {
+              console.log("Envoi de l'image pour détection:", publicUrl.substring(0, 50) + "...");
+              const detectedColor = await detectImageColor(publicUrl);
+              form.setValue('couleur', detectedColor);
+              toast({
+                title: "Couleur détectée",
+                description: `La couleur ${detectedColor} a été détectée et sélectionnée automatiquement.`,
+              });
+            } catch (error) {
+              console.error("Erreur lors de la détection de couleur:", error);
+              form.setValue('couleur', 'bleu'); // Valeur par défaut en cas d'erreur
+            } finally {
+              setDetectingColor(false);
+            }
+          }
+        } catch (error) {
+          console.error("Erreur lors du téléchargement de l'image:", error);
+          setDetectingColor(false);
+        }
       };
       reader.readAsDataURL(file);
-
-      if (!user) {
-        toast({
-          title: "Erreur",
-          description: "Vous devez être connecté pour télécharger des images.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Télécharger l'image sur Supabase Storage
-      try {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-        
-        // Vérifier si le bucket "vetements" existe, sinon on utilise une URL locale
-        const { data: bucketData, error: bucketError } = await supabase.storage.getBucket('vetements');
-        
-        let publicUrl = '';
-        
-        if (bucketError) {
-          console.warn("Le bucket 'vetements' n'existe pas, l'image sera stockée localement", bucketError);
-          // On garde l'image en local avec le dataURL
-          publicUrl = reader.result as string;
-        } else {
-          const { data, error } = await supabase.storage
-            .from('vetements')
-            .upload(`images/${fileName}`, file);
-
-          if (error) {
-            console.error("Erreur lors du téléchargement de l'image:", error);
-            toast({
-              title: "Erreur",
-              description: "Impossible de télécharger l'image.",
-              variant: "destructive",
-            });
-            return;
-          }
-
-          // Obtenir l'URL publique de l'image
-          const { data: { publicUrl: storedPublicUrl } } = supabase.storage
-            .from('vetements')
-            .getPublicUrl(`images/${fileName}`);
-            
-          publicUrl = storedPublicUrl;
-          setImagePreview(publicUrl);
-        }
-        
-        // Détecter la couleur de l'image
-        if (publicUrl) {
-          setDetectingColor(true);
-          try {
-            const detectedColor = await detectImageColor(publicUrl);
-            form.setValue('couleur', detectedColor);
-            toast({
-              title: "Couleur détectée",
-              description: `La couleur ${detectedColor} a été détectée et sélectionnée automatiquement.`,
-            });
-          } catch (error) {
-            console.error("Erreur lors de la détection de couleur:", error);
-          } finally {
-            setDetectingColor(false);
-          }
-        }
-      } catch (error) {
-        console.error("Erreur lors du téléchargement de l'image:", error);
-        setDetectingColor(false);
-      }
     }
   };
 

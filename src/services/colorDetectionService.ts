@@ -11,8 +11,13 @@ export const detectImageColor = async (imageUrl: string): Promise<string> => {
     // Afficher un message indiquant que la détection de couleur est en cours
     console.log('Détection de couleur du vêtement en cours avec Hugging Face...');
     
+    // S'assurer que l'URL de l'image est correctement formatée pour l'API
+    const imageUrlToSend = imageUrl.startsWith('data:') 
+      ? imageUrl // Si c'est déjà en base64, on l'envoie tel quel
+      : imageUrl; // Sinon on envoie l'URL
+
     const { data, error } = await supabase.functions.invoke('detect-color', {
-      body: { imageUrl },
+      body: { imageUrl: imageUrlToSend },
     });
 
     if (error) {

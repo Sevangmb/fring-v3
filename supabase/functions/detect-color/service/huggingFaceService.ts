@@ -1,4 +1,3 @@
-
 import { HfInference } from 'https://esm.sh/@huggingface/inference@2.3.2';
 
 /**
@@ -11,9 +10,12 @@ export async function generateImageDescription(imageUrl: string, hf: HfInference
   console.log("Generating image description...");
   
   try {
+    // Prétraitement de l'URL pour gérer les images en base64
+    const processedUrl = preprocessImageUrl(imageUrl);
+    
     const visionResult = await hf.imageToText({
       model: "Salesforce/blip-image-captioning-large",
-      data: imageUrl,
+      data: processedUrl,
     });
     
     console.log("Image description:", visionResult);
@@ -22,6 +24,26 @@ export async function generateImageDescription(imageUrl: string, hf: HfInference
     console.error("Error generating image description:", error);
     throw new Error("Failed to generate image description");
   }
+}
+
+/**
+ * Prétraite l'URL de l'image pour s'assurer qu'elle est utilisable par Hugging Face
+ * @param imageUrl URL ou données base64 de l'image
+ * @returns URL ou données traitées
+ */
+function preprocessImageUrl(imageUrl: string): string {
+  // Vérifier si c'est déjà une URL ou une chaîne base64
+  if (imageUrl.startsWith('http')) {
+    return imageUrl;
+  }
+  
+  // Si c'est une chaîne base64, la retourner telle quelle
+  if (imageUrl.startsWith('data:image')) {
+    return imageUrl;
+  }
+  
+  // Cas par défaut
+  return imageUrl;
 }
 
 /**
@@ -139,10 +161,13 @@ export async function analyzeImageDirectly(imageUrl: string, hf: HfInference): P
   console.log("Analyzing image directly...");
   
   try {
+    // Prétraitement de l'URL pour gérer les images en base64
+    const processedUrl = preprocessImageUrl(imageUrl);
+    
     // Vérifier d'abord si c'est un pantalon ou jeans
     const isPantsQuery = await hf.textGeneration({
       model: "google/flan-t5-xxl",
-      inputs: `Is the main clothing item in this image pants, jeans, or any lower-body garment? Answer with only yes or no: ${imageUrl}`,
+      inputs: `Is the main clothing item in this image pants, jeans, or any lower-body garment? Answer with only yes or no: ${processedUrl}`,
       parameters: {
         max_new_tokens: 5,
         temperature: 0.1,
@@ -160,7 +185,7 @@ export async function analyzeImageDirectly(imageUrl: string, hf: HfInference): P
     // Si ce n'est pas un pantalon, vérifier si c'est bleu
     const visionQuery = await hf.textGeneration({
       model: "google/flan-t5-xxl",
-      inputs: `Is the main clothing item in this image blue? Answer with only yes or no: ${imageUrl}`,
+      inputs: `Is the main clothing item in this image blue? Answer with only yes or no: ${processedUrl}`,
       parameters: {
         max_new_tokens: 5,
         temperature: 0.1,

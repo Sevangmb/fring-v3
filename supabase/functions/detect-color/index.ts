@@ -20,6 +20,8 @@ serve(async (req) => {
       );
     }
 
+    console.log("Processing image URL:", imageUrl.substring(0, 50) + "...");
+    
     // Extraire la couleur du vêtement de l'image
     let color = await detectClothingColor(imageUrl);
     
@@ -32,7 +34,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Erreur lors de la détection de couleur:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Une erreur s\'est produite lors de la détection de couleur' }),
+      JSON.stringify({ error: error.message || 'Une erreur s\'est produite lors de la détection de couleur', color: 'bleu' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
