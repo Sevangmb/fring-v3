@@ -78,17 +78,19 @@ const ModifierVetementPage = () => {
     loadData();
   }, [vetementId, user, authLoading, navigate, toast]);
 
+  // NOUVELLE IMPLÉMENTATION: Fonction de mise à jour directe
   const handleUpdate = async (updatedData: VetementFormValues) => {
     try {
-      console.log("Données à mettre à jour:", updatedData);
+      setIsLoading(true);
+      console.log("====== DÉBUT SOUMISSION DU FORMULAIRE ======");
+      console.log("Données du formulaire:", updatedData);
       
-      // S'assurer que l'ID est inclus pour la mise à jour
       if (!vetementId) {
         throw new Error("ID de vêtement manquant");
       }
       
-      // Assurons-nous que les données sont bien formatées avant l'envoi
-      await updateVetement(vetementId, {
+      // Collecte directe des données sans transformation
+      const dataToUpdate = {
         nom: updatedData.nom,
         categorie: updatedData.categorie,
         couleur: updatedData.couleur,
@@ -96,7 +98,14 @@ const ModifierVetementPage = () => {
         description: updatedData.description || null,
         marque: updatedData.marque || null,
         image_url: updatedData.image_url || null
-      });
+      };
+      
+      console.log("Données envoyées au service:", dataToUpdate);
+      
+      // Appel direct au service de mise à jour
+      await updateVetement(vetementId, dataToUpdate);
+      
+      console.log("====== FIN SOUMISSION DU FORMULAIRE ======");
       
       toast({
         title: "Vêtement mis à jour",
@@ -111,6 +120,8 @@ const ModifierVetementPage = () => {
         description: "Impossible de mettre à jour le vêtement.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 

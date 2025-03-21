@@ -53,6 +53,14 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
       image_url: "",
     },
   });
+  
+  // Debug des valeurs du formulaire
+  React.useEffect(() => {
+    const subscription = form.watch((value, { name, type }) => {
+      console.log("Form value changed:", name, value);
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   // Mettre à jour l'aperçu de l'image si initialValues contient une image_url
   useEffect(() => {
@@ -75,14 +83,16 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
 
     try {
       setIsSubmitting(true);
+      console.log("===== DÉBUT SOUMISSION FORMULAIRE =====");
       
       // Préparation des données avec l'image_url
       const vetementData = {
         ...data,
-        image_url: imagePreview || null,
+        // S'assurer que l'image_url est correctement défini
+        image_url: imagePreview,
       };
       
-      console.log("Données du formulaire soumises:", vetementData);
+      console.log("Données du formulaire complètes:", vetementData);
       
       if (mode === "update" && onSubmit) {
         // En mode modification, utiliser la fonction onSubmit personnalisée
@@ -107,6 +117,8 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
         // Rediriger vers la liste des vêtements
         navigate("/mes-vetements/liste");
       }
+      
+      console.log("===== FIN SOUMISSION FORMULAIRE =====");
     } catch (error) {
       console.error("Erreur lors de la gestion du vêtement:", error);
       toast({

@@ -3,53 +3,42 @@ import { supabase } from '@/lib/supabase';
 import { Vetement } from './types';
 
 /**
- * Updates an existing vetement
+ * Updates an existing vetement with the given ID
  */
 export const updateVetement = async (id: number, vetement: Partial<Vetement>): Promise<Vetement> => {
   try {
-    console.log('Mise à jour du vêtement avec ID:', id);
-    console.log('Données envoyées pour mise à jour:', vetement);
-    
-    // Vérifier que l'ID est valide
+    // Vérification des paramètres
     if (!id || isNaN(id)) {
       throw new Error('ID de vêtement invalide');
     }
     
-    // Vérifier que les données à mettre à jour sont valides
     if (!vetement || Object.keys(vetement).length === 0) {
       throw new Error('Données de vêtement invalides');
     }
 
-    // Préparer les données pour la mise à jour
-    // Filtrer les propriétés undefined qui pourraient causer des problèmes
-    const updateData: Record<string, any> = {};
+    console.log('===== DÉBUT MISE À JOUR VÊTEMENT =====');
+    console.log('ID:', id);
+    console.log('Données reçues:', JSON.stringify(vetement, null, 2));
     
-    // Traiter correctement chaque champ
-    for (const [key, value] of Object.entries(vetement)) {
-      // Ne pas inclure les champs undefined
-      if (value !== undefined) {
-        updateData[key] = value;
-      }
-    }
-    
-    console.log('Données formatées pour la mise à jour:', updateData);
-    
+    // APPROCHE DIRECTE : Envoyer les données telles quelles à Supabase
     const { data, error } = await supabase
       .from('vetements')
-      .update(updateData)
+      .update(vetement)
       .eq('id', id)
       .select()
       .single();
     
     if (error) {
-      console.error('Erreur lors de la mise à jour d\'un vêtement:', error);
+      console.error('ERREUR Supabase:', error);
       throw error;
     }
     
-    console.log('Vêtement mis à jour avec succès:', data);
+    console.log('Réponse Supabase:', data);
+    console.log('===== FIN MISE À JOUR VÊTEMENT =====');
+    
     return data as Vetement;
   } catch (error) {
-    console.error('Erreur lors de la mise à jour d\'un vêtement:', error);
+    console.error('Erreur lors de la mise à jour du vêtement:', error);
     throw error;
   }
 };
