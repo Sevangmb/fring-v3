@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { Heading, Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
-import { Shirt, Plus, LogIn } from "lucide-react";
+import { Shirt, Plus, LogIn, Users } from "lucide-react";
 import VetementCard from '@/components/molecules/VetementCard';
 import { Vetement, deleteVetement } from '@/services/vetementService';
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +14,7 @@ interface VetementsListProps {
   error: string | null;
   isAuthenticated: boolean;
   onVetementDeleted: (id: number) => void;
+  showOwner?: boolean;
 }
 
 const VetementsList: React.FC<VetementsListProps> = ({ 
@@ -21,7 +22,8 @@ const VetementsList: React.FC<VetementsListProps> = ({
   isLoading, 
   error, 
   isAuthenticated,
-  onVetementDeleted
+  onVetementDeleted,
+  showOwner = false
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -88,15 +90,31 @@ const VetementsList: React.FC<VetementsListProps> = ({
   if (vetements.length === 0) {
     return (
       <div className="text-center py-16">
-        <Shirt size={48} className="mx-auto text-muted-foreground opacity-20 mb-4" />
-        <Heading as="h3" variant="h4" className="mb-2">Aucun vêtement trouvé</Heading>
-        <Text className="text-muted-foreground mb-6">
-          Vous n'avez pas encore ajouté de vêtements à votre collection.
-        </Text>
-        <Button onClick={() => navigate("/mes-vetements/ajouter")}>
-          <Plus className="mr-2 h-4 w-4" />
-          Ajouter un vêtement
-        </Button>
+        {showOwner ? (
+          <>
+            <Users size={48} className="mx-auto text-muted-foreground opacity-20 mb-4" />
+            <Heading as="h3" variant="h4" className="mb-2">Aucun vêtement trouvé</Heading>
+            <Text className="text-muted-foreground mb-6">
+              Vos amis n'ont pas encore partagé de vêtements, ou vous n'avez pas encore d'amis.
+            </Text>
+            <Button onClick={() => navigate("/mes-amis")}>
+              <Users className="mr-2 h-4 w-4" />
+              Gérer mes amis
+            </Button>
+          </>
+        ) : (
+          <>
+            <Shirt size={48} className="mx-auto text-muted-foreground opacity-20 mb-4" />
+            <Heading as="h3" variant="h4" className="mb-2">Aucun vêtement trouvé</Heading>
+            <Text className="text-muted-foreground mb-6">
+              Vous n'avez pas encore ajouté de vêtements à votre collection.
+            </Text>
+            <Button onClick={() => navigate("/mes-vetements/ajouter")}>
+              <Plus className="mr-2 h-4 w-4" />
+              Ajouter un vêtement
+            </Button>
+          </>
+        )}
       </div>
     );
   }
@@ -107,7 +125,8 @@ const VetementsList: React.FC<VetementsListProps> = ({
         <VetementCard 
           key={vetement.id} 
           vetement={vetement} 
-          onDelete={handleDelete} 
+          onDelete={handleDelete}
+          showOwner={showOwner}
         />
       ))}
     </div>

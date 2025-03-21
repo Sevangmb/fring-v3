@@ -9,11 +9,57 @@ import { Plus, List, LogIn } from "lucide-react";
 import { assignVetementsToUser } from "@/services/databaseService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { createDemoVetementsForUser } from "@/services/vetementService";
 
 const MesVetementsPage = () => {
   const [initialized, setInitialized] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
   const { user, loading } = useAuth();
   const { toast } = useToast();
+
+  // Détecter si c'est un nouvel utilisateur et lui ajouter des vêtements de démo
+  useEffect(() => {
+    if (user && !loading && !initialized) {
+      const checkNewUser = async () => {
+        try {
+          // Vérifier si l'utilisateur a des vêtements
+          const { data, error } = await supabase
+            .from('vetements')
+            .select('count')
+            .eq('user_id', user.id)
+            .single();
+          
+          // Si l'utilisateur n'a pas de vêtements, on considère que c'est un nouvel utilisateur
+          if (!error && data && data.count === 0) {
+            setIsNewUser(true);
+            // Créer des vêtements de démo pour l'utilisateur
+            const result = await createDemoVetementsForUser();
+            if (result) {
+              toast({
+                title: "Bienvenue !",
+                description: "Nous avons ajouté quelques vêtements de démo à votre collection.",
+              });
+            }
+          }
+          
+          setInitialized(true);
+          // Marquer comme initialisé avec sessionStorage
+          sessionStorage.setItem('userInitialized', 'true');
+        } catch (error) {
+          console.error("Erreur lors de la vérification de l'utilisateur:", error);
+          setInitialized(true);
+        }
+      };
+      
+      // Vérifie si déjà initialisé dans cette session
+      const alreadyInitialized = sessionStorage.getItem('userInitialized');
+      if (!alreadyInitialized) {
+        checkNewUser();
+      } else {
+        setInitialized(true);
+      }
+    }
+  }, [user, loading, toast, initialized]);
 
   // Initialiser la base de données au chargement de la page, une seule fois
   useEffect(() => {

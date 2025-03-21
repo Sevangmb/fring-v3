@@ -4,10 +4,10 @@ import { useNavigate, Link } from "react-router-dom";
 import Layout from "@/components/templates/Layout";
 import { Heading, Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, LogIn } from "lucide-react";
+import { ArrowLeft, Plus, LogIn, Users, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  fetchVetements, Vetement
+  fetchVetements, fetchVetementsAmis, Vetement, createDemoVetementsForUser
 } from "@/services/vetementService";
 import { fetchCategories, Categorie } from "@/services/categorieService";
 import { fetchMarques, Marque } from "@/services/marqueService";
@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import VetementsList from "@/components/organisms/VetementsList";
 import SearchFilterBar from "@/components/molecules/SearchFilterBar";
 import CategoryTabs from "@/components/molecules/CategoryTabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ListeVetementsPage = () => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const ListeVetementsPage = () => {
   const [marqueFilter, setMarqueFilter] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("tous");
+  const [viewMode, setViewMode] = useState<'mes-vetements' | 'vetements-amis'>('mes-vetements');
   const [error, setError] = useState<string | null>(null);
 
   // Récupérer les vêtements, catégories et marques depuis Supabase
@@ -44,16 +46,23 @@ const ListeVetementsPage = () => {
         
         console.log("Chargement des données pour l'utilisateur:", user.id);
         
-        // Récupérer les données depuis nos services
-        const [vetementsData, categoriesData, marquesData] = await Promise.all([
-          fetchVetements(),
+        // Récupérer les catégories et marques
+        const [categoriesData, marquesData] = await Promise.all([
           fetchCategories(),
           fetchMarques()
         ]);
         
-        console.log("Vêtements récupérés:", vetementsData);
-        console.log("Catégories récupérées:", categoriesData);
-        console.log("Marques récupérées:", marquesData);
+        // Récupérer les vêtements selon le mode d'affichage
+        let vetementsData: Vetement[] = [];
+        if (viewMode === 'mes-vetements') {
+          vetementsData = await fetchVetements();
+        } else {
+          vetementsData = await fetchVetementsAmis();
+        }
+        
+        console.log("Vêtements récupérés:", vetementsData.length);
+        console.log("Catégories récupérées:", categoriesData.length);
+        console.log("Marques récupérées:", marquesData.length);
         
         setVetements(vetementsData);
         setCategories(categoriesData);
@@ -74,14 +83,15 @@ const ListeVetementsPage = () => {
     if (!authLoading) {
       loadData();
     }
-  }, [user, authLoading, toast]);
+  }, [user, authLoading, toast, viewMode]);
 
   // Filtrer les vêtements en fonction de la recherche et des filtres
   const filteredVetements = vetements.filter(vetement => {
     // Filtre de recherche
     const matchesSearch = vetement.nom.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          (vetement.marque && vetement.marque.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                         (vetement.description && vetement.description.toLowerCase().includes(searchTerm.toLowerCase()));
+                         (vetement.description && vetement.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (vetement.owner_email && vetement.owner_email.toLowerCase().includes(searchTerm.toLowerCase()));
     
     // Filtre de catégorie
     const matchesCategorie = categorieFilter ? categorieFilter === "all" ? true : vetement.categorie === categorieFilter : true;
@@ -101,6 +111,15 @@ const ListeVetementsPage = () => {
     setVetements(vetements.filter(v => v.id !== id));
   };
 
+  const handleViewModeChange = (mode: 'mes-vetements' | 'vetements-amis') => {
+    setViewMode(mode);
+    // Réinitialiser les filtres lors du changement de mode
+    setActiveTab("tous");
+    setSearchTerm("");
+    setCategorieFilter("");
+    setMarqueFilter("");
+  };
+
   return (
     <Layout>
       <div className="pt-24 pb-6 bg-accent/10">
@@ -118,7 +137,9 @@ const ListeVetementsPage = () => {
           </div>
           <Text className="text-muted-foreground max-w-2xl mt-4">
             {user 
-              ? "Consultez tous vos vêtements et gérez votre collection." 
+              ? viewMode === 'mes-vetements' 
+                ? "Consultez tous vos vêtements et gérez votre collection."
+                : "Parcourez les vêtements partagés par vos amis."
               : "Connectez-vous pour voir et gérer vos vêtements."}
           </Text>
           
@@ -138,6 +159,27 @@ const ListeVetementsPage = () => {
       <div className="container mx-auto px-4 py-8">
         {user && (
           <>
+            {/* Sélecteur de mode d'affichage */}
+            <div className="mb-6">
+              <Tabs 
+                defaultValue="mes-vetements" 
+                value={viewMode}
+                onValueChange={(value) => handleViewModeChange(value as 'mes-vetements' | 'vetements-amis')}
+                className="w-full"
+              >
+                <TabsList className="w-full max-w-md mx-auto grid grid-cols-2">
+                  <TabsTrigger value="mes-vetements" className="flex items-center gap-2">
+                    <User size={16} />
+                    <span>Mes vêtements</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="vetements-amis" className="flex items-center gap-2">
+                    <Users size={16} />
+                    <span>Vêtements de mes amis</span>
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
             {/* Barre de recherche et filtres */}
             <SearchFilterBar 
               searchTerm={searchTerm}
@@ -162,19 +204,22 @@ const ListeVetementsPage = () => {
                 error={error}
                 isAuthenticated={!!user}
                 onVetementDeleted={handleVetementDeleted}
+                showOwner={viewMode === 'vetements-amis'}
               />
             </CategoryTabs>
             
-            {/* Bouton flottant pour mobile */}
-            <div className="fixed bottom-6 right-6 md:hidden">
-              <Button
-                size="lg"
-                className="h-14 w-14 rounded-full shadow-lg"
-                onClick={() => navigate("/mes-vetements/ajouter")}
-              >
-                <Plus size={24} />
-              </Button>
-            </div>
+            {/* Bouton flottant pour mobile - visible uniquement en mode "Mes vêtements" */}
+            {viewMode === 'mes-vetements' && (
+              <div className="fixed bottom-6 right-6 md:hidden">
+                <Button
+                  size="lg"
+                  className="h-14 w-14 rounded-full shadow-lg"
+                  onClick={() => navigate("/mes-vetements/ajouter")}
+                >
+                  <Plus size={24} />
+                </Button>
+              </div>
+            )}
           </>
         )}
         
@@ -185,6 +230,7 @@ const ListeVetementsPage = () => {
             error={null}
             isAuthenticated={false}
             onVetementDeleted={() => {}}
+            showOwner={false}
           />
         )}
       </div>

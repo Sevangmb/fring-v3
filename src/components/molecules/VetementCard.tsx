@@ -3,16 +3,17 @@ import React from 'react';
 import Card, { CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/molecules/Card";
 import { Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
-import { Shirt, Edit, Trash2, TagIcon } from "lucide-react";
+import { Shirt, Edit, Trash2, TagIcon, User } from "lucide-react";
 import { Vetement } from '@/services/vetementService';
 import { useToast } from "@/hooks/use-toast";
 
 interface VetementCardProps {
   vetement: Vetement;
   onDelete: (id: number) => Promise<void>;
+  showOwner?: boolean;
 }
 
-const VetementCard: React.FC<VetementCardProps> = ({ vetement, onDelete }) => {
+const VetementCard: React.FC<VetementCardProps> = ({ vetement, onDelete, showOwner = false }) => {
   const { toast } = useToast();
 
   const handleEdit = () => {
@@ -45,27 +46,35 @@ const VetementCard: React.FC<VetementCardProps> = ({ vetement, onDelete }) => {
             <Shirt size={64} className="text-muted-foreground opacity-20" />
           </div>
         )}
-        <div className="absolute top-2 right-2 flex gap-1">
-          <Button 
-            variant="secondary" 
-            size="icon" 
-            className="h-7 w-7 bg-background/80 backdrop-blur-sm"
-            onClick={handleEdit}
-          >
-            <Edit size={14} />
-          </Button>
-          <Button 
-            variant="destructive" 
-            size="icon" 
-            className="h-7 w-7 bg-destructive/80 backdrop-blur-sm"
-            onClick={handleDelete}
-          >
-            <Trash2 size={14} />
-          </Button>
-        </div>
+        {!showOwner && (
+          <div className="absolute top-2 right-2 flex gap-1">
+            <Button 
+              variant="secondary" 
+              size="icon" 
+              className="h-7 w-7 bg-background/80 backdrop-blur-sm"
+              onClick={handleEdit}
+            >
+              <Edit size={14} />
+            </Button>
+            <Button 
+              variant="destructive" 
+              size="icon" 
+              className="h-7 w-7 bg-destructive/80 backdrop-blur-sm"
+              onClick={handleDelete}
+            >
+              <Trash2 size={14} />
+            </Button>
+          </div>
+        )}
       </div>
       
       <CardHeader className="flex-grow">
+        {showOwner && vetement.owner_email && (
+          <div className="flex items-center gap-2 mb-2 text-sm text-muted-foreground">
+            <User size={14} />
+            <span className="truncate">{vetement.owner_email}</span>
+          </div>
+        )}
         <div className="flex items-center gap-2 mb-2">
           <TagIcon size={16} className="text-muted-foreground" />
           <Text variant="subtle" className="capitalize">
