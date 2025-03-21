@@ -2,7 +2,7 @@
 import React, { useState, useRef } from "react";
 import { Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
-import { ImagePlus, Loader2 } from "lucide-react";
+import { ImagePlus, Loader2, Palette } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { detectImageInfo } from "@/services/colorDetectionService";
@@ -95,47 +95,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             
             setImagePreview(publicUrl);
           }
-          
-          // Détecter les informations de l'image (couleur et catégorie)
-          if (publicUrl) {
-            setDetectingColor(true);
-            try {
-              console.log("Envoi de l'image pour détection:", publicUrl.substring(0, 50) + "...");
-              const detectedInfo = await detectImageInfo(publicUrl);
-              
-              console.log("Informations détectées:", detectedInfo);
-              
-              // Définir la couleur détectée
-              form.setValue('couleur', detectedInfo.color);
-              
-              // Définir la catégorie détectée si disponible
-              if (detectedInfo.category) {
-                form.setValue('categorie', detectedInfo.category);
-              }
-              
-              toast({
-                title: "Détection réussie",
-                description: `La couleur ${detectedInfo.color} et la catégorie ${detectedInfo.category} ont été détectées.`,
-              });
-            } catch (error) {
-              console.error("Erreur lors de la détection:", error);
-              // Utiliser des valeurs aléatoires en cas d'erreur
-              const randomColors = ['bleu', 'rouge', 'vert', 'jaune', 'noir', 'blanc', 'violet', 'orange'];
-              const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
-              form.setValue('couleur', randomColor);
-              
-              toast({
-                title: "Détection partielle",
-                description: "La détection automatique a rencontré un problème. Vous pouvez sélectionner manuellement la couleur.",
-                variant: "default",
-              });
-            } finally {
-              setDetectingColor(false);
-            }
-          }
         } catch (error) {
           console.error("Erreur lors du téléchargement de l'image:", error);
-          setDetectingColor(false);
           toast({
             title: "Erreur",
             description: "Une erreur s'est produite lors du traitement de l'image.",
@@ -144,6 +105,51 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         }
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDetectImage = async () => {
+    if (!imagePreview) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez d'abord télécharger une image à analyser.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setDetectingColor(true);
+    try {
+      console.log("Envoi de l'image pour détection:", imagePreview.substring(0, 50) + "...");
+      const detectedInfo = await detectImageInfo(imagePreview);
+      
+      console.log("Informations détectées:", detectedInfo);
+      
+      // Définir la couleur détectée
+      form.setValue('couleur', detectedInfo.color);
+      
+      // Définir la catégorie détectée si disponible
+      if (detectedInfo.category) {
+        form.setValue('categorie', detectedInfo.category);
+      }
+      
+      toast({
+        title: "Détection réussie",
+        description: `La couleur ${detectedInfo.color} et la catégorie ${detectedInfo.category} ont été détectées.`,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la détection:", error);
+      const randomColors = ['bleu', 'rouge', 'vert', 'jaune', 'noir', 'blanc', 'violet', 'orange'];
+      const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+      form.setValue('couleur', randomColor);
+      
+      toast({
+        title: "Détection partielle",
+        description: "La détection automatique a rencontré un problème. Vous pouvez sélectionner manuellement la couleur.",
+        variant: "default",
+      });
+    } finally {
+      setDetectingColor(false);
     }
   };
 
@@ -186,19 +192,30 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           onChange={handleImageChange}
         />
       </div>
-      {imagePreview && (
-        <Button 
-          variant="outline" 
-          className="mt-4"
-          onClick={() => {
-            setImagePreview(null);
-            form.setValue('couleur', '');
-            form.setValue('categorie', '');
-          }}
-        >
-          Supprimer l'image
-        </Button>
-      )}
+      <div className="flex gap-4 mt-4">
+        {imagePreview && (
+          <>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setImagePreview(null);
+                form.setValue('couleur', '');
+                form.setValue('categorie', '');
+              }}
+            >
+              Supprimer l'image
+            </Button>
+            <Button 
+              variant="default"
+              onClick={handleDetectImage}
+              disabled={detectingColor}
+              className="flex items-center gap-2"
+            >
+              <Palette size={16} /> Détecter couleur et catégorie
+            </Button>
+          </>
+        )}
+      </div>
     </div>
   );
 };

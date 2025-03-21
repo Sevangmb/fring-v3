@@ -44,18 +44,23 @@ export async function generateImageDescription(imageUrl: string, hf: HfInference
       inputs: processedUrl,
       parameters: {
         max_new_tokens: 150,  // Augmenter pour des descriptions plus détaillées
-        temperature: 0.1,     // Réduire pour des descriptions plus précises
+        temperature: 0.2,     // Réduire pour des descriptions plus précises et moins créatives
+        top_p: 0.95,          // Contrôle la diversité des réponses
       }
     });
     
     const description = result.generated_text;
     console.log("Generated description:", description);
     
-    return description;
+    // Ajoutons quelques instructions pour améliorer la détection des vêtements
+    const enhancedDescription = `Description d'un vêtement: ${description}. 
+    Il s'agit d'un vêtement de la couleur principale : X, et de type : Y.`;
+    
+    return enhancedDescription;
   } catch (error) {
     console.error("Error generating image description:", error);
     
     // En cas d'erreur, retourner une description générique plus précise
-    return "An unidentified clothing item, possibly casual wear.";
+    return "Un vêtement non identifié, probablement un vêtement de tous les jours.";
   }
 }
