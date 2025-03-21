@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Text } from '@/components/atoms/Typography';
@@ -23,8 +24,70 @@ const TenueSuggestion: React.FC<TenueSuggestionProps> = ({
       <Text as="h3" variant="h4" className="mb-3">Suggestion de tenue</Text>
       <Text className="mb-4">{message}</Text>
       
+      {/* Affichage principal de la tenue avec images */}
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        {/* Photos des vêtements */}
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="grid grid-cols-3 gap-2 w-full">
+            {/* Haut */}
+            <div className="flex flex-col items-center">
+              <div className="h-32 w-32 bg-white/80 dark:bg-white/10 rounded-lg border border-amber-200 dark:border-amber-800 overflow-hidden shadow-sm mb-2">
+                {haut?.image_url ? (
+                  <img 
+                    src={haut.image_url} 
+                    alt={haut.nom} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-amber-100/50 dark:bg-amber-900/20">
+                    <Shirt className="h-12 w-12 text-amber-600 dark:text-amber-400" />
+                  </div>
+                )}
+              </div>
+              <Text variant="subtle" className="text-xs text-center">Haut</Text>
+            </div>
+            
+            {/* Bas */}
+            <div className="flex flex-col items-center">
+              <div className="h-32 w-32 bg-white/80 dark:bg-white/10 rounded-lg border border-amber-200 dark:border-amber-800 overflow-hidden shadow-sm mb-2">
+                {bas?.image_url ? (
+                  <img 
+                    src={bas.image_url} 
+                    alt={bas.nom} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-amber-100/50 dark:bg-amber-900/20">
+                    <ShoppingBag className="h-12 w-12 text-amber-600 dark:text-amber-400" />
+                  </div>
+                )}
+              </div>
+              <Text variant="subtle" className="text-xs text-center">Bas</Text>
+            </div>
+            
+            {/* Chaussures */}
+            <div className="flex flex-col items-center">
+              <div className="h-32 w-32 bg-white/80 dark:bg-white/10 rounded-lg border border-amber-200 dark:border-amber-800 overflow-hidden shadow-sm mb-2">
+                {chaussures?.image_url ? (
+                  <img 
+                    src={chaussures.image_url} 
+                    alt={chaussures.nom} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-amber-100/50 dark:bg-amber-900/20">
+                    <Footprints className="h-12 w-12 text-amber-600 dark:text-amber-400" />
+                  </div>
+                )}
+              </div>
+              <Text variant="subtle" className="text-xs text-center">Chaussures</Text>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Haut */}
+        {/* Haut - Détails */}
         <div className="border border-amber-200 dark:border-amber-800 rounded-lg p-3 bg-white/50 dark:bg-white/5">
           <div className="flex items-center mb-2">
             <Shirt className="h-5 w-5 text-amber-600 dark:text-amber-400 mr-2" />
@@ -57,7 +120,7 @@ const TenueSuggestion: React.FC<TenueSuggestionProps> = ({
           )}
         </div>
         
-        {/* Bas */}
+        {/* Bas - Détails */}
         <div className="border border-amber-200 dark:border-amber-800 rounded-lg p-3 bg-white/50 dark:bg-white/5">
           <div className="flex items-center mb-2">
             <ShoppingBag className="h-5 w-5 text-amber-600 dark:text-amber-400 mr-2" />
@@ -90,7 +153,7 @@ const TenueSuggestion: React.FC<TenueSuggestionProps> = ({
           )}
         </div>
         
-        {/* Chaussures */}
+        {/* Chaussures - Détails */}
         <div className="border border-amber-200 dark:border-amber-800 rounded-lg p-3 bg-white/50 dark:bg-white/5">
           <div className="flex items-center mb-2">
             <Footprints className="h-5 w-5 text-amber-600 dark:text-amber-400 mr-2" />
