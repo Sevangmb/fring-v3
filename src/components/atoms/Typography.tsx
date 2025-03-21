@@ -73,8 +73,21 @@ export const Text = ({
 
 export const Heading = (props: TextProps) => {
   const { variant = "h2", as } = props;
-  // Use the correct element type for headings
-  const Component = as || (variant.startsWith('h') ? variant : 'h2');
+  
+  // Choose appropriate element type based on variant
+  // Default to h2 if it's not a heading variant
+  let Component: React.ElementType;
+  
+  if (as) {
+    // If 'as' prop is provided, use it
+    Component = as;
+  } else if (variant.startsWith('h') && ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(variant)) {
+    // If variant is a valid heading element, use it as the element
+    Component = variant as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+  } else {
+    // For non-heading variants like 'subtle', 'lead', etc., default to h2
+    Component = 'h2';
+  }
   
   return <Text as={Component} variant={variant} weight="bold" {...props} />;
 };
