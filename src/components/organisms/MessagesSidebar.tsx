@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import ConversationList from "@/components/molecules/ConversationList";
 import { Button } from "@/components/ui/button";
-import { Plus, Users } from "lucide-react";
+import { Plus, Users, RefreshCw } from "lucide-react";
 import { useAmis } from "@/hooks/useAmis";
 import {
   Dialog,
@@ -17,6 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Message } from "@/services/messagesService";
 import { User } from "@supabase/supabase-js";
+import { toast } from "@/hooks/use-toast";
 
 interface MessagesSidebarProps {
   conversations: Message[];
@@ -24,6 +25,7 @@ interface MessagesSidebarProps {
   friendEmail?: string | null;
   isMobile: boolean;
   user: User;
+  refreshConversations: () => Promise<void>;
 }
 
 const MessagesSidebar: React.FC<MessagesSidebarProps> = ({
@@ -31,11 +33,13 @@ const MessagesSidebar: React.FC<MessagesSidebarProps> = ({
   loading,
   friendEmail,
   isMobile,
-  user
+  user,
+  refreshConversations
 }) => {
   const navigate = useNavigate();
   const { chargerAmis, filteredAmis } = useAmis();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Charger la liste des amis au démarrage
   useEffect(() => {
@@ -50,24 +54,53 @@ const MessagesSidebar: React.FC<MessagesSidebarProps> = ({
     navigate(`/messages/${amiEmail}`);
   };
 
+  // Rafraîchir manuellement les conversations
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshConversations();
+      toast({
+        title: "Mise à jour terminée",
+        description: "La liste des conversations a été mise à jour",
+      });
+    } catch (error) {
+      console.error("Erreur lors du rafraîchissement:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <div 
       className={cn(
-        "w-full md:w-1/3 md:border-r",
+        "w-full md:w-1/3 md:border-r h-full",
         friendEmail && isMobile ? "hidden" : "flex flex-col"
       )}
     >
       <div className="p-3 flex items-center justify-between border-b">
         <h2 className="font-semibold text-lg">Messages</h2>
         
-        <NewConversationDialog 
-          isOpen={isDialogOpen}
-          setIsOpen={setIsDialogOpen}
-          filteredAmis={filteredAmis.amisAcceptes}
-          startNewConversation={startNewConversation}
-          user={user}
-          navigate={navigate}
-        />
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            title="Rafraîchir les conversations"
+          >
+            <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+            <span className="sr-only">Rafraîchir</span>
+          </Button>
+          
+          <NewConversationDialog 
+            isOpen={isDialogOpen}
+            setIsOpen={setIsDialogOpen}
+            filteredAmis={filteredAmis.amisAcceptes}
+            startNewConversation={startNewConversation}
+            user={user}
+            navigate={navigate}
+          />
+        </div>
       </div>
       <div className="p-3 overflow-y-auto flex-1">
         <ConversationList 

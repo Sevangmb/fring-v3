@@ -2,12 +2,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMessages } from "@/hooks/useMessages";
-import { cn } from "@/lib/utils";
-import { getUserIdByEmail, getUserEmailById } from "@/services/amis/userEmail";
+import { resolveUserIdentifier, isEmail } from "@/services/amis/userEmail";
 import { useAuth } from "@/contexts/AuthContext";
 import { Mail } from "lucide-react";
 import MessagesSidebar from "@/components/organisms/MessagesSidebar";
 import MessagesContent from "@/components/organisms/MessagesContent";
+import { useToast } from "@/hooks/use-toast";
 
 interface MessagesPageContentProps {
   friendIdOrEmail?: string;
@@ -15,6 +15,7 @@ interface MessagesPageContentProps {
 
 const MessagesPageContent: React.FC<MessagesPageContentProps> = ({ friendIdOrEmail }) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { user } = useAuth();
   const [friendId, setFriendId] = useState<string | null>(null);
   const [friendEmail, setFriendEmail] = useState<string | null>(null);
@@ -41,33 +42,42 @@ const MessagesPageContent: React.FC<MessagesPageContentProps> = ({ friendIdOrEma
       
       try {
         setResolving(true);
-        // Vérifier si c'est un UUID (format ID) ou un email
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(friendIdOrEmail);
+        console.log(`Résolution de l'identifiant: ${friendIdOrEmail}`);
         
-        if (isUuid) {
-          const email = await getUserEmailById(friendIdOrEmail);
-          setFriendId(friendIdOrEmail);
+        const { id, email } = await resolveUserIdentifier(friendIdOrEmail);
+        
+        if (id) {
+          setFriendId(id);
           setFriendEmail(email);
-        } else {
-          // C'est un email, trouver l'ID correspondant
-          const id = await getUserIdByEmail(friendIdOrEmail);
-          if (id) {
-            setFriendId(id);
-            setFriendEmail(friendIdOrEmail);
-          } else {
-            console.error("Impossible de trouver l'utilisateur avec cet email", friendIdOrEmail);
-            navigate("/messages", { replace: true });
+          console.log(`Identifiant résolu: ID=${id}, Email=${email}`);
+          
+          // Si l'URL contient un UUID et que nous avons un email, rediriger vers l'URL avec l'email
+          if (friendIdOrEmail.includes('-') && email && isEmail(email) && friendIdOrEmail !== email) {
+            navigate(`/messages/${email}`, { replace: true });
           }
+        } else {
+          console.error("Impossible de trouver l'utilisateur avec cet identifiant", friendIdOrEmail);
+          toast({
+            title: "Utilisateur introuvable",
+            description: `Impossible de trouver l'utilisateur avec l'identifiant ${friendIdOrEmail}`,
+            variant: "destructive"
+          });
+          navigate("/messages", { replace: true });
         }
       } catch (error) {
         console.error("Erreur lors de la résolution de l'identifiant:", error);
+        toast({
+          title: "Erreur",
+          description: "Une erreur est survenue lors de la recherche de l'utilisateur",
+          variant: "destructive"
+        });
       } finally {
         setResolving(false);
       }
     };
     
     resolveIdentifier();
-  }, [friendIdOrEmail, navigate]);
+  }, [friendIdOrEmail, navigate, toast]);
 
   // Vérifier si la page est affichée sur mobile
   const isMobile = window.innerWidth < 768;
@@ -95,6 +105,7 @@ const MessagesPageContent: React.FC<MessagesPageContentProps> = ({ friendIdOrEma
         friendEmail={friendEmail}
         isMobile={isMobile}
         user={user}
+        refreshConversations={refreshConversations}
       />
       
       {/* Conversation active (masquée sur mobile si aucune conversation n'est sélectionnée) */}

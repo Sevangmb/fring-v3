@@ -7,6 +7,7 @@ import { fr } from "date-fns/locale";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
+import { isEmail } from "@/services/amis/userEmail";
 
 interface ConversationListProps {
   conversations: Message[];
@@ -55,12 +56,18 @@ const ConversationList: React.FC<ConversationListProps> = ({
         
         // Utiliser l'email au lieu de l'ID pour les liens
         const email = conversation.sender_email || 'Utilisateur inconnu';
-        const initials = email.substring(0, 2).toUpperCase();
+        // Utiliser l'ID seulement si l'email ne ressemble pas à un email
+        const linkTo = isEmail(email) ? `/messages/${email}` : `/messages/${otherUserId}`;
+        
+        // Calculer les initiales correctement
+        const initials = email && email.includes('@') 
+          ? email.split('@')[0].substring(0, 2).toUpperCase() 
+          : email.substring(0, 2).toUpperCase();
         
         return (
           <Link
             key={conversation.id}
-            to={`/messages/${email}`}
+            to={linkTo}
             className={cn(
               "flex items-center gap-3 p-3 border rounded-md hover:bg-accent/50 transition-colors",
               isUnread && "bg-primary/5 border-primary/20"
@@ -76,7 +83,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
                 <p className={cn("font-medium truncate", isUnread && "text-primary font-semibold")}>
                   {email}
                 </p>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground whitespace-nowrap ml-1">
                   {formatDistanceToNow(new Date(conversation.created_at), { 
                     addSuffix: true,
                     locale: fr 

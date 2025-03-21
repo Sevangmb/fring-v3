@@ -12,12 +12,18 @@ export const useConversation = (friendId?: string | null) => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastLoadedRef = useRef<string | null>(null);
 
   // Charger les messages d'une conversation spécifique
   const loadConversation = useCallback(async (silent = false) => {
     if (!user || !friendId) {
       setMessages([]);
-      setLoading(false);
+      if (loading) setLoading(false);
+      return;
+    }
+    
+    // Éviter les rafraîchissements inutiles pour le même ID
+    if (lastLoadedRef.current === friendId && messages.length > 0 && !silent) {
       return;
     }
     
@@ -25,9 +31,13 @@ export const useConversation = (friendId?: string | null) => {
       if (!silent) setLoading(true);
       console.log(`Chargement des messages pour la conversation avec ${friendId}`);
       const enrichedMessages = await loadConversationMessages(user.id, friendId);
+      lastLoadedRef.current = friendId;
       
       // Ne mettre à jour les messages que s'ils sont différents pour éviter le re-rendu
-      if (JSON.stringify(enrichedMessages) !== JSON.stringify(messages)) {
+      const newMessagesJson = JSON.stringify(enrichedMessages);
+      const currentMessagesJson = JSON.stringify(messages);
+      
+      if (newMessagesJson !== currentMessagesJson) {
         setMessages(enrichedMessages);
       }
       
@@ -45,7 +55,7 @@ export const useConversation = (friendId?: string | null) => {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [user, friendId, toast, messages]);
+  }, [user, friendId, toast, messages, loading]);
 
   // Envoyer un message
   const handleSendMessage = async (content: string) => {
@@ -77,7 +87,12 @@ export const useConversation = (friendId?: string | null) => {
 
   // Charger au démarrage et lors du changement de friendId
   useEffect(() => {
-    loadConversation();
+    if (friendId) {
+      loadConversation();
+    } else {
+      setMessages([]);
+      setLoading(false);
+    }
     
     // Nettoyer l'intervalle précédent
     if (refreshTimerRef.current) {
@@ -86,7 +101,7 @@ export const useConversation = (friendId?: string | null) => {
     }
     
     // Configurer l'intervalle de rafraîchissement silencieux
-    if (friendId) {
+    if (friendId && user) {
       console.log(`Configuration de l'intervalle de rafraîchissement pour la conversation avec ${friendId}`);
       refreshTimerRef.current = setInterval(() => loadConversation(true), 5000);
     }
@@ -97,7 +112,7 @@ export const useConversation = (friendId?: string | null) => {
         refreshTimerRef.current = null;
       }
     };
-  }, [friendId, loadConversation]);
+  }, [friendId, user, loadConversation]);
 
   return {
     messages,

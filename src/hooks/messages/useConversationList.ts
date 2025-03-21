@@ -11,6 +11,7 @@ export const useConversationList = () => {
   const [conversations, setConversations] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastLoadedRef = useRef<string | null>(null);
 
   // Charger les aperçus de conversation
   const loadConversationPreviews = useCallback(async (silent = false) => {
@@ -20,12 +21,21 @@ export const useConversationList = () => {
       return;
     }
     
+    // Éviter de charger plusieurs fois le même utilisateur
+    if (lastLoadedRef.current === user.id && conversations.length > 0 && !silent) {
+      return;
+    }
+    
     try {
       if (!silent) setLoading(true);
       const enrichedPreviews = await loadConversationPreviewsWithEmail(user.id);
+      lastLoadedRef.current = user.id;
       
-      // Ne mettre à jour les conversations que si elles sont différentes 
-      if (JSON.stringify(enrichedPreviews) !== JSON.stringify(conversations)) {
+      // Ne mettre à jour les conversations que si elles sont différentes
+      const newPreviewsJson = JSON.stringify(enrichedPreviews);
+      const currentPreviewsJson = JSON.stringify(conversations);
+      
+      if (newPreviewsJson !== currentPreviewsJson) {
         setConversations(enrichedPreviews);
       }
     } catch (error: any) {
@@ -44,17 +54,20 @@ export const useConversationList = () => {
 
   // Charger au démarrage et configurer l'intervalle de rafraîchissement
   useEffect(() => {
-    loadConversationPreviews();
-    
-    // Nettoyer l'intervalle précédent
-    if (refreshTimerRef.current) {
-      clearInterval(refreshTimerRef.current);
-      refreshTimerRef.current = null;
-    }
-    
     if (user) {
+      loadConversationPreviews();
+      
+      // Nettoyer l'intervalle précédent
+      if (refreshTimerRef.current) {
+        clearInterval(refreshTimerRef.current);
+        refreshTimerRef.current = null;
+      }
+      
       // Rafraîchir les conversations toutes les 10 secondes (silencieusement)
       refreshTimerRef.current = setInterval(() => loadConversationPreviews(true), 10000);
+    } else {
+      setConversations([]);
+      setLoading(false);
     }
     
     return () => {
@@ -63,7 +76,7 @@ export const useConversationList = () => {
         refreshTimerRef.current = null;
       }
     };
-  }, [loadConversationPreviews, user]);
+  }, [user, loadConversationPreviews]);
 
   return {
     conversations,
