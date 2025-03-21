@@ -1,7 +1,8 @@
 
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { ToastProps } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { ToastProps } from '@/components/ui/toast';
 
 /**
  * Sign in with email and password
