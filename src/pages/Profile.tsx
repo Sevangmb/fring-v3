@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import Layout from "@/components/templates/Layout";
 import { Heading, Text } from "@/components/atoms/Typography";
@@ -7,7 +6,7 @@ import Card from "@/components/molecules/Card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit, LogOut, User, Mail, Calendar, Shield, Check, X, Loader2 } from "lucide-react";
+import { Edit, LogOut, User, Mail, Calendar, Shield, Check, X, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -16,7 +15,6 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
-// Schéma de validation pour le formulaire de profil
 const profileSchema = z.object({
   name: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères" }),
   email: z.string().email({ message: "Format d'email invalide" }).optional(),
@@ -34,7 +32,6 @@ const Profile = () => {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
-  // Initialisation du formulaire avec les valeurs actuelles
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -49,13 +46,8 @@ const Profile = () => {
     navigate("/");
   };
 
-  const handleBack = () => {
-    navigate("/dashboard");
-  };
-
   const toggleEdit = () => {
     if (isEditing) {
-      // Si on quitte le mode édition, on réinitialise le formulaire
       form.reset({
         name: user?.user_metadata?.name || "",
         email: user?.email || "",
@@ -69,14 +61,12 @@ const Profile = () => {
   const onSubmit = async (data: ProfileFormValues) => {
     setIsLoading(true);
     try {
-      // Préparer les métadonnées à mettre à jour
       const updates = {
         data: {
           name: data.name,
         },
       };
 
-      // Mettre à jour les métadonnées de l'utilisateur
       const { error } = await supabase.auth.updateUser({
         data: updates.data,
       });
@@ -85,19 +75,15 @@ const Profile = () => {
         throw error;
       }
 
-      // Gérer l'upload d'avatar si un nouveau fichier a été sélectionné
       if (avatarPreview && avatarPreview !== user?.user_metadata?.avatar_url) {
         try {
           setUploadingAvatar(true);
-          // Extraire le fichier Base64 et le convertir en Blob
           const base64Data = avatarPreview.split(',')[1];
           const blob = await fetch(`data:image/jpeg;base64,${base64Data}`).then(res => res.blob());
           
-          // Générer un nom de fichier unique
           const fileExt = "jpg";
           const fileName = `${user?.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
           
-          // Uploader le fichier
           const { error: uploadError, data: uploadData } = await supabase.storage
             .from('avatars')
             .upload(fileName, blob);
@@ -106,10 +92,8 @@ const Profile = () => {
             throw uploadError;
           }
           
-          // Récupérer l'URL publique
           const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
           
-          // Mettre à jour l'URL de l'avatar dans les métadonnées utilisateur
           if (urlData) {
             await supabase.auth.updateUser({
               data: {
@@ -151,7 +135,6 @@ const Profile = () => {
     }
   };
 
-  // Fonction pour gérer l'upload d'avatar
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) {
       return;
@@ -170,7 +153,6 @@ const Profile = () => {
     reader.readAsDataURL(file);
   };
 
-  // Fonction pour obtenir les initiales de l'utilisateur
   const getUserInitials = () => {
     const name = user?.user_metadata?.name || user?.email || "";
     if (name) {
@@ -183,7 +165,6 @@ const Profile = () => {
     return "U";
   };
 
-  // Fonction pour formater la date d'inscription
   const formatJoinDate = () => {
     if (user?.created_at) {
       const date = new Date(user.created_at);
@@ -200,15 +181,6 @@ const Profile = () => {
     <Layout>
       <div className="container mx-auto px-4 py-24">
         <div className="max-w-3xl mx-auto">
-          <Button 
-            variant="ghost" 
-            className="mb-6 flex items-center gap-2" 
-            onClick={handleBack}
-          >
-            <ArrowLeft size={18} />
-            Retour au tableau de bord
-          </Button>
-          
           <Heading variant="h3" className="mb-6">Mon profil</Heading>
           
           <Card className="p-8">
