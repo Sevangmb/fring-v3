@@ -41,29 +41,18 @@ export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]>
   try {
     // Si un ID d'ami spécifique est fourni, filtrer uniquement ses vêtements
     if (friendId) {
-      // Utiliser une jointure avec la table profiles pour obtenir l'email
-      const { data: userData, error: userError } = await supabase
-        .from('vetements')
-        .select('*, profiles:user_id(email)')
-        .eq('user_id', friendId)
-        .order('created_at', { ascending: false });
+      console.log('Récupération des vêtements pour l\'ami spécifique:', friendId);
       
-      if (userError) {
-        console.error('Erreur lors de la récupération des vêtements de l\'ami:', userError);
-        throw userError;
+      // Utiliser directement le RPC personnalisé pour récupérer les vêtements de l'ami spécifique
+      const { data, error } = await supabase
+        .rpc('get_friend_vetements', { friend_id_param: friendId });
+      
+      if (error) {
+        console.error('Erreur lors de la récupération des vêtements de l\'ami:', error);
+        throw error;
       }
       
-      // Transformer les données pour inclure l'email du propriétaire
-      return userData.map(item => {
-        const vetement: Vetement = {
-          ...item,
-          // Extraire l'email de la relation profiles si disponible
-          owner_email: item.profiles?.email || 'Email inconnu'
-        };
-        // Supprimer la propriété profiles qui n'est pas dans le type Vetement
-        delete (vetement as any).profiles;
-        return vetement;
-      });
+      return data as Vetement[];
     } else {
       // Sinon, utiliser la fonction RPC pour récupérer tous les vêtements des amis
       const { data, error } = await supabase
