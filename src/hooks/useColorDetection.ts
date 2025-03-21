@@ -15,6 +15,12 @@ export const useColorDetection = (
   const { toast } = useToast();
   const [detectingColor, setDetectingColor] = useState(false);
   const [detectionError, setDetectionError] = useState<string | null>(null);
+  const [detectionSteps, setDetectionSteps] = useState<string[]>([]);
+
+  const addStep = (step: string) => {
+    setDetectionSteps(prev => [...prev, step]);
+    console.log(`Étape de détection: ${step}`);
+  };
 
   const handleDetectImage = async () => {
     if (!imagePreview) {
@@ -26,8 +32,10 @@ export const useColorDetection = (
       return;
     }
 
+    // Réinitialiser l'état
     setDetectionError(null);
     setDetectingColor(true);
+    setDetectionSteps([]);
     
     try {
       toast({
@@ -35,9 +43,19 @@ export const useColorDetection = (
         description: "Analyse de l'image pour identifier la couleur et la catégorie...",
       });
       
+      addStep("1. Préparation de l'image pour l'analyse");
       console.log("Envoi de l'image pour détection:", imagePreview.substring(0, 50) + "...");
-      const detectedInfo = await detectImageInfo(imagePreview);
       
+      addStep("2. Appel du service de détection");
+      const detectedInfo = await detectImageInfo(imagePreview, (step) => {
+        addStep(step);
+        toast({
+          title: "Traitement en cours",
+          description: step,
+        });
+      });
+      
+      addStep(`3. Informations détectées: couleur=${detectedInfo.color}, catégorie=${detectedInfo.category}`);
       console.log("Informations détectées:", detectedInfo);
       
       // Vérifier que les informations détectées sont valides
@@ -50,6 +68,7 @@ export const useColorDetection = (
           form.setValue('categorie', detectedInfo.category);
         }
         
+        addStep("4. Application des valeurs détectées au formulaire");
         toast({
           title: "Détection réussie",
           description: `La couleur ${detectedInfo.color} et la catégorie ${detectedInfo.category || 'inconnue'} ont été détectées.`,
@@ -59,7 +78,13 @@ export const useColorDetection = (
       }
     } catch (error) {
       console.error("Erreur lors de la détection:", error);
+      
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "Erreur inconnue lors de la détection";
+      
       setDetectionError("La détection automatique a échoué. Veuillez sélectionner manuellement les informations.");
+      addStep(`Erreur: ${errorMessage}`);
       
       // Utiliser une couleur aléatoire comme fallback
       const randomColors = ['bleu', 'rouge', 'vert', 'jaune', 'noir', 'blanc', 'violet', 'orange'];
@@ -79,6 +104,7 @@ export const useColorDetection = (
   return {
     detectingColor,
     detectionError,
+    detectionSteps,
     handleDetectImage
   };
 };
