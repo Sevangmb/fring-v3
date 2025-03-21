@@ -42,7 +42,7 @@ export const useColorDetection = (
     
     try {
       // Créer le toast pour notification
-      const toastNotification = toast({
+      const toastId = toast({
         title: "Détection en cours",
         description: "Analyse de l'image avec Mistral AI (peut prendre jusqu'à 30 secondes)...",
         duration: 30000, // Augmenter la durée pour correspondre au timeout de la fonction
@@ -56,8 +56,13 @@ export const useColorDetection = (
         addStep(step);
       });
       
-      // Fermer le toast précédent manuellement en utilisant l'API retournée par toast()
-      toastNotification.dismiss();
+      // Fermer le toast précédent
+      toast({
+        id: toastId.id,
+        title: "Détection terminée",
+        description: "Analyse terminée avec succès",
+        duration: 0,
+      });
       
       addStep(`3. Informations détectées: couleur=${detectedInfo.color}, catégorie=${detectedInfo.category}`);
       console.log("Informations détectées:", detectedInfo);
@@ -68,10 +73,23 @@ export const useColorDetection = (
       // Définir la catégorie détectée
       form.setValue('categorie', detectedInfo.category);
       
+      // Définir les autres champs disponibles si possible
+      if (detectedInfo.category === "T-shirt") {
+        // Pré-remplir les tailles communes pour les T-shirts
+        form.setValue('taille', 'M');
+      } else if (detectedInfo.category === "Pantalon" || detectedInfo.category === "Jeans") {
+        // Pré-remplir les tailles communes pour les pantalons
+        form.setValue('taille', '40');
+      }
+      
+      // Suggérer un nom basé sur la couleur et la catégorie
+      const suggestedName = `${detectedInfo.color.charAt(0).toUpperCase() + detectedInfo.color.slice(1)} ${detectedInfo.category.toLowerCase()}`;
+      form.setValue('nom', suggestedName);
+      
       addStep("4. Application des valeurs détectées au formulaire");
       toast({
         title: "Détection réussie",
-        description: `La couleur ${detectedInfo.color} et la catégorie ${detectedInfo.category} ont été détectées.`,
+        description: `La couleur ${detectedInfo.color}, la catégorie ${detectedInfo.category} et d'autres champs ont été pré-remplis`,
         duration: 5000,
       });
     } catch (error) {
@@ -86,7 +104,7 @@ export const useColorDetection = (
       
       toast({
         title: "Échec de la détection",
-        description: "Impossible de détecter automatiquement la couleur et la catégorie. Veuillez les saisir manuellement.",
+        description: "Impossible de détecter automatiquement les informations du vêtement. Veuillez les saisir manuellement.",
         variant: "destructive",
         duration: 7000,
       });
