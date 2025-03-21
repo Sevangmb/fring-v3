@@ -38,44 +38,70 @@ export async function detectClothingType(imageUrl: string, hf: HfInference): Pro
     // Prétraitement de l'URL pour gérer les images en base64
     const processedUrl = preprocessImageUrl(imageUrl);
     
-    // Prompt amélioré pour une meilleure détection du type de vêtement
+    // Utiliser un modèle multimodal plus performant avec un prompt spécifique
+    const clothingTypePrompt = `What type of clothing item is shown in this image? 
+    Choose ONE specific category from this list: t-shirt, shirt, blouse, sweater, hoodie, jacket, coat, 
+    dress, skirt, pants, jeans, shorts, leggings, suit, blazer, vest, tank top, polo shirt, cardigan.
+    Reply with JUST ONE WORD.`;
+    
     const clothingTypeQuery = await hf.textGeneration({
-      model: "google/flan-t5-xxl",
-      inputs: `Analyze this image and tell me EXACTLY what type of clothing item it shows.
-      Choose ONE specific category from this list: t-shirt, shirt, blouse, sweater, hoodie, jacket, coat, 
-      dress, skirt, pants, jeans, shorts, leggings, suit, blazer, vest, tank top, polo shirt, cardigan.
-      Look ONLY at the main garment and reply with JUST ONE WORD: ${processedUrl}`,
+      model: "llava-hf/llava-1.5-7b-hf", // Modèle multimodal plus performant
+      inputs: {
+        image: processedUrl,
+        text: clothingTypePrompt
+      },
       parameters: {
-        max_new_tokens: 10,
-        temperature: 0.2,
+        max_new_tokens: 15,
+        temperature: 0.01,
       }
     });
     
     const clothingType = clothingTypeQuery.generated_text.toLowerCase().trim();
-    console.log("Clothing type detected:", clothingType);
+    console.log("Clothing type detected with primary model:", clothingType);
     
-    // Si la réponse est valide, la retourner
-    if (clothingType && clothingType.length < 20 && !clothingType.includes("sorry") && !clothingType.includes("cannot")) {
-      return clothingType;
+    // Liste des types de vêtements valides
+    const validTypes = [
+      "t-shirt", "shirt", "blouse", "sweater", "hoodie", "jacket", "coat",
+      "dress", "skirt", "pants", "jeans", "shorts", "leggings", "suit",
+      "blazer", "vest", "tank", "polo", "cardigan"
+    ];
+    
+    // Extraire le type de vêtement si la réponse contient plus d'un mot
+    let extractedType = clothingType;
+    
+    for (const type of validTypes) {
+      if (clothingType.includes(type)) {
+        extractedType = type;
+        console.log("Extracted specific clothing type from response:", type);
+        break;
+      }
     }
     
-    // Si la réponse n'est pas valide, essayer une seconde tentative avec un prompt différent
-    console.log("First attempt didn't return a clear clothing type, trying again...");
-    const secondAttempt = await hf.textGeneration({
-      model: "google/flan-t5-xxl",
-      inputs: `What clothing item do you see in this image? Reply with just one word: ${processedUrl}`,
-      parameters: {
-        max_new_tokens: 10,
-        temperature: 0.2,
-      }
-    });
-    
-    const secondType = secondAttempt.generated_text.toLowerCase().trim();
-    console.log("Second attempt clothing type:", secondType);
-    
-    return secondType || "t-shirt"; // Fallback to t-shirt if still no valid response
+    return extractedType;
   } catch (error) {
     console.error("Error detecting clothing type:", error);
-    return "t-shirt"; // Valeur par défaut en cas d'erreur
+    
+    try {
+      // Tentative avec un modèle alternatif
+      console.log("Trying alternative model for clothing type detection...");
+      const processedUrl = preprocessImageUrl(imageUrl);
+      
+      const result = await hf.textGeneration({
+        model: "google/flan-t5-xxl",
+        inputs: `What type of clothing is shown in this image? Reply with just one word: ${processedUrl}`,
+        parameters: {
+          max_new_tokens: 10,
+          temperature: 0.1,
+        }
+      });
+      
+      const alternativeType = result.generated_text.toLowerCase().trim();
+      console.log("Alternative model clothing type result:", alternativeType);
+      
+      return alternativeType;
+    } catch (secondError) {
+      console.error("Error with alternative model:", secondError);
+      return "t-shirt"; // Valeur par défaut en cas d'erreur
+    }
   }
 }

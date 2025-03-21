@@ -22,11 +22,11 @@ export async function extractClothingColor(imageDescription: string, hf: HfInfer
     `;
     
     const colorResult = await hf.textGeneration({
-      model: "google/flan-t5-xxl",
+      model: "google/flan-ul2", // Modèle plus performant pour l'analyse textuelle
       inputs: colorAnalysisPrompt,
       parameters: {
         max_new_tokens: 10,
-        temperature: 0.1,
+        temperature: 0.05,
       }
     });
     
@@ -67,11 +67,11 @@ export async function performDirectColorQuery(imageDescription: string, hf: HfIn
     `;
     
     const directColorQuery = await hf.textGeneration({
-      model: "google/flan-t5-xxl",
+      model: "google/flan-ul2", // Modèle plus performant pour l'analyse textuelle
       inputs: directColorPrompt,
       parameters: {
         max_new_tokens: 10,
-        temperature: 0.1,
+        temperature: 0.05,
       }
     });
     
@@ -114,11 +114,11 @@ export async function detectDominantColor(imageDescription: string, hf: HfInfere
     `;
     
     const dominantResult = await hf.textGeneration({
-      model: "google/flan-t5-xxl",
+      model: "google/flan-ul2", // Modèle plus performant pour l'analyse textuelle
       inputs: dominantColorPrompt,
       parameters: {
         max_new_tokens: 10,
-        temperature: 0.1,
+        temperature: 0.05,
       }
     });
     
@@ -130,26 +130,35 @@ export async function detectDominantColor(imageDescription: string, hf: HfInfere
       return detectedColor;
     }
     
-    // Si aucune couleur n'est détectée, essayer avec un prompt simplifié
+    // Si aucune couleur n'est détectée, essayer avec un modèle plus basique
     console.log("First attempt didn't yield a valid color, trying a simpler approach");
     
-    const simpleColorPrompt = `What color is the clothing in this description: "${imageDescription}"? 
-    Answer with just one word - the color name.`;
+    const simplifiedPrompt = `What is the main color of this clothing: "${imageDescription.substring(0, 200)}"?`;
     
-    const simpleResult = await hf.textGeneration({
-      model: "google/flan-t5-xxl",
-      inputs: simpleColorPrompt,
+    const simplifiedResult = await hf.textGeneration({
+      model: "mistralai/Mistral-7B-Instruct-v0.2", // Modèle alternatif
+      inputs: simplifiedPrompt,
       parameters: {
         max_new_tokens: 10,
         temperature: 0.1,
       }
     });
     
-    const simpleColor = simpleResult.generated_text.toLowerCase().trim();
-    console.log("Simple color detection result:", simpleColor);
+    const simplifiedColor = simplifiedResult.generated_text.toLowerCase().trim();
+    console.log("Simplified approach color result:", simplifiedColor);
     
-    if (simpleColor.length < 20 && !simpleColor.includes("sorry") && !simpleColor.includes("cannot") && !simpleColor.includes("unknown")) {
-      return simpleColor;
+    // Extraire la couleur de la réponse
+    const commonColors = [
+      "red", "blue", "green", "yellow", "purple", "pink", "orange", 
+      "black", "white", "gray", "grey", "brown", "tan", "beige", 
+      "navy", "teal", "maroon", "burgundy", "olive", "cyan", "magenta"
+    ];
+    
+    for (const color of commonColors) {
+      if (simplifiedColor.includes(color)) {
+        console.log("Extracted color from simplified approach:", color);
+        return color;
+      }
     }
     
     // Fallback - générer une couleur aléatoire si aucune détection n'a fonctionné

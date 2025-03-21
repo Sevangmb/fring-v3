@@ -15,47 +15,69 @@ export async function analyzeImageDirectly(imageUrl: string, hf: HfInference): P
     // Prétraitement de l'URL pour gérer les images en base64
     const processedUrl = preprocessImageUrl(imageUrl);
     
-    // Utiliser un prompt très spécifique pour la détection de couleur
-    const colorPrompt = `Examine this image and identify ONLY the main color of the primary clothing item. 
+    // Utiliser un modèle de vision plus performant avec un prompt très spécifique
+    const colorPrompt = `Observe this image of clothing and identify ONLY the main color. 
     Give me just ONE WORD - the exact color name (like red, blue, green, white, black, etc.).
-    Ignore background colors, accessories, and patterns. Focus only on the dominant solid color of the main garment.`;
+    Focus only on the dominant solid color of the main garment.`;
     
-    // Utiliser un modèle plus adapté à l'analyse d'images
+    // Utiliser un modèle multimodal plus performant
     const colorQuery = await hf.textGeneration({
-      model: "google/flan-t5-xxl",
-      inputs: `${colorPrompt}: ${processedUrl}`,
+      model: "llava-hf/llava-1.5-7b-hf", // Modèle multimodal plus performant
+      inputs: {
+        image: processedUrl,
+        text: colorPrompt
+      },
       parameters: {
-        max_new_tokens: 10,
-        temperature: 0.1, // Réduit la température pour des réponses plus précises
+        max_new_tokens: 15,
+        temperature: 0.01, // Température très basse pour des réponses précises
       }
     });
     
     const detectedColor = colorQuery.generated_text.toLowerCase().trim();
     console.log("Direct color analysis result:", detectedColor);
     
-    // Vérification supplémentaire pour éviter les réponses invalides
-    if (detectedColor.length > 20 || detectedColor.includes("sorry") || detectedColor.includes("cannot")) {
-      console.log("Invalid direct color analysis result, trying fallback");
-      return "unknown";
-    }
+    // Extraire le mot de couleur si la réponse contient plus d'un mot
+    const commonColors = [
+      "red", "blue", "green", "yellow", "purple", "pink", "orange", 
+      "black", "white", "gray", "grey", "brown", "tan", "beige", 
+      "navy", "teal", "maroon", "burgundy", "olive", "cyan", "magenta"
+    ];
     
-    // Essayer d'extraire le mot de couleur si la réponse contient plus d'un mot
-    if (detectedColor.includes(" ")) {
-      const commonColors = ["red", "blue", "green", "yellow", "purple", "pink", "orange", 
-                          "black", "white", "gray", "grey", "brown", "tan", "beige", 
-                          "navy", "teal", "maroon", "burgundy", "olive", "cyan", "magenta"];
-      
-      for (const color of commonColors) {
-        if (detectedColor.includes(color)) {
-          console.log("Extracted specific color from response:", color);
-          return color;
-        }
+    let extractedColor = detectedColor;
+    
+    for (const color of commonColors) {
+      if (detectedColor.includes(color)) {
+        extractedColor = color;
+        console.log("Extracted specific color from response:", color);
+        break;
       }
     }
     
-    return detectedColor;
+    return extractedColor;
   } catch (error) {
     console.error("Error analyzing image directly:", error);
-    return "unknown"; // En cas d'erreur, on continue avec les autres méthodes
+    
+    try {
+      // Tentative avec un modèle alternatif
+      console.log("Trying alternative model for direct color detection...");
+      const processedUrl = preprocessImageUrl(imageUrl);
+      
+      const result = await hf.textGeneration({
+        model: "google/flan-t5-xxl",
+        inputs: `What is the main color of the clothing in this image? Answer with just one word: ${processedUrl}`,
+        parameters: {
+          max_new_tokens: 10,
+          temperature: 0.1,
+        }
+      });
+      
+      const alternativeColor = result.generated_text.toLowerCase().trim();
+      console.log("Alternative model color result:", alternativeColor);
+      
+      return alternativeColor;
+    } catch (secondError) {
+      console.error("Error with alternative model:", secondError);
+      return "unknown"; // En cas d'erreur, on continue avec les autres méthodes
+    }
   }
 }
