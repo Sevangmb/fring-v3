@@ -100,7 +100,7 @@ export const useColorDetection = (
       addStep("6. Application des valeurs détectées au formulaire");
       toast({
         title: "Détection réussie",
-        description: `Tous les champs ont été pré-remplis avec les informations détectées`,
+        description: `Catégorie: ${detectedInfo.category}, Couleur: ${detectedInfo.color}`,
         duration: 5000,
       });
     } catch (error) {

@@ -65,7 +65,7 @@ const CouleurField: React.FC<CouleurFieldProps> = ({ form, detectingColor }) => 
               Couleur*
               {hasDetectedValue && (
                 <span className="ml-2 text-primary font-normal">
-                  {couleurValue}
+                  (Détectée)
                 </span>
               )}
             </FormLabel>

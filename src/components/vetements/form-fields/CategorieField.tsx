@@ -33,7 +33,7 @@ const CategorieField: React.FC<CategorieFieldProps> = ({
             Catégorie*
             {hasDetectedValue && (
               <span className="ml-2 text-primary font-normal">
-                {categorieValue}
+                (Détectée)
               </span>
             )}
           </FormLabel>
