@@ -3,7 +3,9 @@ import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { VetementFormValues, temperatureOptions } from "../schema/VetementFormSchema";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Thermometer, ThermometerSnowflake, ThermometerSun } from "lucide-react";
 
 interface TemperatureFieldProps {
   form: UseFormReturn<VetementFormValues>;
@@ -18,31 +20,54 @@ const TemperatureField: React.FC<TemperatureFieldProps> = ({ form }) => {
     return () => subscription.unsubscribe();
   }, [form]);
   
+  // Obtenir la valeur actuelle pour l'afficher dans le label si elle existe
+  const temperatureValue = form.watch('temperature');
+  const hasDetectedValue = !!temperatureValue;
+  
   return (
     <FormField
       control={form.control}
       name="temperature"
       render={({ field }) => (
-        <FormItem>
-          <FormLabel>Température idéale</FormLabel>
+        <FormItem className="space-y-2">
+          <FormLabel>
+            Température idéale
+            {hasDetectedValue && (
+              <span className="ml-2 text-primary font-normal">
+                (Détecté)
+              </span>
+            )}
+          </FormLabel>
           <FormControl>
-            <Select
-              value={field.value || "none"}
+            <RadioGroup
               onValueChange={field.onChange}
-              disabled={field.disabled}
+              value={field.value || ''}
+              className="flex flex-col space-y-1"
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionnez une température" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Non spécifiée</SelectItem>
-                {temperatureOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <div className="flex flex-wrap gap-4 items-center">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="froid" id="froid" />
+                  <Label htmlFor="froid" className="flex items-center">
+                    <ThermometerSnowflake className="w-4 h-4 mr-1.5 text-blue-500" />
+                    Froid
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="tempere" id="tempere" />
+                  <Label htmlFor="tempere" className="flex items-center">
+                    <Thermometer className="w-4 h-4 mr-1.5 text-purple-500" />
+                    Tempéré
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="chaud" id="chaud" />
+                  <Label htmlFor="chaud" className="flex items-center">
+                    <ThermometerSun className="w-4 h-4 mr-1.5 text-orange-500" />
+                    Chaud
+                  </Label>
+                </div>
+              </div>
+            </RadioGroup>
           </FormControl>
           <FormMessage />
         </FormItem>
