@@ -4,6 +4,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { Vetement } from "@/services/vetement";
 import { useToast } from "@/hooks/use-toast";
+import {
+  fetchVetementsStats,
+  fetchTenutesCount,
+  fetchAmisCount,
+  calculateDistributions,
+  prepareRecentActivity
+} from "@/utils/statsUtils";
 
 interface DashboardStats {
   totalVetements: number;
@@ -45,21 +52,31 @@ export const useDashboardStats = () => {
       setError(null);
       console.log("Début de récupération des statistiques pour l'utilisateur:", user.id);
 
-      // Récupérer les vêtements
+      // Récupérer les vêtements avec jointure explicite pour éviter l'ambiguïté
       const { data: vetements, error: vetementsError } = await supabase
         .from('vetements')
-        .select('*, categories(nom)')
+        .select(`
+          *,
+          categories:categorie_id(nom)
+        `)
         .eq('user_id', user.id);
 
-      if (vetementsError) throw vetementsError;
+      if (vetementsError) {
+        console.error("Erreur lors de la récupération des vêtements:", vetementsError);
+        throw vetementsError;
+      }
       console.log("Vêtements récupérés:", vetements?.length || 0);
 
       // Récupérer le nombre de tenues
       const { count: tenuesCount, error: tenuesError } = await supabase
         .from('tenues')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
 
-      if (tenuesError) throw tenuesError;
+      if (tenuesError) {
+        console.error("Erreur lors de la récupération des tenues:", tenuesError);
+        throw tenuesError;
+      }
       console.log("Nombre de tenues:", tenuesCount || 0);
 
       // Récupérer le nombre d'amis
@@ -69,7 +86,10 @@ export const useDashboardStats = () => {
         .or(`user_id.eq.${user.id},ami_id.eq.${user.id}`)
         .eq('status', 'accepted');
 
-      if (amisError) throw amisError;
+      if (amisError) {
+        console.error("Erreur lors de la récupération des amis:", amisError);
+        throw amisError;
+      }
       console.log("Nombre d'amis:", amis?.length || 0);
 
       // Calculer les distributions
@@ -78,7 +98,7 @@ export const useDashboardStats = () => {
       const marqueCount: Record<string, number> = {};
 
       vetements?.forEach((vetement: any) => {
-        // Catégories
+        // Catégories - utiliser la jointure explicite
         if (vetement.categories && vetement.categories.nom) {
           const categoryName = vetement.categories.nom;
           categorieCount[categoryName] = (categorieCount[categoryName] || 0) + 1;

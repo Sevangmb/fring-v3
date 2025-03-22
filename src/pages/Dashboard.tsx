@@ -14,6 +14,7 @@ import CouleursChart from "@/components/dashboard/CouleursChart";
 import MarquesChart from "@/components/dashboard/MarquesChart";
 import RecentActivity from "@/components/dashboard/RecentActivity";
 import DashboardLoader from "@/components/dashboard/DashboardLoader";
+import EmptyStateMessage from "@/components/molecules/EmptyStateMessage";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -35,6 +36,10 @@ const Dashboard = () => {
     stats.categoriesDistribution.length > 0 || 
     stats.couleursDistribution.length > 0 || 
     stats.marquesDistribution.length > 0;
+
+  const handleAddClothing = () => {
+    window.location.href = '/mes-vetements/ajouter';
+  };
 
   return (
     <Layout>
@@ -65,17 +70,14 @@ const Dashboard = () => {
             </Button>
           </div>
         ) : !hasData ? (
-          <div className="bg-accent/10 p-10 rounded-lg text-center">
-            <Shirt size={48} className="mx-auto text-muted-foreground mb-4" />
-            <Heading as="h3" variant="h4" className="mb-2">Aucune donnée disponible</Heading>
-            <Text className="text-muted-foreground max-w-md mx-auto mb-6">
-              Ajoutez des vêtements à votre collection pour voir apparaître des statistiques ici.
-            </Text>
-            <Button onClick={() => window.location.href = '/mes-vetements/ajouter'}>
-              <Plus className="mr-2 h-4 w-4" />
-              Ajouter un vêtement
-            </Button>
-          </div>
+          <EmptyStateMessage 
+            icon={<Shirt size={48} />}
+            title="Aucune donnée disponible"
+            description="Ajoutez des vêtements à votre collection pour voir apparaître des statistiques ici."
+            buttonText="Ajouter un vêtement"
+            buttonIcon={<Plus className="mr-2 h-4 w-4" />}
+            onButtonClick={handleAddClothing}
+          />
         ) : (
           <>
             <DashboardStats 
