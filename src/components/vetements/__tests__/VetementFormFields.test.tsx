@@ -7,6 +7,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import VetementFormFields from '../VetementFormFields';
 import { VetementFormValues, vetementFormSchema } from '../schema/VetementFormSchema';
 
+// Mock EtiquetteUploader
+vi.mock('../etiquette/EtiquetteUploader', () => ({
+  default: () => <div data-testid="etiquette-uploader">Etiquette Uploader Component</div>
+}));
+
 // Create a wrapper component to provide the form context
 const FormWrapper = ({ children, defaultValues = {} }) => {
   const form = useForm({
@@ -31,7 +36,11 @@ describe('VetementFormFields', () => {
         marque: '',
         image_url: '',
         temperature: undefined,
-        weatherType: undefined
+        weatherType: undefined,
+        composition: undefined,
+        instructions_lavage: undefined,
+        pays_fabrication: undefined,
+        etiquette_image_url: undefined
       },
     });
     
@@ -63,7 +72,11 @@ describe('VetementFormFields', () => {
         marque: '',
         image_url: '',
         temperature: undefined,
-        weatherType: undefined
+        weatherType: undefined,
+        composition: undefined,
+        instructions_lavage: undefined,
+        pays_fabrication: undefined,
+        etiquette_image_url: undefined
       },
     });
     
@@ -80,7 +93,7 @@ describe('VetementFormFields', () => {
     expect(screen.getByLabelText(/Type de météo/i)).toBeInTheDocument();
   });
 
-  it('renders etiquette tab message', () => {
+  it('renders etiquette tab with uploader component', () => {
     // Create a properly typed form with complete schema
     const form = useForm<VetementFormValues>({
       resolver: zodResolver(vetementFormSchema),
@@ -93,20 +106,27 @@ describe('VetementFormFields', () => {
         marque: '',
         image_url: '',
         temperature: undefined,
-        weatherType: undefined
+        weatherType: undefined,
+        composition: undefined,
+        instructions_lavage: undefined,
+        pays_fabrication: undefined,
+        etiquette_image_url: undefined
       },
     });
+    
+    const mockUser = { id: "user123" };
     
     render(
       <VetementFormFields 
         form={form} 
         marques={[]} 
         loading={false} 
-        activeTab="etiquette" 
+        activeTab="etiquette"
+        user={mockUser} 
       />
     );
     
     expect(screen.getByText(/Informations d'étiquette/i)).toBeInTheDocument();
-    expect(screen.getByText(/Cette fonctionnalité sera bientôt disponible/i)).toBeInTheDocument();
+    expect(screen.getByTestId("etiquette-uploader")).toBeInTheDocument();
   });
 });

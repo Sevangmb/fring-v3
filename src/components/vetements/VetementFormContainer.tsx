@@ -65,6 +65,7 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
               loading={loading}
               onCategoriesChange={() => {}}
               activeTab={activeTab}
+              user={user}
             />
             
             <FormActions

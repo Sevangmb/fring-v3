@@ -48,6 +48,11 @@ export const vetementFormSchema = z.object({
   temperature: z.enum(["froid", "tempere", "chaud"]).optional(),
   weatherType: z.enum(["normal", "pluie", "neige"]).optional(),
   image_url: z.string().optional(),
+  // Nouveaux champs pour l'étiquette
+  composition: z.string().optional(),
+  instructions_lavage: z.string().optional(),
+  pays_fabrication: z.string().optional(),
+  etiquette_image_url: z.string().optional(),
 });
 
 // Type for form values
