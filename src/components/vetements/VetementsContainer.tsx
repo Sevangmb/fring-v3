@@ -1,5 +1,4 @@
-
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useVetementsData } from "@/hooks/useVetementsData";
 import { useVetementsFilters } from "@/hooks/useVetementsFilters";
 import { useAmis } from "@/hooks/useAmis";
@@ -7,20 +6,21 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Tabs } from "@/components/ui/tabs";
 import VetementsTabsList from "./tabs/VetementsTabsList";
 import MesVetementsTab from "./tabs/MesVetementsTab";
-import AjouterEnsembleTab from "./tabs/AjouterEnsembleTab";
-import MesEnsemblesTab from "./tabs/MesEnsemblesTab";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface VetementsContainerProps {
-  defaultTab?: 'mes-vetements' | 'ajouter-vetement' | 'mes-tenues' | 'ajouter-tenue' | 'mes-ensembles';
+  defaultTab?: 'mes-vetements' | 'ajouter-vetement' | 'mes-tenues' | 'ajouter-tenue';
 }
 
 const VetementsContainer: React.FC<VetementsContainerProps> = ({ 
   defaultTab = 'mes-vetements' 
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { filteredAmis, loadingAmis, chargerAmis } = useAmis();
+  const [activeTab, setActiveTab] = useState(defaultTab);
+  
   const {
     searchTerm,
     setSearchTerm,
@@ -30,8 +30,8 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
     setMarqueFilter,
     friendFilter,
     setFriendFilter,
-    activeTab,
-    setActiveTab,
+    activeTab: categoryTab,
+    setActiveTab: setCategoryTab,
     viewMode,
     handleViewModeChange,
     filterVetements
@@ -49,6 +49,20 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
 
   const acceptedFriends = filteredAmis?.amisAcceptes || [];
 
+  // Update active tab based on route
+  useEffect(() => {
+    if (location.pathname === "/mes-vetements") {
+      setActiveTab("mes-vetements");
+      handleViewModeChange('mes-vetements');
+    } else if (location.pathname === "/mes-vetements/ajouter") {
+      setActiveTab("ajouter-vetement");
+    } else if (location.pathname === "/ensembles") {
+      setActiveTab("mes-tenues");
+    } else if (location.pathname === "/ensembles/ajouter") {
+      setActiveTab("ajouter-tenue");
+    }
+  }, [location.pathname, handleViewModeChange]);
+
   // Charge les amis au chargement du composant
   useEffect(() => {
     if (user) {
@@ -56,20 +70,10 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
     }
   }, [user, chargerAmis]);
 
-  // Définit le mode de vue initial en fonction du paramètre defaultTab
-  useEffect(() => {
-    if (defaultTab === 'mes-vetements') {
-      handleViewModeChange('mes-vetements');
-    } else if (defaultTab === 'mes-ensembles') {
-      handleViewModeChange('mes-ensembles');
-    }
-  }, [defaultTab, handleViewModeChange]);
-
   // Met à jour l'email de l'ami sélectionné lorsque le filtre d'ami change
   useEffect(() => {
     if (viewMode === 'vetements-amis') {
       if (friendFilter !== "all") {
-        console.log("Mise à jour du filtre d'ami:", friendFilter);
         const selectedFriend = acceptedFriends.find(ami => 
           (ami.user_id === ami.ami_id ? ami.ami_id : ami.user_id) === friendFilter
         );
@@ -89,22 +93,30 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
   };
 
   const handleTabChange = (value: string) => {
-    switch (value) {
-      case "mes-vetements":
-        handleViewModeChange('mes-vetements');
-        break;
-      case "ajouter-vetement":
-        navigate("/mes-vetements/ajouter");
-        break;
-      case "mes-tenues":
-        navigate("/ensembles");
-        break;
-      case "ajouter-tenue":
-        navigate("/ensembles/ajouter");
-        break;
-      default:
-        break;
+    setActiveTab(value);
+  };
+
+  // Only render content for the current active tab
+  const renderTabContent = () => {
+    if (activeTab === "mes-vetements") {
+      return (
+        <MesVetementsTab 
+          vetements={filteredVetements}
+          categories={categories}
+          marques={marques.map(m => m.nom)}
+          acceptedFriends={acceptedFriends}
+          activeTab={categoryTab}
+          isLoading={isLoading || loadingAmis}
+          error={error}
+          isAuthenticated={!!user}
+          onVetementDeleted={handleVetementDeleted}
+          onTabChange={setCategoryTab}
+        />
+      );
     }
+    
+    // Other tabs are handled by route navigation in VetementsTabsList
+    return null;
   };
 
   if (!user) {
@@ -113,25 +125,9 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
 
   return (
     <>
-      <Tabs defaultValue={defaultTab} onValueChange={handleTabChange} className="w-full mb-6">
-        <VetementsTabsList onTabChange={handleTabChange} />
-        
-        <MesVetementsTab 
-          vetements={filteredVetements}
-          categories={categories}
-          marques={marques.map(m => m.nom)}
-          acceptedFriends={acceptedFriends}
-          activeTab={activeTab}
-          isLoading={isLoading || loadingAmis}
-          error={error}
-          isAuthenticated={!!user}
-          onVetementDeleted={handleVetementDeleted}
-          onTabChange={setActiveTab}
-        />
-        
-        <MesEnsemblesTab />
-        
-        {/* Les autres onglets sont gérés par des redirections vers les pages correspondantes */}
+      <Tabs value={activeTab} className="w-full mb-6">
+        <VetementsTabsList onTabChange={handleTabChange} activeTab={activeTab} />
+        {renderTabContent()}
       </Tabs>
     </>
   );
