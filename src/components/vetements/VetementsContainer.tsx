@@ -10,9 +10,13 @@ import CategoryTabs from "@/components/molecules/CategoryTabs";
 import ViewModeSelector from "@/components/molecules/ViewModeSelector";
 import FloatingAddButton from "@/components/molecules/FloatingAddButton";
 import { SearchFilterProvider } from "@/contexts/SearchFilterContext";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from "react-router-dom";
+import { Shirt, Users, ListPlus, List } from "lucide-react";
 
 const VetementsContainer: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { filteredAmis, loadingAmis } = useAmis();
   const {
     searchTerm,
@@ -54,6 +58,25 @@ const VetementsContainer: React.FC = () => {
     console.log(`Vêtement ${id} supprimé`);
   };
 
+  const handleTabChange = (value: string) => {
+    switch (value) {
+      case "mes-vetements":
+        handleViewModeChange('mes-vetements');
+        break;
+      case "vetements-amis":
+        handleViewModeChange('vetements-amis');
+        break;
+      case "ajouter-ensemble":
+        navigate("/ensembles/ajouter");
+        break;
+      case "mes-ensembles":
+        navigate("/ensembles");
+        break;
+      default:
+        break;
+    }
+  };
+
   if (!user) {
     return (
       <VetementsList 
@@ -69,36 +92,58 @@ const VetementsContainer: React.FC = () => {
 
   return (
     <>
-      <ViewModeSelector 
-        viewMode={viewMode}
-        onViewModeChange={handleViewModeChange}
-      />
+      <div className="mb-6">
+        <Tabs defaultValue="mes-vetements" onValueChange={handleTabChange} className="w-full">
+          <TabsList className="w-full grid grid-cols-4">
+            <TabsTrigger value="mes-vetements" className="flex items-center gap-2">
+              <Shirt className="h-4 w-4" />
+              Mes Vêtements
+            </TabsTrigger>
+            <TabsTrigger value="vetements-amis" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Vêtements Amis
+            </TabsTrigger>
+            <TabsTrigger value="ajouter-ensemble" className="flex items-center gap-2">
+              <ListPlus className="h-4 w-4" />
+              Ajouter Ensemble
+            </TabsTrigger>
+            <TabsTrigger value="mes-ensembles" className="flex items-center gap-2">
+              <List className="h-4 w-4" />
+              Mes Ensembles
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
 
-      <SearchFilterProvider
-        categories={categories}
-        marques={marques}
-        friends={acceptedFriends}
-        showFriendFilter={viewMode === 'vetements-amis'}
-      >
-        <SearchFilterBar />
-      </SearchFilterProvider>
-      
-      <CategoryTabs 
-        categories={categories}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      >
-        <VetementsList 
-          vetements={filteredVetements}
-          isLoading={isLoading || loadingAmis}
-          error={error}
-          isAuthenticated={!!user}
-          onVetementDeleted={handleVetementDeleted}
-          showOwner={viewMode === 'vetements-amis'}
-        />
-      </CategoryTabs>
-      
-      <FloatingAddButton visible={viewMode === 'mes-vetements'} />
+      {(viewMode === 'mes-vetements' || viewMode === 'vetements-amis') && (
+        <>
+          <SearchFilterProvider
+            categories={categories}
+            marques={marques}
+            friends={acceptedFriends}
+            showFriendFilter={viewMode === 'vetements-amis'}
+          >
+            <SearchFilterBar />
+          </SearchFilterProvider>
+          
+          <CategoryTabs 
+            categories={categories}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          >
+            <VetementsList 
+              vetements={filteredVetements}
+              isLoading={isLoading || loadingAmis}
+              error={error}
+              isAuthenticated={!!user}
+              onVetementDeleted={handleVetementDeleted}
+              showOwner={viewMode === 'vetements-amis'}
+            />
+          </CategoryTabs>
+          
+          <FloatingAddButton visible={viewMode === 'mes-vetements'} />
+        </>
+      )}
     </>
   );
 };
