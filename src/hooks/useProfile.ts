@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/lib/supabase";
 import { ProfileFormValues, profileSchema } from "@/components/profile/ProfileForm";
+import { uploadAvatar } from "@/services/userService";
 
 export const useProfile = () => {
   const { user, signOut } = useAuth();
@@ -66,9 +67,50 @@ export const useProfile = () => {
     reader.readAsDataURL(file);
   };
 
+  const processAvatarUpload = async () => {
+    if (!avatarPreview || !user || avatarPreview === user?.user_metadata?.avatar_url) {
+      return null;
+    }
+    
+    try {
+      setUploadingAvatar(true);
+      const base64Data = avatarPreview.split(',')[1];
+      const blob = await fetch(`data:image/jpeg;base64,${base64Data}`).then(res => res.blob());
+      
+      const fileExt = "jpg";
+      const fileName = `${user?.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      
+      const { error: uploadError, data: uploadData } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, blob);
+        
+      if (uploadError) {
+        throw uploadError;
+      }
+      
+      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+      
+      if (urlData) {
+        await supabase.auth.updateUser({
+          data: {
+            avatar_url: urlData.publicUrl,
+          },
+        });
+        return urlData.publicUrl;
+      }
+    } catch (error) {
+      throw error;
+    } finally {
+      setUploadingAvatar(false);
+    }
+    
+    return null;
+  };
+
   const onSubmit = async (data: ProfileFormValues) => {
     setIsLoading(true);
     try {
+      // Update user name
       const updates = {
         data: {
           name: data.name,
@@ -83,53 +125,22 @@ export const useProfile = () => {
         throw error;
       }
 
-      if (avatarPreview && avatarPreview !== user?.user_metadata?.avatar_url) {
-        try {
-          setUploadingAvatar(true);
-          const base64Data = avatarPreview.split(',')[1];
-          const blob = await fetch(`data:image/jpeg;base64,${base64Data}`).then(res => res.blob());
-          
-          const fileExt = "jpg";
-          const fileName = `${user?.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-          
-          const { error: uploadError, data: uploadData } = await supabase.storage
-            .from('avatars')
-            .upload(fileName, blob);
-            
-          if (uploadError) {
-            throw uploadError;
-          }
-          
-          const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
-          
-          if (urlData) {
-            await supabase.auth.updateUser({
-              data: {
-                avatar_url: urlData.publicUrl,
-              },
-            });
-          }
-          
-          toast({
-            title: "Avatar mis à jour",
-            description: "Votre avatar a été mis à jour avec succès.",
-          });
-        } catch (uploadError: any) {
-          console.error("Erreur lors de l'upload de l'avatar:", uploadError);
-          toast({
-            title: "Erreur lors de l'upload de l'avatar",
-            description: uploadError.message || "Impossible de télécharger votre avatar. Veuillez réessayer.",
-            variant: "destructive",
-          });
-        } finally {
-          setUploadingAvatar(false);
-        }
+      // Handle avatar upload
+      try {
+        await processAvatarUpload();
+        
+        toast({
+          title: "Profil mis à jour",
+          description: "Vos informations ont été mises à jour avec succès",
+        });
+      } catch (uploadError: any) {
+        console.error("Erreur lors de l'upload de l'avatar:", uploadError);
+        toast({
+          title: "Erreur lors de l'upload de l'avatar",
+          description: uploadError.message || "Impossible de télécharger votre avatar. Veuillez réessayer.",
+          variant: "destructive",
+        });
       }
-
-      toast({
-        title: "Profil mis à jour",
-        description: "Vos informations ont été mises à jour avec succès",
-      });
       
       setIsEditing(false);
     } catch (error: any) {
