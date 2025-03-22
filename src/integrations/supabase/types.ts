@@ -301,6 +301,22 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_friend_ensembles: {
+        Args: {
+          friend_id_param: string
+        }
+        Returns: {
+          id: number
+          nom: string
+          description: string
+          occasion: string
+          saison: string
+          created_at: string
+          user_id: string
+          vetements: Json[]
+          email: string
+        }[]
+      }
       get_friend_vetements: {
         Args: {
           friend_id_param: string
@@ -335,6 +351,20 @@ export type Database = {
           created_at: string
           user_id: string
           owner_email: string
+        }[]
+      }
+      get_friends_ensembles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: number
+          nom: string
+          description: string
+          occasion: string
+          saison: string
+          created_at: string
+          user_id: string
+          vetements: Json[]
+          email: string
         }[]
       }
       get_friends_vetements: {
