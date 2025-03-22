@@ -70,13 +70,24 @@ export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]>
         
         console.log('Statut de l\'amitié avec', friendId, ':', amisData ? 'Accepté' : 'Non accepté ou inexistant');
         
+        // Si l'amitié n'est pas acceptée, retourner un tableau vide au lieu de lancer une exception
+        if (!amisData) {
+          console.warn(`L'utilisateur ${friendId} n'est pas dans vos amis ou la demande n'est pas acceptée`);
+          return [];
+        }
+        
         // Utiliser la fonction RPC personnalisée pour récupérer les vêtements de l'ami spécifique
         const { data, error } = await supabase
           .rpc('get_friend_vetements', { friend_id_param: friendId });
         
         if (error) {
           console.error('Erreur lors de la récupération des vêtements de l\'ami:', error);
-          // Ne pas relancer l'erreur, retourner un tableau vide à la place
+          // Vérifier si l'erreur est liée à l'amitié non acceptée
+          if (error.message && error.message.includes('amis')) {
+            console.warn('Erreur d\'amitié détectée, retourne tableau vide');
+            return [];
+          }
+          // Pour les autres erreurs, continuer à retourner un tableau vide
           return [];
         }
         

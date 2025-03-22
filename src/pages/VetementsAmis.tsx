@@ -49,15 +49,25 @@ const VetementsAmis = () => {
     console.log("Nombre de vêtements affichés:", vetements.length);
   }, [friendFilter, vetements]);
 
-  // Vérifier le statut d'amitié pour mieux déboguer
+  // Vérifier le statut d'amitié pour mieux déboguer et afficher une notification si nécessaire
   useEffect(() => {
     const checkFriendshipStatus = async () => {
       if (friendFilter && friendFilter !== 'all' && user) {
         try {
+          console.log("Vérification du statut d'amitié pour:", friendFilter);
+          
+          const { data: sessionData } = await supabase.auth.getSession();
+          const currentUserId = sessionData.session?.user?.id;
+          
+          if (!currentUserId) {
+            console.error('Utilisateur non connecté');
+            return;
+          }
+          
           const { data: amisData, error: amisError } = await supabase
             .from('amis')
             .select('*')
-            .or(`(user_id.eq.${friendFilter}.and.ami_id.eq.${user.id}),(user_id.eq.${user.id}.and.ami_id.eq.${friendFilter})`)
+            .or(`(user_id.eq.${friendFilter}.and.ami_id.eq.${currentUserId}),(user_id.eq.${currentUserId}.and.ami_id.eq.${friendFilter})`)
             .eq('status', 'accepted')
             .maybeSingle();
             
@@ -68,11 +78,14 @@ const VetementsAmis = () => {
           console.log('Statut d\'amitié avec', friendFilter, ':', amisData ? 'Accepté' : 'Non accepté ou inexistant');
           
           if (!amisData) {
-            toast({
-              title: "Attention",
-              description: "Il semble que vous n'ayez pas d'amitié acceptée avec cet utilisateur.",
-              variant: "destructive",
-            });
+            // Afficher un toast seulement si aucun vêtement n'est affiché
+            if (vetements.length === 0) {
+              toast({
+                title: "Information",
+                description: "Il semble que vous n'ayez pas d'amitié acceptée avec cet utilisateur ou qu'il n'a pas partagé de vêtements.",
+                variant: "default",
+              });
+            }
           }
         } catch (error) {
           console.error("Erreur lors de la vérification du statut d'amitié:", error);
@@ -80,8 +93,13 @@ const VetementsAmis = () => {
       }
     };
     
-    checkFriendshipStatus();
-  }, [friendFilter, user]);
+    // Attendre un court instant pour que les vêtements soient chargés avant de vérifier
+    const timeoutId = setTimeout(() => {
+      checkFriendshipStatus();
+    }, 500);
+    
+    return () => clearTimeout(timeoutId);
+  }, [friendFilter, user, vetements.length]);
 
   const filteredVetements = filterVetements(vetements, categories);
 
