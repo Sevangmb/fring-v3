@@ -47,11 +47,20 @@ export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]>
       console.log('Récupération des vêtements pour l\'ami spécifique:', friendId);
       
       try {
+        // Obtenir la session courante pour récupérer l'ID utilisateur
+        const { data: sessionData } = await supabase.auth.getSession();
+        const currentUserId = sessionData.session?.user?.id;
+        
+        if (!currentUserId) {
+          console.error('Utilisateur non connecté');
+          return [];
+        }
+        
         // Vérifier d'abord si c'est un ami avec status 'accepted'
         const { data: amisData, error: amisError } = await supabase
           .from('amis')
           .select('*')
-          .or(`(user_id.eq.${friendId}.and.ami_id.eq.${auth.uid()}),(user_id.eq.${auth.uid()}.and.ami_id.eq.${friendId})`)
+          .or(`(user_id.eq.${friendId}.and.ami_id.eq.${currentUserId}),(user_id.eq.${currentUserId}.and.ami_id.eq.${friendId})`)
           .eq('status', 'accepted')
           .maybeSingle();
           
