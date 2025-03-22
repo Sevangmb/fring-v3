@@ -7,8 +7,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import VetementsList from "@/components/organisms/VetementsList";
 import SearchFilterBar from "@/components/molecules/SearchFilterBar";
 import CategoryTabs from "@/components/molecules/CategoryTabs";
-import ViewModeSelector from "@/components/molecules/ViewModeSelector";
-import FloatingAddButton from "@/components/molecules/FloatingAddButton";
 import { SearchFilterProvider } from "@/contexts/SearchFilterContext";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
@@ -92,28 +90,26 @@ const VetementsContainer: React.FC = () => {
 
   return (
     <>
-      <div className="mb-6">
-        <Tabs defaultValue="mes-vetements" onValueChange={handleTabChange} className="w-full">
-          <TabsList className="w-full grid grid-cols-4">
-            <TabsTrigger value="mes-vetements" className="flex items-center gap-2">
-              <Shirt className="h-4 w-4" />
-              Mes Vêtements
-            </TabsTrigger>
-            <TabsTrigger value="vetements-amis" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Vêtements Amis
-            </TabsTrigger>
-            <TabsTrigger value="ajouter-ensemble" className="flex items-center gap-2">
-              <ListPlus className="h-4 w-4" />
-              Ajouter Ensemble
-            </TabsTrigger>
-            <TabsTrigger value="mes-ensembles" className="flex items-center gap-2">
-              <List className="h-4 w-4" />
-              Mes Ensembles
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
+      <Tabs defaultValue="mes-vetements" onValueChange={handleTabChange} className="w-full mb-6">
+        <TabsList className="w-full grid grid-cols-4">
+          <TabsTrigger value="mes-vetements" className="flex items-center gap-2">
+            <Shirt className="h-4 w-4" />
+            Mes Vêtements
+          </TabsTrigger>
+          <TabsTrigger value="vetements-amis" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Vêtements Amis
+          </TabsTrigger>
+          <TabsTrigger value="ajouter-ensemble" className="flex items-center gap-2">
+            <ListPlus className="h-4 w-4" />
+            Ajouter Ensemble
+          </TabsTrigger>
+          <TabsTrigger value="mes-ensembles" className="flex items-center gap-2">
+            <List className="h-4 w-4" />
+            Mes Ensembles
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {(viewMode === 'mes-vetements' || viewMode === 'vetements-amis') && (
         <>
@@ -140,8 +136,6 @@ const VetementsContainer: React.FC = () => {
               showOwner={viewMode === 'vetements-amis'}
             />
           </CategoryTabs>
-          
-          <FloatingAddButton visible={viewMode === 'mes-vetements'} />
         </>
       )}
     </>
