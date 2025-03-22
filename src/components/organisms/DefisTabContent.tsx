@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DefiCard, { DefiType } from "../molecules/DefiCard";
+import DefiCardSkeleton from "../molecules/DefiCardSkeleton";
 import { Award, Calendar, Clock, Flag, Trophy } from "lucide-react";
 
 // Define a common interface for all defi objects
@@ -14,7 +15,11 @@ interface DefiItem {
   participantsCount?: number; // Make this property optional
 }
 
-const DefisTabContent: React.FC = () => {
+interface DefisTabContentProps {
+  isLoading?: boolean;
+}
+
+const DefisTabContent: React.FC<DefisTabContentProps> = ({ isLoading = false }) => {
   const [defisTab, setDefisTab] = useState<DefiType>("current");
   
   const currentDefis: DefiItem[] = [
@@ -76,6 +81,12 @@ const DefisTabContent: React.FC = () => {
     return pastDefis;
   };
 
+  const renderLoadingSkeletons = () => {
+    return Array(3).fill(0).map((_, index) => (
+      <DefiCardSkeleton key={`skeleton-${index}`} />
+    ));
+  };
+
   return (
     <Tabs value={defisTab} onValueChange={(value) => setDefisTab(value as DefiType)} className="w-full">
       <TabsList className="grid w-full grid-cols-3 mb-6">
@@ -94,17 +105,21 @@ const DefisTabContent: React.FC = () => {
       </TabsList>
       
       <TabsContent value={defisTab} className="space-y-4">
-        {getDefisForTab().map((defi, index) => (
-          <DefiCard
-            key={`${defisTab}-${index}`}
-            title={defi.title}
-            description={defi.description}
-            dateRange={defi.dateRange}
-            type={defi.type}
-            icon={defi.icon}
-            participantsCount={defi.participantsCount}
-          />
-        ))}
+        {isLoading ? (
+          renderLoadingSkeletons()
+        ) : (
+          getDefisForTab().map((defi, index) => (
+            <DefiCard
+              key={`${defisTab}-${index}`}
+              title={defi.title}
+              description={defi.description}
+              dateRange={defi.dateRange}
+              type={defi.type}
+              icon={defi.icon}
+              participantsCount={defi.participantsCount}
+            />
+          ))
+        )}
       </TabsContent>
     </Tabs>
   );
