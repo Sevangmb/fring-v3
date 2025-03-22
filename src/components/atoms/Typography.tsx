@@ -1,7 +1,5 @@
-
 import React from "react";
 import { cn } from "@/lib/utils";
-
 interface TextProps {
   children: React.ReactNode;
   className?: string;
@@ -11,9 +9,8 @@ interface TextProps {
   align?: "left" | "center" | "right";
   color?: string;
   style?: React.CSSProperties;
-  title?: string;
+  title?: string; // Add this line to include the title prop
 }
-
 export const Text = ({
   children,
   className,
@@ -24,6 +21,7 @@ export const Text = ({
   color,
   style,
   title,
+  // Add this to destructure the title prop
   ...props
 }: TextProps) => {
   const baseStyles = "tracking-tight transition-colors duration-200";
@@ -51,33 +49,8 @@ export const Text = ({
     center: "text-center",
     right: "text-right"
   };
-  
-  // Combine all class names
-  const combinedClassName = cn(
-    baseStyles,
-    variantStyles[variant],
-    weightStyles[weight],
-    alignStyles[align],
-    className
-  );
-  
-  // Add color style if provided
-  const combinedStyle = color 
-    ? { ...style, color } 
-    : style;
-  
-  return (
-    <Component 
-      className={combinedClassName} 
-      style={combinedStyle} 
-      title={title}
-      {...props}
-    >
-      {children}
-    </Component>
-  );
+  return;
 };
-
 export const Heading = (props: TextProps) => {
   const {
     variant = "h2",
@@ -99,5 +72,4 @@ export const Heading = (props: TextProps) => {
   }
   return <Text as={Component} variant={variant} weight="bold" {...props} />;
 };
-
 export default Text;
