@@ -12,7 +12,7 @@ import { Ami } from "@/services/amis/types";
 interface MesVetementsTabProps {
   vetements: Vetement[];
   categories: Categorie[];
-  marques: string[];
+  marques: string[]; // Changed from Marque[] to string[]
   acceptedFriends: Ami[];
   activeTab: string;
   isLoading: boolean;
