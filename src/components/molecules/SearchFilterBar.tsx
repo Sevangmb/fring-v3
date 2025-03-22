@@ -38,15 +38,6 @@ const SearchFilterBar: React.FC = () => {
     setTempMarqueFilter(marqueFilter);
   }, [searchTerm, categorieFilter, marqueFilter]);
 
-  // Déboguer les états des filtres
-  useEffect(() => {
-    console.log('SearchFilterBar filters:', {
-      categorieFilter,
-      marqueFilter,
-      availableCategories: categories
-    });
-  }, [categorieFilter, marqueFilter, categories]);
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTempSearchTerm(e.target.value);
   };
@@ -59,6 +50,7 @@ const SearchFilterBar: React.FC = () => {
   };
 
   const handleApplyFilters = () => {
+    // Appliquer les filtres temporaires aux filtres globaux
     setSearchTerm(tempSearchTerm);
     setCategorieFilter(tempCategorieFilter);
     setMarqueFilter(tempMarqueFilter);
@@ -117,7 +109,7 @@ const SearchFilterBar: React.FC = () => {
         
         <Button 
           variant="default" 
-          className="flex items-center" 
+          className="flex items-center bg-emerald-600 hover:bg-emerald-700" 
           onClick={handleApplyFilters}
         >
           <CheckCircle2 className="mr-2 h-4 w-4" />

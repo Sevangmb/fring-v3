@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import VetementCard from "@/components/molecules/VetementCard";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,7 +7,7 @@ import { deleteVetement } from "@/services/vetement";
 import { Categorie } from "@/services/categorieService";
 import { useToast } from "@/hooks/use-toast";
 import SearchFilterBar from "@/components/molecules/SearchFilterBar";
-import { SearchFilterProvider } from "@/contexts/SearchFilterContext";
+import { SearchFilterProvider, useSearchFilter } from "@/contexts/SearchFilterContext";
 import { useCategories } from "@/hooks/useCategories";
 
 interface MesVetementsTabProps {
@@ -110,6 +111,7 @@ const MesVetementsTab: React.FC<MesVetementsTabProps> = ({
     );
   }
 
+  // On utilise le SearchFilterProvider pour encapsuler le contenu
   return (
     <div>
       <SearchFilterProvider 
@@ -118,19 +120,66 @@ const MesVetementsTab: React.FC<MesVetementsTabProps> = ({
         friends={acceptedFriends}
         showFriendFilter={false}
       >
-        <SearchFilterBar />
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {vetements.map((vetement) => (
-            <VetementCard 
-              key={vetement.id}
-              vetement={vetement}
-              onDelete={handleDeleteVetement}
-            />
-          ))}
-        </div>
+        <MesVetementsTabContent 
+          vetements={vetements} 
+          onDelete={handleDeleteVetement} 
+        />
       </SearchFilterProvider>
     </div>
+  );
+};
+
+// Composant interne qui utilise le contexte SearchFilter
+const MesVetementsTabContent: React.FC<{
+  vetements: Vetement[],
+  onDelete: (id: number) => Promise<void>
+}> = ({ vetements, onDelete }) => {
+  const { searchTerm, categorieFilter, marqueFilter, categories } = useSearchFilter();
+  
+  // Filtrer les vêtements en fonction des critères de recherche et des filtres
+  const filteredVetements = vetements.filter(vetement => {
+    // Filtre par terme de recherche
+    const searchMatch = !searchTerm || 
+      vetement.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vetement.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vetement.marque?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Récupérer le nom de la catégorie à partir de l'ID
+    const category = categories.find(cat => cat.id === vetement.categorie_id);
+    const categoryName = category ? category.nom : "Catégorie inconnue";
+
+    // Filtre par catégorie
+    const categoryMatch = categorieFilter === "all" || 
+      (category && category.nom === categorieFilter);
+
+    // Filtre par marque
+    const marqueMatch = marqueFilter === "all" || 
+      vetement.marque === marqueFilter;
+
+    return searchMatch && categoryMatch && marqueMatch;
+  });
+
+  return (
+    <>
+      <SearchFilterBar />
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {filteredVetements.map((vetement) => (
+          <VetementCard 
+            key={vetement.id}
+            vetement={vetement}
+            onDelete={onDelete}
+          />
+        ))}
+      </div>
+      
+      {filteredVetements.length === 0 && vetements.length > 0 && (
+        <div className="py-10 text-center">
+          <p className="text-lg font-medium mb-2">Aucun vêtement ne correspond à vos critères</p>
+          <p className="text-muted-foreground">Essayez de modifier vos filtres</p>
+        </div>
+      )}
+    </>
   );
 };
 
