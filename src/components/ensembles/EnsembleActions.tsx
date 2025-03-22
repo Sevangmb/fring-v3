@@ -5,13 +5,19 @@ import { Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { deleteEnsemble } from '@/services/ensemble';
+import FavoriButton from '@/components/atoms/FavoriButton';
 
 interface EnsembleActionsProps {
   ensembleId: number;
   onDelete?: () => void;
+  nom?: string;
 }
 
-const EnsembleActions: React.FC<EnsembleActionsProps> = ({ ensembleId, onDelete }) => {
+const EnsembleActions: React.FC<EnsembleActionsProps> = ({ 
+  ensembleId, 
+  onDelete,
+  nom
+}) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = React.useState(false);
@@ -45,6 +51,11 @@ const EnsembleActions: React.FC<EnsembleActionsProps> = ({ ensembleId, onDelete 
 
   return (
     <div className="absolute top-2 right-2 flex gap-1 z-10">
+      <FavoriButton 
+        type="ensemble" 
+        elementId={ensembleId} 
+        nom={nom}
+      />
       <Button variant="ghost" size="icon" onClick={handleEdit} className="h-8 w-8 bg-background/80 backdrop-blur-sm">
         <Edit size={16} className="text-muted-foreground hover:text-primary" />
       </Button>

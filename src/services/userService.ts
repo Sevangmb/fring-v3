@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 
 /**
@@ -94,5 +93,28 @@ export const updateUserMetadata = async (
       success: false,
       error: error instanceof Error ? error : new Error("Unknown error"),
     };
+  }
+};
+
+/**
+ * Récupère un utilisateur par son ID
+ */
+export const getUserById = async (userId: string): Promise<any> => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error("Erreur lors de la récupération de l'utilisateur:", error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Erreur lors de la récupération de l'utilisateur:", error);
+    return null;
   }
 };

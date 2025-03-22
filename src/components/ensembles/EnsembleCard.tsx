@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Ensemble } from '@/services/ensemble';
@@ -38,7 +37,8 @@ const EnsembleCard: React.FC<EnsembleCardProps> = ({ ensemble, onDelete }) => {
     <Card className="h-full flex flex-col shadow-sm hover:shadow-md transition-shadow relative">
       <EnsembleActions 
         ensembleId={ensemble.id} 
-        onDelete={onDelete} 
+        onDelete={onDelete}
+        nom={ensemble.nom} 
       />
       
       <CardHeader className="pb-2">

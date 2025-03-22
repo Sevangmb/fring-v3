@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -61,6 +60,7 @@ export * from './fetchVetements';
 export * from './updateVetement';
 export * from './types';
 export * from './demoVetements';
+export * from './fetchVetementById';
 
 // Re-export the fetchVetements function as the default export
 export { fetchVetements as default } from './fetchVetements';

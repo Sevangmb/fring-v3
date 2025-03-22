@@ -1,52 +1,69 @@
-
 import React from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserCheck, X, UserX } from "lucide-react";
-import { Ami } from "@/services/amis/types";
+import { MessageCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { Ami } from "@/services/amis";
+import FavoriButton from '@/components/atoms/FavoriButton';
 
 interface AmiListItemProps {
   ami: Ami;
-  onRetirer: (id: number) => Promise<void>;
+  onMessage: (friendId: string) => void;
 }
 
-const AmiListItem: React.FC<AmiListItemProps> = ({ ami, onRetirer }) => {
-  // Extraire les initiales de l'email pour l'avatar
-  const getInitials = (email: string) => {
-    if (!email) return "?";
-    return email.slice(0, 2).toUpperCase();
+const AmiListItem = ({ 
+  ami,
+  onMessage
+}: AmiListItemProps) => {
+  const navigate = useNavigate();
+
+  const handleMessage = () => {
+    onMessage(ami.ami_id);
+    navigate(`/messages/${ami.ami_id}`);
   };
 
-  const timeAgo = formatDistanceToNow(new Date(ami.created_at), { 
-    addSuffix: true,
-    locale: fr 
-  });
-
   return (
-    <div className="flex items-center justify-between p-4 hover:bg-muted/20 transition-colors">
-      <div className="flex items-center gap-3">
-        <Avatar className="h-10 w-10 bg-green-100">
-          <AvatarFallback className="text-green-600">{getInitials(ami.email || '')}</AvatarFallback>
-        </Avatar>
-        <div>
-          <p className="font-medium">{ami.email || 'Email inconnu'}</p>
-          <p className="text-xs text-muted-foreground">Ami depuis {timeAgo}</p>
+    <Card className="overflow-hidden">
+      <CardContent className="p-4">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-3">
+            <Avatar className="h-9 w-9">
+              <AvatarFallback>{ami.email.substring(0, 2).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="text-sm font-medium">{ami.email}</h3>
+              <p className="text-xs text-muted-foreground">
+                {ami.status === "pending" ? "En attente" : "Ami"}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <FavoriButton 
+              type="utilisateur" 
+              elementId={ami.ami_id} 
+              nom={ami.email}
+            />
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              onClick={handleMessage} 
+              className="py-1.5"
+            >
+              <MessageCircle size={16} className="mr-1" />
+              Message
+            </Button>
+          </div>
         </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
-          onClick={() => onRetirer(ami.id)}
-        >
-          <UserX className="h-4 w-4 mr-1" />
-          Retirer
-        </Button>
-      </div>
-    </div>
+        
+        {ami.status === "pending" && (
+          <p className="text-xs text-muted-foreground mt-2">
+            En attente de confirmation.
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import Layout from "@/components/templates/Layout";
 import MesVetementsSection from "@/components/organisms/MesVetements";
@@ -9,8 +8,16 @@ import { useToast } from "@/hooks/use-toast";
 import { createDemoVetementsForUser } from "@/services/vetement/demoVetements";
 import { supabase } from "@/lib/supabase";
 import VetementsContainer from "@/components/vetements/VetementsContainer";
+import VetementsPageHeader from "@/components/vetements/VetementsPageHeader";
+import Tabs from "@/components/vetements/Tabs";
+import VetementsTabsList from "@/components/vetements/TabsList";
+import VetementsTab from "@/components/vetements/Tabs/Tab";
+import MesVetementsTab from "@/components/vetements/tabs/MesVetementsTab";
+import VetementsAmisTab from "@/components/vetements/tabs/VetementsAmisTab";
+import MesEnsemblesTab from "@/components/vetements/tabs/MesEnsemblesTab";
+import MesFavorisTab from "@/components/vetements/tabs/MesFavorisTab";
 
-const MesVetementsPage = () => {
+const MesVetements: React.FC = () => {
   const [initialized, setInitialized] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
   const { user, loading } = useAuth();
@@ -100,23 +107,36 @@ const MesVetementsPage = () => {
 
   return (
     <Layout>
-      <div className="pt-24 pb-6 bg-accent/10">
-        <div className="container mx-auto px-4">
-          <Heading className="text-center">Mes Vêtements</Heading>
-          <Text className="text-center text-muted-foreground max-w-2xl mx-auto mt-4">
-            {user 
-              ? "Découvrez votre collection personnelle de vêtements."
-              : "Connectez-vous pour voir et gérer votre collection de vêtements."}
-          </Text>
+      <VetementsContainer>
+        <section className="w-full">
+          <VetementsPageHeader
+            className="text-center"
+            title="Mes Vêtements"
+            description="Découvrez votre collection personnelle de vêtements."
+          />
           
-          <div className="mt-8">
-            <VetementsContainer />
-          </div>
-        </div>
-      </div>
-      {!loading && <MesVetementsSection isAuthenticated={!!user} />}
+          <Tabs defaultValue="mes-vetements" className="w-full">
+            <VetementsTabsList />
+            
+            <MesVetementsTab
+              isAuthenticated={!!user}
+              description="Découvrez votre collection personnelle de vêtements."
+            />
+            
+            <VetementsAmisTab
+              description="Gérez vos vêtements avec vos amis."
+            />
+            
+            <MesEnsemblesTab
+              description="Gérez vos ensembles de vêtements."
+            />
+            
+            <MesFavorisTab />
+          </Tabs>
+        </section>
+      </VetementsContainer>
     </Layout>
   );
 };
 
-export default MesVetementsPage;
+export default MesVetements;
