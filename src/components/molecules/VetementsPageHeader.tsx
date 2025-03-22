@@ -31,7 +31,7 @@ const VetementsPageHeader: React.FC<VetementsPageHeaderProps> = ({
     <div className={`pt-24 pb-6 bg-accent/10 ${className || ''}`}>
       <div className="container mx-auto px-4">
         {title && !hideHeading && (
-          <Heading level="h1" className="text-3xl font-bold">{title}</Heading>
+          <Heading as="h1" className="text-3xl font-bold">{title}</Heading>
         )}
         
         {!hideHeading && (

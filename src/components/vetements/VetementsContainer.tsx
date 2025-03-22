@@ -47,3 +47,4 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
 };
 
 export default VetementsContainer;
+export type { TabType };

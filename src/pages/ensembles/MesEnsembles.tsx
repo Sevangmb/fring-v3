@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from "@/components/templates/Layout";
 import { Helmet } from "react-helmet";
@@ -12,7 +13,8 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TabsContent } from "@/components/ui/tabs";
-import VetementsContainer, { TabType } from "@/components/vetements/VetementsContainer";
+import VetementsContainer from "@/components/vetements/VetementsContainer";
+import { TabType } from "@/components/vetements/types/TabTypes";
 
 interface MesEnsemblesProps {
   asTabContent?: boolean;

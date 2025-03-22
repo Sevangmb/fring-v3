@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -12,7 +11,7 @@ import VetementsPageHeader from "@/components/molecules/VetementsPageHeader";
 import AjouterVetement from "@/pages/vetements/AjouterVetement";
 import AjouterEnsemble from "@/pages/ensembles/AjouterEnsemble";
 import { Text } from "@/components/atoms/Typography";
-import { TabType } from "@/components/vetements/VetementsContainer";
+import { TabType } from "@/components/vetements/types/TabTypes";
 
 interface VetementsPageContentProps {
   initialTab?: string;
