@@ -75,10 +75,7 @@ const EnsembleCard: React.FC<EnsembleCardProps> = ({ ensemble, onDelete }) => {
   };
 
   const handleEdit = () => {
-    toast({
-      title: "Fonctionnalité à venir",
-      description: "La modification d'ensemble sera bientôt disponible"
-    });
+    navigate(`/ensembles/modifier/${ensemble.id}`);
   };
 
   const handleDelete = async () => {

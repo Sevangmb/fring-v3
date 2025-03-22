@@ -24,6 +24,7 @@ import About from "./pages/About";
 import MiesPage from "./pages/Mies";
 import MesEnsembles from "./pages/ensembles/MesEnsembles";
 import AjouterEnsemble from "./pages/ensembles/AjouterEnsemble";
+import ModifierEnsemble from "./pages/ensembles/ModifierEnsemble";
 import VetementsAmisPage from "./pages/VetementsAmisPage";
 import EnsemblesAmis from "./pages/EnsemblesAmis";
 
@@ -70,6 +71,7 @@ const App = () => {
               {/* Ensemble routes - content will be shown in tabs */}
               <Route path="/ensembles" element={<ListeVetements />} />
               <Route path="/ensembles/ajouter" element={<ListeVetements />} />
+              <Route path="/ensembles/modifier/:id" element={<ModifierEnsemble />} />
               
               {/* Protected Routes */}
               <Route path="/dashboard" element={
