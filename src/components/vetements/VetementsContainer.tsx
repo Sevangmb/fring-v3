@@ -15,7 +15,7 @@ interface VetementsContainerProps {
 }
 
 const VetementsContainer: React.FC<VetementsContainerProps> = ({ 
-  defaultTab = 'mes-vetements',
+  defaultTab = 'mes-favoris',
   children
 }) => {
   const { user } = useAuth();
@@ -37,19 +37,12 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
   return (
     <>
       <Helmet>
-        <title>
-          {activeTab === 'mes-vetements' ? 'Mes Vêtements' : 
-           activeTab === 'ajouter-vetement' ? 'Ajouter un vêtement' : 
-           activeTab === 'mes-ensembles' ? 'Mes Tenues' : 
-           activeTab === 'ajouter-ensemble' ? 'Ajouter une tenue' :
-           activeTab === 'mes-favoris' ? 'Mes Favoris' :
-           'Vêtements de mes amis'}
-        </title>
+        <title>Mes Favoris</title>
       </Helmet>
       
       <Tabs value={activeTab} className="w-full mb-6" onValueChange={(value) => handleTabChange(value as TabType)}>
         <VetementsTabsList onTabChange={handleTabChange} activeTab={activeTab} />
-        <TabContentRenderer activeTab={activeTab}>
+        <TabContentRenderer>
           {children}
         </TabContentRenderer>
       </Tabs>
