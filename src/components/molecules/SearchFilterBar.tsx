@@ -22,8 +22,12 @@ const SearchFilterBar: React.FC = () => {
     marques,
     friends,
     showFriendFilter,
-    resetFilters
+    resetFilters,
+    currentFriendFilter
   } = useSearchFilter();
+
+  // Utiliser la valeur spécifique du filtre d'ami si disponible
+  const effectiveFriendFilter = currentFriendFilter || friendFilter;
 
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-8">
@@ -39,7 +43,10 @@ const SearchFilterBar: React.FC = () => {
       
       <div className="flex gap-2 flex-wrap">
         {showFriendFilter && (
-          <Select value={friendFilter} onValueChange={setFriendFilter}>
+          <Select 
+            value={effectiveFriendFilter} 
+            onValueChange={setFriendFilter}
+          >
             <SelectTrigger className="w-[180px]">
               <div className="flex items-center">
                 <Users className="mr-2 h-4 w-4" />
@@ -48,11 +55,14 @@ const SearchFilterBar: React.FC = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tous les amis</SelectItem>
-              {friends.map((ami) => (
-                <SelectItem key={ami.user_id === ami.ami_id ? ami.ami_id : ami.user_id} value={ami.user_id === ami.ami_id ? ami.ami_id : ami.user_id}>
-                  {ami.email || 'Email inconnu'}
-                </SelectItem>
-              ))}
+              {friends.map((ami) => {
+                const friendId = ami.user_id === ami.ami_id ? ami.ami_id : ami.user_id;
+                return (
+                  <SelectItem key={friendId} value={friendId}>
+                    {ami.email || 'Email inconnu'}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         )}

@@ -18,6 +18,8 @@ interface SearchFilterContextType {
   friends: Ami[];
   showFriendFilter: boolean;
   resetFilters: () => void;
+  onFriendFilterChange?: (friendId: string) => void;
+  currentFriendFilter?: string;
 }
 
 const SearchFilterContext = createContext<SearchFilterContextType | undefined>(undefined);
@@ -28,6 +30,8 @@ export interface SearchFilterProviderProps {
   marques: string[];
   friends?: Ami[];
   showFriendFilter?: boolean;
+  onFriendFilterChange?: (friendId: string) => void;
+  currentFriendFilter?: string;
 }
 
 export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
@@ -36,6 +40,8 @@ export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
   marques,
   friends = [],
   showFriendFilter = false,
+  onFriendFilterChange,
+  currentFriendFilter = 'all',
 }) => {
   const {
     searchTerm,
@@ -44,10 +50,17 @@ export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
     setCategorieFilter,
     marqueFilter,
     setMarqueFilter,
-    friendFilter,
-    setFriendFilter,
+    friendFilter: internalFriendFilter,
+    setFriendFilter: internalSetFriendFilter,
     resetFilters,
   } = useVetementsFilters();
+
+  const setFriendFilter = (value: string) => {
+    internalSetFriendFilter(value);
+    if (onFriendFilterChange) {
+      onFriendFilterChange(value);
+    }
+  };
 
   const value = {
     searchTerm,
@@ -56,13 +69,15 @@ export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
     setCategorieFilter,
     marqueFilter,
     setMarqueFilter,
-    friendFilter,
+    friendFilter: currentFriendFilter || internalFriendFilter,
     setFriendFilter,
     categories,
     marques,
     friends,
     showFriendFilter,
     resetFilters,
+    onFriendFilterChange,
+    currentFriendFilter,
   };
 
   return (

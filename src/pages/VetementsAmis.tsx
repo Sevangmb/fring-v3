@@ -18,6 +18,8 @@ const VetementsAmis = () => {
   const {
     activeTab,
     setActiveTab,
+    friendFilter,
+    setFriendFilter,
     filterVetements
   } = useVetementsFilters();
 
@@ -28,7 +30,7 @@ const VetementsAmis = () => {
     isLoading,
     error,
     reloadVetements
-  } = useVetementsData('vetements-amis', 'all');
+  } = useVetementsData('vetements-amis', friendFilter);
 
   const acceptedFriends = filteredAmis?.amisAcceptes || [];
 
@@ -44,6 +46,12 @@ const VetementsAmis = () => {
   const handleVetementDeleted = (id: number) => {
     console.log(`Vêtement ${id} supprimé`);
     reloadVetements();
+  };
+
+  // Cette fonction est appelée lorsqu'un ami est sélectionné dans le filtre
+  const handleFriendFilterChange = (friendId: string) => {
+    console.log("Changement de filtre ami:", friendId);
+    setFriendFilter(friendId);
   };
 
   return (
@@ -65,6 +73,8 @@ const VetementsAmis = () => {
               marques={marques.map(m => m.nom)}
               friends={acceptedFriends}
               showFriendFilter={true}
+              onFriendFilterChange={handleFriendFilterChange}
+              currentFriendFilter={friendFilter}
             >
               <SearchFilterBar />
             </SearchFilterProvider>
