@@ -25,12 +25,10 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({ user }) => {
   const handleProfile = () => navigate("/profile");
   const handleDashboard = () => navigate("/dashboard");
   
-  // Modification: Naviguer directement vers /mes-vetements avec activeTab 'mes-favoris'
+  // Modification: Naviguer directement vers /mes-favoris au lieu de /mes-vetements avec activeTab
   const handleFavorites = () => {
     console.log("Navigation vers favoris");
-    navigate("/mes-vetements", { 
-      state: { activeTab: 'mes-favoris' } 
-    });
+    navigate("/mes-favoris");
   };
   
   const handleLogout = async () => {

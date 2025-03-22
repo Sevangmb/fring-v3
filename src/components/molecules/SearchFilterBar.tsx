@@ -75,7 +75,7 @@ const SearchFilterBar: React.FC = () => {
             <SelectItem value="all">Toutes</SelectItem>
             {marques.map(marque => {
               // Handle both string marques and marque objects
-              const marqueValue = typeof marque === 'string' ? marque : marque.nom;
+              const marqueValue = typeof marque === 'string' ? marque : (marque as any).nom;
               return (
                 <SelectItem key={marqueValue} value={marqueValue}>
                   {marqueValue}
@@ -89,8 +89,6 @@ const SearchFilterBar: React.FC = () => {
           <SlidersHorizontal className="mr-2 h-4 w-4" />
           Réinitialiser
         </Button>
-        
-        
       </div>
     </div>;
 };

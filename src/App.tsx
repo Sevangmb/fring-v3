@@ -22,6 +22,7 @@ import MesAmis from "./pages/MesAmis";
 import Messages from "./pages/Messages";
 import About from "./pages/About";
 import MiesPage from "./pages/Mies";
+import MesFavoris from "./pages/MesFavoris";
 import MesEnsembles from "./pages/ensembles/MesEnsembles";
 import AjouterEnsemble from "./pages/ensembles/AjouterEnsemble";
 import ModifierEnsemble from "./pages/ensembles/ModifierEnsemble";
@@ -84,6 +85,13 @@ const App = () => {
               <Route path="/mes-vetements/modifier/:id" element={
                 <ProtectedRoute>
                   <ModifierVetement />
+                </ProtectedRoute>
+              } />
+              
+              {/* Favoris Route - Séparée */}
+              <Route path="/mes-favoris" element={
+                <ProtectedRoute>
+                  <MesFavoris />
                 </ProtectedRoute>
               } />
               

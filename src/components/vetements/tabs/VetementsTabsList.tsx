@@ -2,7 +2,7 @@
 import React from "react";
 import { TabsList } from "@/components/ui/tabs";
 import { TabsTrigger } from "@/components/ui/tabs";
-import { Shirt, Plus, Users, Layers, PlusCircle, Heart } from "lucide-react";
+import { Shirt, Plus, Layers, PlusCircle } from "lucide-react";
 import { TabType, TabChangeHandler } from "../types/TabTypes";
 
 interface VetementsTabsListProps {
@@ -21,7 +21,7 @@ const VetementsTabsList: React.FC<VetementsTabsListProps> = ({
   };
 
   return (
-    <TabsList className="grid grid-cols-3 md:grid-cols-6 mb-8">
+    <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-8">
       <TabsTrigger 
         value="mes-vetements" 
         onClick={() => handleTabChange("mes-vetements")}
@@ -60,16 +60,6 @@ const VetementsTabsList: React.FC<VetementsTabsListProps> = ({
         <PlusCircle className="mr-2 h-4 w-4" />
         <span className="hidden md:inline">Ajouter un Ensemble</span>
         <span className="inline md:hidden">Ajouter</span>
-      </TabsTrigger>
-      
-      <TabsTrigger 
-        value="mes-favoris" 
-        onClick={() => handleTabChange("mes-favoris")}
-        className="flex items-center"
-      >
-        <Heart className="mr-2 h-4 w-4" />
-        <span className="hidden md:inline">Mes Favoris</span>
-        <span className="inline md:hidden">Favoris</span>
       </TabsTrigger>
     </TabsList>
   );
