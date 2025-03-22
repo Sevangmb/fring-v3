@@ -4,10 +4,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DefiCard, { DefiType } from "../molecules/DefiCard";
 import { Award, Calendar, Clock, Flag, Trophy } from "lucide-react";
 
+// Define a common interface for all defi objects
+interface DefiItem {
+  title: string;
+  description: string;
+  dateRange: string;
+  icon: React.ReactNode;
+  type: DefiType;
+  participantsCount?: number; // Make this property optional
+}
+
 const DefisTabContent: React.FC = () => {
   const [defisTab, setDefisTab] = useState<DefiType>("current");
   
-  const currentDefis = [
+  const currentDefis: DefiItem[] = [
     {
       title: "Défi hebdomadaire",
       description: "Créez un ensemble avec au moins un vêtement partagé par un ami.",
@@ -24,7 +34,7 @@ const DefisTabContent: React.FC = () => {
     }
   ];
 
-  const upcomingDefis = [
+  const upcomingDefis: DefiItem[] = [
     {
       title: "Défi de la saison",
       description: "Créez votre meilleur ensemble d'été et partagez-le avec la communauté.",
@@ -41,7 +51,7 @@ const DefisTabContent: React.FC = () => {
     }
   ];
 
-  const pastDefis = [
+  const pastDefis: DefiItem[] = [
     {
       title: "Challenge des tendances",
       description: "Créer un ensemble qui intègre au moins une tendance mode du printemps 2024.",
