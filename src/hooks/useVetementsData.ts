@@ -58,7 +58,7 @@ export function useVetementsData(
         if (viewMode === 'mes-vetements') {
           vetementsData = await fetchVetements();
         } else if (viewMode === 'vetements-amis') {
-          // Si on a sélectionné un ami spécifique, on passe son ID
+          // Utilise la nouvelle fonction fetchVetementsAmis qui appelle désormais les RPC
           vetementsData = await fetchVetementsAmis(friendFilter !== "all" ? friendFilter : undefined);
           console.log("Vêtements récupérés pour", friendFilter !== "all" ? "l'ami spécifique" : "tous les amis", ":", vetementsData.length);
         } else if (viewMode === 'mes-ensembles') {

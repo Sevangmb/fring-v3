@@ -316,8 +316,44 @@ export type Database = {
           owner_email: string
         }[]
       }
+      get_friends_clothes: {
+        Args: {
+          current_user_id_param?: string
+        }
+        Returns: {
+          id: number
+          nom: string
+          categorie_id: number
+          couleur: string
+          taille: string
+          description: string
+          marque: string
+          image_url: string
+          created_at: string
+          user_id: string
+          owner_email: string
+        }[]
+      }
       get_friends_vetements: {
         Args: Record<PropertyKey, never>
+        Returns: {
+          id: number
+          nom: string
+          categorie_id: number
+          couleur: string
+          taille: string
+          description: string
+          marque: string
+          image_url: string
+          created_at: string
+          user_id: string
+          owner_email: string
+        }[]
+      }
+      get_specific_friend_clothes: {
+        Args: {
+          friend_id_param: string
+        }
         Returns: {
           id: number
           nom: string

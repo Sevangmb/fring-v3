@@ -11,7 +11,6 @@ import VetementsList from "@/components/organisms/VetementsList";
 import CategoryTabs from "@/components/molecules/CategoryTabs";
 import { SearchFilterProvider } from "@/contexts/SearchFilterContext";
 import SearchFilterBar from "@/components/molecules/SearchFilterBar";
-import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
 
 const VetementsAmis = () => {
@@ -47,60 +46,39 @@ const VetementsAmis = () => {
   useEffect(() => {
     console.log("Filtre d'ami actuel dans VetementsAmis:", friendFilter);
     console.log("Nombre de vêtements affichés:", vetements.length);
-  }, [friendFilter, vetements]);
+    console.log("Amis acceptés:", acceptedFriends.length);
+  }, [friendFilter, vetements, acceptedFriends]);
 
-  // Vérifier le statut d'amitié pour mieux déboguer et afficher une notification si nécessaire
+  // Effet pour afficher un message informatif si aucun vêtement n'est trouvé
   useEffect(() => {
-    const checkFriendshipStatus = async () => {
-      if (friendFilter && friendFilter !== 'all' && user) {
-        try {
-          console.log("Vérification du statut d'amitié pour:", friendFilter);
-          
-          const { data: sessionData } = await supabase.auth.getSession();
-          const currentUserId = sessionData.session?.user?.id;
-          
-          if (!currentUserId) {
-            console.error('Utilisateur non connecté');
-            return;
+    if (!isLoading && !loadingAmis && user) {
+      const timeoutId = setTimeout(() => {
+        if (vetements.length === 0) {
+          if (friendFilter && friendFilter !== 'all') {
+            toast({
+              title: "Information",
+              description: "Cet ami n'a pas encore partagé de vêtements.",
+              variant: "default",
+            });
+          } else if (acceptedFriends.length === 0) {
+            toast({
+              title: "Information",
+              description: "Vous n'avez pas encore d'amis acceptés. Ajoutez des amis pour voir leurs vêtements.",
+              variant: "default",
+            });
+          } else if (acceptedFriends.length > 0) {
+            toast({
+              title: "Information",
+              description: "Vos amis n'ont pas encore partagé de vêtements.",
+              variant: "default",
+            });
           }
-          
-          const { data: amisData, error: amisError } = await supabase
-            .from('amis')
-            .select('*')
-            .or(`(user_id.eq.${friendFilter}.and.ami_id.eq.${currentUserId}),(user_id.eq.${currentUserId}.and.ami_id.eq.${friendFilter})`)
-            .eq('status', 'accepted')
-            .maybeSingle();
-            
-          if (amisError) {
-            console.error('Erreur lors de la vérification de l\'amitié:', amisError);
-          }
-          
-          console.log('Statut d\'amitié avec', friendFilter, ':', amisData ? 'Accepté' : 'Non accepté ou inexistant');
-          console.log('Données d\'amitié:', amisData);
-          
-          if (!amisData) {
-            // Afficher un toast seulement si aucun vêtement n'est affiché
-            if (vetements.length === 0) {
-              toast({
-                title: "Information",
-                description: "Il semble que vous n'ayez pas d'amitié acceptée avec cet utilisateur ou qu'il n'a pas partagé de vêtements.",
-                variant: "default",
-              });
-            }
-          }
-        } catch (error) {
-          console.error("Erreur lors de la vérification du statut d'amitié:", error);
         }
-      }
-    };
-    
-    // Attendre un court instant pour que les vêtements soient chargés avant de vérifier
-    const timeoutId = setTimeout(() => {
-      checkFriendshipStatus();
-    }, 500);
-    
-    return () => clearTimeout(timeoutId);
-  }, [friendFilter, user, vetements.length]);
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isLoading, loadingAmis, vetements.length, friendFilter, acceptedFriends.length, user]);
 
   const filteredVetements = filterVetements(vetements, categories);
 
