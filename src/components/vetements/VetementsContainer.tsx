@@ -19,7 +19,7 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
   defaultTab = 'mes-vetements' 
 }) => {
   const { user } = useAuth();
-  const { filteredAmis, loadingAmis } = useAmis();
+  const { filteredAmis, loadingAmis, chargerAmis } = useAmis();
   const {
     searchTerm,
     categorieFilter,
@@ -43,13 +43,23 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
 
   const acceptedFriends = filteredAmis?.amisAcceptes || [];
 
+  // Charge les amis au chargement du composant
   useEffect(() => {
-    // Set initial view mode based on defaultTab
+    if (user) {
+      chargerAmis();
+    }
+  }, [user, chargerAmis]);
+
+  // Définit le mode de vue initial en fonction du paramètre defaultTab
+  useEffect(() => {
     if (defaultTab === 'vetements-amis') {
       handleViewModeChange('vetements-amis');
+    } else if (defaultTab === 'mes-vetements') {
+      handleViewModeChange('mes-vetements');
     }
   }, [defaultTab, handleViewModeChange]);
 
+  // Met à jour l'email de l'ami sélectionné lorsque le filtre d'ami change
   useEffect(() => {
     if (viewMode === 'vetements-amis' && friendFilter !== "all") {
       const selectedFriend = acceptedFriends.find(ami => 
