@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from "@/components/templates/Layout";
 import { Helmet } from "react-helmet";
@@ -25,25 +26,30 @@ const MesEnsembles: React.FC<MesEnsemblesProps> = ({ asTabContent = false }) => 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  useEffect(() => {
-    const loadEnsembles = async () => {
-      if (!user) return;
-      
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await fetchEnsembles();
-        setEnsembles(data);
-      } catch (err) {
-        console.error("Erreur lors du chargement des ensembles:", err);
-        setError("Impossible de charger vos ensembles. Veuillez réessayer.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadEnsembles = async () => {
+    if (!user) return;
     
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchEnsembles();
+      setEnsembles(data);
+    } catch (err) {
+      console.error("Erreur lors du chargement des ensembles:", err);
+      setError("Impossible de charger vos ensembles. Veuillez réessayer.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     loadEnsembles();
   }, [user]);
+  
+  const handleEnsembleDelete = () => {
+    // Recharger la liste après suppression
+    loadEnsembles();
+  };
   
   const ensemblesContent = (
     <>
@@ -81,7 +87,7 @@ const MesEnsembles: React.FC<MesEnsemblesProps> = ({ asTabContent = false }) => 
             <Button 
               variant="outline" 
               className="mt-4" 
-              onClick={() => window.location.reload()}
+              onClick={() => loadEnsembles()}
             >
               Réessayer
             </Button>
@@ -103,7 +109,11 @@ const MesEnsembles: React.FC<MesEnsemblesProps> = ({ asTabContent = false }) => 
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {ensembles.map(ensemble => (
-            <EnsembleCard key={ensemble.id} ensemble={ensemble} />
+            <EnsembleCard 
+              key={ensemble.id} 
+              ensemble={ensemble} 
+              onDelete={handleEnsembleDelete}
+            />
           ))}
         </div>
       )}

@@ -12,7 +12,7 @@ import { Text } from '@/components/atoms/Typography';
 const EnsemblesAmisList: React.FC = () => {
   const { filteredAmis, loadingAmis } = useAmis();
   const [selectedFriend, setSelectedFriend] = useState<string>("all");
-  const { ensemblesAmis, loading, error } = useEnsemblesAmis(selectedFriend !== "all" ? selectedFriend : undefined);
+  const { ensemblesAmis, loading, error, refreshEnsemblesAmis } = useEnsemblesAmis(selectedFriend !== "all" ? selectedFriend : undefined);
   
   const handleFriendChange = (friendId: string) => {
     setSelectedFriend(friendId);

@@ -1,17 +1,24 @@
-
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Ensemble } from '@/services/ensembleService';
 import { VetementType } from '@/services/meteo/tenue';
-import { CalendarIcon, TagIcon } from 'lucide-react';
+import { CalendarIcon, TagIcon, Edit, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
+import { deleteEnsemble } from '@/services/ensembleService';
 
 interface EnsembleCardProps {
   ensemble: Ensemble;
+  onDelete?: () => void;
 }
 
-const EnsembleCard: React.FC<EnsembleCardProps> = ({ ensemble }) => {
-  // Define the function before using it in useMemo
+const EnsembleCard: React.FC<EnsembleCardProps> = ({ ensemble, onDelete }) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
   const determineVetementTypeSync = (vetement: any): string => {
     const nomLower = vetement.nom ? vetement.nom.toLowerCase() : '';
     const descriptionLower = vetement.description ? vetement.description.toLowerCase() : '';
@@ -38,22 +45,19 @@ const EnsembleCard: React.FC<EnsembleCardProps> = ({ ensemble }) => {
     return 'autre';
   };
 
-  // Ordonner les vêtements par type
   const vetementsByType = React.useMemo(() => {
     const result: Record<string, any[]> = {
       [VetementType.HAUT]: [],
       [VetementType.BAS]: [],
       [VetementType.CHAUSSURES]: [],
-      'autre': [] // Using string literal instead of enum value that doesn't exist
+      'autre': []
     };
     
-    // Trier les vêtements par position
     const orderedVetements = [...ensemble.vetements].sort(
       (a, b) => a.position_ordre - b.position_ordre
     );
     
     orderedVetements.forEach(item => {
-      // Now we can safely call the function
       const type = determineVetementTypeSync(item.vetement);
       result[type].push(item.vetement);
     });
@@ -70,8 +74,53 @@ const EnsembleCard: React.FC<EnsembleCardProps> = ({ ensemble }) => {
     });
   };
 
+  const handleEdit = () => {
+    toast({
+      title: "Fonctionnalité à venir",
+      description: "La modification d'ensemble sera bientôt disponible"
+    });
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cet ensemble ?")) {
+      try {
+        setIsDeleting(true);
+        await deleteEnsemble(ensemble.id);
+        toast({
+          title: "Succès",
+          description: "L'ensemble a été supprimé avec succès"
+        });
+        if (onDelete) onDelete();
+      } catch (error) {
+        console.error("Erreur lors de la suppression de l'ensemble:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de supprimer l'ensemble",
+          variant: "destructive"
+        });
+      } finally {
+        setIsDeleting(false);
+      }
+    }
+  };
+
   return (
-    <Card className="h-full flex flex-col shadow-sm hover:shadow-md transition-shadow">
+    <Card className="h-full flex flex-col shadow-sm hover:shadow-md transition-shadow relative">
+      <div className="absolute top-2 right-2 flex gap-1 z-10">
+        <Button variant="ghost" size="icon" onClick={handleEdit} className="h-8 w-8 bg-background/80 backdrop-blur-sm">
+          <Edit size={16} className="text-muted-foreground hover:text-primary" />
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={handleDelete} 
+          className="h-8 w-8 bg-background/80 backdrop-blur-sm"
+          disabled={isDeleting}
+        >
+          <Trash2 size={16} className="text-muted-foreground hover:text-destructive" />
+        </Button>
+      </div>
+      
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-medium">{ensemble.nom}</CardTitle>
       </CardHeader>
