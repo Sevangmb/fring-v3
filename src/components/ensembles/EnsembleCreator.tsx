@@ -103,11 +103,11 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
             <Text className="text-muted-foreground">Aucun {label.toLowerCase()} disponible</Text>
           </div>
         ) : (
-          <div className="px-4 relative">
+          <div className="px-6 relative">
             <Carousel className="w-full mx-auto">
-              <CarouselContent className="ml-0">
+              <CarouselContent className="-ml-2 -mr-2">
                 {items.map((item) => (
-                  <CarouselItem key={item.id} className="basis-1/2 md:basis-1/3 lg:basis-1/4 pl-4 pr-0">
+                  <CarouselItem key={item.id} className="pl-2 pr-2 md:basis-1/3 lg:basis-1/4">
                     <VetementCarouselItem 
                       vetement={item} 
                       isSelected={selectedItems[type]?.id === item.id}
@@ -117,8 +117,8 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="-left-1 h-8 w-8" />
-              <CarouselNext className="-right-1 h-8 w-8" />
+              <CarouselPrevious className="-left-3 h-8 w-8" />
+              <CarouselNext className="-right-3 h-8 w-8" />
             </Carousel>
           </div>
         )}
