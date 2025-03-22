@@ -2,6 +2,7 @@
 import { supabase } from '@/lib/supabase';
 import { VetementType } from './meteo/tenue';
 import { initializeEnsembleData } from './database/ensembleInitialization';
+import { Vetement } from './vetement/types';
 
 export interface EnsembleVetement {
   id: number;
@@ -14,6 +15,20 @@ export interface EnsembleCreateData {
   vetements: EnsembleVetement[];
   occasion?: string;
   saison?: string;
+}
+
+export interface Ensemble {
+  id: number;
+  nom: string;
+  description?: string;
+  occasion?: string;
+  saison?: string;
+  created_at: string;
+  vetements: {
+    id: number;
+    vetement: Vetement;
+    position_ordre: number;
+  }[];
 }
 
 /**
@@ -78,7 +93,7 @@ export const createEnsemble = async (data: EnsembleCreateData) => {
 /**
  * Récupère tous les ensembles créés par l'utilisateur
  */
-export const fetchEnsembles = async () => {
+export const fetchEnsembles = async (): Promise<Ensemble[]> => {
   try {
     const { data: sessionData } = await supabase.auth.getSession();
     const userId = sessionData.session?.user?.id;
@@ -104,7 +119,15 @@ export const fetchEnsembles = async () => {
       throw error;
     }
 
-    return ensembles;
+    return ensembles.map(ensemble => ({
+      id: ensemble.id,
+      nom: ensemble.nom,
+      description: ensemble.description,
+      occasion: ensemble.occasion,
+      saison: ensemble.saison,
+      created_at: ensemble.created_at,
+      vetements: ensemble.tenues_vetements
+    }));
   } catch (error) {
     console.error("Erreur lors de la récupération des ensembles:", error);
     throw error;

@@ -1,16 +1,44 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from "@/components/templates/Layout";
 import { Helmet } from "react-helmet";
 import { useAuth } from "@/contexts/AuthContext";
 import VetementsPageHeader from "@/components/molecules/VetementsPageHeader";
-import VetementsContainer from "@/components/vetements/VetementsContainer";
 import { Text } from "@/components/atoms/Typography";
-import { Shirt } from "lucide-react";
+import { Shirt, Plus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Ensemble, fetchEnsembles } from '@/services/ensembleService';
+import EnsembleCard from '@/components/ensembles/EnsembleCard';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const MesEnsembles = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [ensembles, setEnsembles] = useState<Ensemble[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const loadEnsembles = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await fetchEnsembles();
+        setEnsembles(data);
+      } catch (err) {
+        console.error("Erreur lors du chargement des ensembles:", err);
+        setError("Impossible de charger vos ensembles. Veuillez réessayer.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadEnsembles();
+  }, [user]);
   
   return (
     <Layout>
@@ -24,17 +52,67 @@ const MesEnsembles = () => {
         viewMode="mes-vetements"
       />
       
-      <div className="container mx-auto px-4 py-8">
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle>Mes Ensembles</CardTitle>
-            <CardDescription>Gérez vos ensembles de vêtements.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Shirt size={64} className="text-muted-foreground mb-4" />
-            <Text className="text-center">La fonctionnalité de gestion des ensembles est en cours de développement.</Text>
-          </CardContent>
-        </Card>
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-xl font-semibold">Mes Ensembles</h1>
+          <Button 
+            size="sm" 
+            onClick={() => navigate('/ensembles/ajouter')}
+            className="flex items-center gap-1"
+          >
+            <Plus size={16} />
+            <span>Ajouter</span>
+          </Button>
+        </div>
+        
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <Card key={i} className="h-64">
+                <CardHeader className="pb-2">
+                  <Skeleton className="h-5 w-3/4" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-32 w-full mb-2" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-2/3 mt-1" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : error ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Text className="text-center text-red-500">{error}</Text>
+              <Button 
+                variant="outline" 
+                className="mt-4" 
+                onClick={() => window.location.reload()}
+              >
+                Réessayer
+              </Button>
+            </CardContent>
+          </Card>
+        ) : ensembles.length === 0 ? (
+          <Card className="w-full">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Shirt size={64} className="text-muted-foreground mb-4" />
+              <Text className="text-center">Vous n'avez pas encore créé d'ensembles.</Text>
+              <Button 
+                className="mt-4" 
+                onClick={() => navigate('/ensembles/ajouter')}
+              >
+                Créer mon premier ensemble
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {ensembles.map(ensemble => (
+              <EnsembleCard key={ensemble.id} ensemble={ensemble} />
+            ))}
+          </div>
+        )}
       </div>
     </Layout>
   );
