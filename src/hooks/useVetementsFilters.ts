@@ -41,6 +41,10 @@ export function useVetementsFilters() {
 
   const handleViewModeChange = (mode: 'mes-vetements' | 'vetements-amis') => {
     setViewMode(mode);
+    resetFilters();
+  };
+
+  const resetFilters = () => {
     setActiveTab("tous");
     setSearchTerm("");
     setCategorieFilter("");
@@ -61,6 +65,7 @@ export function useVetementsFilters() {
     setActiveTab,
     viewMode,
     handleViewModeChange,
-    filterVetements
+    filterVetements,
+    resetFilters
   };
 }

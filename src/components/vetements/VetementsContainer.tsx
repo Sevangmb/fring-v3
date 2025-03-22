@@ -9,19 +9,16 @@ import SearchFilterBar from "@/components/molecules/SearchFilterBar";
 import CategoryTabs from "@/components/molecules/CategoryTabs";
 import ViewModeSelector from "@/components/molecules/ViewModeSelector";
 import FloatingAddButton from "@/components/molecules/FloatingAddButton";
+import { SearchFilterProvider } from "@/contexts/SearchFilterContext";
 
 const VetementsContainer: React.FC = () => {
   const { user } = useAuth();
   const { filteredAmis, loadingAmis } = useAmis();
   const {
     searchTerm,
-    setSearchTerm,
     categorieFilter,
-    setCategorieFilter,
     marqueFilter,
-    setMarqueFilter,
     friendFilter,
-    setFriendFilter,
     activeTab,
     setActiveTab,
     viewMode,
@@ -54,8 +51,6 @@ const VetementsContainer: React.FC = () => {
   const filteredVetements = filterVetements(vetements, categories);
 
   const handleVetementDeleted = (id: number) => {
-    // We can't directly modify the vetements array from the hook,
-    // but this will trigger a refetch on the next render
     console.log(`Vêtement ${id} supprimé`);
   };
 
@@ -79,20 +74,14 @@ const VetementsContainer: React.FC = () => {
         onViewModeChange={handleViewModeChange}
       />
 
-      <SearchFilterBar 
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        categorieFilter={categorieFilter}
-        setCategorieFilter={setCategorieFilter}
-        marqueFilter={marqueFilter}
-        setMarqueFilter={setMarqueFilter}
+      <SearchFilterProvider
         categories={categories}
         marques={marques}
-        showFriendFilter={viewMode === 'vetements-amis'}
-        friendFilter={friendFilter}
-        setFriendFilter={setFriendFilter}
         friends={acceptedFriends}
-      />
+        showFriendFilter={viewMode === 'vetements-amis'}
+      >
+        <SearchFilterBar />
+      </SearchFilterProvider>
       
       <CategoryTabs 
         categories={categories}

@@ -4,50 +4,26 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter, SlidersHorizontal, TagIcon, Plus, Users } from "lucide-react";
-import { Categorie } from '@/services/categorieService';
-import { Marque } from '@/services/marqueService';
 import { useNavigate } from 'react-router-dom';
-import { Ami } from '@/services/amis';
+import { useSearchFilter } from '@/contexts/SearchFilterContext';
 
-interface SearchFilterBarProps {
-  searchTerm: string;
-  setSearchTerm: (value: string) => void;
-  categorieFilter: string;
-  setCategorieFilter: (value: string) => void;
-  marqueFilter: string;
-  setMarqueFilter: (value: string) => void;
-  categories: Categorie[];
-  marques: Marque[];
-  showFriendFilter?: boolean;
-  friendFilter?: string;
-  setFriendFilter?: (value: string) => void;
-  friends?: Ami[];
-}
-
-const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
-  searchTerm,
-  setSearchTerm,
-  categorieFilter,
-  setCategorieFilter,
-  marqueFilter,
-  setMarqueFilter,
-  categories,
-  marques,
-  showFriendFilter = false,
-  friendFilter = '',
-  setFriendFilter = () => {},
-  friends = []
-}) => {
+const SearchFilterBar: React.FC = () => {
   const navigate = useNavigate();
-
-  const handleReset = () => {
-    setSearchTerm("");
-    setCategorieFilter("");
-    setMarqueFilter("");
-    if (showFriendFilter && setFriendFilter) {
-      setFriendFilter("all");
-    }
-  };
+  const {
+    searchTerm,
+    setSearchTerm,
+    categorieFilter,
+    setCategorieFilter,
+    marqueFilter,
+    setMarqueFilter,
+    friendFilter,
+    setFriendFilter,
+    categories,
+    marques,
+    friends,
+    showFriendFilter,
+    resetFilters
+  } = useSearchFilter();
 
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-8">
@@ -118,7 +94,7 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
         <Button 
           variant="outline" 
           className="flex items-center"
-          onClick={handleReset}
+          onClick={resetFilters}
         >
           <SlidersHorizontal className="mr-2 h-4 w-4" />
           Réinitialiser
