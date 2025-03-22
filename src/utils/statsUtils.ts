@@ -65,18 +65,41 @@ export const fetchVetementsStats = async (userId: string): Promise<VetementWithC
  * Fetches the total count of outfits for a user
  */
 export const fetchTenutesCount = async (userId: string): Promise<number> => {
-  const { count, error: tenuesError } = await supabase
-    .from('tenues')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId);
-
-  if (tenuesError) {
-    console.error("Erreur lors de la récupération des tenues:", tenuesError);
-    throw tenuesError;
+  // La table tenues n'a pas de colonne user_id, nous allons chercher les tenues
+  // via la table tenues_vetements qui relie les tenues aux vêtements de l'utilisateur
+  try {
+    // On récupère d'abord les IDs des vêtements de l'utilisateur
+    const { data: userVetements, error: vetementsError } = await supabase
+      .from('vetements')
+      .select('id')
+      .eq('user_id', userId);
+    
+    if (vetementsError) throw vetementsError;
+    
+    if (!userVetements || userVetements.length === 0) {
+      return 0; // L'utilisateur n'a pas de vêtements, donc pas de tenues
+    }
+    
+    const vetementIds = userVetements.map(v => v.id);
+    
+    // Ensuite on récupère les tenues distinctes liées à ces vêtements
+    const { data: tenues, error: tenuesError } = await supabase
+      .from('tenues_vetements')
+      .select('tenue_id')
+      .in('vetement_id', vetementIds)
+      .is('tenue_id', 'not.null');
+    
+    if (tenuesError) throw tenuesError;
+    
+    // On compte le nombre de tenues distinctes
+    const uniqueTenueIds = [...new Set(tenues?.map(t => t.tenue_id) || [])];
+    
+    console.log("Nombre de tenues:", uniqueTenueIds.length || 0);
+    return uniqueTenueIds.length || 0;
+  } catch (error) {
+    console.error("Erreur lors de la récupération des tenues:", error);
+    throw error;
   }
-  
-  console.log("Nombre de tenues:", count || 0);
-  return count || 0;
 };
 
 /**

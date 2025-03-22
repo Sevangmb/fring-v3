@@ -33,8 +33,25 @@ export const useDashboardStats = () => {
 
       // Récupérer toutes les données nécessaires
       const vetements = await fetchVetementsStats(user.id);
-      const totalTenues = await fetchTenutesCount(user.id);
-      const totalAmis = await fetchAmisCount(user.id);
+      
+      // Utiliser Promise.allSettled pour continuer même si certaines requêtes échouent
+      const [tenutesCountResult, amisCountResult] = await Promise.allSettled([
+        fetchTenutesCount(user.id),
+        fetchAmisCount(user.id)
+      ]);
+      
+      // Extraire les valeurs ou utiliser des valeurs par défaut en cas d'erreur
+      const totalTenues = tenutesCountResult.status === 'fulfilled' ? tenutesCountResult.value : 0;
+      const totalAmis = amisCountResult.status === 'fulfilled' ? amisCountResult.value : 0;
+      
+      // Si des erreurs se sont produites, les logguer mais continuer
+      if (tenutesCountResult.status === 'rejected') {
+        console.error("Impossible de récupérer le nombre de tenues:", tenutesCountResult.reason);
+      }
+      
+      if (amisCountResult.status === 'rejected') {
+        console.error("Impossible de récupérer le nombre d'amis:", amisCountResult.reason);
+      }
 
       // Calculer les distributions
       const { 
