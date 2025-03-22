@@ -12,6 +12,23 @@ import {
   prepareRecentActivity
 } from "@/utils/statsUtils";
 
+// Create an interface for the Vetement with categories relationship
+interface VetementWithCategories {
+  id: number;
+  nom: string;
+  couleur: string;
+  taille: string;
+  description?: string;
+  marque?: string;
+  image_url?: string;
+  created_at?: string;
+  user_id?: string;
+  categories?: {
+    id: number;
+    nom: string;
+  };
+}
+
 interface DashboardStats {
   totalVetements: number;
   totalTenues: number;
@@ -98,7 +115,7 @@ export const useDashboardStats = () => {
       const couleurCount: Record<string, number> = {};
       const marqueCount: Record<string, number> = {};
 
-      vetements?.forEach((vetement: any) => {
+      vetements?.forEach((vetement: VetementWithCategories) => {
         // Catégories - utiliser la relation explicite
         if (vetement.categories && vetement.categories.nom) {
           const categoryName = vetement.categories.nom;
@@ -140,11 +157,11 @@ export const useDashboardStats = () => {
 
       // Préparer l'activité récente
       const recentActivity = (vetements || [])
-        .sort((a: Vetement, b: Vetement) => {
+        .sort((a: VetementWithCategories, b: VetementWithCategories) => {
           return new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime();
         })
         .slice(0, 5)
-        .map((vetement: Vetement) => ({
+        .map((vetement: VetementWithCategories) => ({
           type: "vêtement",
           date: vetement.created_at || "",
           description: `Ajout de ${vetement.nom}`,
