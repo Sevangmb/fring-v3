@@ -51,7 +51,7 @@ const EnsemblesAmisList: React.FC = () => {
           </TabsTrigger>
           {filteredAmis.amisAcceptes.map((ami) => (
             <TabsTrigger key={ami.id} value={ami.ami_id === ami.user_id ? ami.ami_id : ami.user_id} className="mb-1">
-              {ami.user_email || ami.ami_email || 'Ami'}
+              {ami.email || 'Ami'}
             </TabsTrigger>
           ))}
         </TabsList>
