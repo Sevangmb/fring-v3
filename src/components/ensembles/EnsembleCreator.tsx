@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Vetement } from '@/services/vetement/types';
 import { VetementType } from '@/services/meteo/tenue';
@@ -87,14 +88,14 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
     const isSelected = selectedItems[type]?.id;
     
     return (
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 border-b pb-1">
+      <div className="space-y-1">
+        <div className="flex items-center gap-1 border-b pb-1">
           {icon}
-          <h3 className="text-sm font-medium">{label} ({items.length})</h3>
+          <h3 className="text-xs font-medium">{label} ({items.length})</h3>
         </div>
         
         {items.length === 0 ? (
-          <div className="text-center py-2 bg-muted/30 rounded-lg">
+          <div className="text-center py-1 bg-muted/30 rounded-lg">
             <p className="text-xs text-muted-foreground">Aucun {label.toLowerCase()} disponible</p>
           </div>
         ) : (
@@ -111,8 +112,8 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="-left-4 h-7 w-7" />
-            <CarouselNext className="-right-4 h-7 w-7" />
+            <CarouselPrevious className="-left-3 h-6 w-6" />
+            <CarouselNext className="-right-3 h-6 w-6" />
           </Carousel>
         )}
       </div>
@@ -120,25 +121,25 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
   };
 
   return (
-    <div className="space-y-6 py-2">
+    <div className="space-y-3 py-1">
       {renderCarousel(
         categorizedVetements.hauts, 
         'haut', 
-        <Shirt className="h-4 w-4 text-primary" />, 
+        <Shirt className="h-3 w-3 text-primary" />, 
         'Hauts'
       )}
 
       {renderCarousel(
         categorizedVetements.bas, 
         'bas', 
-        <ShoppingBag className="h-4 w-4 text-primary" />, 
+        <ShoppingBag className="h-3 w-3 text-primary" />, 
         'Bas'
       )}
 
       {renderCarousel(
         categorizedVetements.chaussures, 
         'chaussures', 
-        <Footprints className="h-4 w-4 text-primary" />, 
+        <Footprints className="h-3 w-3 text-primary" />, 
         'Chaussures'
       )}
     </div>

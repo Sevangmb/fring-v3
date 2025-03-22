@@ -23,21 +23,21 @@ const VetementCarouselItem: React.FC<VetementCarouselItemProps> = ({
       className={cn(
         "cursor-pointer transition-all border-2", 
         isSelected 
-          ? "border-primary shadow-lg scale-105" 
+          ? "border-primary shadow-md scale-105" 
           : "border-transparent hover:border-primary/50"
       )}
       onClick={onSelect}
     >
       <CardContent className={cn(
         "flex flex-col items-center",
-        compact ? "p-2" : "p-4"
+        compact ? "p-1.5" : "p-3"
       )}>
         <div className={cn(
-          "w-full relative mb-2",
-          compact ? "aspect-square max-h-24" : "aspect-square"
+          "w-full relative mb-1",
+          compact ? "aspect-square max-h-20" : "aspect-square"
         )}>
           {isSelected && (
-            <Badge className="absolute top-1 right-1 bg-primary text-primary-foreground text-xs py-0">
+            <Badge className="absolute top-0.5 right-0.5 bg-primary text-primary-foreground text-xs py-0 px-1">
               ✓
             </Badge>
           )}
@@ -55,7 +55,7 @@ const VetementCarouselItem: React.FC<VetementCarouselItemProps> = ({
           )}
         </div>
         
-        <div className="text-center space-y-0.5 w-full">
+        <div className="text-center space-y-0 w-full">
           <h4 className={cn(
             "font-medium truncate max-w-full",
             compact ? "text-xs" : "text-sm"

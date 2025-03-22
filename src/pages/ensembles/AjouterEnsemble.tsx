@@ -15,6 +15,7 @@ import { VetementType } from "@/services/meteo/tenue";
 import { createEnsemble } from "@/services/ensembleService";
 import { fetchVetements } from "@/services/vetement";
 import { Loader2 } from "lucide-react";
+import { initializeEnsembleData } from "@/services/database/ensembleInitialization";
 
 const AjouterEnsemble = () => {
   const { user } = useAuth();
@@ -32,6 +33,21 @@ const AjouterEnsemble = () => {
     chaussures: null
   });
   const [creating, setCreating] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+
+  // Initialiser la structure de la base de données
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        await initializeEnsembleData();
+        setInitialized(true);
+      } catch (error) {
+        console.error("Erreur lors de l'initialisation:", error);
+      }
+    };
+
+    initialize();
+  }, []);
 
   // Charger les vêtements de l'utilisateur
   useEffect(() => {
@@ -94,7 +110,7 @@ const AjouterEnsemble = () => {
       console.error("Erreur lors de la création de l'ensemble:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de créer l'ensemble.",
+        description: "Impossible de créer l'ensemble. La base de données est peut-être en cours d'initialisation, veuillez réessayer.",
         variant: "destructive",
       });
     } finally {
@@ -114,7 +130,7 @@ const AjouterEnsemble = () => {
         viewMode="mes-vetements"
       />
       
-      <div className="container max-w-2xl mx-auto px-4 py-4">
+      <div className="container max-w-xl mx-auto px-4 py-4">
         <Card className="w-full shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Composer un Ensemble</CardTitle>

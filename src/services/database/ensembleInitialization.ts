@@ -38,11 +38,13 @@ export const addUserIdToEnsembles = async (): Promise<boolean> => {
     const columnExists = await checkEnsembleUserIdColumn();
     
     if (!columnExists) {
+      console.log("La colonne user_id n'existe pas, tentative d'ajout...");
+      
       const { error } = await supabase
         .rpc('exec_sql', {
           query: `
             ALTER TABLE public.tenues 
-            ADD COLUMN user_id UUID REFERENCES auth.users(id);
+            ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id);
           `
         });
 
@@ -51,7 +53,7 @@ export const addUserIdToEnsembles = async (): Promise<boolean> => {
         return false;
       }
       
-      console.log("Colonne user_id ajoutée à la table tenues");
+      console.log("Colonne user_id ajoutée à la table tenues avec succès");
       return true;
     }
     
@@ -68,7 +70,9 @@ export const addUserIdToEnsembles = async (): Promise<boolean> => {
  */
 export const initializeEnsembleData = async (): Promise<void> => {
   try {
+    console.log("Initialisation de la structure des ensembles...");
     await addUserIdToEnsembles();
+    console.log("Structure des ensembles initialisée avec succès");
   } catch (error) {
     console.error("Erreur lors de l'initialisation des données d'ensemble:", error);
   }

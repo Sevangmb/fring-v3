@@ -1,6 +1,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { VetementType } from './meteo/tenue';
+import { initializeEnsembleData } from './database/ensembleInitialization';
 
 export interface EnsembleVetement {
   id: number;
@@ -20,6 +21,9 @@ export interface EnsembleCreateData {
  */
 export const createEnsemble = async (data: EnsembleCreateData) => {
   try {
+    // 0. S'assurer que la structure de la base de données est correcte
+    await initializeEnsembleData();
+
     // 1. Vérifier l'authentification de l'utilisateur
     const { data: sessionData } = await supabase.auth.getSession();
     const userId = sessionData.session?.user?.id;
