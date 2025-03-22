@@ -15,6 +15,7 @@ interface VetementsListProps {
   isAuthenticated: boolean;
   onVetementDeleted: (id: number) => void;
   showOwner?: boolean;
+  hideTitle?: boolean;
 }
 
 const VetementsList: React.FC<VetementsListProps> = ({ 
@@ -23,7 +24,8 @@ const VetementsList: React.FC<VetementsListProps> = ({
   error, 
   isAuthenticated,
   onVetementDeleted,
-  showOwner = false
+  showOwner = false,
+  hideTitle = false
 }) => {
   const { handleDelete, navigateToAdd, navigateToLogin, navigateToFriends } = useVetementOperations();
 
