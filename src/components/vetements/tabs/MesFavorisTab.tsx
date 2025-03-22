@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,6 +59,7 @@ const MesFavorisTab: React.FC = () => {
 
   // Fonction pour déterminer si un élément est réellement disponible
   const isElementAvailable = (favori: any) => {
+    // Vérifier que details n'est pas null/undefined et contient des données
     return favori.details !== null && 
            favori.details !== undefined && 
            Object.keys(favori.details).length > 0;
