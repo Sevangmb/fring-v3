@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Ensemble } from '@/services/ensembleService';
-import { determinerTypeVetement, VetementType } from '@/services/meteo/tenue';
+import { VetementType } from '@/services/meteo/tenue';
 import { CalendarIcon, TagIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -13,11 +13,11 @@ interface EnsembleCardProps {
 const EnsembleCard: React.FC<EnsembleCardProps> = ({ ensemble }) => {
   // Ordonner les vêtements par type
   const vetementsByType = React.useMemo(() => {
-    const result: Record<VetementType, any[]> = {
+    const result: Record<string, any[]> = {
       [VetementType.HAUT]: [],
       [VetementType.BAS]: [],
       [VetementType.CHAUSSURES]: [],
-      [VetementType.AUTRE]: []
+      'autre': [] // Using string literal instead of enum value that doesn't exist
     };
     
     // Trier les vêtements par position
@@ -26,12 +26,40 @@ const EnsembleCard: React.FC<EnsembleCardProps> = ({ ensemble }) => {
     );
     
     orderedVetements.forEach(item => {
-      const type = determinerTypeVetement(item.vetement);
+      // Instead of trying to use the async function directly, use a simple string-based check
+      const type = determineVetementTypeSync(item.vetement);
       result[type].push(item.vetement);
     });
     
     return result;
   }, [ensemble]);
+
+  // Non-async function to determine vetement type
+  const determineVetementTypeSync = (vetement: any): string => {
+    const nomLower = vetement.nom ? vetement.nom.toLowerCase() : '';
+    const descriptionLower = vetement.description ? vetement.description.toLowerCase() : '';
+    const textToCheck = nomLower + ' ' + descriptionLower;
+    
+    const VETEMENTS_HAUTS = [
+      'tshirt', 't-shirt', 'chemise', 'pull', 'sweat', 'sweatshirt', 'veste', 
+      'manteau', 'blouson', 'gilet', 'hoodie', 'débardeur', 'top', 'polo'
+    ];
+    
+    const VETEMENTS_BAS = [
+      'pantalon', 'jean', 'short', 'jupe', 'bermuda', 'jogging', 'legging'
+    ];
+    
+    const VETEMENTS_CHAUSSURES = [
+      'chaussures', 'basket', 'baskets', 'tennis', 'bottes', 'bottines', 
+      'mocassins', 'sandales', 'tongs', 'escarpins', 'derbies'
+    ];
+    
+    if (VETEMENTS_HAUTS.some(h => textToCheck.includes(h))) return VetementType.HAUT;
+    if (VETEMENTS_BAS.some(b => textToCheck.includes(b))) return VetementType.BAS;
+    if (VETEMENTS_CHAUSSURES.some(c => textToCheck.includes(c))) return VetementType.CHAUSSURES;
+    
+    return 'autre';
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
