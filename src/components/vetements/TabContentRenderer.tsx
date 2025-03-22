@@ -20,13 +20,18 @@ const TabContentRenderer: React.FC<TabContentRendererProps> = ({ children }) => 
   const { vetements, marques, isLoading, error } = useVetementsData('mes-vetements', '');
   const { categories, loadingCategories } = useCategories();
   
+  // Ensure marques are strings, not objects
+  const formattedMarques = marques.map(marque => 
+    typeof marque === 'string' ? marque : marque.nom
+  );
+  
   return (
     <>
       <TabsContent value="mes-vetements">
         <MesVetementsTab 
           vetements={vetements}
           categories={categories}
-          marques={marques}
+          marques={formattedMarques}
           isLoading={isLoading || loadingCategories}
           error={error}
           isAuthenticated={true}
