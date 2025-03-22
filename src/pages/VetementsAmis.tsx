@@ -16,8 +16,6 @@ const VetementsAmis = () => {
   const { user, loading } = useAuth();
   const { filteredAmis, loadingAmis, chargerAmis } = useAmis();
   const {
-    activeTab,
-    setActiveTab,
     friendFilter,
     setFriendFilter,
     filterVetements

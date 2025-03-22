@@ -12,12 +12,12 @@ interface MesVetementsTabProps {
   categories: Categorie[];
   marques: string[];
   acceptedFriends: Ami[];
-  activeTab: string;
+  activeTab?: string;
   isLoading: boolean;
   error: string | null;
   isAuthenticated: boolean;
   onVetementDeleted: (id: number) => void;
-  onTabChange: (tab: string) => void;
+  onTabChange?: (tab: string) => void;
   hideTitle?: boolean;
 }
 
@@ -26,12 +26,10 @@ const MesVetementsTab: React.FC<MesVetementsTabProps> = ({
   categories,
   marques,
   acceptedFriends,
-  activeTab,
   isLoading,
   error,
   isAuthenticated,
   onVetementDeleted,
-  onTabChange,
   hideTitle = false,
 }) => {
   // Loguer les données pour le débogage
@@ -39,10 +37,9 @@ const MesVetementsTab: React.FC<MesVetementsTabProps> = ({
     console.log('MesVetementsTab rendering with:', {
       vetements: vetements.length,
       categories: categories.length,
-      marques: marques.length,
-      activeTab
+      marques: marques.length
     });
-  }, [vetements, categories, marques, activeTab]);
+  }, [vetements, categories, marques]);
 
   return (
     <TabsContent value="mes-vetements">

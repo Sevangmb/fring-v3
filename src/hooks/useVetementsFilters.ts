@@ -9,6 +9,8 @@ export function useVetementsFilters() {
   const [marqueFilter, setMarqueFilter] = useState<string>("all");
   const [friendFilter, setFriendFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<'mes-vetements' | 'vetements-amis' | 'mes-ensembles'>('mes-vetements');
+  const [activeTab, setActiveTab] = useState<string>("mes-vetements");
+  const [categoryTab, setCategoryTab] = useState<string>("all");
 
   const getCategoryNameById = (categories: Categorie[], categoryId: number): string => {
     const category = categories.find(cat => Number(cat.id) === categoryId);
@@ -57,6 +59,7 @@ export function useVetementsFilters() {
     setCategorieFilter("all");
     setMarqueFilter("all");
     setFriendFilter("all");
+    setCategoryTab("all");
   };
 
   return {
@@ -68,6 +71,10 @@ export function useVetementsFilters() {
     setMarqueFilter,
     friendFilter,
     setFriendFilter,
+    activeTab,
+    setActiveTab,
+    categoryTab,
+    setCategoryTab,
     viewMode,
     handleViewModeChange,
     filterVetements,

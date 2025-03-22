@@ -26,8 +26,6 @@ const ListeVetements = () => {
     setMarqueFilter,
     friendFilter,
     setFriendFilter,
-    categoryTab,
-    setCategoryTab,
     viewMode,
     handleViewModeChange,
     filterVetements
@@ -80,12 +78,10 @@ const ListeVetements = () => {
                 categories={categories}
                 marques={marquesFormatted}
                 acceptedFriends={acceptedFriends}
-                activeTab={categoryTab || "tous"}
                 isLoading={isLoading || loadingAmis}
                 error={error}
                 isAuthenticated={!!user}
                 onVetementDeleted={handleVetementDeleted}
-                onTabChange={setCategoryTab}
                 hideTitle={true}
               />
             </TabsContent>

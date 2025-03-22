@@ -6,18 +6,19 @@ import SearchFilterBar from "@/components/molecules/SearchFilterBar";
 import { Categorie } from "@/services/categorieService";
 import { Vetement } from "@/services/vetement/types";
 import { Ami } from "@/services/amis/types";
+import { useSearchFilter } from "@/contexts/SearchFilterContext";
 
 interface VetementsAmisTabProps {
   vetements: Vetement[];
   categories: Categorie[];
   marques: string[]; 
   acceptedFriends: Ami[];
-  activeTab: string;
+  activeTab?: string;
   isLoading: boolean;
   error: string | null;
   isAuthenticated: boolean;
   onVetementDeleted: (id: number) => void;
-  onTabChange: (tab: string) => void;
+  onTabChange?: (tab: string) => void;
   description?: string;
 }
 
@@ -26,14 +27,15 @@ const VetementsAmisTab: React.FC<VetementsAmisTabProps> = ({
   categories,
   marques,
   acceptedFriends,
-  activeTab,
   isLoading,
   error,
   isAuthenticated,
   onVetementDeleted,
-  onTabChange,
   description,
 }) => {
+  // Nous utilisons le contexte pour accéder aux filtres
+  const { searchTerm, categorieFilter, marqueFilter } = useSearchFilter();
+
   return (
     <TabsContent value="vetements-amis">
       {description && (
