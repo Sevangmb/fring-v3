@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, LogOut, User, LayoutDashboard } from "lucide-react";
+import { ChevronDown, LogOut, User, LayoutDashboard, Star } from "lucide-react";
 
 interface AuthButtonsProps {
   user: any;
@@ -24,6 +24,7 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({ user }) => {
   const handleSignUp = () => navigate("/register");
   const handleProfile = () => navigate("/profile");
   const handleDashboard = () => navigate("/dashboard");
+  const handleFavorites = () => navigate("/mes-vetements", { state: { activeTab: 'mes-favoris' } });
   const handleLogout = async () => {
     await signOut();
     navigate("/");
@@ -68,6 +69,10 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({ user }) => {
           <DropdownMenuItem onClick={handleProfile}>
             <User className="mr-2 h-4 w-4" />
             Profil
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleFavorites}>
+            <Star className="mr-2 h-4 w-4" />
+            Mes Favoris
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />

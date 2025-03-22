@@ -1,5 +1,5 @@
-
 import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import Layout from "@/components/templates/Layout";
 import MesVetementsSection from "@/components/organisms/MesVetements";
 import { Heading, Text } from "@/components/atoms/Typography";
@@ -20,8 +20,16 @@ import MesFavorisTab from "@/components/vetements/tabs/MesFavorisTab";
 const MesVetements: React.FC = () => {
   const [initialized, setInitialized] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
+  const [activeTab, setActiveTab] = useState("mes-vetements");
   const { user, loading } = useAuth();
   const { toast } = useToast();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location]);
 
   useEffect(() => {
     if (user && !loading && !initialized) {
@@ -105,6 +113,10 @@ const MesVetements: React.FC = () => {
     }
   }, [initialized, toast]);
 
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+  };
+
   return (
     <Layout>
       <VetementsContainer>
@@ -116,7 +128,7 @@ const MesVetements: React.FC = () => {
             isAuthenticated={!!user}
           />
           
-          <Tabs defaultValue="mes-vetements" className="w-full">
+          <Tabs defaultValue={activeTab} value={activeTab} onValueChange={handleTabChange} className="w-full">
             <VetementsTabsList />
             
             <TabsContent value="mes-vetements">
@@ -131,7 +143,6 @@ const MesVetements: React.FC = () => {
                 isAuthenticated={!!user}
                 onVetementDeleted={() => {}}
                 onTabChange={() => {}}
-                description="Consultez tous vos vêtements et gérez votre collection."
               />
             </TabsContent>
             
@@ -147,7 +158,6 @@ const MesVetements: React.FC = () => {
                 isAuthenticated={!!user}
                 onVetementDeleted={() => {}}
                 onTabChange={() => {}}
-                description="Parcourez les vêtements partagés par vos amis."
               />
             </TabsContent>
             
@@ -157,7 +167,6 @@ const MesVetements: React.FC = () => {
                 marques={[]}
                 acceptedFriends={[]}
                 isLoading={false}
-                description="Gérez vos ensembles de vêtements et créez de nouvelles combinaisons."
               />
             </TabsContent>
             

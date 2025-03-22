@@ -5,11 +5,11 @@ import { TabsTrigger } from "@/components/ui/tabs";
 import { Shirt, PlusCircle, Layers, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 
-export type TabType = 'mes-vetements' | 'ajouter-vetement' | 'mes-tenues' | 'ajouter-tenue';
+export type TabType = 'mes-vetements' | 'ajouter-vetement' | 'mes-tenues' | 'ajouter-tenue' | 'mes-favoris';
 
 interface VetementsTabsListProps {
   onTabChange?: (value: string) => void;
-  activeTab?: TabType;
+  activeTab?: TabType | string;
 }
 
 const VetementsTabsList: React.FC<VetementsTabsListProps> = ({ onTabChange, activeTab }) => {
@@ -30,28 +30,20 @@ const VetementsTabsList: React.FC<VetementsTabsListProps> = ({ onTabChange, acti
         Mes Vêtements
       </TabsTrigger>
       <TabsTrigger 
-        value="ajouter-vetement" 
-        onClick={() => handleTabChange("ajouter-vetement")}
+        value="vetements-amis" 
+        onClick={() => handleTabChange("vetements-amis")}
         className="rounded-b-none border-b-2 pb-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
       >
-        <PlusCircle className="mr-2 h-4 w-4" />
-        Ajouter un vêtement
+        <Shirt className="mr-2 h-4 w-4" />
+        Vêtements Amis
       </TabsTrigger>
       <TabsTrigger 
-        value="mes-tenues" 
-        onClick={() => handleTabChange("mes-tenues")}
+        value="mes-ensembles" 
+        onClick={() => handleTabChange("mes-ensembles")}
         className="rounded-b-none border-b-2 pb-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
       >
         <Layers className="mr-2 h-4 w-4" />
         Mes Tenues
-      </TabsTrigger>
-      <TabsTrigger 
-        value="ajouter-tenue" 
-        onClick={() => handleTabChange("ajouter-tenue")}
-        className="rounded-b-none border-b-2 pb-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-      >
-        <PlusCircle className="mr-2 h-4 w-4" />
-        Créer une tenue
       </TabsTrigger>
       <TabsTrigger 
         value="mes-favoris" 
