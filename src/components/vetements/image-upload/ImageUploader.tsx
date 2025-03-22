@@ -2,10 +2,10 @@
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { VetementFormValues } from "../schema/VetementFormSchema";
-import { useImageUpload } from "@/hooks/useImageUpload";
-import { useDetection } from "@/hooks/useDetection";
 import ImagePreviewArea from "./ImagePreviewArea";
 import DetectionResults from "../detection/DetectionResults";
+import { useImageUploader } from "@/hooks/useImageUploader";
+import ImageActions from "./ImageActions";
 
 interface ImageUploaderProps {
   form: UseFormReturn<VetementFormValues>;
@@ -14,40 +14,34 @@ interface ImageUploaderProps {
   setImagePreview: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
+/**
+ * Composant principal pour le téléchargement et l'analyse d'images de vêtements
+ */
 const ImageUploader: React.FC<ImageUploaderProps> = ({
   form,
   user,
   imagePreview,
   setImagePreview
 }) => {
-  const { fileInputRef, handleImageChange } = useImageUpload(user, setImagePreview);
-  
-  const { 
+  const {
+    fileInputRef,
     loading,
     error,
     steps,
     currentStep,
+    handleImageChange,
+    handleOpenFileSelector,
+    handleDeleteImage,
     detectImage
-  } = useDetection(form, imagePreview);
-
-  const handleDeleteImage = () => {
-    setImagePreview(null);
-    form.setValue('couleur', '');
-    form.setValue('categorie_id', 0);
-  };
-
-  // Fonction pour ouvrir la boîte de dialogue de sélection de fichier
-  const handleOpenFileSelector = (e: React.MouseEvent) => {
-    // Empêcher le comportement par défaut (soumission du formulaire)
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Ouvrir la boîte de dialogue de sélection de fichier
-    fileInputRef.current?.click();
-  };
+  } = useImageUploader(form, user, imagePreview, setImagePreview);
 
   return (
     <div className="flex flex-col items-center w-full">
+      <ImageActions 
+        onUploadClick={handleOpenFileSelector} 
+        loading={loading}
+      />
+      
       <div className="w-full mb-4">
         <ImagePreviewArea 
           imagePreview={imagePreview}
