@@ -5,8 +5,6 @@ import { VetementFormValues } from "../schema/VetementFormSchema";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useDetection } from "@/hooks/useDetection";
 import ImagePreviewArea from "./ImagePreviewArea";
-import { Button } from "@/components/ui/button";
-import DetectionButton from "../detection/DetectionButton";
 import DetectionResults from "../detection/DetectionResults";
 
 interface ImageUploaderProps {
@@ -45,6 +43,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           imagePreview={imagePreview}
           loading={loading}
           onClick={() => fileInputRef.current?.click()}
+          onDelete={imagePreview ? handleDeleteImage : undefined}
+          onDetect={imagePreview ? detectImage : undefined}
+          detectingColor={loading}
         />
       </div>
       
@@ -55,22 +56,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         ref={fileInputRef}
         onChange={handleImageChange}
       />
-      
-      {imagePreview && (
-        <div className="flex gap-4 mt-4">
-          <Button 
-            variant="outline" 
-            onClick={handleDeleteImage}
-            disabled={loading}
-          >
-            Supprimer l'image
-          </Button>
-          <DetectionButton 
-            onClick={detectImage}
-            loading={loading}
-          />
-        </div>
-      )}
       
       <DetectionResults 
         error={error}
