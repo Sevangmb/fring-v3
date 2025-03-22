@@ -46,30 +46,56 @@ export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]>
     if (friendId && friendId !== 'all') {
       console.log('Récupération des vêtements pour l\'ami spécifique:', friendId);
       
-      // Utiliser la fonction RPC personnalisée pour récupérer les vêtements de l'ami spécifique
-      const { data, error } = await supabase
-        .rpc('get_friend_vetements', { friend_id_param: friendId });
-      
-      if (error) {
-        console.error('Erreur lors de la récupération des vêtements de l\'ami:', error);
-        throw error;
+      try {
+        // Vérifier d'abord si c'est un ami avec status 'accepted'
+        const { data: amisData, error: amisError } = await supabase
+          .from('amis')
+          .select('*')
+          .or(`(user_id.eq.${friendId}.and.ami_id.eq.${auth.uid()}),(user_id.eq.${auth.uid()}.and.ami_id.eq.${friendId})`)
+          .eq('status', 'accepted')
+          .maybeSingle();
+          
+        if (amisError) {
+          console.error('Erreur lors de la vérification de l\'amitié:', amisError);
+        }
+        
+        console.log('Statut de l\'amitié avec', friendId, ':', amisData ? 'Accepté' : 'Non accepté ou inexistant');
+        
+        // Utiliser la fonction RPC personnalisée pour récupérer les vêtements de l'ami spécifique
+        const { data, error } = await supabase
+          .rpc('get_friend_vetements', { friend_id_param: friendId });
+        
+        if (error) {
+          console.error('Erreur lors de la récupération des vêtements de l\'ami:', error);
+          // Ne pas relancer l'erreur, retourner un tableau vide à la place
+          return [];
+        }
+        
+        console.log('Vêtements de l\'ami récupérés:', data?.length || 0, 'vêtements');
+        return data as Vetement[];
+        
+      } catch (innerError) {
+        console.error('Erreur inattendue lors de la récupération des vêtements de l\'ami:', innerError);
+        return [];
       }
-      
-      console.log('Vêtements de l\'ami récupérés:', data?.length || 0, 'vêtements');
-      return data as Vetement[];
     } else {
       console.log('Récupération des vêtements de tous les amis');
-      // Sinon, utiliser la fonction RPC pour récupérer tous les vêtements des amis
-      const { data, error } = await supabase
-        .rpc('get_friends_vetements');
-      
-      if (error) {
-        console.error('Erreur lors de la récupération des vêtements des amis:', error);
-        throw error;
+      try {
+        // Sinon, utiliser la fonction RPC pour récupérer tous les vêtements des amis
+        const { data, error } = await supabase
+          .rpc('get_friends_vetements');
+        
+        if (error) {
+          console.error('Erreur lors de la récupération des vêtements des amis:', error);
+          return [];
+        }
+        
+        console.log('Vêtements des amis récupérés:', data?.length || 0, 'vêtements');
+        return data as Vetement[];
+      } catch (innerError) {
+        console.error('Erreur inattendue lors de la récupération des vêtements des amis:', innerError);
+        return [];
       }
-      
-      console.log('Vêtements des amis récupérés:', data?.length || 0, 'vêtements');
-      return data as Vetement[];
     }
   } catch (error) {
     console.error('Erreur lors de la récupération des vêtements des amis:', error);
