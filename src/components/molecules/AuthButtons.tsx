@@ -4,6 +4,13 @@ import { useNavigate } from "react-router-dom";
 import Button from "../atoms/Button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown, LogOut, User } from "lucide-react";
 
 interface AuthButtonsProps {
   user: any;
@@ -36,24 +43,33 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({ user }) => {
 
   if (user) {
     return (
-      <div className="flex items-center gap-3">
-        <Button 
-          variant="ghost" 
-          size="sm"
-          onClick={handleProfile}
-          className="flex items-center gap-2"
-        >
-          <Avatar className="w-8 h-8">
-            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-              {getUserInitials()}
-            </AvatarFallback>
-          </Avatar>
-          <span className="hidden lg:inline">{user.user_metadata?.name || user.email?.split('@')[0]}</span>
-        </Button>
-        <Button variant="outline" size="sm" onClick={handleLogout}>
-          Déconnexion
-        </Button>
-      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <Avatar className="w-8 h-8">
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                {getUserInitials()}
+              </AvatarFallback>
+            </Avatar>
+            <span className="hidden lg:inline">{user.user_metadata?.name || user.email?.split('@')[0]}</span>
+            <ChevronDown className="h-4 w-4 opacity-50" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={handleProfile}>
+            <User className="mr-2 h-4 w-4" />
+            Profil
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleLogout}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Déconnexion
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   }
 

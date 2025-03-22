@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { User } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 import NavItem from "./NavItem";
 import Button from "../atoms/Button";
 import NavLinks from "./NavLinks";
@@ -61,6 +61,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
                   className="w-full justify-center text-white bg-red-600 hover:bg-red-700" 
                   onClick={handleLogout}
                 >
+                  <LogOut size={18} className="mr-2" />
                   Déconnexion
                 </Button>
               </>
