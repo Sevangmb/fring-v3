@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useEffect } from 'react';
 import { Categorie } from '@/services/categorieService';
 import { Ami } from '@/services/amis';
 import { useVetementsFilters } from '@/hooks/useVetementsFilters';
@@ -41,7 +41,7 @@ export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
   friends = [],
   showFriendFilter = false,
   onFriendFilterChange,
-  currentFriendFilter = 'all',
+  currentFriendFilter,
 }) => {
   const {
     searchTerm,
@@ -61,6 +61,13 @@ export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
       onFriendFilterChange(value);
     }
   };
+
+  // Mise à jour des filtres si currentFriendFilter change
+  useEffect(() => {
+    if (currentFriendFilter && currentFriendFilter !== internalFriendFilter) {
+      internalSetFriendFilter(currentFriendFilter);
+    }
+  }, [currentFriendFilter, internalSetFriendFilter, internalFriendFilter]);
 
   const value = {
     searchTerm,

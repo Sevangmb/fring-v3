@@ -68,7 +68,7 @@ const SearchFilterBar: React.FC = () => {
         )}
         
         <Select 
-          value={categorieFilter || "all"} 
+          value={categorieFilter} 
           onValueChange={setCategorieFilter}
         >
           <SelectTrigger className="w-[180px]">
@@ -88,7 +88,7 @@ const SearchFilterBar: React.FC = () => {
         </Select>
         
         <Select 
-          value={marqueFilter || "all"} 
+          value={marqueFilter} 
           onValueChange={setMarqueFilter}
         >
           <SelectTrigger className="w-[180px]">

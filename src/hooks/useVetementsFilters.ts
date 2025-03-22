@@ -5,8 +5,8 @@ import { Vetement } from "@/services/vetement";
 
 export function useVetementsFilters() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [categorieFilter, setCategorieFilter] = useState<string>("");
-  const [marqueFilter, setMarqueFilter] = useState<string>("");
+  const [categorieFilter, setCategorieFilter] = useState<string>("all");
+  const [marqueFilter, setMarqueFilter] = useState<string>("all");
   const [friendFilter, setFriendFilter] = useState<string>("all");
   const [activeTab, setActiveTab] = useState("tous");
   const [viewMode, setViewMode] = useState<'mes-vetements' | 'vetements-amis' | 'mes-ensembles'>('mes-vetements');
@@ -56,8 +56,8 @@ export function useVetementsFilters() {
   const resetFilters = () => {
     setActiveTab("tous");
     setSearchTerm("");
-    setCategorieFilter("");
-    setMarqueFilter("");
+    setCategorieFilter("all");
+    setMarqueFilter("all");
     setFriendFilter("all");
   };
 
