@@ -63,7 +63,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       
       <DetectionResults 
         error={error}
-        steps={steps}
+        // Converting the steps array to the expected format
+        steps={steps?.map(step => step.label)}
         currentStep={currentStep}
         loading={loading}
       />

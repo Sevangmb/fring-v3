@@ -101,7 +101,8 @@ export const useEtiquetteUpload = (
         toast({
           title: "Attention",
           description: "L'image est volumineuse, ce qui peut ralentir le traitement.",
-          variant: "warning",
+          // Changed "warning" to "default" as only "default" or "destructive" variants are allowed
+          variant: "default",
         });
       }
 
