@@ -162,3 +162,155 @@ export const updateDefisStatus = async (): Promise<boolean> => {
     return false;
   }
 };
+
+// Structure pour les participations aux défis
+export interface DefiParticipation {
+  id: number;
+  defi_id: number;
+  user_id: string;
+  ensemble_id: number;
+  note?: number;
+  commentaire?: string;
+  created_at: string;
+}
+
+/**
+ * Participe à un défi en soumettant un ensemble
+ */
+export const participerDefi = async (defiId: number, ensembleId: number): Promise<boolean> => {
+  try {
+    // Vérifier si l'utilisateur est connecté
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+    
+    if (!userId) {
+      toast({
+        title: "Non authentifié",
+        description: "Vous devez être connecté pour participer à un défi",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    // Vérifier si l'utilisateur a déjà participé à ce défi
+    const { data: existingParticipation, error: checkError } = await supabase
+      .from('defi_participations')
+      .select('id')
+      .eq('defi_id', defiId)
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    if (checkError) {
+      console.error("Erreur lors de la vérification de participation:", checkError);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la vérification",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    if (existingParticipation) {
+      // Mettre à jour la participation existante
+      const { error: updateError } = await supabase
+        .from('defi_participations')
+        .update({ ensemble_id: ensembleId })
+        .eq('id', existingParticipation.id);
+      
+      if (updateError) {
+        console.error("Erreur lors de la mise à jour de la participation:", updateError);
+        toast({
+          title: "Erreur",
+          description: "Une erreur est survenue lors de la mise à jour de votre participation",
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      toast({
+        title: "Participation mise à jour",
+        description: "Votre participation a été mise à jour avec succès",
+      });
+    } else {
+      // Créer une nouvelle participation
+      const { error: insertError } = await supabase
+        .from('defi_participations')
+        .insert([{
+          defi_id: defiId,
+          user_id: userId,
+          ensemble_id: ensembleId
+        }]);
+      
+      if (insertError) {
+        console.error("Erreur lors de la création de la participation:", insertError);
+        toast({
+          title: "Erreur",
+          description: "Une erreur est survenue lors de l'enregistrement de votre participation",
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      // Incrémenter le compteur de participants pour ce défi
+      const { error: incrementError } = await supabase
+        .from('defis')
+        .update({ participants_count: supabase.rpc('increment', { row_id: defiId, table_name: 'defis' }) })
+        .eq('id', defiId);
+      
+      if (incrementError) {
+        console.error("Erreur lors de l'incrémentation du compteur de participants:", incrementError);
+        // Ne pas bloquer le processus si cette étape échoue
+      }
+      
+      toast({
+        title: "Participation enregistrée",
+        description: "Votre participation au défi a été enregistrée avec succès",
+      });
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de la participation au défi:", error);
+    toast({
+      title: "Erreur",
+      description: "Une erreur est survenue lors de la participation au défi",
+      variant: "destructive"
+    });
+    return false;
+  }
+};
+
+/**
+ * Vérifie si l'utilisateur participe déjà à un défi
+ */
+export const checkUserParticipation = async (defiId: number): Promise<{participe: boolean, ensembleId?: number}> => {
+  try {
+    // Vérifier si l'utilisateur est connecté
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+    
+    if (!userId) {
+      return { participe: false };
+    }
+    
+    const { data, error } = await supabase
+      .from('defi_participations')
+      .select('ensemble_id')
+      .eq('defi_id', defiId)
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    if (error) {
+      console.error("Erreur lors de la vérification de participation:", error);
+      return { participe: false };
+    }
+    
+    return { 
+      participe: !!data, 
+      ensembleId: data?.ensemble_id
+    };
+  } catch (error) {
+    console.error("Erreur lors de la vérification de participation:", error);
+    return { participe: false };
+  }
+};

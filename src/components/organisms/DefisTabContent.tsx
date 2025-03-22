@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import DefiCard, { DefiType } from "../molecules/DefiCard";
-import DefiCardSkeleton from "../molecules/DefiCardSkeleton";
-import { Award, Calendar, Clock, Flag, Trophy } from "lucide-react";
-import { getDefisByStatus, Defi, updateDefisStatus } from "@/services/defiService";
+import { FlameIcon, Clock, Trophy } from "lucide-react";
+import DefiCard, { DefiType } from "@/components/molecules/DefiCard";
+import DefiCardSkeleton from "@/components/molecules/DefiCardSkeleton";
+import { getDefisByStatus, updateDefisStatus, Defi } from "@/services/defiService";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -13,111 +13,156 @@ interface DefisTabContentProps {
 }
 
 const DefisTabContent: React.FC<DefisTabContentProps> = ({ isLoading: initialLoading = false }) => {
-  const [defisTab, setDefisTab] = useState<DefiType>("current");
-  const [defis, setDefis] = useState<Defi[]>([]);
-  const [isLoading, setIsLoading] = useState(initialLoading);
-  
-  const fetchDefis = async () => {
-    setIsLoading(true);
+  const [activeTab, setActiveTab] = useState("current");
+  const [loading, setLoading] = useState(initialLoading);
+  const [currentDefis, setCurrentDefis] = useState<Defi[]>([]);
+  const [upcomingDefis, setUpcomingDefis] = useState<Defi[]>([]);
+  const [pastDefis, setPastDefis] = useState<Defi[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const loadDefis = async () => {
     try {
-      // D'abord, mettre à jour le statut des défis en fonction des dates
+      setLoading(true);
+      
+      // Mettre à jour le statut des défis en fonction des dates
       await updateDefisStatus();
       
-      // Ensuite, récupérer les défis en fonction de l'onglet actif
-      const data = await getDefisByStatus(defisTab);
-      setDefis(data);
+      // Charger les défis par statut
+      const [current, upcoming, past] = await Promise.all([
+        getDefisByStatus('current'),
+        getDefisByStatus('upcoming'),
+        getDefisByStatus('past')
+      ]);
+      
+      setCurrentDefis(current);
+      setUpcomingDefis(upcoming);
+      setPastDefis(past);
     } catch (error) {
-      console.error("Erreur lors de la récupération des défis:", error);
+      console.error("Erreur lors du chargement des défis:", error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
   
+  // Formater la plage de dates
+  const formatDateRange = (startDate: string, endDate: string) => {
+    const start = format(new Date(startDate), 'dd MMM', { locale: fr });
+    const end = format(new Date(endDate), 'dd MMM', { locale: fr });
+    return `${start} - ${end}`;
+  };
+  
+  // Charger les défis au chargement du composant
   useEffect(() => {
-    fetchDefis();
-  }, [defisTab]);
+    loadDefis();
+  }, [refreshKey]);
   
-  // Fonction pour formater l'affichage de la plage de dates
-  const formatDateRange = (dateDebut: string, dateFin: string) => {
-    const dateDebutObj = new Date(dateDebut);
-    const dateFinObj = new Date(dateFin);
-    
-    const debutFormatted = format(dateDebutObj, 'd MMMM yyyy', { locale: fr });
-    const finFormatted = format(dateFinObj, 'd MMMM yyyy', { locale: fr });
-    
-    return `${debutFormatted} - ${finFormatted}`;
+  // Gérer la participation pour actualiser les compteurs
+  const handleParticipation = () => {
+    setRefreshKey(prev => prev + 1);
   };
-  
-  // Fonction pour déterminer l'icône en fonction du titre du défi
-  const getIconForDefi = (defi: Defi) => {
-    const title = defi.titre.toLowerCase();
-    
-    if (title.includes('hebdomadaire') || title.includes('semaine')) {
-      return <Flag className="h-5 w-5" />;
-    } else if (title.includes('mensuel') || title.includes('mois')) {
-      return <Award className="h-5 w-5" />;
-    } else if (title.includes('saison') || title.includes('été') || title.includes('hiver') || title.includes('printemps') || title.includes('automne')) {
-      return <Calendar className="h-5 w-5" />;
-    } else {
-      return <Trophy className="h-5 w-5" />;
-    }
-  };
-  
-  const renderLoadingSkeletons = () => {
-    return Array(3).fill(0).map((_, index) => (
-      <DefiCardSkeleton key={`skeleton-${index}`} />
-    ));
-  };
-  
-  const renderEmptyState = () => (
-    <div className="text-center py-10">
-      <Trophy className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-      <h3 className="text-lg font-medium mb-2">
-        {defisTab === "current" ? "Aucun défi en cours" : 
-         defisTab === "upcoming" ? "Aucun défi à venir" : "Aucun défi passé"}
-      </h3>
-      <p className="text-muted-foreground">
-        {defisTab === "current" ? "Il n'y a pas de défis en cours pour le moment." : 
-         defisTab === "upcoming" ? "Revenez plus tard pour découvrir les prochains défis." : 
-         "Aucun défi passé n'a été trouvé."}
-      </p>
-    </div>
-  );
 
   return (
-    <Tabs value={defisTab} onValueChange={(value) => setDefisTab(value as DefiType)} className="w-full">
-      <TabsList className="grid w-full grid-cols-3 mb-6">
+    <Tabs defaultValue="current" value={activeTab} onValueChange={setActiveTab}>
+      <TabsList className="grid grid-cols-3 mb-6">
         <TabsTrigger value="current" className="flex items-center gap-2">
-          <Flag className="h-4 w-4" />
+          <FlameIcon className="h-4 w-4" />
           <span>En cours</span>
         </TabsTrigger>
         <TabsTrigger value="upcoming" className="flex items-center gap-2">
-          <Calendar className="h-4 w-4" />
+          <Clock className="h-4 w-4" />
           <span>À venir</span>
         </TabsTrigger>
         <TabsTrigger value="past" className="flex items-center gap-2">
-          <Clock className="h-4 w-4" />
-          <span>Passés</span>
+          <Trophy className="h-4 w-4" />
+          <span>Terminés</span>
         </TabsTrigger>
       </TabsList>
       
-      <TabsContent value={defisTab} className="space-y-4">
-        {isLoading ? (
-          renderLoadingSkeletons()
-        ) : defis.length === 0 ? (
-          renderEmptyState()
+      <TabsContent value="current" className="space-y-6">
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, index) => (
+              <DefiCardSkeleton key={index} />
+            ))}
+          </div>
+        ) : currentDefis.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Aucun défi en cours pour le moment.</p>
+          </div>
         ) : (
-          defis.map((defi) => (
-            <DefiCard
-              key={defi.id}
-              title={defi.titre}
-              description={defi.description}
-              dateRange={formatDateRange(defi.date_debut, defi.date_fin)}
-              type={defisTab as DefiType}
-              icon={getIconForDefi(defi)}
-              participantsCount={defi.participants_count}
-            />
-          ))
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {currentDefis.map((defi) => (
+              <DefiCard
+                key={defi.id}
+                id={defi.id}
+                title={defi.titre}
+                description={defi.description}
+                dateRange={formatDateRange(defi.date_debut, defi.date_fin)}
+                type="current"
+                icon={<FlameIcon className="h-5 w-5" />}
+                participantsCount={defi.participants_count}
+                onParticipation={handleParticipation}
+              />
+            ))}
+          </div>
+        )}
+      </TabsContent>
+      
+      <TabsContent value="upcoming" className="space-y-6">
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, index) => (
+              <DefiCardSkeleton key={index} />
+            ))}
+          </div>
+        ) : upcomingDefis.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Aucun défi à venir pour le moment.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {upcomingDefis.map((defi) => (
+              <DefiCard
+                key={defi.id}
+                id={defi.id}
+                title={defi.titre}
+                description={defi.description}
+                dateRange={formatDateRange(defi.date_debut, defi.date_fin)}
+                type="upcoming"
+                icon={<Clock className="h-5 w-5" />}
+                participantsCount={defi.participants_count}
+              />
+            ))}
+          </div>
+        )}
+      </TabsContent>
+      
+      <TabsContent value="past" className="space-y-6">
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, index) => (
+              <DefiCardSkeleton key={index} />
+            ))}
+          </div>
+        ) : pastDefis.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Aucun défi terminé pour le moment.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {pastDefis.map((defi) => (
+              <DefiCard
+                key={defi.id}
+                id={defi.id}
+                title={defi.titre}
+                description={defi.description}
+                dateRange={formatDateRange(defi.date_debut, defi.date_fin)}
+                type="past"
+                icon={<Trophy className="h-5 w-5" />}
+                participantsCount={defi.participants_count}
+              />
+            ))}
+          </div>
         )}
       </TabsContent>
     </Tabs>

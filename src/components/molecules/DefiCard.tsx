@@ -4,25 +4,30 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
 import { Award, Calendar, ChevronRight, Flag } from "lucide-react";
+import ParticiperDefiDialog from "./ParticiperDefiDialog";
 
 export type DefiType = "current" | "upcoming" | "past";
 
 export interface DefiCardProps {
+  id: number;
   title: string;
   description: string;
   dateRange: string;
   type: DefiType;
   icon?: React.ReactNode;
   participantsCount?: number;
+  onParticipation?: () => void;
 }
 
 const DefiCard: React.FC<DefiCardProps> = ({
+  id,
   title,
   description,
   dateRange,
   type,
   icon = <Flag className="h-5 w-5" />,
-  participantsCount
+  participantsCount = 0,
+  onParticipation
 }) => {
   const isPast = type === "past";
   const isUpcoming = type === "upcoming";
@@ -60,9 +65,17 @@ const DefiCard: React.FC<DefiCardProps> = ({
             Bientôt disponible <Calendar className="h-3 w-3" />
           </Button>
         ) : (
-          <Button variant="outline" size="sm" className="ml-auto flex items-center gap-1">
-            Participer <ChevronRight className="h-3 w-3" />
-          </Button>
+          <div className="flex w-full justify-between items-center">
+            <Text className="text-sm text-muted-foreground">
+              <Award className="h-4 w-4 inline mr-1" />
+              {participantsCount} participants
+            </Text>
+            <ParticiperDefiDialog 
+              defiId={id} 
+              defiTitle={title} 
+              onParticipation={onParticipation}
+            />
+          </div>
         )}
       </CardFooter>
     </Card>
