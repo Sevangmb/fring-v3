@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useElementFavori } from '@/hooks/useElementFavori';
+import { useToast } from '@/hooks/use-toast';
 
 interface FavoriButtonProps {
   type: 'utilisateur' | 'vetement' | 'ensemble';
@@ -11,6 +12,7 @@ interface FavoriButtonProps {
   nom?: string;
   variant?: 'default' | 'ghost' | 'icon';
   className?: string;
+  showToast?: boolean;
 }
 
 const FavoriButton: React.FC<FavoriButtonProps> = ({
@@ -18,14 +20,25 @@ const FavoriButton: React.FC<FavoriButtonProps> = ({
   elementId,
   nom,
   variant = 'icon',
-  className
+  className,
+  showToast = true
 }) => {
   const { estFavori, loading, toggleFavori } = useElementFavori(type, elementId, nom);
+  const { toast } = useToast();
   
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleFavori();
+    
+    toggleFavori().then((success) => {
+      if (success && showToast) {
+        toast({
+          title: estFavori ? "Retiré des favoris" : "Ajouté aux favoris",
+          description: `${nom || "L'élément"} a été ${estFavori ? "retiré de" : "ajouté à"} vos favoris.`,
+          variant: estFavori ? "destructive" : "default",
+        });
+      }
+    });
   };
 
   if (variant === 'icon') {

@@ -67,10 +67,6 @@ export const useFavoris = () => {
     try {
       const success = await addFavori(type, elementId);
       if (success) {
-        toast({
-          title: "Ajouté aux favoris",
-          description: `${nom || "L'élément"} a été ajouté à vos favoris.`,
-        });
         // Rafraîchir la liste
         loadFavoris();
         return true;
@@ -98,10 +94,6 @@ export const useFavoris = () => {
     try {
       const success = await removeFavori(type, elementId);
       if (success) {
-        toast({
-          title: "Retiré des favoris",
-          description: `${nom || "L'élément"} a été retiré de vos favoris.`,
-        });
         // Rafraîchir la liste
         loadFavoris();
         return true;
