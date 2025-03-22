@@ -5,7 +5,7 @@ import { Form } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import VetementFormFields from '../VetementFormFields';
-import { vetementFormSchema } from '../schema/VetementFormSchema';
+import { VetementFormValues, vetementFormSchema } from '../schema/VetementFormSchema';
 
 // Create a wrapper component to provide the form context
 const FormWrapper = ({ children, defaultValues = {} }) => {
@@ -19,13 +19,19 @@ const FormWrapper = ({ children, defaultValues = {} }) => {
 
 describe('VetementFormFields', () => {
   it('renders principal tab correctly', () => {
-    const form = useForm({
+    // Create a properly typed form with complete schema
+    const form = useForm<VetementFormValues>({
       resolver: zodResolver(vetementFormSchema),
       defaultValues: {
         nom: '',
         categorie_id: 0,
         couleur: '',
         taille: '',
+        description: '',
+        marque: '',
+        image_url: '',
+        temperature: undefined,
+        weatherType: undefined
       },
     });
     
@@ -45,11 +51,19 @@ describe('VetementFormFields', () => {
   });
 
   it('renders supplementaire tab correctly', () => {
-    const form = useForm({
+    // Create a properly typed form with complete schema
+    const form = useForm<VetementFormValues>({
       resolver: zodResolver(vetementFormSchema),
       defaultValues: {
-        temperature: undefined,
+        nom: '',
+        categorie_id: 0,
+        couleur: '',
+        taille: '',
         description: '',
+        marque: '',
+        image_url: '',
+        temperature: undefined,
+        weatherType: undefined
       },
     });
     
@@ -67,9 +81,20 @@ describe('VetementFormFields', () => {
   });
 
   it('renders etiquette tab message', () => {
-    const form = useForm({
+    // Create a properly typed form with complete schema
+    const form = useForm<VetementFormValues>({
       resolver: zodResolver(vetementFormSchema),
-      defaultValues: {},
+      defaultValues: {
+        nom: '',
+        categorie_id: 0,
+        couleur: '',
+        taille: '',
+        description: '',
+        marque: '',
+        image_url: '',
+        temperature: undefined,
+        weatherType: undefined
+      },
     });
     
     render(
