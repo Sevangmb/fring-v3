@@ -74,6 +74,7 @@ const ListeVetements = () => {
               isAuthenticated={!!user}
               onVetementDeleted={handleVetementDeleted}
               onTabChange={setCategoryTab}
+              hideTitle={true} // Add this prop to hide the title in MesVetementsTab
             />
           </TabsContent>
           

@@ -20,6 +20,7 @@ interface MesVetementsTabProps {
   isAuthenticated: boolean;
   onVetementDeleted: (id: number) => void;
   onTabChange: (tab: string) => void;
+  hideTitle?: boolean;
 }
 
 const MesVetementsTab: React.FC<MesVetementsTabProps> = ({
@@ -33,6 +34,7 @@ const MesVetementsTab: React.FC<MesVetementsTabProps> = ({
   isAuthenticated,
   onVetementDeleted,
   onTabChange,
+  hideTitle = false,
 }) => {
   return (
     <TabsContent value="mes-vetements">
@@ -57,6 +59,7 @@ const MesVetementsTab: React.FC<MesVetementsTabProps> = ({
           isAuthenticated={isAuthenticated}
           onVetementDeleted={onVetementDeleted}
           showOwner={false}
+          hideTitle={hideTitle}
         />
       </CategoryTabs>
     </TabsContent>
