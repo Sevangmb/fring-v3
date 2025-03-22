@@ -5,6 +5,7 @@ import { Helmet } from "react-helmet";
 import { useAuth } from "@/contexts/AuthContext";
 import AmisPageHeader from "@/components/organisms/AmisPageHeader";
 import VetementsContainer from "@/components/vetements/VetementsContainer";
+import { TabType } from "@/components/vetements/VetementsContainer";
 
 const EnsemblesAmis = () => {
   const { user, loading } = useAuth();

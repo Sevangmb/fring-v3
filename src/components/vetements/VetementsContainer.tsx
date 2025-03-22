@@ -8,8 +8,10 @@ import VetementsTabsList from "./tabs/VetementsTabsList";
 import MesVetementsTab from "./tabs/MesVetementsTab";
 import { useNavigate, useLocation } from "react-router-dom";
 
+export type TabType = 'mes-vetements' | 'ajouter-vetement' | 'mes-tenues' | 'ajouter-tenue' | 'mes-ensembles';
+
 interface VetementsContainerProps {
-  defaultTab?: 'mes-vetements' | 'ajouter-vetement' | 'mes-tenues' | 'ajouter-tenue';
+  defaultTab?: TabType;
 }
 
 const VetementsContainer: React.FC<VetementsContainerProps> = ({ 
@@ -19,7 +21,7 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
   const location = useLocation();
   const { user } = useAuth();
   const { filteredAmis, loadingAmis, chargerAmis } = useAmis();
-  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [activeTab, setActiveTab] = useState<TabType>(defaultTab);
   
   const {
     searchTerm,
@@ -49,7 +51,6 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
 
   const acceptedFriends = filteredAmis?.amisAcceptes || [];
 
-  // Update active tab based on route
   useEffect(() => {
     if (location.pathname === "/mes-vetements") {
       setActiveTab("mes-vetements");
@@ -60,17 +61,17 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
       setActiveTab("mes-tenues");
     } else if (location.pathname === "/ensembles/ajouter") {
       setActiveTab("ajouter-tenue");
+    } else if (location.pathname === "/ensembles-amis") {
+      setActiveTab("mes-ensembles");
     }
   }, [location.pathname, handleViewModeChange]);
 
-  // Charge les amis au chargement du composant
   useEffect(() => {
     if (user) {
       chargerAmis();
     }
   }, [user, chargerAmis]);
 
-  // Met à jour l'email de l'ami sélectionné lorsque le filtre d'ami change
   useEffect(() => {
     if (viewMode === 'vetements-amis') {
       if (friendFilter !== "all") {
@@ -81,7 +82,6 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
       } else {
         setSelectedFriendEmail(undefined);
       }
-      // Recharger les vêtements quand le filtre d'ami change
       reloadVetements();
     }
   }, [friendFilter, acceptedFriends, viewMode, setSelectedFriendEmail, reloadVetements]);
@@ -93,10 +93,9 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
   };
 
   const handleTabChange = (value: string) => {
-    setActiveTab(value);
+    setActiveTab(value as TabType);
   };
 
-  // Only render content for the current active tab
   const renderTabContent = () => {
     if (activeTab === "mes-vetements") {
       return (
@@ -115,7 +114,6 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
       );
     }
     
-    // Other tabs are handled by route navigation in VetementsTabsList
     return null;
   };
 

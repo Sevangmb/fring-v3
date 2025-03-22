@@ -3,6 +3,7 @@ import React from "react";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Shirt, Plus, FileText, FilePlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { TabType } from "../VetementsContainer";
 
 interface VetementsTabsListProps {
   onTabChange: (value: string) => void;
@@ -28,6 +29,9 @@ const VetementsTabsList: React.FC<VetementsTabsListProps> = ({ onTabChange, acti
         break;
       case "ajouter-tenue":
         navigate("/ensembles/ajouter");
+        break;
+      case "mes-ensembles":
+        navigate("/ensembles-amis");
         break;
     }
   };
