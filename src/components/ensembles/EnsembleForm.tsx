@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,19 +5,12 @@ import { Heading, Text } from "@/components/atoms/Typography";
 import { Loader2 } from "lucide-react";
 import { Vetement } from "@/services/vetement/types";
 import EnsembleCreator from "@/components/ensembles/EnsembleCreator";
+import { SelectedItems } from "@/hooks/ensembles/useEnsembleSubmission";
 
 interface EnsembleFormProps {
   vetements: Vetement[];
-  selectedItems: {
-    haut: Vetement | null;
-    bas: Vetement | null;
-    chaussures: Vetement | null;
-  };
-  onItemsSelected: (items: {
-    haut: Vetement | null;
-    bas: Vetement | null;
-    chaussures: Vetement | null;
-  }) => void;
+  selectedItems: SelectedItems;
+  onItemsSelected: (items: SelectedItems) => void;
   creating: boolean;
   onSubmit: () => void;
 }
