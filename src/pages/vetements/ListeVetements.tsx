@@ -58,6 +58,7 @@ const ListeVetements = () => {
       <VetementsPageHeader 
         isAuthenticated={!!user} 
         viewMode="mes-vetements"
+        hideHeading={true}
       />
 
       <div className="container mx-auto px-4 py-8">
@@ -74,7 +75,7 @@ const ListeVetements = () => {
               isAuthenticated={!!user}
               onVetementDeleted={handleVetementDeleted}
               onTabChange={setCategoryTab}
-              hideTitle={true} // Add this prop to hide the title in MesVetementsTab
+              hideTitle={true}
             />
           </TabsContent>
           

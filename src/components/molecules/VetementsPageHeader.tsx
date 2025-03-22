@@ -10,12 +10,14 @@ interface VetementsPageHeaderProps {
   isAuthenticated: boolean;
   viewMode: 'mes-vetements' | 'vetements-amis';
   selectedFriendEmail?: string;
+  hideHeading?: boolean;
 }
 
 const VetementsPageHeader: React.FC<VetementsPageHeaderProps> = ({ 
   isAuthenticated,
   viewMode,
-  selectedFriendEmail
+  selectedFriendEmail,
+  hideHeading = false
 }) => {
   const navigate = useNavigate();
 
@@ -31,7 +33,7 @@ const VetementsPageHeader: React.FC<VetementsPageHeaderProps> = ({
           >
             <ArrowLeft size={20} />
           </Button>
-          <Heading>Liste des vêtements</Heading>
+          {!hideHeading && <Heading>Liste des vêtements</Heading>}
           
           {viewMode === 'vetements-amis' && selectedFriendEmail && (
             <Badge variant="secondary" className="ml-2 flex items-center gap-1">
@@ -40,15 +42,17 @@ const VetementsPageHeader: React.FC<VetementsPageHeaderProps> = ({
             </Badge>
           )}
         </div>
-        <Text className="text-muted-foreground max-w-2xl mt-4">
-          {isAuthenticated 
-            ? viewMode === 'mes-vetements' 
-              ? "Consultez tous vos vêtements et gérez votre collection."
-              : selectedFriendEmail 
-                ? `Parcourez les vêtements partagés par ${selectedFriendEmail}.`
-                : "Parcourez les vêtements partagés par vos amis."
-            : "Connectez-vous pour voir et gérer vos vêtements."}
-        </Text>
+        {!hideHeading && (
+          <Text className="text-muted-foreground max-w-2xl mt-4">
+            {isAuthenticated 
+              ? viewMode === 'mes-vetements' 
+                ? "Consultez tous vos vêtements et gérez votre collection."
+                : selectedFriendEmail 
+                  ? `Parcourez les vêtements partagés par ${selectedFriendEmail}.`
+                  : "Parcourez les vêtements partagés par vos amis."
+              : "Connectez-vous pour voir et gérer vos vêtements."}
+          </Text>
+        )}
         
         {!isAuthenticated && (
           <div className="mt-8">
