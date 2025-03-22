@@ -129,7 +129,7 @@ const MesVetements: React.FC = () => {
           />
           
           <Tabs defaultValue={activeTab} value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <VetementsTabsList />
+            <VetementsTabsList onTabChange={handleTabChange} activeTab={activeTab} />
             
             <TabsContent value="mes-vetements">
               <MesVetementsTab
