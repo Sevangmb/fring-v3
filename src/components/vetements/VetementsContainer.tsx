@@ -8,13 +8,14 @@ import VetementsList from "@/components/organisms/VetementsList";
 import SearchFilterBar from "@/components/molecules/SearchFilterBar";
 import CategoryTabs from "@/components/molecules/CategoryTabs";
 import { SearchFilterProvider } from "@/contexts/SearchFilterContext";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useNavigate } from "react-router-dom";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Shirt, Users, ListPlus, List } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Text } from "@/components/atoms/Typography";
+import { Button } from "@/components/ui/button";
 
 const VetementsContainer: React.FC = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const { filteredAmis, loadingAmis } = useAmis();
   const {
     searchTerm,
@@ -64,12 +65,6 @@ const VetementsContainer: React.FC = () => {
       case "vetements-amis":
         handleViewModeChange('vetements-amis');
         break;
-      case "ajouter-ensemble":
-        navigate("/ensembles/ajouter");
-        break;
-      case "mes-ensembles":
-        navigate("/ensembles");
-        break;
       default:
         break;
     }
@@ -109,15 +104,14 @@ const VetementsContainer: React.FC = () => {
             Mes Ensembles
           </TabsTrigger>
         </TabsList>
-      </Tabs>
 
-      {(viewMode === 'mes-vetements' || viewMode === 'vetements-amis') && (
-        <>
+        {/* Contenu pour l'onglet "Mes Vêtements" */}
+        <TabsContent value="mes-vetements">
           <SearchFilterProvider
             categories={categories}
             marques={marques}
             friends={acceptedFriends}
-            showFriendFilter={viewMode === 'vetements-amis'}
+            showFriendFilter={false}
           >
             <SearchFilterBar />
           </SearchFilterProvider>
@@ -133,11 +127,66 @@ const VetementsContainer: React.FC = () => {
               error={error}
               isAuthenticated={!!user}
               onVetementDeleted={handleVetementDeleted}
-              showOwner={viewMode === 'vetements-amis'}
+              showOwner={false}
             />
           </CategoryTabs>
-        </>
-      )}
+        </TabsContent>
+        
+        {/* Contenu pour l'onglet "Vêtements Amis" */}
+        <TabsContent value="vetements-amis">
+          <SearchFilterProvider
+            categories={categories}
+            marques={marques}
+            friends={acceptedFriends}
+            showFriendFilter={true}
+          >
+            <SearchFilterBar />
+          </SearchFilterProvider>
+          
+          <CategoryTabs 
+            categories={categories}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          >
+            <VetementsList 
+              vetements={filteredVetements}
+              isLoading={isLoading || loadingAmis}
+              error={error}
+              isAuthenticated={!!user}
+              onVetementDeleted={handleVetementDeleted}
+              showOwner={true}
+            />
+          </CategoryTabs>
+        </TabsContent>
+        
+        {/* Contenu pour l'onglet "Ajouter Ensemble" */}
+        <TabsContent value="ajouter-ensemble">
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle>Ajouter un Ensemble</CardTitle>
+              <CardDescription>Créez un nouvel ensemble à partir de vos vêtements.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <ListPlus size={64} className="text-muted-foreground mb-4" />
+              <Text className="text-center mb-6">La fonctionnalité d'ajout d'ensembles est en cours de développement.</Text>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Contenu pour l'onglet "Mes Ensembles" */}
+        <TabsContent value="mes-ensembles">
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle>Mes Ensembles</CardTitle>
+              <CardDescription>Gérez vos ensembles de vêtements.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <List size={64} className="text-muted-foreground mb-4" />
+              <Text className="text-center">La fonctionnalité de gestion des ensembles est en cours de développement.</Text>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </>
   );
 };
