@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { VetementType } from './meteo/tenue';
 import { initializeEnsembleData } from './database/ensembleInitialization';
@@ -36,10 +35,8 @@ export interface Ensemble {
  */
 export const createEnsemble = async (data: EnsembleCreateData) => {
   try {
-    // 0. S'assurer que la structure de la base de données est correcte
     await initializeEnsembleData();
 
-    // 1. Vérifier l'authentification de l'utilisateur
     const { data: sessionData } = await supabase.auth.getSession();
     const userId = sessionData.session?.user?.id;
 
@@ -47,7 +44,6 @@ export const createEnsemble = async (data: EnsembleCreateData) => {
       throw new Error("Utilisateur non connecté");
     }
 
-    // 2. Insérer l'ensemble dans la table tenues
     const { data: ensembleData, error: ensembleError } = await supabase
       .from('tenues')
       .insert({
@@ -67,7 +63,6 @@ export const createEnsemble = async (data: EnsembleCreateData) => {
 
     const ensembleId = ensembleData.id;
 
-    // 3. Associer les vêtements à l'ensemble dans la table tenues_vetements
     const vetementEntries = data.vetements.map((vetement, index) => ({
       tenue_id: ensembleId,
       vetement_id: vetement.id,
@@ -130,6 +125,62 @@ export const fetchEnsembles = async (): Promise<Ensemble[]> => {
     }));
   } catch (error) {
     console.error("Erreur lors de la récupération des ensembles:", error);
+    throw error;
+  }
+};
+
+/**
+ * Récupère tous les ensembles créés par les amis de l'utilisateur
+ */
+export const fetchEnsemblesAmis = async (friendId?: string): Promise<Ensemble[]> => {
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+
+    if (!userId) {
+      throw new Error("Utilisateur non connecté");
+    }
+
+    if (friendId && friendId !== "all") {
+      const { data: ensembles, error } = await supabase
+        .from('tenues')
+        .select(`
+          *,
+          tenues_vetements:tenues_vetements(
+            *,
+            vetement:vetement_id(*)
+          )
+        `)
+        .eq('user_id', friendId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Erreur lors de la récupération des ensembles de l'ami:", error);
+        throw error;
+      }
+
+      return ensembles.map(ensemble => ({
+        id: ensemble.id,
+        nom: ensemble.nom,
+        description: ensemble.description,
+        occasion: ensemble.occasion,
+        saison: ensemble.saison,
+        created_at: ensemble.created_at,
+        vetements: ensemble.tenues_vetements,
+        user_id: ensemble.user_id
+      }));
+    } else {
+      const { data: ensembles, error } = await supabase.rpc('get_friends_ensembles');
+
+      if (error) {
+        console.error("Erreur lors de la récupération des ensembles des amis:", error);
+        throw error;
+      }
+
+      return ensembles || [];
+    }
+  } catch (error) {
+    console.error("Erreur lors de la récupération des ensembles des amis:", error);
     throw error;
   }
 };

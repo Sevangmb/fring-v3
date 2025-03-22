@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,7 +25,7 @@ import MiesPage from "./pages/Mies";
 import MesEnsembles from "./pages/ensembles/MesEnsembles";
 import AjouterEnsemble from "./pages/ensembles/AjouterEnsemble";
 import VetementsAmisPage from "./pages/VetementsAmisPage";
-import EnsemblesAmisPage from "./pages/EnsemblesAmisPage";
+import EnsemblesAmis from "./pages/EnsemblesAmis";
 
 // Create a new query client instance
 const queryClient = new QueryClient({
@@ -60,6 +61,7 @@ const App = () => {
               <Route path="/mes-vetements/modifier/:id" element={<ModifierVetement />} />
               <Route path="/mes-amis" element={<MesAmis />} />
               <Route path="/vetements-amis" element={<VetementsAmisPage />} />
+              <Route path="/ensembles-amis" element={<EnsemblesAmis />} />
               <Route path="/messages" element={<Messages />} />
               <Route path="/messages/:friendId" element={<Messages />} />
               <Route path="/mies" element={<MiesPage />} />
