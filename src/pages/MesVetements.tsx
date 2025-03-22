@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import Layout from "@/components/templates/Layout";
 import MesVetementsSection from "@/components/organisms/MesVetements";
@@ -8,10 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 import { createDemoVetementsForUser } from "@/services/vetement/demoVetements";
 import { supabase } from "@/lib/supabase";
 import VetementsContainer from "@/components/vetements/VetementsContainer";
-import VetementsPageHeader from "@/components/vetements/VetementsPageHeader";
-import Tabs from "@/components/vetements/Tabs";
-import VetementsTabsList from "@/components/vetements/TabsList";
-import VetementsTab from "@/components/vetements/Tabs/Tab";
+import VetementsPageHeader from "@/components/molecules/VetementsPageHeader";
+import { Tabs } from "@/components/ui/tabs";
+import { TabsContent } from "@/components/ui/tabs";
+import VetementsTabsList from "@/components/vetements/tabs/VetementsTabsList";
 import MesVetementsTab from "@/components/vetements/tabs/MesVetementsTab";
 import VetementsAmisTab from "@/components/vetements/tabs/VetementsAmisTab";
 import MesEnsemblesTab from "@/components/vetements/tabs/MesEnsemblesTab";
@@ -113,25 +114,49 @@ const MesVetements: React.FC = () => {
             className="text-center"
             title="Mes Vêtements"
             description="Découvrez votre collection personnelle de vêtements."
+            isAuthenticated={!!user}
           />
           
           <Tabs defaultValue="mes-vetements" className="w-full">
             <VetementsTabsList />
             
-            <MesVetementsTab
-              isAuthenticated={!!user}
-              description="Découvrez votre collection personnelle de vêtements."
-            />
+            <TabsContent value="mes-vetements">
+              <MesVetementsTab
+                vetements={[]}
+                categories={[]}
+                marques={[]}
+                acceptedFriends={[]}
+                activeTab=""
+                isLoading={false}
+                error={null}
+                isAuthenticated={!!user}
+                onVetementDeleted={() => {}}
+                onTabChange={() => {}}
+              />
+            </TabsContent>
             
-            <VetementsAmisTab
-              description="Gérez vos vêtements avec vos amis."
-            />
+            <TabsContent value="vetements-amis">
+              <VetementsAmisTab
+                vetements={[]}
+                categories={[]}
+                marques={[]}
+                acceptedFriends={[]}
+                activeTab=""
+                isLoading={false}
+                error={null}
+                isAuthenticated={!!user}
+                onVetementDeleted={() => {}}
+                onTabChange={() => {}}
+              />
+            </TabsContent>
             
-            <MesEnsemblesTab
-              description="Gérez vos ensembles de vêtements."
-            />
+            <TabsContent value="mes-ensembles">
+              <MesEnsemblesTab />
+            </TabsContent>
             
-            <MesFavorisTab />
+            <TabsContent value="mes-favoris">
+              <MesFavorisTab />
+            </TabsContent>
           </Tabs>
         </section>
       </VetementsContainer>

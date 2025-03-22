@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,18 +10,22 @@ import FavoriButton from '@/components/atoms/FavoriButton';
 
 interface AmiListItemProps {
   ami: Ami;
-  onMessage: (friendId: string) => void;
+  onRetirer: (id: number) => Promise<void>;
+  onMessage?: (friendId: string) => void;
 }
 
-const AmiListItem = ({ 
+const AmiListItem: React.FC<AmiListItemProps> = ({ 
   ami,
+  onRetirer,
   onMessage
-}: AmiListItemProps) => {
+}) => {
   const navigate = useNavigate();
 
   const handleMessage = () => {
-    onMessage(ami.ami_id);
-    navigate(`/messages/${ami.ami_id}`);
+    if (onMessage) {
+      onMessage(ami.ami_id);
+      navigate(`/messages/${ami.ami_id}`);
+    }
   };
 
   return (
@@ -54,6 +59,13 @@ const AmiListItem = ({
               <MessageCircle size={16} className="mr-1" />
               Message
             </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => onRetirer(ami.id)}
+            >
+              Retirer
+            </Button>
           </div>
         </div>
         
@@ -68,3 +80,4 @@ const AmiListItem = ({
 };
 
 export default AmiListItem;
+

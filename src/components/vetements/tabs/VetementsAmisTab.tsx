@@ -19,6 +19,7 @@ interface VetementsAmisTabProps {
   isAuthenticated: boolean;
   onVetementDeleted: (id: number) => void;
   onTabChange: (tab: string) => void;
+  description?: string;
 }
 
 const VetementsAmisTab: React.FC<VetementsAmisTabProps> = ({
@@ -32,9 +33,14 @@ const VetementsAmisTab: React.FC<VetementsAmisTabProps> = ({
   isAuthenticated,
   onVetementDeleted,
   onTabChange,
+  description,
 }) => {
   return (
     <TabsContent value="vetements-amis">
+      {description && (
+        <p className="text-muted-foreground mb-4">{description}</p>
+      )}
+      
       <SearchFilterBar />
       
       <CategoryTabs 

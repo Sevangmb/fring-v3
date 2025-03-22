@@ -12,16 +12,22 @@ interface MesEnsemblesTabProps {
   marques?: string[];
   acceptedFriends?: Ami[];
   isLoading?: boolean;
+  description?: string;
 }
 
 const MesEnsemblesTab: React.FC<MesEnsemblesTabProps> = ({
   categories = [],
   marques = [],
   acceptedFriends = [],
-  isLoading = false
+  isLoading = false,
+  description
 }) => {
   return (
     <TabsContent value="mes-ensembles" className="mt-6">
+      {description && (
+        <p className="text-muted-foreground mb-4">{description}</p>
+      )}
+      
       <SearchFilterProvider 
         categories={categories}
         marques={marques}
