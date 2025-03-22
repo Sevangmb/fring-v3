@@ -1,6 +1,10 @@
 
-export type TabType = 'mes-vetements' | 'ajouter-vetement' | 'mes-ensembles' | 'ajouter-ensemble' | 'mes-tenues';
+export type TabType = 
+  | 'mes-vetements' 
+  | 'ajouter-vetement' 
+  | 'vetements-amis' 
+  | 'mes-ensembles' 
+  | 'ajouter-ensemble'
+  | 'mes-favoris';
 
-export interface TabChangeHandler {
-  (value: TabType): void;
-}
+export type TabChangeHandler = (value: TabType) => void;

@@ -5,11 +5,16 @@ import { TabType } from "@/components/vetements/types/TabTypes";
 
 export function useVetementsTabState(defaultTab: TabType = 'mes-vetements') {
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState<TabType>(defaultTab);
+  const [activeTab, setActiveTab] = useState<TabType>(
+    location.state?.activeTab ? (location.state.activeTab as TabType) : defaultTab
+  );
   
   useEffect(() => {
     if (location.pathname === "/mes-vetements") {
-      setActiveTab("mes-vetements");
+      // Don't override when pathname is /mes-vetements but there's a state with activeTab
+      if (!location.state?.activeTab) {
+        setActiveTab("mes-vetements");
+      }
     } else if (location.pathname === "/mes-vetements/ajouter") {
       setActiveTab("ajouter-vetement");
     } else if (location.pathname === "/ensembles") {
@@ -17,7 +22,7 @@ export function useVetementsTabState(defaultTab: TabType = 'mes-vetements') {
     } else if (location.pathname === "/ensembles/ajouter") {
       setActiveTab("ajouter-ensemble");
     }
-  }, [location.pathname]);
+  }, [location.pathname, location.state]);
 
   const handleTabChange = (value: TabType) => {
     setActiveTab(value);

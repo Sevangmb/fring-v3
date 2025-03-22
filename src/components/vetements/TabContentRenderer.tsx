@@ -3,6 +3,7 @@ import React from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import AjouterVetement from "@/pages/vetements/AjouterVetement";
 import AjouterEnsemble from "@/pages/ensembles/AjouterEnsemble";
+import MesFavorisTab from "@/components/vetements/tabs/MesFavorisTab";
 import { TabType } from "./types/TabTypes";
 
 interface TabContentRendererProps {
@@ -30,6 +31,10 @@ const TabContentRenderer: React.FC<TabContentRendererProps> = ({
       
       <TabsContent value="ajouter-ensemble">
         {activeTab === "ajouter-ensemble" && <AjouterEnsemble />}
+      </TabsContent>
+      
+      <TabsContent value="mes-favoris">
+        {activeTab === "mes-favoris" && <MesFavorisTab />}
       </TabsContent>
     </>
   );

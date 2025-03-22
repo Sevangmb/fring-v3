@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs } from "@/components/ui/tabs";
 import VetementsTabsList from "./tabs/VetementsTabsList";
@@ -7,6 +7,7 @@ import TabContentRenderer from "./TabContentRenderer";
 import { useVetementsTabState } from "@/hooks/useVetementsTabState";
 import { TabType } from "./types/TabTypes";
 import { Helmet } from "react-helmet";
+import { useLocation } from "react-router-dom";
 
 interface VetementsContainerProps {
   defaultTab?: TabType;
@@ -18,7 +19,16 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
   children
 }) => {
   const { user } = useAuth();
-  const { activeTab, handleTabChange } = useVetementsTabState(defaultTab);
+  const location = useLocation();
+  const { activeTab, handleTabChange, setActiveTab } = useVetementsTabState(defaultTab);
+  
+  // Écouter les changements de state venant de la navigation
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      console.log("Setting active tab from location state:", location.state.activeTab);
+      setActiveTab(location.state.activeTab as TabType);
+    }
+  }, [location.state, setActiveTab]);
   
   if (!user) {
     return null;
@@ -31,7 +41,8 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
           {activeTab === 'mes-vetements' ? 'Mes Vêtements' : 
            activeTab === 'ajouter-vetement' ? 'Ajouter un vêtement' : 
            activeTab === 'mes-ensembles' ? 'Mes Tenues' : 
-           activeTab === 'ajouter-ensemble' ? 'Ajouter une tenue' : 
+           activeTab === 'ajouter-ensemble' ? 'Ajouter une tenue' :
+           activeTab === 'mes-favoris' ? 'Mes Favoris' :
            'Vêtements de mes amis'}
         </title>
       </Helmet>
