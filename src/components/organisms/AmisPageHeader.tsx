@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { LogIn, Mail, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
+import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from "@/components/ui/menubar";
 
 interface AmisPageHeaderProps {
   user: User | null;
@@ -23,19 +24,44 @@ const AmisPageHeader: React.FC<AmisPageHeaderProps> = ({ user, loading }) => {
         </Text>
         
         {user && !loading && (
-          <div className="flex justify-center gap-4 mt-8">
-            <Button asChild variant="default">
-              <Link to="/messages">
-                <Mail className="mr-2 h-4 w-4" />
-                Messages
-              </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link to="/mies">
-                <Users className="mr-2 h-4 w-4" />
-                Mies
-              </Link>
-            </Button>
+          <div className="mt-8 flex flex-col items-center gap-4">
+            <Menubar className="mx-auto">
+              <MenubarMenu>
+                <MenubarTrigger className="font-semibold">
+                  <Mail className="mr-2 h-4 w-4" />
+                  Menu de Navigation
+                </MenubarTrigger>
+                <MenubarContent>
+                  <MenubarItem asChild>
+                    <Link to="/messages" className="flex items-center">
+                      <Mail className="mr-2 h-4 w-4" />
+                      Messages
+                    </Link>
+                  </MenubarItem>
+                  <MenubarItem asChild>
+                    <Link to="/mies" className="flex items-center">
+                      <Users className="mr-2 h-4 w-4" />
+                      Mies
+                    </Link>
+                  </MenubarItem>
+                </MenubarContent>
+              </MenubarMenu>
+            </Menubar>
+            
+            <div className="flex justify-center gap-4">
+              <Button asChild variant="default">
+                <Link to="/messages">
+                  <Mail className="mr-2 h-4 w-4" />
+                  Messages
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/mies">
+                  <Users className="mr-2 h-4 w-4" />
+                  Mies
+                </Link>
+              </Button>
+            </div>
           </div>
         )}
         
