@@ -1,14 +1,12 @@
 
-import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Tabs } from "@/components/ui/tabs";
 import VetementsTabsList from "./tabs/VetementsTabsList";
-import AjouterVetement from "@/pages/vetements/AjouterVetement";
-import AjouterEnsemble from "@/pages/ensembles/AjouterEnsemble";
+import TabContentRenderer from "./TabContentRenderer";
+import { useVetementsTabState } from "@/hooks/useVetementsTabState";
+import { TabType } from "./types/TabTypes";
 import { Helmet } from "react-helmet";
-
-export type TabType = 'mes-vetements' | 'ajouter-vetement' | 'mes-ensembles' | 'ajouter-ensemble' | 'vetements-amis' | 'mes-tenues';
 
 interface VetementsContainerProps {
   defaultTab?: TabType;
@@ -19,57 +17,30 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
   defaultTab = 'mes-vetements',
   children
 }) => {
-  const location = useLocation();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>(defaultTab);
+  const { activeTab, handleTabChange } = useVetementsTabState(defaultTab);
   
-  useEffect(() => {
-    if (location.pathname === "/mes-vetements") {
-      setActiveTab("mes-vetements");
-    } else if (location.pathname === "/mes-vetements/ajouter") {
-      setActiveTab("ajouter-vetement");
-    } else if (location.pathname === "/ensembles") {
-      setActiveTab("mes-ensembles");
-    } else if (location.pathname === "/ensembles/ajouter") {
-      setActiveTab("ajouter-ensemble");
-    } else if (location.pathname === "/vetements-amis") {
-      setActiveTab("vetements-amis");
-    }
-  }, [location.pathname]);
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value as TabType);
-  };
-
   if (!user) {
     return null;
   }
 
   return (
     <>
-      <Tabs value={activeTab} className="w-full mb-6" onValueChange={handleTabChange}>
+      <Helmet>
+        <title>
+          {activeTab === 'mes-vetements' ? 'Mes Vêtements' : 
+           activeTab === 'ajouter-vetement' ? 'Ajouter un vêtement' : 
+           activeTab === 'mes-ensembles' ? 'Mes Tenues' : 
+           activeTab === 'ajouter-ensemble' ? 'Ajouter une tenue' : 
+           'Vêtements de mes amis'}
+        </title>
+      </Helmet>
+      
+      <Tabs value={activeTab} className="w-full mb-6" onValueChange={(value) => handleTabChange(value as TabType)}>
         <VetementsTabsList onTabChange={handleTabChange} activeTab={activeTab} />
-        
-        {/* Render tab content based on activeTab */}
-        <TabsContent value="mes-vetements">
-          {activeTab === "mes-vetements" && children}
-        </TabsContent>
-        
-        <TabsContent value="ajouter-vetement">
-          {activeTab === "ajouter-vetement" && <AjouterVetement />}
-        </TabsContent>
-        
-        <TabsContent value="mes-ensembles">
-          {activeTab === "mes-ensembles" && children}
-        </TabsContent>
-        
-        <TabsContent value="ajouter-ensemble">
-          {activeTab === "ajouter-ensemble" && <AjouterEnsemble />}
-        </TabsContent>
-        
-        <TabsContent value="vetements-amis">
-          {activeTab === "vetements-amis" && children}
-        </TabsContent>
+        <TabContentRenderer activeTab={activeTab}>
+          {children}
+        </TabContentRenderer>
       </Tabs>
     </>
   );

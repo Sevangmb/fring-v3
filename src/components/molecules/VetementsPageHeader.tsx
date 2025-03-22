@@ -8,33 +8,41 @@ import { Badge } from "@/components/ui/badge";
 
 interface VetementsPageHeaderProps {
   isAuthenticated: boolean;
-  viewMode: 'mes-vetements' | 'vetements-amis';
+  viewMode?: 'mes-vetements' | 'vetements-amis';
   selectedFriendEmail?: string;
   hideHeading?: boolean;
   className?: string;
+  title?: string;
+  description?: string;
 }
 
 const VetementsPageHeader: React.FC<VetementsPageHeaderProps> = ({
   isAuthenticated,
-  viewMode,
+  viewMode = 'mes-vetements',
   selectedFriendEmail,
   hideHeading = false,
-  className
+  className,
+  title,
+  description
 }) => {
   const navigate = useNavigate();
   
   return (
     <div className={`pt-24 pb-6 bg-accent/10 ${className || ''}`}>
       <div className="container mx-auto px-4">
+        {title && !hideHeading && (
+          <Heading level="h1" className="text-3xl font-bold">{title}</Heading>
+        )}
+        
         {!hideHeading && (
           <Text className="text-muted-foreground max-w-2xl mt-4">
-            {isAuthenticated 
+            {description || (isAuthenticated 
               ? viewMode === 'mes-vetements' 
                 ? "Consultez tous vos vêtements et gérez votre collection." 
                 : selectedFriendEmail 
                   ? `Parcourez les vêtements partagés par ${selectedFriendEmail}.` 
                   : "Parcourez les vêtements partagés par vos amis." 
-              : "Connectez-vous pour voir et gérer vos vêtements."}
+              : "Connectez-vous pour voir et gérer vos vêtements.")}
           </Text>
         )}
         

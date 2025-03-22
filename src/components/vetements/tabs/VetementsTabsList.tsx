@@ -2,19 +2,18 @@
 import React from "react";
 import { TabsList } from "@/components/ui/tabs";
 import { TabsTrigger } from "@/components/ui/tabs";
-import { Shirt, PlusCircle, Layers, Plus } from "lucide-react";
-import { Link } from "react-router-dom";
-import { TabType } from "../VetementsContainer";
+import { Shirt, PlusCircle, Layers, Plus, UserIcon } from "lucide-react";
+import { TabType, TabChangeHandler } from "../types/TabTypes";
 
 interface VetementsTabsListProps {
-  onTabChange?: (value: string) => void;
+  onTabChange?: TabChangeHandler;
   activeTab?: TabType | string;
 }
 
 const VetementsTabsList: React.FC<VetementsTabsListProps> = ({ onTabChange, activeTab }) => {
   const handleTabChange = (value: string) => {
     if (onTabChange) {
-      onTabChange(value);
+      onTabChange(value as TabType);
     }
   };
 
@@ -51,6 +50,14 @@ const VetementsTabsList: React.FC<VetementsTabsListProps> = ({ onTabChange, acti
       >
         <Plus className="mr-2 h-4 w-4" />
         Ajouter une tenue
+      </TabsTrigger>
+      <TabsTrigger 
+        value="vetements-amis" 
+        onClick={() => handleTabChange("vetements-amis")}
+        className="rounded-b-none border-b-2 pb-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+      >
+        <UserIcon className="mr-2 h-4 w-4" />
+        Vêtements Amis
       </TabsTrigger>
     </TabsList>
   );
