@@ -56,6 +56,12 @@ const AjouterEnsemble = () => {
     );
   }
   
+  // Create a complete ModifierEnsembleFormData object to pass to EnsembleFormFields
+  const completeFormData = {
+    ...formData,
+    selectedItems
+  };
+  
   return (
     <Layout>
       <Helmet>
@@ -76,7 +82,7 @@ const AjouterEnsemble = () => {
               
               <div className="space-y-4 mb-6">
                 <EnsembleFormFields
-                  formData={formData}
+                  formData={completeFormData}
                   onChange={handleChange}
                 />
               </div>

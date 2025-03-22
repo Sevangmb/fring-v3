@@ -36,6 +36,8 @@ export const useEnsembleCreation = () => {
       await createEnsemble({
         nom: formData.nom,
         description: formData.description || "Ensemble créé manuellement",
+        occasion: formData.occasion,
+        saison: formData.saison,
         vetements: [
           {
             id: selectedItems.haut!.id,

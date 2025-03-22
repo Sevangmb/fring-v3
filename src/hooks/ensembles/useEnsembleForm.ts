@@ -20,7 +20,9 @@ export const useEnsembleForm = () => {
   
   const [formData, setFormData] = useState({
     nom: `Ensemble du ${new Date().toLocaleDateString()}`,
-    description: ""
+    description: "",
+    occasion: "",
+    saison: ""
   });
   
   const handleItemsSelected = (items: SelectedItems) => {
