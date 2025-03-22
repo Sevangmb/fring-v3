@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/templates/Layout";
 import { Heading, Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, FileText, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchMarques } from "@/services/marqueService";
@@ -11,6 +12,7 @@ import { getVetementById, updateVetement } from "@/services/vetement";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import VetementFormContainer from "@/components/vetements/VetementFormContainer";
 import { VetementFormValues } from "@/components/vetements/schema/VetementFormSchema";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const ModifierVetementPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +24,7 @@ const ModifierVetementPage = () => {
   const [marques, setMarques] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("principal");
 
   // Charger les données nécessaires
   useEffect(() => {
@@ -159,15 +162,44 @@ const ModifierVetementPage = () => {
           </div>
         ) : (
           !error && vetement && (
-            <VetementFormContainer
-              user={user}
-              marques={marques}
-              initialValues={vetement}
-              onSubmit={handleUpdate}
-              submitLabel="Enregistrer les modifications"
-              submitIcon={<Save className="mr-2 h-4 w-4" />}
-              mode="update"
-            />
+            <Tabs defaultValue="principal" value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="mb-6">
+                <TabsTrigger value="principal" className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Informations principales
+                </TabsTrigger>
+                <TabsTrigger value="supplementaire" className="flex items-center gap-2">
+                  <Info className="h-4 w-4" />
+                  Informations supplémentaires
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="principal">
+                <VetementFormContainer
+                  user={user}
+                  marques={marques}
+                  initialValues={vetement}
+                  onSubmit={handleUpdate}
+                  submitLabel="Enregistrer les modifications"
+                  submitIcon={<Save className="mr-2 h-4 w-4" />}
+                  mode="update"
+                  activeTab={activeTab}
+                />
+              </TabsContent>
+              
+              <TabsContent value="supplementaire">
+                <VetementFormContainer
+                  user={user}
+                  marques={marques}
+                  initialValues={vetement}
+                  onSubmit={handleUpdate}
+                  submitLabel="Enregistrer les modifications"
+                  submitIcon={<Save className="mr-2 h-4 w-4" />}
+                  mode="update"
+                  activeTab={activeTab}
+                />
+              </TabsContent>
+            </Tabs>
           )
         )}
       </div>

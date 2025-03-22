@@ -14,25 +14,27 @@ import FormActions from "./FormActions";
 interface VetementFormContainerProps {
   user: any;
   marques: any[];
-  categories?: any[]; // Added this prop to match what's being passed in ModifierVetement.tsx
+  categories?: any[];
   loadingCategories?: boolean;
   initialValues?: VetementFormValues;
   onSubmit?: (data: VetementFormValues) => Promise<void>;
   submitLabel?: string;
   submitIcon?: React.ReactNode;
   mode?: "create" | "update";
+  activeTab?: string;
 }
 
 const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
   user,
   marques,
-  categories, // Added to props
+  categories,
   loadingCategories = false,
   initialValues,
   onSubmit,
   submitLabel,
   submitIcon,
-  mode = "create"
+  mode = "create",
+  activeTab = "principal"
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -154,7 +156,8 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
               form={form}
               marques={marques}
               loading={loading}
-              onCategoriesChange={() => {}} // Pass empty function as default
+              onCategoriesChange={() => {}}
+              activeTab={activeTab}
             />
             
             <FormActions

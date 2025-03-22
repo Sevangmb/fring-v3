@@ -16,6 +16,7 @@ interface VetementFormFieldsProps {
   marques: any[];
   loading: boolean;
   onCategoriesChange?: () => void;
+  activeTab?: string;
 }
 
 /**
@@ -26,29 +27,36 @@ const VetementFormFields: React.FC<VetementFormFieldsProps> = ({
   form,
   marques,
   loading,
-  onCategoriesChange
+  onCategoriesChange,
+  activeTab = "principal"
 }) => {
+  if (activeTab === "principal") {
+    return (
+      <div className="space-y-4">
+        <NomField form={form} />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CategorieField 
+            form={form} 
+            loading={loading}
+            onCategoriesChange={onCategoriesChange}
+          />
+          <CouleurField 
+            form={form} 
+            loading={loading}
+          />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <TailleField form={form} />
+          <MarqueField form={form} marques={marques} />
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="space-y-4">
-      <NomField form={form} />
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <CategorieField 
-          form={form} 
-          loading={loading}
-          onCategoriesChange={onCategoriesChange}
-        />
-        <CouleurField 
-          form={form} 
-          loading={loading}
-        />
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <TailleField form={form} />
-        <MarqueField form={form} marques={marques} />
-      </div>
-      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <TemperatureField form={form} />
         <WeatherTypeField form={form} />
