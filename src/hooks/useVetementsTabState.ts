@@ -16,8 +16,6 @@ export function useVetementsTabState(defaultTab: TabType = 'mes-vetements') {
       setActiveTab("mes-ensembles");
     } else if (location.pathname === "/ensembles/ajouter") {
       setActiveTab("ajouter-ensemble");
-    } else if (location.pathname === "/vetements-amis") {
-      setActiveTab("vetements-amis");
     }
   }, [location.pathname]);
 

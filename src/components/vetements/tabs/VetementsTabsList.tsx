@@ -2,7 +2,7 @@
 import React from "react";
 import { TabsList } from "@/components/ui/tabs";
 import { TabsTrigger } from "@/components/ui/tabs";
-import { Shirt, PlusCircle, Layers, Plus, UserIcon } from "lucide-react";
+import { Shirt, PlusCircle, Layers, Plus } from "lucide-react";
 import { TabType, TabChangeHandler } from "../types/TabTypes";
 
 interface VetementsTabsListProps {
@@ -50,14 +50,6 @@ const VetementsTabsList: React.FC<VetementsTabsListProps> = ({ onTabChange, acti
       >
         <Plus className="mr-2 h-4 w-4" />
         Ajouter une tenue
-      </TabsTrigger>
-      <TabsTrigger 
-        value="vetements-amis" 
-        onClick={() => handleTabChange("vetements-amis")}
-        className="rounded-b-none border-b-2 pb-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-      >
-        <UserIcon className="mr-2 h-4 w-4" />
-        Vêtements Amis
       </TabsTrigger>
     </TabsList>
   );

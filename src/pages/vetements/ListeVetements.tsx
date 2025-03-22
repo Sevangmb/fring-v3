@@ -89,10 +89,6 @@ const ListeVetements = () => {
             <TabsContent value="mes-ensembles">
               <MesEnsembles asTabContent={true} />
             </TabsContent>
-            
-            <TabsContent value="vetements-amis">
-              {/* Contenu pour l'onglet Vêtements Amis */}
-            </TabsContent>
           </VetementsContainer>
         </SearchFilterProvider>
       </div>

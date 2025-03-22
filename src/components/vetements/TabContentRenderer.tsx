@@ -31,10 +31,6 @@ const TabContentRenderer: React.FC<TabContentRendererProps> = ({
       <TabsContent value="ajouter-ensemble">
         {activeTab === "ajouter-ensemble" && <AjouterEnsemble />}
       </TabsContent>
-      
-      <TabsContent value="vetements-amis">
-        {activeTab === "vetements-amis" && children}
-      </TabsContent>
     </>
   );
 };

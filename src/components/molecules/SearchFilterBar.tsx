@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, SlidersHorizontal, TagIcon, Plus, Users } from "lucide-react";
+import { Search, Filter, SlidersHorizontal, TagIcon, Plus } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { useSearchFilter } from '@/contexts/SearchFilterContext';
 
@@ -16,27 +16,18 @@ const SearchFilterBar: React.FC = () => {
     setCategorieFilter,
     marqueFilter,
     setMarqueFilter,
-    friendFilter,
-    setFriendFilter,
-    categories,
-    marques,
-    friends,
-    showFriendFilter,
     resetFilters,
-    currentFriendFilter
+    categories,
+    marques
   } = useSearchFilter();
 
   // Déboguer les états des filtres
   useEffect(() => {
     console.log('SearchFilterBar filters:', {
       categorieFilter,
-      marqueFilter,
-      friendFilter
+      marqueFilter
     });
-  }, [categorieFilter, marqueFilter, friendFilter]);
-
-  // Utiliser la valeur spécifique du filtre d'ami si disponible
-  const effectiveFriendFilter = currentFriendFilter || friendFilter;
+  }, [categorieFilter, marqueFilter]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -59,31 +50,6 @@ const SearchFilterBar: React.FC = () => {
       </div>
       
       <div className="flex gap-2 flex-wrap">
-        {showFriendFilter && (
-          <Select 
-            value={effectiveFriendFilter} 
-            onValueChange={setFriendFilter}
-          >
-            <SelectTrigger className="w-[180px]">
-              <div className="flex items-center">
-                <Users className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="Ami" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les amis</SelectItem>
-              {friends.map((ami) => {
-                const friendId = ami.user_id === ami.ami_id ? ami.ami_id : ami.user_id;
-                return (
-                  <SelectItem key={friendId} value={friendId}>
-                    {ami.email || 'Email inconnu'}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-        )}
-        
         <Select 
           value={categorieFilter} 
           onValueChange={setCategorieFilter}
@@ -135,7 +101,7 @@ const SearchFilterBar: React.FC = () => {
         
         <Button 
           onClick={() => navigate("/mes-vetements/ajouter")}
-          className="hidden md:flex items-center"
+          className="flex items-center"
         >
           <Plus className="mr-2 h-4 w-4" />
           Ajouter
