@@ -7,12 +7,12 @@ import CreateDefiDialog from "@/components/molecules/CreateDefiDialog";
 import { fetchDefis, Defi } from "@/services/defi";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-
 interface DefisTabContentProps {
   isLoading?: boolean;
 }
-
-const DefisTabContent: React.FC<DefisTabContentProps> = ({ isLoading: externalLoading }) => {
+const DefisTabContent: React.FC<DefisTabContentProps> = ({
+  isLoading: externalLoading
+}) => {
   const [defis, setDefis] = useState<Defi[]>([]);
   const [isLoading, setIsLoading] = useState(externalLoading || false);
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
@@ -23,7 +23,6 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({ isLoading: externalLo
     const now = new Date();
     const startDate = new Date(defi.date_debut);
     const endDate = new Date(defi.date_fin);
-    
     if (endDate < now) return "past";
     if (startDate > now) return "upcoming";
     return "current";
@@ -31,7 +30,11 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({ isLoading: externalLo
 
   // Format date range
   const formatDateRange = (startDate: string, endDate: string) => {
-    return `Du ${format(new Date(startDate), 'dd MMM', { locale: fr })} au ${format(new Date(endDate), 'dd MMM yyyy', { locale: fr })}`;
+    return `Du ${format(new Date(startDate), 'dd MMM', {
+      locale: fr
+    })} au ${format(new Date(endDate), 'dd MMM yyyy', {
+      locale: fr
+    })}`;
   };
 
   // Group defis by type
@@ -58,70 +61,40 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({ isLoading: externalLo
       }
     }
   }, [externalLoading]);
-
   useEffect(() => {
     loadDefis();
   }, [loadDefis, refreshTrigger]);
-
   const handleDefiCreated = () => {
     setRefreshTrigger(prev => prev + 1);
   };
-
   const handleParticipation = () => {
     setRefreshTrigger(prev => prev + 1);
   };
-
-  return (
-    <div className="space-y-8">
+  return <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Les Défis</h2>
+          
           <Text className="text-muted-foreground">
             Participez aux défis de la communauté et montrez votre style
           </Text>
         </div>
-        <Button onClick={() => setOpenCreateDialog(true)}>
-          <PlusCircle className="mr-2 h-4 w-4" /> Créer un défi
-        </Button>
+        
       </div>
 
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-64 rounded-lg border border-border animate-pulse bg-muted/50"
-            />
-          ))}
-        </div>
-      ) : (
-        <>
+      {isLoading ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map(i => <div key={i} className="h-64 rounded-lg border border-border animate-pulse bg-muted/50" />)}
+        </div> : <>
           {/* Défis en cours */}
           <section>
             <div className="flex items-center gap-2 mb-4">
               <Flag className="h-5 w-5 text-primary" />
               <h3 className="text-xl font-semibold">Défis en cours</h3>
             </div>
-            {groupedDefis.current?.length ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {groupedDefis.current.map((defi) => (
-                  <DefiCard
-                    key={defi.id}
-                    id={defi.id}
-                    title={defi.titre}
-                    description={defi.description}
-                    dateRange={formatDateRange(defi.date_debut, defi.date_fin)}
-                    type="current"
-                    participantsCount={defi.participants_count}
-                    onParticipation={handleParticipation}
-                  />
-                ))}
-              </div>
-            ) : (
-              <Text className="text-muted-foreground italic">
+            {groupedDefis.current?.length ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {groupedDefis.current.map(defi => <DefiCard key={defi.id} id={defi.id} title={defi.titre} description={defi.description} dateRange={formatDateRange(defi.date_debut, defi.date_fin)} type="current" participantsCount={defi.participants_count} onParticipation={handleParticipation} />)}
+              </div> : <Text className="text-muted-foreground italic">
                 Aucun défi en cours pour le moment
-              </Text>
-            )}
+              </Text>}
           </section>
 
           {/* Défis à venir */}
@@ -130,25 +103,11 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({ isLoading: externalLo
               <Calendar className="h-5 w-5 text-secondary" />
               <h3 className="text-xl font-semibold">Défis à venir</h3>
             </div>
-            {groupedDefis.upcoming?.length ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {groupedDefis.upcoming.map((defi) => (
-                  <DefiCard
-                    key={defi.id}
-                    id={defi.id}
-                    title={defi.titre}
-                    description={defi.description}
-                    dateRange={formatDateRange(defi.date_debut, defi.date_fin)}
-                    type="upcoming"
-                    icon={<Calendar className="h-5 w-5" />}
-                  />
-                ))}
-              </div>
-            ) : (
-              <Text className="text-muted-foreground italic">
+            {groupedDefis.upcoming?.length ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {groupedDefis.upcoming.map(defi => <DefiCard key={defi.id} id={defi.id} title={defi.titre} description={defi.description} dateRange={formatDateRange(defi.date_debut, defi.date_fin)} type="upcoming" icon={<Calendar className="h-5 w-5" />} />)}
+              </div> : <Text className="text-muted-foreground italic">
                 Aucun défi à venir pour le moment
-              </Text>
-            )}
+              </Text>}
           </section>
 
           {/* Défis passés */}
@@ -157,37 +116,15 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({ isLoading: externalLo
               <Trophy className="h-5 w-5 text-muted-foreground" />
               <h3 className="text-xl font-semibold">Défis passés</h3>
             </div>
-            {groupedDefis.past?.length ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {groupedDefis.past.map((defi) => (
-                  <DefiCard
-                    key={defi.id}
-                    id={defi.id}
-                    title={defi.titre}
-                    description={defi.description}
-                    dateRange={formatDateRange(defi.date_debut, defi.date_fin)}
-                    type="past"
-                    icon={<Trophy className="h-5 w-5" />}
-                    participantsCount={defi.participants_count}
-                  />
-                ))}
-              </div>
-            ) : (
-              <Text className="text-muted-foreground italic">
+            {groupedDefis.past?.length ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {groupedDefis.past.map(defi => <DefiCard key={defi.id} id={defi.id} title={defi.titre} description={defi.description} dateRange={formatDateRange(defi.date_debut, defi.date_fin)} type="past" icon={<Trophy className="h-5 w-5" />} participantsCount={defi.participants_count} />)}
+              </div> : <Text className="text-muted-foreground italic">
                 Aucun défi passé pour le moment
-              </Text>
-            )}
+              </Text>}
           </section>
-        </>
-      )}
+        </>}
 
-      <CreateDefiDialog
-        open={openCreateDialog}
-        onOpenChange={setOpenCreateDialog}
-        onDefiCreated={handleDefiCreated}
-      />
-    </div>
-  );
+      <CreateDefiDialog open={openCreateDialog} onOpenChange={setOpenCreateDialog} onDefiCreated={handleDefiCreated} />
+    </div>;
 };
-
 export default DefisTabContent;

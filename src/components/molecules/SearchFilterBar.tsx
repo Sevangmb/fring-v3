@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,6 @@ import { Search, Filter, SlidersHorizontal, TagIcon, Plus } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { useSearchFilter } from '@/contexts/SearchFilterContext';
 import { useCategories } from '@/hooks/useCategories';
-
 const SearchFilterBar: React.FC = () => {
   const navigate = useNavigate();
   const {
@@ -33,15 +31,12 @@ const SearchFilterBar: React.FC = () => {
       availableCategories: categories
     });
   }, [categorieFilter, marqueFilter, categories]);
-  
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
-  
   const handleResetFilters = () => {
     resetFilters();
   };
-  
   return <div className="flex flex-col md:flex-row gap-4 mb-8">
       <div className="relative flex-grow">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -73,15 +68,9 @@ const SearchFilterBar: React.FC = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Toutes</SelectItem>
-            {marques.map(marque => {
-              // Handle both string marques and marque objects
-              const marqueValue = typeof marque === 'string' ? marque : (marque as any).nom;
-              return (
-                <SelectItem key={marqueValue} value={marqueValue}>
-                  {marqueValue}
-                </SelectItem>
-              );
-            })}
+            {marques.map(marque => <SelectItem key={marque} value={marque}>
+                {marque}
+              </SelectItem>)}
           </SelectContent>
         </Select>
         
@@ -89,6 +78,8 @@ const SearchFilterBar: React.FC = () => {
           <SlidersHorizontal className="mr-2 h-4 w-4" />
           Réinitialiser
         </Button>
+        
+        
       </div>
     </div>;
 };
