@@ -37,12 +37,12 @@ const EnsembleFormFields: React.FC<EnsembleFormFieldsProps> = ({ formData, onCha
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label htmlFor="occasion">Occasion</Label>
-          <Select value={formData.occasion} onValueChange={value => onChange('occasion', value)}>
+          <Select value={formData.occasion || "none"} onValueChange={value => onChange('occasion', value === "none" ? "" : value)}>
             <SelectTrigger id="occasion">
               <SelectValue placeholder="Choisir une occasion" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Aucune</SelectItem>
+              <SelectItem value="none">Aucune</SelectItem>
               <SelectItem value="Casual">Casual</SelectItem>
               <SelectItem value="Sport">Sport</SelectItem>
               <SelectItem value="Formel">Formel</SelectItem>
@@ -54,12 +54,12 @@ const EnsembleFormFields: React.FC<EnsembleFormFieldsProps> = ({ formData, onCha
         
         <div>
           <Label htmlFor="saison">Saison</Label>
-          <Select value={formData.saison} onValueChange={value => onChange('saison', value)}>
+          <Select value={formData.saison || "none"} onValueChange={value => onChange('saison', value === "none" ? "" : value)}>
             <SelectTrigger id="saison">
               <SelectValue placeholder="Choisir une saison" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Aucune</SelectItem>
+              <SelectItem value="none">Aucune</SelectItem>
               <SelectItem value="Printemps">Printemps</SelectItem>
               <SelectItem value="Été">Été</SelectItem>
               <SelectItem value="Automne">Automne</SelectItem>

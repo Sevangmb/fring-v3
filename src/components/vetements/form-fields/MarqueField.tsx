@@ -20,7 +20,7 @@ const MarqueField: React.FC<MarqueFieldProps> = ({ form, marques }) => {
           <FormLabel>Marque</FormLabel>
           <Select 
             onValueChange={field.onChange} 
-            defaultValue={field.value}
+            defaultValue={field.value || "none"}
           >
             <FormControl>
               <SelectTrigger>
@@ -28,6 +28,7 @@ const MarqueField: React.FC<MarqueFieldProps> = ({ form, marques }) => {
               </SelectTrigger>
             </FormControl>
             <SelectContent>
+              <SelectItem value="none">Aucune marque</SelectItem>
               {marques.length > 0 ? (
                 marques.map((marque) => (
                   <SelectItem key={marque.id} value={marque.nom}>
