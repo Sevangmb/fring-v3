@@ -4,8 +4,8 @@ import Layout from "@/components/templates/Layout";
 import { Helmet } from "react-helmet";
 import { useAuth } from "@/contexts/AuthContext";
 import VetementsPageHeader from "@/components/molecules/VetementsPageHeader";
-import { Text } from "@/components/atoms/Typography";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Text, Heading } from "@/components/atoms/Typography";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -14,7 +14,7 @@ import { Vetement } from "@/services/vetement/types";
 import { VetementType } from "@/services/meteo/tenue";
 import { createEnsemble } from "@/services/ensembleService";
 import { fetchVetements } from "@/services/vetement";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowRight, ListPlus } from "lucide-react";
 import { initializeEnsembleData } from "@/services/database/ensembleInitialization";
 
 const AjouterEnsemble = () => {
@@ -121,7 +121,7 @@ const AjouterEnsemble = () => {
   return (
     <Layout>
       <Helmet>
-        <title>Ajouter un Ensemble | Garde-Robe</title>
+        <title>Créer un Ensemble | Garde-Robe</title>
         <meta name="description" content="Créez un nouvel ensemble de vêtements" />
       </Helmet>
       
@@ -130,54 +130,69 @@ const AjouterEnsemble = () => {
         viewMode="mes-vetements"
       />
       
-      <div className="container max-w-xl mx-auto px-4 py-4">
-        <Card className="w-full shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Composer un Ensemble</CardTitle>
-            <Text variant="subtle" className="text-sm">Sélectionnez vos vêtements pour créer votre ensemble.</Text>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              </div>
-            ) : vetements.length === 0 ? (
-              <div className="text-center py-8">
-                <Text>Vous n'avez pas encore de vêtements.</Text>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="mb-8 text-center">
+            <Heading className="text-2xl md:text-3xl mb-2">Composer votre Ensemble</Heading>
+            <Text variant="subtle" className="text-sm max-w-md mx-auto">
+              Sélectionnez un haut, un bas et des chaussures pour créer votre tenue personnalisée.
+            </Text>
+          </div>
+          
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-16 bg-muted/30 rounded-lg">
+              <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+              <Text>Chargement de vos vêtements...</Text>
+            </div>
+          ) : vetements.length === 0 ? (
+            <Card className="text-center py-12 shadow-md border-primary/10">
+              <CardContent className="flex flex-col items-center space-y-4">
+                <ListPlus className="h-16 w-16 text-muted-foreground mb-2" />
+                <Heading className="text-xl">Vous n'avez pas encore de vêtements</Heading>
+                <Text className="text-muted-foreground mb-4 max-w-md">
+                  Ajoutez d'abord quelques vêtements à votre garde-robe pour pouvoir créer des ensembles.
+                </Text>
                 <Button 
-                  className="mt-4" 
+                  size="lg"
                   onClick={() => navigate("/mes-vetements/ajouter")}
+                  className="gap-2"
                 >
                   Ajouter un vêtement
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="shadow-lg border-primary/10 overflow-hidden">
+              <div className="bg-gradient-to-r from-primary/5 to-accent/10 p-4 border-b">
+                <Heading className="text-lg text-center">Votre Collection</Heading>
               </div>
-            ) : (
-              <>
+              <CardContent className="p-6">
                 <EnsembleCreator 
                   vetements={vetements} 
                   onItemsSelected={setSelectedItems} 
                   selectedItems={selectedItems}
                 />
                 
-                <div className="flex justify-end mt-6">
+                <div className="flex justify-center mt-8 pt-4 border-t">
                   <Button 
-                    size="sm"
-                    className="px-4" 
+                    size="lg"
+                    className="gap-2 px-6 min-w-40" 
                     onClick={handleCreateEnsemble} 
                     disabled={creating || !selectedItems.haut || !selectedItems.bas || !selectedItems.chaussures}
                   >
                     {creating ? (
                       <>
-                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Création...
                       </>
                     ) : "Créer cet ensemble"}
                   </Button>
                 </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </Layout>
   );

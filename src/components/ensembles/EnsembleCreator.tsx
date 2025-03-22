@@ -6,6 +6,8 @@ import { determinerTypeVetement } from '@/services/meteo/tenue';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import VetementCarouselItem from './VetementCarouselItem';
 import { Shirt, ShoppingBag, Footprints } from 'lucide-react';
+import { Text } from '@/components/atoms/Typography';
+import { Separator } from '@/components/ui/separator';
 
 interface EnsembleCreatorProps {
   vetements: Vetement[];
@@ -85,35 +87,39 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
     icon: React.ReactNode, 
     label: string
   ) => {
-    const isSelected = selectedItems[type]?.id;
-    
     return (
-      <div className="space-y-1">
-        <div className="flex items-center gap-1 border-b pb-1">
-          {icon}
-          <h3 className="text-xs font-medium">{label} ({items.length})</h3>
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="bg-primary/10 rounded-full p-1.5">
+            {icon}
+          </div>
+          <Text className="font-medium">{label}</Text>
+          <Text className="text-sm text-muted-foreground ml-1">({items.length})</Text>
+          <Separator className="flex-grow ml-2" />
         </div>
         
         {items.length === 0 ? (
-          <div className="text-center py-1 bg-muted/30 rounded-lg">
-            <p className="text-xs text-muted-foreground">Aucun {label.toLowerCase()} disponible</p>
+          <div className="text-center py-6 bg-muted/30 rounded-lg border border-dashed border-muted">
+            <Text className="text-muted-foreground">Aucun {label.toLowerCase()} disponible</Text>
           </div>
         ) : (
-          <Carousel className="w-full max-w-xs mx-auto">
-            <CarouselContent>
-              {items.map((item) => (
-                <CarouselItem key={item.id} className="basis-full">
-                  <VetementCarouselItem 
-                    vetement={item} 
-                    isSelected={selectedItems[type]?.id === item.id}
-                    onSelect={() => handleSelectItem(type, item)}
-                    compact={true}
-                  />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="-left-3 h-6 w-6" />
-            <CarouselNext className="-right-3 h-6 w-6" />
+          <Carousel className="w-full mx-auto">
+            <div className="relative">
+              <CarouselContent>
+                {items.map((item) => (
+                  <CarouselItem key={item.id} className="basis-1/2 md:basis-1/3 lg:basis-1/4 p-1">
+                    <VetementCarouselItem 
+                      vetement={item} 
+                      isSelected={selectedItems[type]?.id === item.id}
+                      onSelect={() => handleSelectItem(type, item)}
+                      compact={false}
+                    />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="-left-3 h-8 w-8" />
+              <CarouselNext className="-right-3 h-8 w-8" />
+            </div>
           </Carousel>
         )}
       </div>
@@ -121,25 +127,25 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
   };
 
   return (
-    <div className="space-y-3 py-1">
+    <div className="space-y-2">
       {renderCarousel(
         categorizedVetements.hauts, 
         'haut', 
-        <Shirt className="h-3 w-3 text-primary" />, 
+        <Shirt className="h-4 w-4 text-primary" />, 
         'Hauts'
       )}
 
       {renderCarousel(
         categorizedVetements.bas, 
         'bas', 
-        <ShoppingBag className="h-3 w-3 text-primary" />, 
+        <ShoppingBag className="h-4 w-4 text-primary" />, 
         'Bas'
       )}
 
       {renderCarousel(
         categorizedVetements.chaussures, 
         'chaussures', 
-        <Footprints className="h-3 w-3 text-primary" />, 
+        <Footprints className="h-4 w-4 text-primary" />, 
         'Chaussures'
       )}
     </div>
