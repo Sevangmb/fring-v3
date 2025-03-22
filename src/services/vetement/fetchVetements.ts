@@ -46,6 +46,7 @@ export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]>
       console.log('Récupération des vêtements pour l\'ami spécifique:', friendId);
       
       try {
+        // Utiliser la fonction RPC en spécifiant clairement le nom de la fonction
         const { data, error } = await supabase
           .rpc('get_specific_friend_clothes', { friend_id_param: friendId });
         
@@ -69,6 +70,7 @@ export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]>
       // Pour 'all' ou undefined, utiliser la fonction get_friends_clothes
       console.log('Récupération des vêtements de tous les amis');
       try {
+        // Utiliser la fonction RPC sans paramètres supplémentaires
         const { data, error } = await supabase
           .rpc('get_friends_clothes');
         
