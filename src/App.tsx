@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,6 +20,7 @@ import ModifierVetement from "./pages/vetements/ModifierVetement";
 import MesAmis from "./pages/MesAmis";
 import Messages from "./pages/Messages";
 import About from "./pages/About";
+import MiesPage from "./pages/Mies";
 
 // Create a new query client instance
 const queryClient = new QueryClient({
@@ -53,6 +53,7 @@ const App = () => {
               <Route path="/mes-amis" element={<MesAmis />} />
               <Route path="/messages" element={<Messages />} />
               <Route path="/messages/:friendId" element={<Messages />} />
+              <Route path="/mies" element={<MiesPage />} />
               <Route path="/about" element={<About />} />
               
               {/* Protected Routes */}
