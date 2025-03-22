@@ -15,7 +15,7 @@ const NavLinks: React.FC<NavLinksProps> = ({ unreadCount, user }) => {
     { href: "/", label: "Home" },
     { href: "/mes-vetements", label: "Mes Vêtements" },
     { href: "/mes-amis", label: "Mes Amis" },
-    { href: "/about", label: "About" },
+    { href: "/about", label: "Fring" },
   ];
 
   return (
