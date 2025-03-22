@@ -22,9 +22,13 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
   const { filteredAmis, loadingAmis, chargerAmis } = useAmis();
   const {
     searchTerm,
+    setSearchTerm,
     categorieFilter,
+    setCategorieFilter,
     marqueFilter,
+    setMarqueFilter,
     friendFilter,
+    setFriendFilter,
     activeTab,
     setActiveTab,
     viewMode,
@@ -64,6 +68,7 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
   useEffect(() => {
     if (viewMode === 'vetements-amis') {
       if (friendFilter !== "all") {
+        console.log("Mise à jour du filtre d'ami:", friendFilter);
         const selectedFriend = acceptedFriends.find(ami => 
           (ami.user_id === ami.ami_id ? ami.ami_id : ami.user_id) === friendFilter
         );

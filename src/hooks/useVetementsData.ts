@@ -59,6 +59,7 @@ export function useVetementsData(
         } else {
           // Si on a sélectionné un ami spécifique, on passe son ID
           const friendIdParam = friendFilter !== "all" ? friendFilter : undefined;
+          console.log("Récupération des vêtements avec le filtre ami:", friendIdParam);
           vetementsData = await fetchVetementsAmis(friendIdParam);
         }
         

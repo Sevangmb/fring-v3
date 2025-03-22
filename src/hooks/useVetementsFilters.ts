@@ -38,7 +38,7 @@ export function useVetementsFilters() {
       const matchesActiveTab = activeTab === "tous" 
         ? true 
         : getCategoryNameById(categories, vetement.categorie_id) === activeTab;
-      
+
       return matchesSearch && matchesCategorie && matchesMarque && matchesActiveTab;
     });
   };
