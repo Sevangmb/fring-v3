@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Tabs } from "@/components/ui/tabs";
 import VetementsTabsList from "./tabs/VetementsTabsList";
 
-export type TabType = 'mes-vetements' | 'ajouter-vetement' | 'mes-ensembles' | 'ajouter-ensemble' | 'vetements-amis';
+export type TabType = 'mes-vetements' | 'ajouter-vetement' | 'mes-ensembles' | 'ajouter-ensemble' | 'vetements-amis' | 'mes-tenues';
 
 interface VetementsContainerProps {
   defaultTab?: TabType;
@@ -49,6 +49,8 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
       navigate("/ensembles/ajouter");
     } else if (value === "vetements-amis") {
       navigate("/vetements-amis");
+    } else if (value === "mes-tenues") {
+      navigate("/ensembles");
     }
   };
 

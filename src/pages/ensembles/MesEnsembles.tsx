@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TabsContent } from "@/components/ui/tabs";
-import VetementsContainer from "@/components/vetements/VetementsContainer";
+import VetementsContainer, { TabType } from "@/components/vetements/VetementsContainer";
 
 interface MesEnsemblesProps {
   asTabContent?: boolean;
@@ -139,8 +139,8 @@ const MesEnsembles: React.FC<MesEnsemblesProps> = ({ asTabContent = false }) => 
       />
       
       <div className="container mx-auto px-4 py-6">
-        <VetementsContainer defaultTab="mes-tenues">
-          <TabsContent value="mes-tenues">
+        <VetementsContainer defaultTab="mes-ensembles">
+          <TabsContent value="mes-ensembles">
             {ensemblesContent}
           </TabsContent>
         </VetementsContainer>

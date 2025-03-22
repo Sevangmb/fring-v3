@@ -4,8 +4,7 @@ import { TabsList } from "@/components/ui/tabs";
 import { TabsTrigger } from "@/components/ui/tabs";
 import { Shirt, PlusCircle, Layers, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
-
-export type TabType = 'mes-vetements' | 'ajouter-vetement' | 'mes-ensembles' | 'ajouter-ensemble' | 'vetements-amis';
+import { TabType } from "../VetementsContainer";
 
 interface VetementsTabsListProps {
   onTabChange?: (value: string) => void;
