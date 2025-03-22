@@ -1,13 +1,16 @@
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
+import { Categorie } from "@/services/categorieService";
 
 interface AddCategoryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddCategory: (categoryName: string) => Promise<void>;
+  onAddCategory: (categoryName: string) => Promise<Categorie | void>;
   addingCategory: boolean;
 }
 
@@ -17,46 +20,67 @@ export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
   onAddCategory,
   addingCategory
 }) => {
-  const [newCategoryValue, setNewCategoryValue] = useState('');
+  const [categoryName, setCategoryName] = useState("");
+  const [error, setError] = useState("");
 
   const handleAddCategory = async () => {
-    if (!newCategoryValue.trim()) return;
-    
-    try {
-      await onAddCategory(newCategoryValue);
-      setNewCategoryValue('');
-    } catch (error) {
-      console.error("Error adding category:", error);
+    if (!categoryName.trim()) {
+      setError("Le nom de la catégorie est requis");
+      return;
     }
+
+    setError("");
+
+    try {
+      await onAddCategory(categoryName.trim());
+      setCategoryName("");
+    } catch (err) {
+      console.error("Erreur lors de l'ajout de la catégorie:", err);
+      setError("Une erreur est survenue lors de l'ajout de la catégorie");
+    }
+  };
+
+  const handleClose = () => {
+    setCategoryName("");
+    setError("");
+    onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Ajouter une nouvelle catégorie</DialogTitle>
-          <DialogDescription>
-            Entrez le nom de la nouvelle catégorie de vêtement.
-          </DialogDescription>
         </DialogHeader>
-        <Input
-          placeholder="Nom de la catégorie"
-          value={newCategoryValue}
-          onChange={(e) => setNewCategoryValue(e.target.value)}
-        />
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="categoryName">Nom de la catégorie</Label>
+            <Input
+              id="categoryName"
+              value={categoryName}
+              onChange={(e) => setCategoryName(e.target.value)}
+              placeholder="Entrez le nom de la catégorie"
+              disabled={addingCategory}
+              autoFocus
+            />
+            {error && (
+              <p className="text-sm text-destructive">{error}</p>
+            )}
+          </div>
+        </div>
         <DialogFooter>
-          <Button 
-            variant="outline" 
-            onClick={() => onOpenChange(false)}
-            disabled={addingCategory}
-          >
+          <Button variant="outline" onClick={handleClose} disabled={addingCategory}>
             Annuler
           </Button>
-          <Button 
-            onClick={handleAddCategory}
-            disabled={addingCategory || !newCategoryValue.trim()}
-          >
-            {addingCategory ? "Ajout en cours..." : "Ajouter"}
+          <Button onClick={handleAddCategory} disabled={addingCategory || !categoryName.trim()}>
+            {addingCategory ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Ajout en cours...
+              </>
+            ) : (
+              "Ajouter"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

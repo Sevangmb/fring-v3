@@ -17,6 +17,8 @@ interface SearchFilterContextType {
   marques: string[];
   friends: any[];
   showFriendFilter: boolean;
+  onFriendFilterChange?: (friendId: string) => void;
+  currentFriendFilter?: string;
 }
 
 const SearchFilterContext = createContext<SearchFilterContextType | undefined>(undefined);
@@ -27,6 +29,8 @@ interface SearchFilterProviderProps {
   marques?: string[];
   friends?: any[];
   showFriendFilter?: boolean;
+  onFriendFilterChange?: (friendId: string) => void;
+  currentFriendFilter?: string;
 }
 
 export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
@@ -34,12 +38,14 @@ export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
   categories: initialCategories,
   marques: initialMarques = [],
   friends: initialFriends = [],
-  showFriendFilter = false
+  showFriendFilter = false,
+  onFriendFilterChange,
+  currentFriendFilter = 'all'
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categorieFilter, setCategorieFilter] = useState('all');
   const [marqueFilter, setMarqueFilter] = useState('all');
-  const [friendFilter, setFriendFilter] = useState('all');
+  const [friendFilter, setFriendFilter] = useState(currentFriendFilter);
   
   // Utiliser le hook useCategories pour récupérer les catégories de la base de données
   const { categories: dbCategories, loadingCategories } = useCategories();
@@ -72,11 +78,35 @@ export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
     }
   }, [initialFriends]);
 
+  // Mise à jour du friendFilter lorsque currentFriendFilter change
+  useEffect(() => {
+    if (currentFriendFilter) {
+      setFriendFilter(currentFriendFilter);
+    }
+  }, [currentFriendFilter]);
+
+  // Appel de onFriendFilterChange lorsque friendFilter change
+  useEffect(() => {
+    if (onFriendFilterChange && friendFilter !== currentFriendFilter) {
+      onFriendFilterChange(friendFilter);
+    }
+  }, [friendFilter, onFriendFilterChange, currentFriendFilter]);
+
+  const handleSetFriendFilter = (value: string) => {
+    setFriendFilter(value);
+    if (onFriendFilterChange) {
+      onFriendFilterChange(value);
+    }
+  };
+
   const resetFilters = () => {
     setSearchTerm('');
     setCategorieFilter('all');
     setMarqueFilter('all');
     setFriendFilter('all');
+    if (onFriendFilterChange) {
+      onFriendFilterChange('all');
+    }
   };
 
   return (
@@ -89,12 +119,14 @@ export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
         marqueFilter,
         setMarqueFilter,
         friendFilter,
-        setFriendFilter,
+        setFriendFilter: handleSetFriendFilter,
         resetFilters,
         categories,
         marques,
         friends,
-        showFriendFilter
+        showFriendFilter,
+        onFriendFilterChange,
+        currentFriendFilter
       }}
     >
       {children}

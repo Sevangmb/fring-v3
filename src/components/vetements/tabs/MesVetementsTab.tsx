@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import VetementCard from "@/components/molecules/VetementCard";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,10 +14,12 @@ interface MesVetementsTabProps {
   categories: Categorie[];
   marques: any[];
   acceptedFriends?: any[];
+  activeTab?: string;
   isLoading?: boolean;
   error?: string | null;
   isAuthenticated?: boolean;
   onVetementDeleted?: (id: number) => void;
+  onTabChange?: (value: string) => void;
   hideTitle?: boolean;
 }
 
@@ -26,16 +27,17 @@ const MesVetementsTab: React.FC<MesVetementsTabProps> = ({
   vetements,
   marques,
   acceptedFriends = [],
+  activeTab,
   isLoading = false,
   error = null,
   isAuthenticated = false,
   onVetementDeleted,
+  onTabChange,
   hideTitle = false
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
   
-  // Utilisation du hook useCategories pour récupérer les catégories de la base de données
   const { categories, loadingCategories } = useCategories();
   
   useEffect(() => {
