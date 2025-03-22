@@ -36,13 +36,23 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     form.setValue('categorie_id', 0);
   };
 
+  // Fonction pour ouvrir la boîte de dialogue de sélection de fichier
+  const handleOpenFileSelector = (e: React.MouseEvent) => {
+    // Empêcher le comportement par défaut (soumission du formulaire)
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Ouvrir la boîte de dialogue de sélection de fichier
+    fileInputRef.current?.click();
+  };
+
   return (
     <div className="flex flex-col items-center w-full">
       <div className="w-full mb-4">
         <ImagePreviewArea 
           imagePreview={imagePreview}
           loading={loading}
-          onClick={() => fileInputRef.current?.click()}
+          onClick={handleOpenFileSelector}
           onDelete={imagePreview ? handleDeleteImage : undefined}
           onDetect={imagePreview ? detectImage : undefined}
           detectingColor={loading}
