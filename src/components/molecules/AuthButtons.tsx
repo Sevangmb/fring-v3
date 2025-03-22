@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, LogOut, User } from "lucide-react";
+import { ChevronDown, LogOut, User, LayoutDashboard } from "lucide-react";
 
 interface AuthButtonsProps {
   user: any;
@@ -23,6 +23,7 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({ user }) => {
   const handleLogin = () => navigate("/login");
   const handleSignUp = () => navigate("/register");
   const handleProfile = () => navigate("/profile");
+  const handleDashboard = () => navigate("/dashboard");
   const handleLogout = async () => {
     await signOut();
     navigate("/");
@@ -44,7 +45,7 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({ user }) => {
   if (user) {
     return (
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+        <DropdownMenuTrigger className="focus:outline-none">
           <Button 
             variant="ghost" 
             size="sm"
@@ -60,6 +61,10 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({ user }) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={handleDashboard}>
+            <LayoutDashboard className="mr-2 h-4 w-4" />
+            Tableau de bord
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={handleProfile}>
             <User className="mr-2 h-4 w-4" />
             Profil

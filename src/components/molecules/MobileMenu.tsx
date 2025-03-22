@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, LayoutDashboard } from "lucide-react";
 import NavItem from "./NavItem";
 import Button from "../atoms/Button";
 import NavLinks from "./NavLinks";
@@ -28,6 +28,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
   const handleLogin = () => navigate("/login");
   const handleSignUp = () => navigate("/register");
   const handleProfile = () => navigate("/profile");
+  const handleDashboard = () => navigate("/dashboard");
   const handleLogout = async () => {
     await signOut();
     navigate("/");
@@ -48,6 +49,14 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
           <div className="mt-6 space-y-3">
             {user ? (
               <>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-center flex items-center gap-2" 
+                  onClick={handleDashboard}
+                >
+                  <LayoutDashboard size={18} />
+                  Tableau de bord
+                </Button>
                 <Button 
                   variant="outline" 
                   className="w-full justify-center flex items-center gap-2" 

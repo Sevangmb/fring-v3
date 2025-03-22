@@ -18,11 +18,6 @@ const NavLinks: React.FC<NavLinksProps> = ({ unreadCount, user }) => {
     { href: "/about", label: "About" },
   ];
 
-  // Liens supplémentaires pour les utilisateurs connectés
-  const authLinks = user ? [
-    { href: "/dashboard", label: "Tableau de bord" },
-  ] : [];
-
   return (
     <>
       {navLinks.map((link) => (
@@ -31,16 +26,6 @@ const NavLinks: React.FC<NavLinksProps> = ({ unreadCount, user }) => {
           href={link.href}
           label={link.label}
           isActive={location.pathname === link.href}
-        />
-      ))}
-      
-      {/* Liens authentifiés */}
-      {user && authLinks.map((link) => (
-        <NavItem
-          key={link.href}
-          href={link.href}
-          label={link.label}
-          isActive={location.pathname.startsWith(link.href)}
         />
       ))}
     </>
