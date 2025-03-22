@@ -13,7 +13,12 @@ export function useVetementsTabState(defaultTab: TabType = 'mes-favoris') {
     if (location.pathname === "/mes-vetements") {
       // Don't override when pathname is /mes-vetements but there's a state with activeTab
       if (!location.state?.activeTab) {
-        setActiveTab("mes-favoris");
+        setActiveTab("mes-vetements");
+      }
+    } else if (location.pathname === "/ensembles") {
+      // Similar logic for the ensembles path
+      if (!location.state?.activeTab) {
+        setActiveTab("mes-ensembles");
       }
     }
   }, [location.pathname, location.state]);
