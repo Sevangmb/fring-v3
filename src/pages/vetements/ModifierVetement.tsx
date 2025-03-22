@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/templates/Layout";
 import { Heading, Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Loader2, FileText, Info } from "lucide-react";
+import { ArrowLeft, Save, Loader2, FileText, Info, Tag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchMarques } from "@/services/marqueService";
@@ -172,6 +172,10 @@ const ModifierVetementPage = () => {
                   <Info className="h-4 w-4" />
                   Informations supplémentaires
                 </TabsTrigger>
+                <TabsTrigger value="etiquette" className="flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  Étiquette
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="principal">
@@ -188,6 +192,19 @@ const ModifierVetementPage = () => {
               </TabsContent>
               
               <TabsContent value="supplementaire">
+                <VetementFormContainer
+                  user={user}
+                  marques={marques}
+                  initialValues={vetement}
+                  onSubmit={handleUpdate}
+                  submitLabel="Enregistrer les modifications"
+                  submitIcon={<Save className="mr-2 h-4 w-4" />}
+                  mode="update"
+                  activeTab={activeTab}
+                />
+              </TabsContent>
+              
+              <TabsContent value="etiquette">
                 <VetementFormContainer
                   user={user}
                   marques={marques}
