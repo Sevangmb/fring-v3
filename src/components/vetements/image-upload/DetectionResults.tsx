@@ -18,6 +18,14 @@ const DetectionResults: React.FC<DetectionResultsProps> = ({
   currentStep,
   loading
 }) => {
+  if (loading) {
+    return (
+      <div className="mt-3 p-3 bg-primary/10 rounded-md">
+        <p className="text-primary text-sm">Analyse en cours...</p>
+      </div>
+    );
+  }
+  
   if (!error && (!steps || steps.length === 0) && !currentStep) {
     return null;
   }
