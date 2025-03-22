@@ -5,10 +5,12 @@ import { VetementType } from '@/services/meteo/tenue';
 import { determinerTypeVetement } from '@/services/meteo/tenue';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import VetementCarouselItem from './VetementCarouselItem';
-import { Shirt, ShoppingBag, Footprints } from 'lucide-react';
+import { Shirt, ShoppingBag, Footprints, User, Users } from 'lucide-react';
 import { Text } from '@/components/atoms/Typography';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { fetchVetementsAmis } from '@/services/vetement';
 
 interface EnsembleCreatorProps {
   vetements: Vetement[];
@@ -23,6 +25,11 @@ interface EnsembleCreatorProps {
     chaussures: Vetement | null;
   }) => void;
   showOwner?: boolean;
+}
+
+interface Owner {
+  id: string;
+  name: string;
 }
 
 const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({ 
@@ -41,6 +48,48 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
     chaussures: []
   });
 
+  // État pour suivre les propriétaires uniques
+  const [owners, setOwners] = useState<Owner[]>([
+    { id: 'me', name: 'Mes vêtements' }
+  ]);
+
+  // État pour suivre la sélection du propriétaire pour chaque catégorie
+  const [selectedOwners, setSelectedOwners] = useState({
+    haut: 'me',
+    bas: 'me',
+    chaussures: 'me'
+  });
+
+  // Vêtements filtrés par propriétaire pour chaque catégorie
+  const [filteredVetements, setFilteredVetements] = useState<{
+    hauts: Vetement[];
+    bas: Vetement[];
+    chaussures: Vetement[];
+  }>({
+    hauts: [],
+    bas: [],
+    chaussures: []
+  });
+
+  // Effet pour extraire les propriétaires uniques des vêtements
+  useEffect(() => {
+    const uniqueOwners = new Map<string, Owner>();
+    uniqueOwners.set('me', { id: 'me', name: 'Mes vêtements' });
+    
+    vetements.forEach(vetement => {
+      if (vetement.owner_email && vetement.user_id) {
+        const ownerName = vetement.owner_email.split('@')[0];
+        uniqueOwners.set(vetement.user_id, { 
+          id: vetement.user_id, 
+          name: ownerName 
+        });
+      }
+    });
+    
+    setOwners(Array.from(uniqueOwners.values()));
+  }, [vetements]);
+
+  // Catégoriser les vêtements par type
   useEffect(() => {
     const categorizeVetements = async () => {
       const hauts: Vetement[] = [];
@@ -60,6 +109,7 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
       }
 
       setCategorizedVetements({ hauts, bas, chaussures });
+      setFilteredVetements({ hauts, bas, chaussures });
       
       // Auto-sélectionner le premier élément de chaque catégorie s'il n'y a pas déjà de sélection
       if (hauts.length > 0 && !selectedItems.haut) {
@@ -78,11 +128,43 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
     categorizeVetements();
   }, [vetements]);
 
+  // Filtrer les vêtements par propriétaire lorsque la sélection change
+  useEffect(() => {
+    const filterByOwner = () => {
+      setFilteredVetements({
+        hauts: categorizedVetements.hauts.filter(item => 
+          selectedOwners.haut === 'me' 
+            ? !item.owner_email 
+            : item.user_id === selectedOwners.haut
+        ),
+        bas: categorizedVetements.bas.filter(item => 
+          selectedOwners.bas === 'me' 
+            ? !item.owner_email 
+            : item.user_id === selectedOwners.bas
+        ),
+        chaussures: categorizedVetements.chaussures.filter(item => 
+          selectedOwners.chaussures === 'me' 
+            ? !item.owner_email 
+            : item.user_id === selectedOwners.chaussures
+        ),
+      });
+    };
+
+    filterByOwner();
+  }, [selectedOwners, categorizedVetements]);
+
   const handleSelectItem = (type: 'haut' | 'bas' | 'chaussures', item: Vetement) => {
     onItemsSelected({
       ...selectedItems,
       [type]: item
     });
+  };
+
+  const handleOwnerChange = (type: 'haut' | 'bas' | 'chaussures', ownerId: string) => {
+    setSelectedOwners(prev => ({
+      ...prev,
+      [type]: ownerId
+    }));
   };
 
   const renderCarousel = (
@@ -100,6 +182,32 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
           <Text className="font-medium">{label}</Text>
           <Text className="text-sm text-muted-foreground ml-1">({items.length})</Text>
           <Separator className="flex-grow ml-2" />
+          
+          {/* Sélecteur de propriétaire */}
+          <div className="min-w-40">
+            <Select 
+              value={selectedOwners[type]} 
+              onValueChange={(value) => handleOwnerChange(type, value)}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="Choisir source" />
+              </SelectTrigger>
+              <SelectContent>
+                {owners.map((owner) => (
+                  <SelectItem key={owner.id} value={owner.id} className="text-xs">
+                    <div className="flex items-center gap-1.5">
+                      {owner.id === 'me' ? (
+                        <User className="h-3 w-3" />
+                      ) : (
+                        <Users className="h-3 w-3" />
+                      )}
+                      {owner.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         
         {items.length === 0 ? (
@@ -121,10 +229,10 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
                           compact={false}
                         />
                         
-                        {showOwner && item.owner_email && (
+                        {(showOwner || item.owner_email) && (
                           <div className="mt-1 flex justify-center">
                             <Badge variant="outline" className="text-xs font-normal">
-                              De: {item.owner_email.split('@')[0]}
+                              {item.owner_email ? `De: ${item.owner_email.split('@')[0]}` : 'Moi'}
                             </Badge>
                           </div>
                         )}
@@ -145,21 +253,21 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
   return (
     <div className="space-y-2">
       {renderCarousel(
-        categorizedVetements.hauts, 
+        filteredVetements.hauts, 
         'haut', 
         <Shirt className="h-4 w-4 text-primary" />, 
         'Hauts'
       )}
 
       {renderCarousel(
-        categorizedVetements.bas, 
+        filteredVetements.bas, 
         'bas', 
         <ShoppingBag className="h-4 w-4 text-primary" />, 
         'Bas'
       )}
 
       {renderCarousel(
-        categorizedVetements.chaussures, 
+        filteredVetements.chaussures, 
         'chaussures', 
         <Footprints className="h-4 w-4 text-primary" />, 
         'Chaussures'

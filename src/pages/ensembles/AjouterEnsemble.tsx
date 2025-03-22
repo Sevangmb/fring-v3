@@ -15,18 +15,12 @@ import { createEnsemble } from "@/services/ensembleService";
 import { fetchVetements, fetchVetementsAmis } from "@/services/vetement";
 import { Loader2, ArrowRight, ListPlus } from "lucide-react";
 import { initializeEnsembleData } from "@/services/database/ensembleInitialization";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const AjouterEnsemble = () => {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
-  const [mesVetements, setMesVetements] = useState<Vetement[]>([]);
-  const [vetementsAmis, setVetementsAmis] = useState<Vetement[]>([]);
+  const { toast } = useToast();
+  const [allVetements, setAllVetements] = useState<Vetement[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState<{
     haut: Vetement | null;
@@ -39,7 +33,6 @@ const AjouterEnsemble = () => {
   });
   const [creating, setCreating] = useState(false);
   const [initialized, setInitialized] = useState(false);
-  const [activeSource, setActiveSource] = useState<'mes-vetements' | 'vetements-amis'>('mes-vetements');
 
   // Initialiser la structure de la base de données
   useEffect(() => {
@@ -54,20 +47,25 @@ const AjouterEnsemble = () => {
     initialize();
   }, []);
 
-  // Charger les vêtements (personnels et amis)
+  // Charger tous les vêtements (personnels et amis)
   useEffect(() => {
     const loadAllVetements = async () => {
       try {
         setLoading(true);
+        // Charger à la fois les vêtements personnels et ceux des amis
         const [mesVetementsData, vetementsAmisData] = await Promise.all([
           fetchVetements(),
           fetchVetementsAmis()
         ]);
         
-        setMesVetements(mesVetementsData);
-        setVetementsAmis(vetementsAmisData);
-        console.log("Vêtements personnels chargés:", mesVetementsData.length);
-        console.log("Vêtements des amis chargés:", vetementsAmisData.length);
+        // Combiner les deux sources de vêtements
+        const combinedVetements = [
+          ...mesVetementsData, 
+          ...vetementsAmisData
+        ];
+        
+        setAllVetements(combinedVetements);
+        console.log("Tous les vêtements chargés:", combinedVetements.length);
       } catch (error) {
         console.error("Erreur lors du chargement des vêtements:", error);
         toast({
@@ -132,9 +130,6 @@ const AjouterEnsemble = () => {
       setCreating(false);
     }
   };
-
-  // Obtenir les vêtements actuellement actifs selon l'onglet sélectionné
-  const activeVetements = activeSource === 'mes-vetements' ? mesVetements : vetementsAmis;
   
   return (
     <Layout>
@@ -150,7 +145,7 @@ const AjouterEnsemble = () => {
               <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
               <span className="text-muted-foreground">Chargement de vos vêtements...</span>
             </div>
-          ) : mesVetements.length === 0 && vetementsAmis.length === 0 ? (
+          ) : allVetements.length === 0 ? (
             <Card className="text-center py-12 shadow-md border-primary/10">
               <CardContent className="flex flex-col items-center space-y-4">
                 <ListPlus className="h-16 w-16 text-muted-foreground mb-2" />
@@ -170,33 +165,15 @@ const AjouterEnsemble = () => {
                 <Heading className="text-lg text-center">Créez votre ensemble</Heading>
               </div>
               <CardContent className="p-6">
-                <Tabs 
-                  defaultValue="mes-vetements" 
-                  className="mb-6"
-                  onValueChange={(value) => setActiveSource(value as 'mes-vetements' | 'vetements-amis')}
-                >
-                  <div className="flex justify-center mb-4">
-                    <TabsList>
-                      <TabsTrigger value="mes-vetements">Mes vêtements</TabsTrigger>
-                      <TabsTrigger value="vetements-amis" disabled={vetementsAmis.length === 0}>
-                        Vêtements des amis {vetementsAmis.length > 0 && `(${vetementsAmis.length})`}
-                      </TabsTrigger>
-                    </TabsList>
-                  </div>
-                  
-                  <Text className="text-center text-muted-foreground mb-4 text-sm">
-                    {activeSource === 'mes-vetements' 
-                      ? "Utilisez vos propres vêtements pour créer l'ensemble"
-                      : "Utilisez les vêtements partagés par vos amis pour créer l'ensemble"
-                    }
-                  </Text>
-                </Tabs>
+                <Text className="text-center text-muted-foreground mb-6 text-sm">
+                  Sélectionnez un vêtement pour chaque catégorie, vous pouvez choisir parmi vos vêtements ou ceux de vos amis.
+                </Text>
                 
                 <EnsembleCreator 
-                  vetements={activeVetements} 
+                  vetements={allVetements} 
                   onItemsSelected={setSelectedItems} 
                   selectedItems={selectedItems}
-                  showOwner={activeSource === 'vetements-amis'}
+                  showOwner={true}
                 />
                 
                 <div className="flex justify-center mt-8 pt-4 border-t">
