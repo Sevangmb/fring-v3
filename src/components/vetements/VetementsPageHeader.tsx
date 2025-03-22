@@ -28,7 +28,7 @@ const VetementsPageHeader: React.FC<VetementsPageHeaderProps> = ({
   const navigate = useNavigate();
 
   return (
-    <div className={`pt-6 pb-6 ${className}`}>
+    <div className={`pt-6 pb-6 ${className || ''}`}>
       <div className="container mx-auto px-4">
         {!hideHeading && (
           <Heading as="h1" className="mb-2">

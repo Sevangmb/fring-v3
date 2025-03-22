@@ -9,9 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { createDemoVetementsForUser } from "@/services/vetement/demoVetements";
 import { supabase } from "@/lib/supabase";
 import VetementsContainer from "@/components/vetements/VetementsContainer";
-import VetementsPageHeader from "@/components/molecules/VetementsPageHeader";
-import { Tabs } from "@/components/ui/tabs";
-import { TabsContent } from "@/components/ui/tabs";
+import VetementsPageHeader from "@/components/vetements/VetementsPageHeader";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import VetementsTabsList from "@/components/vetements/tabs/VetementsTabsList";
 import MesVetementsTab from "@/components/vetements/tabs/MesVetementsTab";
 import VetementsAmisTab from "@/components/vetements/tabs/VetementsAmisTab";
@@ -132,6 +131,7 @@ const MesVetements: React.FC = () => {
                 isAuthenticated={!!user}
                 onVetementDeleted={() => {}}
                 onTabChange={() => {}}
+                description="Consultez tous vos vêtements et gérez votre collection."
               />
             </TabsContent>
             
@@ -147,11 +147,18 @@ const MesVetements: React.FC = () => {
                 isAuthenticated={!!user}
                 onVetementDeleted={() => {}}
                 onTabChange={() => {}}
+                description="Parcourez les vêtements partagés par vos amis."
               />
             </TabsContent>
             
             <TabsContent value="mes-ensembles">
-              <MesEnsemblesTab />
+              <MesEnsemblesTab
+                categories={[]}
+                marques={[]}
+                acceptedFriends={[]}
+                isLoading={false}
+                description="Gérez vos ensembles de vêtements et créez de nouvelles combinaisons."
+              />
             </TabsContent>
             
             <TabsContent value="mes-favoris">
