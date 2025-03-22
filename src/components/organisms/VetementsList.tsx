@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { useNavigate } from "react-router-dom";
-import { Heading, Text } from "@/components/atoms/Typography";
-import { Button } from "@/components/ui/button";
-import { Shirt, Plus, LogIn, Users } from "lucide-react";
 import VetementCard from '@/components/molecules/VetementCard';
-import { Vetement, deleteVetement } from '@/services/vetement';
-import { useToast } from "@/hooks/use-toast";
+import { Vetement } from '@/services/vetement';
+import { Shirt, Plus, LogIn, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Text } from "@/components/atoms/Typography";
+import EmptyStateMessage from '@/components/molecules/EmptyStateMessage';
+import { useVetementOperations } from '@/hooks/useVetementOperations';
 
 interface VetementsListProps {
   vetements: Vetement[];
@@ -25,47 +25,30 @@ const VetementsList: React.FC<VetementsListProps> = ({
   onVetementDeleted,
   showOwner = false
 }) => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const { handleDelete, navigateToAdd, navigateToLogin, navigateToFriends } = useVetementOperations();
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer ce vêtement ?")) {
-      try {
-        await deleteVetement(id);
-        onVetementDeleted(id);
-        
-        toast({
-          title: "Vêtement supprimé",
-          description: "Le vêtement a été supprimé avec succès.",
-        });
-      } catch (error) {
-        console.error("Erreur lors de la suppression:", error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de supprimer ce vêtement.",
-          variant: "destructive",
-        });
-      }
+  const onDeleteVetement = async (id: number) => {
+    const success = await handleDelete(id);
+    if (success) {
+      onVetementDeleted(id);
     }
   };
 
-  // Vérifions qu'un utilisateur est connecté pour voir ses vêtements
+  // Non-authenticated state
   if (!isAuthenticated) {
     return (
-      <div className="text-center py-16">
-        <Shirt size={48} className="mx-auto text-muted-foreground opacity-20 mb-4" />
-        <Heading as="h3" variant="h4" className="mb-2">Connectez-vous pour voir vos vêtements</Heading>
-        <Text className="text-muted-foreground mb-6">
-          Vous devez être connecté pour accéder à votre collection de vêtements.
-        </Text>
-        <Button onClick={() => navigate("/login")}>
-          <LogIn className="mr-2 h-4 w-4" />
-          Se connecter
-        </Button>
-      </div>
+      <EmptyStateMessage
+        icon={<Shirt size={48} />}
+        title="Connectez-vous pour voir vos vêtements"
+        description="Vous devez être connecté pour accéder à votre collection de vêtements."
+        buttonText="Se connecter"
+        buttonIcon={<LogIn className="mr-2 h-4 w-4" />}
+        onButtonClick={navigateToLogin}
+      />
     );
   }
 
+  // Loading state
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -76,6 +59,7 @@ const VetementsList: React.FC<VetementsListProps> = ({
     );
   }
   
+  // Error state
   if (error) {
     return (
       <div className="text-center py-16">
@@ -87,45 +71,42 @@ const VetementsList: React.FC<VetementsListProps> = ({
     );
   }
   
-  if (vetements.length === 0) {
+  // Empty state for personal clothes
+  if (vetements.length === 0 && !showOwner) {
     return (
-      <div className="text-center py-16">
-        {showOwner ? (
-          <>
-            <Users size={48} className="mx-auto text-muted-foreground opacity-20 mb-4" />
-            <Heading as="h3" variant="h4" className="mb-2">Aucun vêtement trouvé</Heading>
-            <Text className="text-muted-foreground mb-6">
-              Vos amis n'ont pas encore partagé de vêtements, ou vous n'avez pas encore d'amis.
-            </Text>
-            <Button onClick={() => navigate("/mes-amis")}>
-              <Users className="mr-2 h-4 w-4" />
-              Gérer mes amis
-            </Button>
-          </>
-        ) : (
-          <>
-            <Shirt size={48} className="mx-auto text-muted-foreground opacity-20 mb-4" />
-            <Heading as="h3" variant="h4" className="mb-2">Aucun vêtement trouvé</Heading>
-            <Text className="text-muted-foreground mb-6">
-              Vous n'avez pas encore ajouté de vêtements à votre collection.
-            </Text>
-            <Button onClick={() => navigate("/mes-vetements/ajouter")}>
-              <Plus className="mr-2 h-4 w-4" />
-              Ajouter un vêtement
-            </Button>
-          </>
-        )}
-      </div>
+      <EmptyStateMessage
+        icon={<Shirt size={48} />}
+        title="Aucun vêtement trouvé"
+        description="Vous n'avez pas encore ajouté de vêtements à votre collection."
+        buttonText="Ajouter un vêtement"
+        buttonIcon={<Plus className="mr-2 h-4 w-4" />}
+        onButtonClick={navigateToAdd}
+      />
     );
   }
   
+  // Empty state for friends' clothes
+  if (vetements.length === 0 && showOwner) {
+    return (
+      <EmptyStateMessage
+        icon={<Users size={48} />}
+        title="Aucun vêtement trouvé"
+        description="Vos amis n'ont pas encore partagé de vêtements, ou vous n'avez pas encore d'amis."
+        buttonText="Gérer mes amis"
+        buttonIcon={<Users className="mr-2 h-4 w-4" />}
+        onButtonClick={navigateToFriends}
+      />
+    );
+  }
+  
+  // Normal list rendering
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       {vetements.map((vetement) => (
         <VetementCard 
           key={vetement.id} 
           vetement={vetement} 
-          onDelete={handleDelete}
+          onDelete={onDeleteVetement}
           showOwner={showOwner}
         />
       ))}
