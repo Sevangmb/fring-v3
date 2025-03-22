@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Tabs } from "@/components/ui/tabs";
 import VetementsTabsList from "./tabs/VetementsTabsList";
 
-export type TabType = 'mes-vetements' | 'ajouter-vetement' | 'mes-tenues' | 'ajouter-tenue';
+export type TabType = 'mes-vetements' | 'ajouter-vetement' | 'mes-ensembles' | 'ajouter-ensemble' | 'vetements-amis';
 
 interface VetementsContainerProps {
   defaultTab?: TabType;
@@ -27,14 +27,29 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
     } else if (location.pathname === "/mes-vetements/ajouter") {
       setActiveTab("ajouter-vetement");
     } else if (location.pathname === "/ensembles") {
-      setActiveTab("mes-tenues");
+      setActiveTab("mes-ensembles");
     } else if (location.pathname === "/ensembles/ajouter") {
-      setActiveTab("ajouter-tenue");
+      setActiveTab("ajouter-ensemble");
+    } else if (location.pathname === "/vetements-amis") {
+      setActiveTab("vetements-amis");
     }
   }, [location.pathname]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as TabType);
+    
+    // Navigation en fonction de l'onglet sélectionné
+    if (value === "mes-vetements") {
+      navigate("/mes-vetements");
+    } else if (value === "ajouter-vetement") {
+      navigate("/mes-vetements/ajouter");
+    } else if (value === "mes-ensembles") {
+      navigate("/ensembles");
+    } else if (value === "ajouter-ensemble") {
+      navigate("/ensembles/ajouter");
+    } else if (value === "vetements-amis") {
+      navigate("/vetements-amis");
+    }
   };
 
   if (!user) {

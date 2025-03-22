@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Layout from "@/components/templates/Layout";
 import MesVetementsSection from "@/components/organisms/MesVetements";
 import { Heading, Text } from "@/components/atoms/Typography";
@@ -16,6 +16,7 @@ import VetementsTabsList from "@/components/vetements/tabs/VetementsTabsList";
 import MesVetementsTab from "@/components/vetements/tabs/MesVetementsTab";
 import VetementsAmisTab from "@/components/vetements/tabs/VetementsAmisTab";
 import MesEnsemblesTab from "@/components/vetements/tabs/MesEnsemblesTab";
+import AjouterEnsembleTab from "@/components/vetements/tabs/AjouterEnsembleTab";
 import { useVetementsData } from "@/hooks/useVetementsData";
 import { useAmis } from "@/hooks/useAmis";
 
@@ -27,6 +28,7 @@ const MesVetements: React.FC = () => {
   const { user, loading } = useAuth();
   const { toast } = useToast();
   const location = useLocation();
+  const navigate = useNavigate();
   const { filteredAmis, loadingAmis } = useAmis();
   
   const {
@@ -131,6 +133,13 @@ const MesVetements: React.FC = () => {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
+    
+    // Redirection pour les onglets avec pages dédiées
+    if (value === "ajouter-vetement") {
+      navigate("/mes-vetements/ajouter");
+    } else if (value === "ajouter-ensemble") {
+      navigate("/ensembles/ajouter");
+    }
   };
 
   const handleVetementDeleted = (id: number) => {
@@ -169,6 +178,12 @@ const MesVetements: React.FC = () => {
               />
             </TabsContent>
             
+            <TabsContent value="ajouter-vetement">
+              <div className="mt-6 text-center">
+                <Text>Redirection vers la page d'ajout de vêtement...</Text>
+              </div>
+            </TabsContent>
+            
             <TabsContent value="vetements-amis">
               <VetementsAmisTab
                 vetements={vetements}
@@ -191,6 +206,12 @@ const MesVetements: React.FC = () => {
                 acceptedFriends={acceptedFriends}
                 isLoading={isLoading || loadingAmis}
               />
+            </TabsContent>
+
+            <TabsContent value="ajouter-ensemble">
+              <div className="mt-6 text-center">
+                <Text>Redirection vers la page d'ajout de tenue...</Text>
+              </div>
             </TabsContent>
           </Tabs>
         </section>

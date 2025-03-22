@@ -2,10 +2,10 @@
 import React from "react";
 import { TabsList } from "@/components/ui/tabs";
 import { TabsTrigger } from "@/components/ui/tabs";
-import { Shirt, PlusCircle, Layers, Star } from "lucide-react";
+import { Shirt, PlusCircle, Layers, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 
-export type TabType = 'mes-vetements' | 'ajouter-vetement' | 'mes-tenues' | 'ajouter-tenue' | 'mes-favoris';
+export type TabType = 'mes-vetements' | 'ajouter-vetement' | 'mes-ensembles' | 'ajouter-ensemble' | 'vetements-amis';
 
 interface VetementsTabsListProps {
   onTabChange?: (value: string) => void;
@@ -30,12 +30,12 @@ const VetementsTabsList: React.FC<VetementsTabsListProps> = ({ onTabChange, acti
         Mes Vêtements
       </TabsTrigger>
       <TabsTrigger 
-        value="vetements-amis" 
-        onClick={() => handleTabChange("vetements-amis")}
+        value="ajouter-vetement" 
+        onClick={() => handleTabChange("ajouter-vetement")}
         className="rounded-b-none border-b-2 pb-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
       >
-        <Shirt className="mr-2 h-4 w-4" />
-        Vêtements Amis
+        <PlusCircle className="mr-2 h-4 w-4" />
+        Ajouter un vêtement
       </TabsTrigger>
       <TabsTrigger 
         value="mes-ensembles" 
@@ -44,6 +44,14 @@ const VetementsTabsList: React.FC<VetementsTabsListProps> = ({ onTabChange, acti
       >
         <Layers className="mr-2 h-4 w-4" />
         Mes Tenues
+      </TabsTrigger>
+      <TabsTrigger 
+        value="ajouter-ensemble" 
+        onClick={() => handleTabChange("ajouter-ensemble")}
+        className="rounded-b-none border-b-2 pb-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+      >
+        <Plus className="mr-2 h-4 w-4" />
+        Ajouter une tenue
       </TabsTrigger>
     </TabsList>
   );
