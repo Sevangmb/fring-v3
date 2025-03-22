@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,8 +26,25 @@ const SearchFilterBar: React.FC = () => {
     currentFriendFilter
   } = useSearchFilter();
 
+  // Déboguer les états des filtres
+  useEffect(() => {
+    console.log('SearchFilterBar filters:', {
+      categorieFilter,
+      marqueFilter,
+      friendFilter
+    });
+  }, [categorieFilter, marqueFilter, friendFilter]);
+
   // Utiliser la valeur spécifique du filtre d'ami si disponible
   const effectiveFriendFilter = currentFriendFilter || friendFilter;
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleResetFilters = () => {
+    resetFilters();
+  };
 
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-8">
@@ -37,7 +54,7 @@ const SearchFilterBar: React.FC = () => {
           placeholder="Rechercher un vêtement..."
           className="pl-10"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleSearchChange}
         />
       </div>
       
@@ -110,7 +127,7 @@ const SearchFilterBar: React.FC = () => {
         <Button 
           variant="outline" 
           className="flex items-center"
-          onClick={resetFilters}
+          onClick={handleResetFilters}
         >
           <SlidersHorizontal className="mr-2 h-4 w-4" />
           Réinitialiser

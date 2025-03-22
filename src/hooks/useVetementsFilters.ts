@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Categorie } from "@/services/categorieService";
 import { Vetement } from "@/services/vetement";
 
@@ -16,10 +16,18 @@ export function useVetementsFilters() {
     return category ? category.nom : 'Catégorie inconnue';
   };
 
-  const filterVetements = (vetements: Vetement[], categories: Categorie[]): Vetement[] => {
+  const filterVetements = useCallback((vetements: Vetement[], categories: Categorie[]): Vetement[] => {
+    console.log('Filtering vetements with:', {
+      searchTerm,
+      categorieFilter,
+      marqueFilter,
+      activeTab
+    });
+    
     return vetements.filter(vetement => {
       // Filtrage par terme de recherche
-      const matchesSearch = vetement.nom.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      const matchesSearch = searchTerm.trim() === "" || 
+                          vetement.nom.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           (vetement.marque && vetement.marque.toLowerCase().includes(searchTerm.toLowerCase())) ||
                           (vetement.description && vetement.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
                           (vetement.owner_email && vetement.owner_email.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -46,7 +54,7 @@ export function useVetementsFilters() {
 
       return matchesSearch && matchesCategorie && matchesMarque && matchesActiveTab;
     });
-  };
+  }, [searchTerm, categorieFilter, marqueFilter, activeTab]);
 
   const handleViewModeChange = (mode: 'mes-vetements' | 'vetements-amis' | 'mes-ensembles') => {
     setViewMode(mode);

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import VetementsList from "@/components/organisms/VetementsList";
 import CategoryTabs from "@/components/molecules/CategoryTabs";
@@ -36,6 +36,16 @@ const MesVetementsTab: React.FC<MesVetementsTabProps> = ({
   onTabChange,
   hideTitle = false,
 }) => {
+  // Loguer les données pour le débogage
+  useEffect(() => {
+    console.log('MesVetementsTab rendering with:', {
+      vetements: vetements.length,
+      categories: categories.length,
+      marques: marques.length,
+      activeTab
+    });
+  }, [vetements, categories, marques, activeTab]);
+
   return (
     <TabsContent value="mes-vetements">
       <SearchFilterProvider

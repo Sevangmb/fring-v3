@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useEffect, useMemo } from 'react';
 import { Categorie } from '@/services/categorieService';
 import { Ami } from '@/services/amis';
 import { useVetementsFilters } from '@/hooks/useVetementsFilters';
@@ -56,20 +56,22 @@ export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
   } = useVetementsFilters();
 
   const setFriendFilter = (value: string) => {
+    console.log('Setting friend filter to:', value);
     internalSetFriendFilter(value);
     if (onFriendFilterChange) {
       onFriendFilterChange(value);
     }
   };
 
-  // Mise à jour des filtres si currentFriendFilter change
+  // Synchroniser les filtres externes et internes
   useEffect(() => {
     if (currentFriendFilter && currentFriendFilter !== internalFriendFilter) {
+      console.log('Synchronizing friend filter from external source:', currentFriendFilter);
       internalSetFriendFilter(currentFriendFilter);
     }
   }, [currentFriendFilter, internalSetFriendFilter, internalFriendFilter]);
 
-  const value = {
+  const value = useMemo(() => ({
     searchTerm,
     setSearchTerm,
     categorieFilter,
@@ -85,7 +87,12 @@ export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
     resetFilters,
     onFriendFilterChange,
     currentFriendFilter,
-  };
+  }), [
+    searchTerm, categorieFilter, marqueFilter, 
+    internalFriendFilter, currentFriendFilter,
+    categories, marques, friends, showFriendFilter,
+    resetFilters, onFriendFilterChange
+  ]);
 
   return (
     <SearchFilterContext.Provider value={value}>
