@@ -52,12 +52,13 @@ export const useDashboardStats = () => {
       setError(null);
       console.log("Début de récupération des statistiques pour l'utilisateur:", user.id);
 
-      // Récupérer les vêtements avec jointure explicite pour éviter l'ambiguïté
+      // Récupérer les vêtements - utilisez un LEFT JOIN au lieu d'une jointure implicite
+      // en spécifiant explicitement la relation à utiliser (vetements_categorie_id_fkey)
       const { data: vetements, error: vetementsError } = await supabase
         .from('vetements')
         .select(`
-          *,
-          categories:categorie_id(nom)
+          id, nom, couleur, taille, description, marque, image_url, created_at, user_id,
+          categories!vetements_categorie_id_fkey(id, nom)
         `)
         .eq('user_id', user.id);
 
@@ -98,7 +99,7 @@ export const useDashboardStats = () => {
       const marqueCount: Record<string, number> = {};
 
       vetements?.forEach((vetement: any) => {
-        // Catégories - utiliser la jointure explicite
+        // Catégories - utiliser la relation explicite
         if (vetement.categories && vetement.categories.nom) {
           const categoryName = vetement.categories.nom;
           categorieCount[categoryName] = (categorieCount[categoryName] || 0) + 1;
