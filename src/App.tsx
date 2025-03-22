@@ -24,6 +24,7 @@ import About from "./pages/About";
 import MiesPage from "./pages/Mies";
 import MesEnsembles from "./pages/ensembles/MesEnsembles";
 import AjouterEnsemble from "./pages/ensembles/AjouterEnsemble";
+import VetementsAmisPage from "./pages/VetementsAmisPage";
 
 // Create a new query client instance
 const queryClient = new QueryClient({
@@ -54,6 +55,7 @@ const App = () => {
               <Route path="/mes-vetements/liste" element={<ListeVetements />} />
               <Route path="/mes-vetements/modifier/:id" element={<ModifierVetement />} />
               <Route path="/mes-amis" element={<MesAmis />} />
+              <Route path="/vetements-amis" element={<VetementsAmisPage />} />
               <Route path="/messages" element={<Messages />} />
               <Route path="/messages/:friendId" element={<Messages />} />
               <Route path="/mies" element={<MiesPage />} />
