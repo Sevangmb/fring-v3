@@ -57,6 +57,11 @@ const MesFavorisTab: React.FC = () => {
     }
   };
 
+  // Fonction pour déterminer si un élément est réellement disponible
+  const isElementAvailable = (favori: any) => {
+    return favori.details !== null && favori.details !== undefined;
+  };
+
   return (
     <TabsContent value="mes-favoris" className="mt-6">
       <Card>
@@ -85,88 +90,91 @@ const MesFavorisTab: React.FC = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredFavoris.map((favori) => (
-                  <Card 
-                    key={favori.id} 
-                    className={`overflow-hidden transition-shadow ${favori.details ? 'cursor-pointer hover:shadow-md' : 'bg-muted/30'}`}
-                    onClick={() => favori.details && handleFavoriClick(favori)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <Badge variant={
-                            favori.type_favori === 'vetement' 
-                              ? 'default' 
-                              : favori.type_favori === 'ensemble' 
-                                ? 'secondary' 
-                                : 'outline'
-                          }>
-                            {favori.type_favori}
-                          </Badge>
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          ID: {favori.element_id}
-                        </span>
-                      </div>
-                      
-                      {!favori.details ? (
-                        <div className="mt-2 bg-muted/50 p-4 rounded-md">
-                          <div className="flex items-center space-x-2 text-muted-foreground mb-2">
-                            <AlertTriangle size={16} className="text-amber-500" />
-                            <h3 className="font-medium">
-                              {favori.type_favori === 'vetement' ? 'Vêtement supprimé' : 
-                               favori.type_favori === 'ensemble' ? 'Ensemble supprimé' : 
-                               'Utilisateur indisponible'}
-                            </h3>
+                {filteredFavoris.map((favori) => {
+                  const elementAvailable = isElementAvailable(favori);
+                  return (
+                    <Card 
+                      key={favori.id} 
+                      className={`overflow-hidden transition-shadow ${elementAvailable ? 'cursor-pointer hover:shadow-md' : 'bg-muted/30'}`}
+                      onClick={() => elementAvailable && handleFavoriClick(favori)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <Badge variant={
+                              favori.type_favori === 'vetement' 
+                                ? 'default' 
+                                : favori.type_favori === 'ensemble' 
+                                  ? 'secondary' 
+                                  : 'outline'
+                            }>
+                              {favori.type_favori}
+                            </Badge>
                           </div>
-                          <p className="text-sm text-muted-foreground mb-3">
-                            Élément supprimé ou indisponible
-                          </p>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="w-full flex items-center justify-center gap-2 mt-2"
-                            onClick={(e) => handleRemoveFavori(e, favori)}
-                          >
-                            <Trash2 size={14} />
-                            <span>Retirer des favoris</span>
-                          </Button>
+                          <span className="text-xs text-muted-foreground">
+                            ID: {favori.element_id}
+                          </span>
                         </div>
-                      ) : (
-                        <>
-                          <h3 className="font-medium mt-2 line-clamp-1">{favori.nom || "Sans nom"}</h3>
-                          
-                          <div className="mt-2 text-sm text-muted-foreground">
-                            {favori.type_favori === 'vetement' && (
-                              <div className="flex flex-col">
-                                <span>Couleur: {favori.details.couleur}</span>
-                                <span>Taille: {favori.details.taille}</span>
-                              </div>
-                            )}
-                            {favori.type_favori === 'ensemble' && (
-                              <span>{favori.details.description || `Ensemble avec ${favori.details.vetements?.length || 0} vêtements`}</span>
-                            )}
-                            {favori.type_favori === 'utilisateur' && (
-                              <span>{favori.details.email}</span>
-                            )}
-                          </div>
-                          
-                          <div className="mt-3 flex justify-end">
+                        
+                        {!elementAvailable ? (
+                          <div className="mt-2 bg-muted/50 p-4 rounded-md">
+                            <div className="flex items-center space-x-2 text-muted-foreground mb-2">
+                              <AlertTriangle size={16} className="text-amber-500" />
+                              <h3 className="font-medium">
+                                {favori.type_favori === 'vetement' ? 'Vêtement supprimé' : 
+                                 favori.type_favori === 'ensemble' ? 'Ensemble supprimé' : 
+                                 'Utilisateur indisponible'}
+                              </h3>
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-3">
+                              Élément supprimé ou indisponible
+                            </p>
                             <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="text-destructive hover:text-destructive/90 p-0 h-auto"
+                              variant="outline" 
+                              size="sm"
+                              className="w-full flex items-center justify-center gap-2 mt-2"
                               onClick={(e) => handleRemoveFavori(e, favori)}
                             >
-                              <Trash2 size={14} className="mr-1" />
-                              <span className="text-xs">Retirer</span>
+                              <Trash2 size={14} />
+                              <span>Retirer des favoris</span>
                             </Button>
                           </div>
-                        </>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
+                        ) : (
+                          <>
+                            <h3 className="font-medium mt-2 line-clamp-1">{favori.nom || "Sans nom"}</h3>
+                            
+                            <div className="mt-2 text-sm text-muted-foreground">
+                              {favori.type_favori === 'vetement' && (
+                                <div className="flex flex-col">
+                                  <span>Couleur: {favori.details.couleur}</span>
+                                  <span>Taille: {favori.details.taille}</span>
+                                </div>
+                              )}
+                              {favori.type_favori === 'ensemble' && (
+                                <span>{favori.details.description || `Ensemble avec ${favori.details.vetements?.length || 0} vêtements`}</span>
+                              )}
+                              {favori.type_favori === 'utilisateur' && (
+                                <span>{favori.details.email}</span>
+                              )}
+                            </div>
+                            
+                            <div className="mt-3 flex justify-end">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-destructive hover:text-destructive/90 p-0 h-auto"
+                                onClick={(e) => handleRemoveFavori(e, favori)}
+                              >
+                                <Trash2 size={14} className="mr-1" />
+                                <span className="text-xs">Retirer</span>
+                              </Button>
+                            </div>
+                          </>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </Tabs>

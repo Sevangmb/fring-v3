@@ -22,6 +22,10 @@ export const fetchVetementById = async (vetementId: number): Promise<Vetement | 
       throw error;
     }
 
+    if (!data) {
+      return null;
+    }
+
     // Transformer la réponse pour maintenir la structure attendue
     const vetementData = {
       ...data,

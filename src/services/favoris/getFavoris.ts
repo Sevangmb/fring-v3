@@ -51,16 +51,20 @@ export const getFavorisWithDetails = async (): Promise<FavoriWithDetails[]> => {
         if (favori.type_favori === 'vetement') {
           try {
             const vetement = await fetchVetementById(parseInt(favori.element_id));
-            details = vetement;
-            nom = vetement?.nom;
+            if (vetement) {
+              details = vetement;
+              nom = vetement.nom;
+            }
           } catch (err) {
             console.error("Erreur lors de la récupération du vêtement favori:", err);
           }
         } else if (favori.type_favori === 'ensemble') {
           try {
             const ensemble = await fetchEnsembleById(parseInt(favori.element_id));
-            details = ensemble;
-            nom = ensemble?.nom;
+            if (ensemble) {
+              details = ensemble;
+              nom = ensemble.nom;
+            }
           } catch (err) {
             console.error("Erreur lors de la récupération de l'ensemble favori:", err);
           }
