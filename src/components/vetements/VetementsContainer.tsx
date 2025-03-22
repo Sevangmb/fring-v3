@@ -38,7 +38,8 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
     marques,
     isLoading,
     error,
-    setSelectedFriendEmail
+    setSelectedFriendEmail,
+    reloadVetements
   } = useVetementsData(viewMode, friendFilter);
 
   const acceptedFriends = filteredAmis?.amisAcceptes || [];
@@ -61,15 +62,19 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
 
   // Met à jour l'email de l'ami sélectionné lorsque le filtre d'ami change
   useEffect(() => {
-    if (viewMode === 'vetements-amis' && friendFilter !== "all") {
-      const selectedFriend = acceptedFriends.find(ami => 
-        (ami.user_id === ami.ami_id ? ami.ami_id : ami.user_id) === friendFilter
-      );
-      setSelectedFriendEmail(selectedFriend?.email);
-    } else {
-      setSelectedFriendEmail(undefined);
+    if (viewMode === 'vetements-amis') {
+      if (friendFilter !== "all") {
+        const selectedFriend = acceptedFriends.find(ami => 
+          (ami.user_id === ami.ami_id ? ami.ami_id : ami.user_id) === friendFilter
+        );
+        setSelectedFriendEmail(selectedFriend?.email);
+      } else {
+        setSelectedFriendEmail(undefined);
+      }
+      // Recharger les vêtements quand le filtre d'ami change
+      reloadVetements();
     }
-  }, [friendFilter, acceptedFriends, viewMode, setSelectedFriendEmail]);
+  }, [friendFilter, acceptedFriends, viewMode, setSelectedFriendEmail, reloadVetements]);
 
   const filteredVetements = filterVetements(vetements, categories);
 

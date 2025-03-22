@@ -1,11 +1,10 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { fetchVetements, fetchVetementsAmis, Vetement } from "@/services/vetement";
 import { fetchCategories, Categorie } from "@/services/categorieService";
 import { fetchMarques, Marque } from "@/services/marqueService";
-import { Ami } from "@/services/amis";
 
 export interface VetementsDataState {
   vetements: Vetement[];
@@ -29,6 +28,11 @@ export function useVetementsData(
     error: null
   });
   const [selectedFriendEmail, setSelectedFriendEmail] = useState<string | undefined>(undefined);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const reloadVetements = useCallback(() => {
+    setRefreshTrigger(prev => prev + 1);
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
@@ -41,6 +45,8 @@ export function useVetementsData(
         setState(prev => ({ ...prev, isLoading: true, error: null }));
         
         console.log("Chargement des données pour l'utilisateur:", user.id);
+        console.log("Mode de vue actuel:", viewMode);
+        console.log("Filtre d'ami actuel:", friendFilter);
         
         const [categoriesData, marquesData] = await Promise.all([
           fetchCategories(),
@@ -51,6 +57,7 @@ export function useVetementsData(
         if (viewMode === 'mes-vetements') {
           vetementsData = await fetchVetements();
         } else {
+          // Si on a sélectionné un ami spécifique, on passe son ID
           const friendIdParam = friendFilter !== "all" ? friendFilter : undefined;
           vetementsData = await fetchVetementsAmis(friendIdParam);
         }
@@ -84,11 +91,12 @@ export function useVetementsData(
     if (!authLoading) {
       loadData();
     }
-  }, [user, authLoading, toast, viewMode, friendFilter]);
+  }, [user, authLoading, toast, viewMode, friendFilter, refreshTrigger]);
 
   return {
     ...state,
     selectedFriendEmail,
-    setSelectedFriendEmail
+    setSelectedFriendEmail,
+    reloadVetements
   };
 }

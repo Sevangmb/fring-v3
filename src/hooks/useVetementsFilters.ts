@@ -18,24 +18,28 @@ export function useVetementsFilters() {
 
   const filterVetements = (vetements: Vetement[], categories: Categorie[]): Vetement[] => {
     return vetements.filter(vetement => {
+      // Filtre par recherche (nom, marque, description, email)
       const matchesSearch = vetement.nom.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           (vetement.marque && vetement.marque.toLowerCase().includes(searchTerm.toLowerCase())) ||
                           (vetement.description && vetement.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
                           (vetement.owner_email && vetement.owner_email.toLowerCase().includes(searchTerm.toLowerCase()));
       
+      // Filtre par catégorie
       const matchesCategorie = categorieFilter 
         ? categorieFilter === "all" 
           ? true 
           : getCategoryNameById(categories, vetement.categorie_id) === categorieFilter 
         : true;
       
+      // Filtre par marque
       const matchesMarque = marqueFilter ? marqueFilter === "all" ? true : vetement.marque === marqueFilter : true;
       
-      if (activeTab === "tous") {
-        return matchesSearch && matchesCategorie && matchesMarque;
-      } else {
-        return matchesSearch && matchesCategorie && matchesMarque && getCategoryNameById(categories, vetement.categorie_id) === activeTab;
-      }
+      // Filtre par onglet de catégorie actif
+      const matchesActiveTab = activeTab === "tous" 
+        ? true 
+        : getCategoryNameById(categories, vetement.categorie_id) === activeTab;
+      
+      return matchesSearch && matchesCategorie && matchesMarque && matchesActiveTab;
     });
   };
 
