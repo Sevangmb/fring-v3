@@ -1,60 +1,22 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
-import { Vetement } from "@/services/vetement";
 import { useToast } from "@/hooks/use-toast";
 import {
   fetchVetementsStats,
   fetchTenutesCount,
   fetchAmisCount,
   calculateDistributions,
-  prepareRecentActivity
+  prepareRecentActivity,
+  createEmptyDashboardStats,
+  DashboardStats,
+  VetementWithCategories
 } from "@/utils/statsUtils";
-
-// Create an interface for the Vetement with categories relationship
-interface VetementWithCategories {
-  id: number;
-  nom: string;
-  couleur: string;
-  taille: string;
-  description?: string;
-  marque?: string;
-  image_url?: string;
-  created_at?: string;
-  user_id?: string;
-  categories?: {
-    id: number;
-    nom: string;
-  }[];  // Changed from an object to an array of objects
-}
-
-interface DashboardStats {
-  totalVetements: number;
-  totalTenues: number;
-  totalAmis: number;
-  categoriesDistribution: { name: string; count: number }[];
-  couleursDistribution: { name: string; count: number }[];
-  marquesDistribution: { name: string; count: number }[];
-  recentActivity: {
-    type: string;
-    date: string;
-    description: string;
-  }[];
-}
 
 export const useDashboardStats = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalVetements: 0,
-    totalTenues: 0,
-    totalAmis: 0,
-    categoriesDistribution: [],
-    couleursDistribution: [],
-    marquesDistribution: [],
-    recentActivity: []
-  });
+  const [stats, setStats] = useState<DashboardStats>(createEmptyDashboardStats());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,109 +31,26 @@ export const useDashboardStats = () => {
       setError(null);
       console.log("Début de récupération des statistiques pour l'utilisateur:", user.id);
 
-      // Récupérer les vêtements - utilisez un LEFT JOIN au lieu d'une jointure implicite
-      // en spécifiant explicitement la relation à utiliser (vetements_categorie_id_fkey)
-      const { data: vetements, error: vetementsError } = await supabase
-        .from('vetements')
-        .select(`
-          id, nom, couleur, taille, description, marque, image_url, created_at, user_id,
-          categories!vetements_categorie_id_fkey(id, nom)
-        `)
-        .eq('user_id', user.id);
-
-      if (vetementsError) {
-        console.error("Erreur lors de la récupération des vêtements:", vetementsError);
-        throw vetementsError;
-      }
-      console.log("Vêtements récupérés:", vetements?.length || 0);
-
-      // Récupérer le nombre de tenues
-      const { count: tenuesCount, error: tenuesError } = await supabase
-        .from('tenues')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      if (tenuesError) {
-        console.error("Erreur lors de la récupération des tenues:", tenuesError);
-        throw tenuesError;
-      }
-      console.log("Nombre de tenues:", tenuesCount || 0);
-
-      // Récupérer le nombre d'amis
-      const { data: amis, error: amisError } = await supabase
-        .from('amis')
-        .select('*')
-        .or(`user_id.eq.${user.id},ami_id.eq.${user.id}`)
-        .eq('status', 'accepted');
-
-      if (amisError) {
-        console.error("Erreur lors de la récupération des amis:", amisError);
-        throw amisError;
-      }
-      console.log("Nombre d'amis:", amis?.length || 0);
+      // Récupérer toutes les données nécessaires
+      const vetements = await fetchVetementsStats(user.id);
+      const totalTenues = await fetchTenutesCount(user.id);
+      const totalAmis = await fetchAmisCount(user.id);
 
       // Calculer les distributions
-      const categorieCount: Record<string, number> = {};
-      const couleurCount: Record<string, number> = {};
-      const marqueCount: Record<string, number> = {};
+      const { 
+        categoriesDistribution, 
+        couleursDistribution, 
+        marquesDistribution 
+      } = calculateDistributions(vetements);
 
-      vetements?.forEach((vetement: any) => {
-        // Catégories - accéder au premier élément du tableau si disponible
-        if (vetement.categories && vetement.categories.length > 0 && vetement.categories[0].nom) {
-          const categoryName = vetement.categories[0].nom;
-          categorieCount[categoryName] = (categorieCount[categoryName] || 0) + 1;
-        }
-
-        // Couleurs
-        if (vetement.couleur) {
-          couleurCount[vetement.couleur] = (couleurCount[vetement.couleur] || 0) + 1;
-        }
-
-        // Marques
-        if (vetement.marque) {
-          marqueCount[vetement.marque] = (marqueCount[vetement.marque] || 0) + 1;
-        }
-      });
-
-      console.log("Distributions calculées:", {
-        categories: Object.keys(categorieCount).length,
-        couleurs: Object.keys(couleurCount).length,
-        marques: Object.keys(marqueCount).length
-      });
-
-      // Transformer en tableaux pour les graphiques
-      const categoriesDistribution = Object.entries(categorieCount)
-        .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
-
-      const couleursDistribution = Object.entries(couleurCount)
-        .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
-
-      const marquesDistribution = Object.entries(marqueCount)
-        .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
-
-      // Préparer l'activité récente - cast any pour éviter les problèmes de typage
-      const recentActivity = (vetements || [])
-        .sort((a: any, b: any) => {
-          return new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime();
-        })
-        .slice(0, 5)
-        .map((vetement: any) => ({
-          type: "vêtement",
-          date: vetement.created_at || "",
-          description: `Ajout de ${vetement.nom}`,
-        }));
+      // Préparer l'activité récente
+      const recentActivity = prepareRecentActivity(vetements);
 
       // Mettre à jour l'état avec toutes les données récupérées
       setStats({
-        totalVetements: vetements?.length || 0,
-        totalTenues: tenuesCount || 0,
-        totalAmis: amis?.length || 0,
+        totalVetements: vetements.length,
+        totalTenues,
+        totalAmis,
         categoriesDistribution,
         couleursDistribution,
         marquesDistribution,
