@@ -2,6 +2,43 @@
 import { supabase } from "@/lib/supabase";
 
 /**
+ * User type definition
+ */
+export interface User {
+  id: string;
+  email: string;
+  created_at?: string;
+  user_metadata?: {
+    avatar_url?: string;
+    full_name?: string;
+  };
+}
+
+/**
+ * Search users by email
+ * @param email Email to search for
+ * @returns Array of users matching the search criteria
+ */
+export const searchUsersByEmail = async (email: string): Promise<User[]> => {
+  try {
+    // Use a secure RPC function to search for users
+    const { data, error } = await supabase.rpc('search_users_by_email', {
+      search_email: email
+    });
+
+    if (error) {
+      console.error("Error searching users:", error);
+      throw new Error(error.message);
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error in searchUsersByEmail:", error);
+    throw error;
+  }
+};
+
+/**
  * Uploads an avatar image to Supabase storage
  * @param userId User ID for file naming
  * @param base64Image Base64 encoded image string
