@@ -37,33 +37,49 @@ export const updateVetement = async (id: number, vetement: Partial<Vetement>): P
     // Nettoyer les données avant la mise à jour
     const cleanedData: any = {};
     
-    // Vérifier quelles colonnes existent réellement dans la table
-    const { data: columns, error: columnsError } = await supabase
-      .from('information_schema.columns')
-      .select('column_name')
-      .eq('table_name', 'vetements')
-      .eq('table_schema', 'public');
-      
-    if (columnsError) {
-      console.error('Erreur lors de la récupération des colonnes:', columnsError);
-    }
-    
-    // Créer un ensemble de noms de colonnes pour une recherche rapide
-    const columnSet = new Set(columns?.map(col => col.column_name) || [
+    // Liste de colonnes connues dans la table vetements
+    const columnNames = [
       'id', 'nom', 'categorie_id', 'couleur', 'taille', 'description', 
       'marque', 'image_url', 'user_id', 'created_at', 'temperature', 'weather_type'
-    ]);
+    ];
     
-    console.log('Colonnes disponibles:', Array.from(columnSet));
+    console.log('Colonnes disponibles:', columnNames);
+    
+    // Vérifier la valeur de categorie_id
+    if (vetement.categorie_id === 0) {
+      // Si categorie_id est 0, c'est une valeur invalide - utiliser une valeur existante ou une valeur par défaut valide
+      // Récupérer une catégorie valide de la base de données
+      const { data: categorie, error: categorieError } = await supabase
+        .from('categories')
+        .select('id')
+        .limit(1)
+        .single();
+        
+      if (!categorieError && categorie) {
+        console.log(`Remplacement de categorie_id=0 par une valeur existante: ${categorie.id}`);
+        cleanedData['categorie_id'] = categorie.id;
+      } else {
+        // Garder la valeur existante si elle existe
+        if (existingData.categorie_id) {
+          console.log(`Conservation de la catégorie existante: ${existingData.categorie_id}`);
+          cleanedData['categorie_id'] = existingData.categorie_id;
+        } else {
+          console.error('Impossible de trouver une catégorie valide');
+          throw new Error('Aucune catégorie valide trouvée pour ce vêtement');
+        }
+      }
+    } else if (vetement.categorie_id) {
+      cleanedData['categorie_id'] = vetement.categorie_id;
+    }
     
     // Ne garder que les propriétés qui existent dans la table
     Object.entries(vetement).forEach(([key, value]) => {
-      // Ne pas inclure les propriétés undefined ou qui n'existent pas dans la table
-      if (value !== undefined && columnSet.has(key)) {
+      // Ne pas inclure les propriétés undefined, categorie_id (déjà traitée) ou qui n'existent pas dans la table
+      if (value !== undefined && key !== 'categorie_id' && columnNames.includes(key)) {
         cleanedData[key] = value;
-      } else if (value !== undefined && !columnSet.has(key)) {
+      } else if (value !== undefined && !columnNames.includes(key)) {
         // Cas spécial pour weatherType -> weather_type
-        if (key === 'weatherType' && columnSet.has('weather_type')) {
+        if (key === 'weatherType' && columnNames.includes('weather_type')) {
           cleanedData['weather_type'] = value;
         } else {
           console.log(`La colonne '${key}' n'existe pas dans la table vetements et sera ignorée`);
