@@ -85,7 +85,7 @@ const ListeVetements = () => {
           
           <TabsContent value="mes-tenues">
             <div className="mt-4">
-              <MesEnsembles />
+              <MesEnsembles asTabContent={true} />
             </div>
           </TabsContent>
           

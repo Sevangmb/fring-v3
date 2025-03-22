@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from "@/components/templates/Layout";
 import { Helmet } from "react-helmet";
@@ -15,7 +14,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { TabsContent } from "@/components/ui/tabs";
 import VetementsContainer from "@/components/vetements/VetementsContainer";
 
-const MesEnsembles = () => {
+interface MesEnsemblesProps {
+  asTabContent?: boolean;
+}
+
+const MesEnsembles: React.FC<MesEnsemblesProps> = ({ asTabContent = false }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [ensembles, setEnsembles] = useState<Ensemble[]>([]);
@@ -42,6 +45,77 @@ const MesEnsembles = () => {
     loadEnsembles();
   }, [user]);
   
+  const ensemblesContent = (
+    <>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-xl font-semibold">Mes Ensembles</h1>
+        <Button 
+          size="sm" 
+          onClick={() => navigate('/ensembles/ajouter')}
+          className="flex items-center gap-1"
+        >
+          <Plus size={16} />
+          <span>Ajouter</span>
+        </Button>
+      </div>
+      
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="h-64">
+              <CardHeader className="pb-2">
+                <Skeleton className="h-5 w-3/4" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-32 w-full mb-2" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-2/3 mt-1" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : error ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Text className="text-center text-red-500">{error}</Text>
+            <Button 
+              variant="outline" 
+              className="mt-4" 
+              onClick={() => window.location.reload()}
+            >
+              Réessayer
+            </Button>
+          </CardContent>
+        </Card>
+      ) : ensembles.length === 0 ? (
+        <Card className="w-full">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Shirt size={64} className="text-muted-foreground mb-4" />
+            <Text className="text-center">Vous n'avez pas encore créé d'ensembles.</Text>
+            <Button 
+              className="mt-4" 
+              onClick={() => navigate('/ensembles/ajouter')}
+            >
+              Créer mon premier ensemble
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {ensembles.map(ensemble => (
+            <EnsembleCard key={ensemble.id} ensemble={ensemble} />
+          ))}
+        </div>
+      )}
+    </>
+  );
+
+  // If used as tab content, return only the content
+  if (asTabContent) {
+    return ensemblesContent;
+  }
+  
+  // Otherwise render with full layout
   return (
     <Layout>
       <Helmet>
@@ -57,66 +131,7 @@ const MesEnsembles = () => {
       <div className="container mx-auto px-4 py-6">
         <VetementsContainer defaultTab="mes-tenues">
           <TabsContent value="mes-tenues">
-            <div className="flex justify-between items-center mb-4">
-              <h1 className="text-xl font-semibold">Mes Ensembles</h1>
-              <Button 
-                size="sm" 
-                onClick={() => navigate('/ensembles/ajouter')}
-                className="flex items-center gap-1"
-              >
-                <Plus size={16} />
-                <span>Ajouter</span>
-              </Button>
-            </div>
-            
-            {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {[...Array(4)].map((_, i) => (
-                  <Card key={i} className="h-64">
-                    <CardHeader className="pb-2">
-                      <Skeleton className="h-5 w-3/4" />
-                    </CardHeader>
-                    <CardContent>
-                      <Skeleton className="h-32 w-full mb-2" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-2/3 mt-1" />
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : error ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Text className="text-center text-red-500">{error}</Text>
-                  <Button 
-                    variant="outline" 
-                    className="mt-4" 
-                    onClick={() => window.location.reload()}
-                  >
-                    Réessayer
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : ensembles.length === 0 ? (
-              <Card className="w-full">
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Shirt size={64} className="text-muted-foreground mb-4" />
-                  <Text className="text-center">Vous n'avez pas encore créé d'ensembles.</Text>
-                  <Button 
-                    className="mt-4" 
-                    onClick={() => navigate('/ensembles/ajouter')}
-                  >
-                    Créer mon premier ensemble
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {ensembles.map(ensemble => (
-                  <EnsembleCard key={ensemble.id} ensemble={ensemble} />
-                ))}
-              </div>
-            )}
+            {ensemblesContent}
           </TabsContent>
         </VetementsContainer>
       </div>
