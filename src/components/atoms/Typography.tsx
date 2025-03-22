@@ -1,7 +1,5 @@
-
 import React from "react";
 import { cn } from "@/lib/utils";
-
 interface TextProps {
   children: React.ReactNode;
   className?: string;
@@ -13,7 +11,6 @@ interface TextProps {
   style?: React.CSSProperties;
   title?: string; // Add this line to include the title prop
 }
-
 export const Text = ({
   children,
   className,
@@ -23,11 +20,11 @@ export const Text = ({
   align = "left",
   color,
   style,
-  title, // Add this to destructure the title prop
+  title,
+  // Add this to destructure the title prop
   ...props
 }: TextProps) => {
   const baseStyles = "tracking-tight transition-colors duration-200";
-  
   const variantStyles = {
     h1: "text-4xl sm:text-5xl lg:text-6xl",
     h2: "text-3xl sm:text-4xl lg:text-5xl",
@@ -38,49 +35,31 @@ export const Text = ({
     p: "text-base",
     small: "text-sm",
     subtle: "text-sm text-muted-foreground",
-    lead: "text-xl",
+    lead: "text-xl"
   };
-
   const weightStyles = {
     light: "font-light",
     regular: "font-normal",
     medium: "font-medium",
     semibold: "font-semibold",
-    bold: "font-bold",
+    bold: "font-bold"
   };
-
   const alignStyles = {
     left: "text-left",
     center: "text-center",
-    right: "text-right",
+    right: "text-right"
   };
-
-  return (
-    <Component
-      className={cn(
-        baseStyles,
-        variantStyles[variant],
-        weightStyles[weight],
-        alignStyles[align],
-        color,
-        className
-      )}
-      style={style}
-      title={title} // Add this to pass the title prop to the component
-      {...props}
-    >
-      {children}
-    </Component>
-  );
+  return;
 };
-
 export const Heading = (props: TextProps) => {
-  const { variant = "h2", as } = props;
-  
+  const {
+    variant = "h2",
+    as
+  } = props;
+
   // Choose appropriate element type based on variant
   // Default to h2 if it's not a heading variant
   let Component: React.ElementType;
-  
   if (as) {
     // If 'as' prop is provided, use it
     Component = as;
@@ -91,8 +70,6 @@ export const Heading = (props: TextProps) => {
     // For non-heading variants like 'subtle', 'lead', etc., default to h2
     Component = 'h2';
   }
-  
   return <Text as={Component} variant={variant} weight="bold" {...props} />;
 };
-
 export default Text;
