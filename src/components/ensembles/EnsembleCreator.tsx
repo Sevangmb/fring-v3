@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Vetement } from '@/services/vetement/types';
 import { VetementType } from '@/services/meteo/tenue';
@@ -36,7 +35,6 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
     chaussures: []
   });
 
-  // Catégoriser les vêtements par type
   useEffect(() => {
     const categorizeVetements = async () => {
       const hauts: Vetement[] = [];
@@ -57,7 +55,6 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
 
       setCategorizedVetements({ hauts, bas, chaussures });
       
-      // Sélectionner par défaut le premier élément de chaque catégorie
       if (hauts.length > 0 && !selectedItems.haut) {
         handleSelectItem('haut', hauts[0]);
       }
@@ -81,97 +78,69 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
     });
   };
 
+  const renderCarousel = (
+    items: Vetement[], 
+    type: 'haut' | 'bas' | 'chaussures', 
+    icon: React.ReactNode, 
+    label: string
+  ) => {
+    const isSelected = selectedItems[type]?.id;
+    
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 border-b pb-1">
+          {icon}
+          <h3 className="text-sm font-medium">{label} ({items.length})</h3>
+        </div>
+        
+        {items.length === 0 ? (
+          <div className="text-center py-2 bg-muted/30 rounded-lg">
+            <p className="text-xs text-muted-foreground">Aucun {label.toLowerCase()} disponible</p>
+          </div>
+        ) : (
+          <Carousel className="w-full max-w-xs mx-auto">
+            <CarouselContent>
+              {items.map((item) => (
+                <CarouselItem key={item.id} className="basis-full">
+                  <VetementCarouselItem 
+                    vetement={item} 
+                    isSelected={selectedItems[type]?.id === item.id}
+                    onSelect={() => handleSelectItem(type, item)}
+                    compact={true}
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="-left-4 h-7 w-7" />
+            <CarouselNext className="-right-4 h-7 w-7" />
+          </Carousel>
+        )}
+      </div>
+    );
+  };
+
   return (
-    <div className="space-y-12 py-4">
-      {/* Hauts */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 border-b pb-2">
-          <Shirt className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-medium">Hauts ({categorizedVetements.hauts.length})</h3>
-        </div>
-        
-        {categorizedVetements.hauts.length === 0 ? (
-          <div className="text-center py-4 bg-muted/30 rounded-lg">
-            <p className="text-muted-foreground">Aucun haut disponible</p>
-          </div>
-        ) : (
-          <Carousel className="max-w-xs mx-auto">
-            <CarouselContent>
-              {categorizedVetements.hauts.map((item) => (
-                <CarouselItem key={item.id} className="basis-full">
-                  <VetementCarouselItem 
-                    vetement={item} 
-                    isSelected={selectedItems.haut?.id === item.id}
-                    onSelect={() => handleSelectItem('haut', item)}
-                  />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="-left-6" />
-            <CarouselNext className="-right-6" />
-          </Carousel>
-        )}
-      </div>
+    <div className="space-y-6 py-2">
+      {renderCarousel(
+        categorizedVetements.hauts, 
+        'haut', 
+        <Shirt className="h-4 w-4 text-primary" />, 
+        'Hauts'
+      )}
 
-      {/* Bas */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 border-b pb-2">
-          <ShoppingBag className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-medium">Bas ({categorizedVetements.bas.length})</h3>
-        </div>
-        
-        {categorizedVetements.bas.length === 0 ? (
-          <div className="text-center py-4 bg-muted/30 rounded-lg">
-            <p className="text-muted-foreground">Aucun bas disponible</p>
-          </div>
-        ) : (
-          <Carousel className="max-w-xs mx-auto">
-            <CarouselContent>
-              {categorizedVetements.bas.map((item) => (
-                <CarouselItem key={item.id} className="basis-full">
-                  <VetementCarouselItem 
-                    vetement={item} 
-                    isSelected={selectedItems.bas?.id === item.id}
-                    onSelect={() => handleSelectItem('bas', item)}
-                  />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="-left-6" />
-            <CarouselNext className="-right-6" />
-          </Carousel>
-        )}
-      </div>
+      {renderCarousel(
+        categorizedVetements.bas, 
+        'bas', 
+        <ShoppingBag className="h-4 w-4 text-primary" />, 
+        'Bas'
+      )}
 
-      {/* Chaussures */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 border-b pb-2">
-          <Footprints className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-medium">Chaussures ({categorizedVetements.chaussures.length})</h3>
-        </div>
-        
-        {categorizedVetements.chaussures.length === 0 ? (
-          <div className="text-center py-4 bg-muted/30 rounded-lg">
-            <p className="text-muted-foreground">Aucun chaussures disponible</p>
-          </div>
-        ) : (
-          <Carousel className="max-w-xs mx-auto">
-            <CarouselContent>
-              {categorizedVetements.chaussures.map((item) => (
-                <CarouselItem key={item.id} className="basis-full">
-                  <VetementCarouselItem 
-                    vetement={item} 
-                    isSelected={selectedItems.chaussures?.id === item.id}
-                    onSelect={() => handleSelectItem('chaussures', item)}
-                  />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="-left-6" />
-            <CarouselNext className="-right-6" />
-          </Carousel>
-        )}
-      </div>
+      {renderCarousel(
+        categorizedVetements.chaussures, 
+        'chaussures', 
+        <Footprints className="h-4 w-4 text-primary" />, 
+        'Chaussures'
+      )}
     </div>
   );
 };

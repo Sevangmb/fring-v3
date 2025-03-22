@@ -1,20 +1,20 @@
 
-import React from 'react';
+import React, { useState, useEffect } from "react";
 import Layout from "@/components/templates/Layout";
 import { Helmet } from "react-helmet";
 import { useAuth } from "@/contexts/AuthContext";
 import VetementsPageHeader from "@/components/molecules/VetementsPageHeader";
-import { Heading, Text } from "@/components/atoms/Typography";
+import { Text } from "@/components/atoms/Typography";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import EnsembleCreator from "@/components/ensembles/EnsembleCreator";
 import { Vetement } from "@/services/vetement/types";
-import { useState, useEffect } from "react";
 import { VetementType } from "@/services/meteo/tenue";
 import { createEnsemble } from "@/services/ensembleService";
 import { fetchVetements } from "@/services/vetement";
+import { Loader2 } from "lucide-react";
 
 const AjouterEnsemble = () => {
   const { user } = useAuth();
@@ -114,20 +114,20 @@ const AjouterEnsemble = () => {
         viewMode="mes-vetements"
       />
       
-      <div className="container mx-auto px-4 py-8">
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle>Composer un Ensemble</CardTitle>
-            <Text variant="subtle">Sélectionnez un haut, un bas et des chaussures pour créer votre ensemble.</Text>
+      <div className="container max-w-2xl mx-auto px-4 py-4">
+        <Card className="w-full shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Composer un Ensemble</CardTitle>
+            <Text variant="subtle" className="text-sm">Sélectionnez vos vêtements pour créer votre ensemble.</Text>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="flex justify-center py-12">
-                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
               </div>
             ) : vetements.length === 0 ? (
-              <div className="text-center py-12">
-                <Text>Vous n'avez pas encore de vêtements. Ajoutez-en pour créer des ensembles.</Text>
+              <div className="text-center py-8">
+                <Text>Vous n'avez pas encore de vêtements.</Text>
                 <Button 
                   className="mt-4" 
                   onClick={() => navigate("/mes-vetements/ajouter")}
@@ -143,13 +143,19 @@ const AjouterEnsemble = () => {
                   selectedItems={selectedItems}
                 />
                 
-                <div className="flex justify-center mt-8">
+                <div className="flex justify-end mt-6">
                   <Button 
-                    className="px-8" 
+                    size="sm"
+                    className="px-4" 
                     onClick={handleCreateEnsemble} 
                     disabled={creating || !selectedItems.haut || !selectedItems.bas || !selectedItems.chaussures}
                   >
-                    {creating ? "Création en cours..." : "Créer cet ensemble"}
+                    {creating ? (
+                      <>
+                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                        Création...
+                      </>
+                    ) : "Créer cet ensemble"}
                   </Button>
                 </div>
               </>

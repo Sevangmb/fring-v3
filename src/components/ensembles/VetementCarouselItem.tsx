@@ -9,12 +9,14 @@ interface VetementCarouselItemProps {
   vetement: Vetement;
   isSelected: boolean;
   onSelect: () => void;
+  compact?: boolean;
 }
 
 const VetementCarouselItem: React.FC<VetementCarouselItemProps> = ({
   vetement,
   isSelected,
-  onSelect
+  onSelect,
+  compact = false
 }) => {
   return (
     <Card 
@@ -26,11 +28,17 @@ const VetementCarouselItem: React.FC<VetementCarouselItemProps> = ({
       )}
       onClick={onSelect}
     >
-      <CardContent className="p-4 flex flex-col items-center">
-        <div className="w-full aspect-square mb-4 relative">
+      <CardContent className={cn(
+        "flex flex-col items-center",
+        compact ? "p-2" : "p-4"
+      )}>
+        <div className={cn(
+          "w-full relative mb-2",
+          compact ? "aspect-square max-h-24" : "aspect-square"
+        )}>
           {isSelected && (
-            <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground">
-              Sélectionné
+            <Badge className="absolute top-1 right-1 bg-primary text-primary-foreground text-xs py-0">
+              ✓
             </Badge>
           )}
           
@@ -47,13 +55,18 @@ const VetementCarouselItem: React.FC<VetementCarouselItemProps> = ({
           )}
         </div>
         
-        <div className="text-center space-y-1">
-          <h4 className="font-medium text-sm truncate max-w-full">
+        <div className="text-center space-y-0.5 w-full">
+          <h4 className={cn(
+            "font-medium truncate max-w-full",
+            compact ? "text-xs" : "text-sm"
+          )}>
             {vetement.nom}
           </h4>
-          <p className="text-xs text-muted-foreground truncate max-w-full">
-            {vetement.marque || "Sans marque"} • {vetement.couleur}
-          </p>
+          {!compact && (
+            <p className="text-xs text-muted-foreground truncate max-w-full">
+              {vetement.marque || "Sans marque"} • {vetement.couleur}
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>
