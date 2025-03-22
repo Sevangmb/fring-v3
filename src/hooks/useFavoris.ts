@@ -94,8 +94,10 @@ export const useFavoris = () => {
     try {
       const success = await removeFavori(type, elementId);
       if (success) {
-        // Rafraîchir la liste
-        loadFavoris();
+        // Rafraîchir la liste sans recharger tous les favoris
+        setFavoris(prev => prev.filter(
+          favori => !(favori.type_favori === type && favori.element_id === elementId.toString())
+        ));
         return true;
       }
       return false;
@@ -108,7 +110,7 @@ export const useFavoris = () => {
       });
       return false;
     }
-  }, [user, toast, loadFavoris]);
+  }, [user, toast]);
 
   // Basculer l'état de favori
   const toggleFavori = useCallback(async (

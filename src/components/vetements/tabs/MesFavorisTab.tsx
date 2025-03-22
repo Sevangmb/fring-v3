@@ -4,15 +4,17 @@ import { TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFavoris } from "@/hooks/useFavoris";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 
 const MesFavorisTab: React.FC = () => {
-  const { favoris, loading } = useFavoris();
+  const { favoris, loading, retirerFavori, loadFavoris } = useFavoris();
   const [activeTab, setActiveTab] = useState<string>("all");
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   // Filtrer les favoris selon l'onglet actif
   const filteredFavoris = React.useMemo(() => {
@@ -22,12 +24,36 @@ const MesFavorisTab: React.FC = () => {
 
   // Gérer la navigation lors du clic sur un favori
   const handleFavoriClick = (favori: any) => {
+    if (!favori.details) return; // Ne pas naviguer si l'élément a été supprimé
+
     if (favori.type_favori === 'vetement') {
       navigate(`/mes-vetements/modifier/${favori.element_id}`);
     } else if (favori.type_favori === 'ensemble') {
       navigate(`/ensembles/modifier/${favori.element_id}`);
     } else if (favori.type_favori === 'utilisateur') {
       navigate(`/messages/${favori.element_id}`);
+    }
+  };
+
+  // Gérer la suppression d'un favori
+  const handleRemoveFavori = async (e: React.MouseEvent, favori: any) => {
+    e.stopPropagation(); // Empêcher la navigation
+
+    try {
+      await retirerFavori(favori.type_favori, favori.element_id);
+      toast({
+        title: "Favori supprimé",
+        description: "L'élément a été retiré de vos favoris.",
+        variant: "default",
+      });
+      loadFavoris(); // Rafraîchir la liste après suppression
+    } catch (error) {
+      console.error("Erreur lors de la suppression du favori:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer ce favori.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -62,8 +88,8 @@ const MesFavorisTab: React.FC = () => {
                 {filteredFavoris.map((favori) => (
                   <Card 
                     key={favori.id} 
-                    className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => handleFavoriClick(favori)}
+                    className={`overflow-hidden transition-shadow ${favori.details ? 'cursor-pointer hover:shadow-md' : 'bg-muted/30'}`}
+                    onClick={() => favori.details && handleFavoriClick(favori)}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-2">
@@ -84,14 +110,27 @@ const MesFavorisTab: React.FC = () => {
                       </div>
                       
                       {!favori.details ? (
-                        <div className="mt-2 bg-muted p-3 rounded-md">
-                          <div className="flex items-center space-x-2 text-muted-foreground">
-                            <AlertTriangle size={16} />
-                            <h3 className="font-medium">Vêtement supprimé</h3>
+                        <div className="mt-2 bg-muted/50 p-4 rounded-md">
+                          <div className="flex items-center space-x-2 text-muted-foreground mb-2">
+                            <AlertTriangle size={16} className="text-amber-500" />
+                            <h3 className="font-medium">
+                              {favori.type_favori === 'vetement' ? 'Vêtement supprimé' : 
+                               favori.type_favori === 'ensemble' ? 'Ensemble supprimé' : 
+                               'Utilisateur indisponible'}
+                            </h3>
                           </div>
-                          <p className="text-sm text-muted-foreground mt-1">
+                          <p className="text-sm text-muted-foreground mb-3">
                             Élément supprimé ou indisponible
                           </p>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="w-full flex items-center justify-center gap-2 mt-2"
+                            onClick={(e) => handleRemoveFavori(e, favori)}
+                          >
+                            <Trash2 size={14} />
+                            <span>Retirer des favoris</span>
+                          </Button>
                         </div>
                       ) : (
                         <>
@@ -110,6 +149,18 @@ const MesFavorisTab: React.FC = () => {
                             {favori.type_favori === 'utilisateur' && (
                               <span>{favori.details.email}</span>
                             )}
+                          </div>
+                          
+                          <div className="mt-3 flex justify-end">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-destructive hover:text-destructive/90 p-0 h-auto"
+                              onClick={(e) => handleRemoveFavori(e, favori)}
+                            >
+                              <Trash2 size={14} className="mr-1" />
+                              <span className="text-xs">Retirer</span>
+                            </Button>
                           </div>
                         </>
                       )}

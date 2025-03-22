@@ -7,7 +7,6 @@ import { Vetement } from './types';
  */
 export const fetchVetementById = async (vetementId: number): Promise<Vetement | null> => {
   try {
-    // Modification de la requête pour éviter de joindre sur user_id qui n'est pas une table
     const { data, error } = await supabase
       .from('vetements')
       .select('*, profiles(email)')
@@ -16,6 +15,10 @@ export const fetchVetementById = async (vetementId: number): Promise<Vetement | 
 
     if (error) {
       console.error("Erreur lors de la récupération du vêtement:", error);
+      // Si le vêtement n'existe pas, on retourne null plutôt que de lancer une erreur
+      if (error.code === 'PGRST116') {
+        return null;
+      }
       throw error;
     }
 
