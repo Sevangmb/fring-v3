@@ -31,6 +31,7 @@ export function useVetementsData(
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const reloadVetements = useCallback(() => {
+    console.log("Rechargement des vêtements...");
     setRefreshTrigger(prev => prev + 1);
   }, []);
 
@@ -58,12 +59,10 @@ export function useVetementsData(
           vetementsData = await fetchVetements();
         } else if (viewMode === 'vetements-amis') {
           // Si on a sélectionné un ami spécifique, on passe son ID
-          const friendIdParam = friendFilter !== "all" ? friendFilter : undefined;
-          console.log("Récupération des vêtements avec le filtre ami:", friendIdParam);
-          vetementsData = await fetchVetementsAmis(friendIdParam);
+          vetementsData = await fetchVetementsAmis(friendFilter !== "all" ? friendFilter : undefined);
+          console.log("Vêtements récupérés pour", friendFilter !== "all" ? "l'ami spécifique" : "tous les amis", ":", vetementsData.length);
         } else if (viewMode === 'mes-ensembles') {
           // Pour l'instant, on utilise la même logique que 'vetements-amis'
-          // mais on pourrait implémenter une logique spécifique pour les ensembles plus tard
           const friendIdParam = friendFilter !== "all" ? friendFilter : undefined;
           vetementsData = await fetchVetementsAmis(friendIdParam);
         }
@@ -79,7 +78,7 @@ export function useVetementsData(
           isLoading: false,
           error: null
         });
-      } catch (err) {
+      } catch (err: any) {
         console.error("Erreur lors de la récupération des données:", err);
         setState(prev => ({
           ...prev,

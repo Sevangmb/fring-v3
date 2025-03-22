@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import Layout from "@/components/templates/Layout";
 import { Helmet } from "react-helmet";
 import { useAuth } from "@/contexts/AuthContext";
@@ -40,6 +40,12 @@ const VetementsAmis = () => {
       chargerAmis();
     }
   }, [user, chargerAmis]);
+
+  // Effet pour débogage
+  useEffect(() => {
+    console.log("Filtre d'ami actuel dans VetementsAmis:", friendFilter);
+    console.log("Nombre de vêtements affichés:", vetements.length);
+  }, [friendFilter, vetements]);
 
   const filteredVetements = filterVetements(vetements, categories);
 

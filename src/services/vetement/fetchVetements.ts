@@ -39,11 +39,14 @@ export const fetchVetements = async (): Promise<Vetement[]> => {
  */
 export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]> => {
   try {
-    // Si un ID d'ami spécifique est fourni, filtrer uniquement ses vêtements
+    // Ajouter plus de logs pour le débogage
+    console.log('fetchVetementsAmis appelé avec friendId:', friendId);
+    
+    // Si un ID d'ami spécifique est fourni et n'est pas 'all', filtrer uniquement ses vêtements
     if (friendId && friendId !== 'all') {
       console.log('Récupération des vêtements pour l\'ami spécifique:', friendId);
       
-      // Utiliser directement la fonction RPC personnalisée pour récupérer les vêtements de l'ami spécifique
+      // Utiliser la fonction RPC personnalisée pour récupérer les vêtements de l'ami spécifique
       const { data, error } = await supabase
         .rpc('get_friend_vetements', { friend_id_param: friendId });
       
@@ -52,8 +55,10 @@ export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]>
         throw error;
       }
       
+      console.log('Vêtements de l\'ami récupérés:', data?.length || 0, 'vêtements');
       return data as Vetement[];
     } else {
+      console.log('Récupération des vêtements de tous les amis');
       // Sinon, utiliser la fonction RPC pour récupérer tous les vêtements des amis
       const { data, error } = await supabase
         .rpc('get_friends_vetements');
@@ -63,6 +68,7 @@ export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]>
         throw error;
       }
       
+      console.log('Vêtements des amis récupérés:', data?.length || 0, 'vêtements');
       return data as Vetement[];
     }
   } catch (error) {
