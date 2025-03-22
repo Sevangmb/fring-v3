@@ -1,7 +1,6 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { Categorie } from '@/services/categorieService';
-import { Marque } from '@/services/marqueService';
 import { Ami } from '@/services/amis';
 import { useVetementsFilters } from '@/hooks/useVetementsFilters';
 
@@ -15,7 +14,7 @@ interface SearchFilterContextType {
   friendFilter: string;
   setFriendFilter: (value: string) => void;
   categories: Categorie[];
-  marques: Marque[];
+  marques: string[];
   friends: Ami[];
   showFriendFilter: boolean;
   resetFilters: () => void;
@@ -26,7 +25,7 @@ const SearchFilterContext = createContext<SearchFilterContextType | undefined>(u
 export interface SearchFilterProviderProps {
   children: ReactNode;
   categories: Categorie[];
-  marques: Marque[];
+  marques: string[];
   friends?: Ami[];
   showFriendFilter?: boolean;
 }
