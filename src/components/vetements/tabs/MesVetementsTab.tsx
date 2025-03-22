@@ -1,60 +1,134 @@
 
 import React, { useEffect } from "react";
-import { TabsContent } from "@/components/ui/tabs";
-import VetementsList from "@/components/organisms/VetementsList";
-import SearchFilterBar from "@/components/molecules/SearchFilterBar";
-import { Categorie } from "@/services/categorieService";
+import VetementCard from "@/components/molecules/VetementCard";
+import { useAuth } from "@/contexts/AuthContext";
 import { Vetement } from "@/services/vetement/types";
-import { Ami } from "@/services/amis/types";
+import { deleteVetement } from "@/services/vetement";
+import { Categorie } from "@/services/categorieService";
+import { useToast } from "@/hooks/use-toast";
+import SearchFilterBar from "@/components/molecules/SearchFilterBar";
+import { SearchFilterProvider } from "@/contexts/SearchFilterContext";
+import { useCategories } from "@/hooks/useCategories";
 
 interface MesVetementsTabProps {
   vetements: Vetement[];
   categories: Categorie[];
-  marques: string[];
-  acceptedFriends: Ami[];
-  activeTab?: string;
-  isLoading: boolean;
-  error: string | null;
-  isAuthenticated: boolean;
-  onVetementDeleted: (id: number) => void;
-  onTabChange?: (tab: string) => void;
+  marques: any[];
+  acceptedFriends?: any[];
+  isLoading?: boolean;
+  error?: string | null;
+  isAuthenticated?: boolean;
+  onVetementDeleted?: (id: number) => void;
   hideTitle?: boolean;
 }
 
 const MesVetementsTab: React.FC<MesVetementsTabProps> = ({
   vetements,
-  categories,
   marques,
-  acceptedFriends,
-  isLoading,
-  error,
-  isAuthenticated,
+  acceptedFriends = [],
+  isLoading = false,
+  error = null,
+  isAuthenticated = false,
   onVetementDeleted,
-  hideTitle = false,
+  hideTitle = false
 }) => {
-  // Loguer les données pour le débogage
+  const { toast } = useToast();
+  const { user } = useAuth();
+  
+  // Utilisation du hook useCategories pour récupérer les catégories de la base de données
+  const { categories, loadingCategories } = useCategories();
+  
   useEffect(() => {
-    console.log('MesVetementsTab rendering with:', {
-      vetements: vetements.length,
-      categories: categories.length,
-      marques: marques.length
-    });
-  }, [vetements, categories, marques]);
+    console.log("Catégories reçues dans MesVetementsTab:", categories);
+  }, [categories]);
+
+  const handleDeleteVetement = async (id: number) => {
+    if (!user) {
+      toast({
+        title: "Erreur",
+        description: "Vous devez être connecté pour supprimer un vêtement",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await deleteVetement(id);
+      toast({
+        title: "Succès",
+        description: "Le vêtement a été supprimé avec succès",
+      });
+      
+      if (onVetementDeleted) {
+        onVetementDeleted(id);
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le vêtement",
+        variant: "destructive",
+      });
+      console.error("Erreur lors de la suppression du vêtement:", error);
+    }
+  };
+
+  if (isLoading || loadingCategories) {
+    return (
+      <div className="flex justify-center items-center py-16">
+        <div className="h-8 w-8 animate-spin text-primary border-2 border-current border-t-transparent rounded-full" />
+        <span className="ml-2">Chargement des vêtements...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="py-10 text-center">
+        <p className="text-destructive mb-2">Erreur lors du chargement des vêtements</p>
+        <p className="text-muted-foreground">{error}</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="py-10 text-center">
+        <p className="text-lg font-medium mb-2">Vous devez être connecté pour voir vos vêtements</p>
+        <p className="text-muted-foreground">Connectez-vous pour accéder à votre garde-robe</p>
+      </div>
+    );
+  }
+
+  if (vetements.length === 0) {
+    return (
+      <div className="py-10 text-center">
+        <p className="text-lg font-medium mb-2">Aucun vêtement trouvé</p>
+        <p className="text-muted-foreground">Ajoutez des vêtements à votre garde-robe</p>
+      </div>
+    );
+  }
 
   return (
-    <TabsContent value="mes-vetements">
-      <SearchFilterBar />
-      
-      <VetementsList 
-        vetements={vetements}
-        isLoading={isLoading}
-        error={error}
-        isAuthenticated={isAuthenticated}
-        onVetementDeleted={onVetementDeleted}
-        showOwner={false}
-        hideTitle={hideTitle}
-      />
-    </TabsContent>
+    <div>
+      <SearchFilterProvider 
+        categories={categories || []}
+        marques={marques}
+        friends={acceptedFriends}
+        showFriendFilter={false}
+      >
+        <SearchFilterBar />
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {vetements.map((vetement) => (
+            <VetementCard 
+              key={vetement.id}
+              vetement={vetement}
+              onDelete={handleDeleteVetement}
+            />
+          ))}
+        </div>
+      </SearchFilterProvider>
+    </div>
   );
 };
 

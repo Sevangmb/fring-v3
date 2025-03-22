@@ -1,107 +1,108 @@
 
-import React, { createContext, useContext, ReactNode, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { Categorie } from '@/services/categorieService';
-import { Ami } from '@/services/amis';
-import { useVetementsFilters } from '@/hooks/useVetementsFilters';
+import { useCategories } from '@/hooks/useCategories';
 
 interface SearchFilterContextType {
   searchTerm: string;
-  setSearchTerm: (value: string) => void;
+  setSearchTerm: (term: string) => void;
   categorieFilter: string;
-  setCategorieFilter: (value: string) => void;
+  setCategorieFilter: (categorie: string) => void;
   marqueFilter: string;
-  setMarqueFilter: (value: string) => void;
+  setMarqueFilter: (marque: string) => void;
   friendFilter: string;
-  setFriendFilter: (value: string) => void;
+  setFriendFilter: (friend: string) => void;
+  resetFilters: () => void;
   categories: Categorie[];
   marques: string[];
-  friends: Ami[];
+  friends: any[];
   showFriendFilter: boolean;
-  resetFilters: () => void;
-  onFriendFilterChange?: (friendId: string) => void;
-  currentFriendFilter?: string;
 }
 
 const SearchFilterContext = createContext<SearchFilterContextType | undefined>(undefined);
 
-export interface SearchFilterProviderProps {
+interface SearchFilterProviderProps {
   children: ReactNode;
-  categories: Categorie[];
-  marques: string[];
-  friends?: Ami[];
+  categories?: Categorie[];
+  marques?: string[];
+  friends?: any[];
   showFriendFilter?: boolean;
-  onFriendFilterChange?: (friendId: string) => void;
-  currentFriendFilter?: string;
 }
 
 export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
   children,
-  categories,
-  marques,
-  friends = [],
-  showFriendFilter = false,
-  onFriendFilterChange,
-  currentFriendFilter,
+  categories: initialCategories,
+  marques: initialMarques = [],
+  friends: initialFriends = [],
+  showFriendFilter = false
 }) => {
-  const {
-    searchTerm,
-    setSearchTerm,
-    categorieFilter,
-    setCategorieFilter,
-    marqueFilter,
-    setMarqueFilter,
-    friendFilter: internalFriendFilter,
-    setFriendFilter: internalSetFriendFilter,
-    resetFilters,
-  } = useVetementsFilters();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categorieFilter, setCategorieFilter] = useState('all');
+  const [marqueFilter, setMarqueFilter] = useState('all');
+  const [friendFilter, setFriendFilter] = useState('all');
+  
+  // Utiliser le hook useCategories pour récupérer les catégories de la base de données
+  const { categories: dbCategories, loadingCategories } = useCategories();
+  
+  // État local pour les catégories et les marques
+  const [categories, setCategories] = useState<Categorie[]>(initialCategories || []);
+  const [marques, setMarques] = useState<string[]>(initialMarques);
+  const [friends, setFriends] = useState<any[]>(initialFriends);
 
-  const setFriendFilter = (value: string) => {
-    console.log('Setting friend filter to:', value);
-    internalSetFriendFilter(value);
-    if (onFriendFilterChange) {
-      onFriendFilterChange(value);
+  // Mise à jour des catégories lorsque les catégories de la base de données sont chargées
+  useEffect(() => {
+    if (dbCategories && dbCategories.length > 0) {
+      setCategories(dbCategories);
+    } else if (initialCategories && initialCategories.length > 0) {
+      setCategories(initialCategories);
     }
+  }, [dbCategories, initialCategories]);
+  
+  // Mise à jour des marques lorsque les props changent
+  useEffect(() => {
+    if (initialMarques && initialMarques.length > 0) {
+      setMarques(initialMarques);
+    }
+  }, [initialMarques]);
+
+  // Mise à jour des amis lorsque les props changent
+  useEffect(() => {
+    if (initialFriends && initialFriends.length > 0) {
+      setFriends(initialFriends);
+    }
+  }, [initialFriends]);
+
+  const resetFilters = () => {
+    setSearchTerm('');
+    setCategorieFilter('all');
+    setMarqueFilter('all');
+    setFriendFilter('all');
   };
 
-  // Synchroniser les filtres externes et internes
-  useEffect(() => {
-    if (currentFriendFilter && currentFriendFilter !== internalFriendFilter) {
-      console.log('Synchronizing friend filter from external source:', currentFriendFilter);
-      internalSetFriendFilter(currentFriendFilter);
-    }
-  }, [currentFriendFilter, internalSetFriendFilter, internalFriendFilter]);
-
-  const value = useMemo(() => ({
-    searchTerm,
-    setSearchTerm,
-    categorieFilter,
-    setCategorieFilter,
-    marqueFilter,
-    setMarqueFilter,
-    friendFilter: currentFriendFilter || internalFriendFilter,
-    setFriendFilter,
-    categories,
-    marques,
-    friends,
-    showFriendFilter,
-    resetFilters,
-    onFriendFilterChange,
-    currentFriendFilter,
-  }), [
-    searchTerm, categorieFilter, marqueFilter, 
-    internalFriendFilter, currentFriendFilter,
-    categories, marques, friends, showFriendFilter,
-    resetFilters, onFriendFilterChange
-  ]);
-
   return (
-    <SearchFilterContext.Provider value={value}>
+    <SearchFilterContext.Provider
+      value={{
+        searchTerm,
+        setSearchTerm,
+        categorieFilter,
+        setCategorieFilter,
+        marqueFilter,
+        setMarqueFilter,
+        friendFilter,
+        setFriendFilter,
+        resetFilters,
+        categories,
+        marques,
+        friends,
+        showFriendFilter
+      }}
+    >
       {children}
     </SearchFilterContext.Provider>
   );
 };
 
-export const useSearchFilter = (): SearchFilterContextType => {
+export const useSearchFilter = () => {
   const context = useContext(SearchFilterContext);
   if (context === undefined) {
     throw new Error('useSearchFilter must be used within a SearchFilterProvider');

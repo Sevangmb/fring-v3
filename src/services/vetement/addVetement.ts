@@ -1,6 +1,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { Vetement } from './types';
+import { getCategorieById } from '@/services/categorieService';
 
 /**
  * Adds a new vetement to the database, handling categorie_id properly
@@ -15,6 +16,27 @@ export const addVetement = async (vetement: Omit<Vetement, 'id' | 'created_at'>)
     }
 
     console.log('Ajout d\'un vêtement avec les données:', vetement);
+    
+    // Vérifier si la catégorie existe
+    if (vetement.categorie_id) {
+      const categorie = await getCategorieById(Number(vetement.categorie_id));
+      
+      if (!categorie) {
+        console.warn(`La catégorie avec l'ID ${vetement.categorie_id} n'existe pas. Récupération d'une catégorie valide...`);
+        
+        // Récupérer une catégorie valide
+        const { data: firstCategorie } = await supabase
+          .from('categories')
+          .select('id')
+          .limit(1)
+          .single();
+          
+        if (firstCategorie) {
+          console.log(`Utilisation de la catégorie ${firstCategorie.id} à la place.`);
+          vetement.categorie_id = Number(firstCategorie.id);
+        }
+      }
+    }
     
     // Vérifier quelles colonnes existent réellement dans la table
     const { data: columns, error: columnsError } = await supabase

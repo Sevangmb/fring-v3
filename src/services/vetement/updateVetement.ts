@@ -1,6 +1,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { Vetement } from './types';
+import { getCategorieById } from '@/services/categorieService';
 
 /**
  * Updates an existing vetement with the given ID
@@ -46,30 +47,39 @@ export const updateVetement = async (id: number, vetement: Partial<Vetement>): P
     console.log('Colonnes disponibles:', columnNames);
     
     // Vérifier la valeur de categorie_id
-    if (vetement.categorie_id === 0) {
-      // Si categorie_id est 0, c'est une valeur invalide - utiliser une valeur existante ou une valeur par défaut valide
-      // Récupérer une catégorie valide de la base de données
-      const { data: categorie, error: categorieError } = await supabase
-        .from('categories')
-        .select('id')
-        .limit(1)
-        .single();
-        
-      if (!categorieError && categorie) {
-        console.log(`Remplacement de categorie_id=0 par une valeur existante: ${categorie.id}`);
-        cleanedData['categorie_id'] = categorie.id;
-      } else {
-        // Garder la valeur existante si elle existe
-        if (existingData.categorie_id) {
-          console.log(`Conservation de la catégorie existante: ${existingData.categorie_id}`);
-          cleanedData['categorie_id'] = existingData.categorie_id;
-        } else {
-          console.error('Impossible de trouver une catégorie valide');
-          throw new Error('Aucune catégorie valide trouvée pour ce vêtement');
-        }
+    if (vetement.categorie_id !== undefined) {
+      // Vérifier si la catégorie existe
+      const categorie = await getCategorieById(Number(vetement.categorie_id));
+      
+      if (!categorie && vetement.categorie_id !== 0) {
+        console.warn(`La catégorie avec l'ID ${vetement.categorie_id} n'existe pas.`);
       }
-    } else if (vetement.categorie_id) {
-      cleanedData['categorie_id'] = vetement.categorie_id;
+      
+      if (vetement.categorie_id === 0 || !categorie) {
+        // Si categorie_id est 0 ou n'existe pas, c'est une valeur invalide - utiliser une valeur existante ou une valeur par défaut valide
+        // Récupérer une catégorie valide
+        const { data: firstCategorie } = await supabase
+          .from('categories')
+          .select('id')
+          .limit(1)
+          .single();
+          
+        if (firstCategorie) {
+          console.log(`Remplacement de categorie_id=${vetement.categorie_id} par une valeur existante: ${firstCategorie.id}`);
+          cleanedData['categorie_id'] = Number(firstCategorie.id);
+        } else {
+          // Garder la valeur existante si elle existe
+          if (existingData.categorie_id) {
+            console.log(`Conservation de la catégorie existante: ${existingData.categorie_id}`);
+            cleanedData['categorie_id'] = existingData.categorie_id;
+          } else {
+            console.error('Impossible de trouver une catégorie valide');
+            throw new Error('Aucune catégorie valide trouvée pour ce vêtement');
+          }
+        }
+      } else {
+        cleanedData['categorie_id'] = vetement.categorie_id;
+      }
     }
     
     // Ne garder que les propriétés qui existent dans la table

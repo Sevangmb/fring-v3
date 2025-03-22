@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Filter, SlidersHorizontal, TagIcon, Plus } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { useSearchFilter } from '@/contexts/SearchFilterContext';
+import { useCategories } from '@/hooks/useCategories';
 
 const SearchFilterBar: React.FC = () => {
   const navigate = useNavigate();
@@ -17,17 +18,19 @@ const SearchFilterBar: React.FC = () => {
     marqueFilter,
     setMarqueFilter,
     resetFilters,
-    categories,
     marques
   } = useSearchFilter();
+
+  const { categories, loadingCategories } = useCategories();
 
   // Déboguer les états des filtres
   useEffect(() => {
     console.log('SearchFilterBar filters:', {
       categorieFilter,
-      marqueFilter
+      marqueFilter,
+      availableCategories: categories
     });
-  }, [categorieFilter, marqueFilter]);
+  }, [categorieFilter, marqueFilter, categories]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -62,11 +65,15 @@ const SearchFilterBar: React.FC = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Toutes</SelectItem>
-            {categories.map((cat) => (
-              <SelectItem key={cat.id} value={cat.nom}>
-                {cat.nom}
-              </SelectItem>
-            ))}
+            {loadingCategories ? (
+              <SelectItem value="loading" disabled>Chargement...</SelectItem>
+            ) : (
+              categories.map((cat) => (
+                <SelectItem key={String(cat.id)} value={cat.nom}>
+                  {cat.nom}
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
         

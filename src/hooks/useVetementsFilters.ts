@@ -1,10 +1,10 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { Vetement } from "@/services/vetement/types";
 import { Categorie } from "@/services/categorieService";
-import { Vetement } from "@/services/vetement";
 
 export function useVetementsFilters() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [categorieFilter, setCategorieFilter] = useState<string>("all");
   const [marqueFilter, setMarqueFilter] = useState<string>("all");
   const [friendFilter, setFriendFilter] = useState<string>("all");
@@ -12,55 +12,51 @@ export function useVetementsFilters() {
   const [activeTab, setActiveTab] = useState<string>("mes-vetements");
   const [categoryTab, setCategoryTab] = useState<string>("all");
 
-  const getCategoryNameById = (categories: Categorie[], categoryId: number): string => {
-    const category = categories.find(cat => Number(cat.id) === categoryId);
-    return category ? category.nom : 'Catégorie inconnue';
-  };
-
-  const filterVetements = useCallback((vetements: Vetement[], categories: Categorie[]): Vetement[] => {
-    console.log('Filtering vetements with:', {
-      searchTerm,
-      categorieFilter,
-      marqueFilter
-    });
-    
-    return vetements.filter(vetement => {
-      // Filtrage par terme de recherche
-      const matchesSearch = searchTerm.trim() === "" || 
-                          vetement.nom.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          (vetement.marque && vetement.marque.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                          (vetement.description && vetement.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                          (vetement.owner_email && vetement.owner_email.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-      // Filtrage par catégorie
-      let matchesCategorie = true;
-      if (categorieFilter && categorieFilter !== "all") {
-        const categoryName = getCategoryNameById(categories, vetement.categorie_id);
-        matchesCategorie = categoryName === categorieFilter;
-      }
-      
-      // Filtrage par marque
-      let matchesMarque = true;
-      if (marqueFilter && marqueFilter !== "all") {
-        matchesMarque = vetement.marque === marqueFilter;
-      }
-
-      return matchesSearch && matchesCategorie && matchesMarque;
-    });
-  }, [searchTerm, categorieFilter, marqueFilter]);
-
   const handleViewModeChange = (mode: 'mes-vetements' | 'vetements-amis' | 'mes-ensembles') => {
     setViewMode(mode);
-    resetFilters();
   };
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setSearchTerm("");
     setCategorieFilter("all");
     setMarqueFilter("all");
     setFriendFilter("all");
     setCategoryTab("all");
-  };
+  }, []);
+
+  const filterVetements = useCallback((vetements: Vetement[], categories: Categorie[]) => {
+    if (!Array.isArray(vetements)) {
+      console.warn("Les vêtements ne sont pas un tableau:", vetements);
+      return [];
+    }
+
+    return vetements.filter(vetement => {
+      // Filtre par terme de recherche
+      const searchMatch = !searchTerm || 
+        vetement.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vetement.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vetement.marque?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      // Récupérer le nom de la catégorie à partir de l'ID
+      const category = categories.find(cat => cat.id === vetement.categorie_id);
+      const categoryName = category ? category.nom : "Catégorie inconnue";
+
+      // Filtre par catégorie
+      const categoryMatch = categorieFilter === "all" || 
+        (category && category.nom === categorieFilter);
+
+      // Filtre par marque
+      const marqueMatch = marqueFilter === "all" || 
+        vetement.marque === marqueFilter;
+
+      // Filtre par ami (uniquement pour le mode 'vetements-amis')
+      const friendMatch = friendFilter === "all" || 
+        (viewMode === 'vetements-amis' && vetement.owner_email === friendFilter);
+
+      return searchMatch && categoryMatch && marqueMatch && 
+        (viewMode !== 'vetements-amis' || friendMatch);
+    });
+  }, [searchTerm, categorieFilter, marqueFilter, friendFilter, viewMode]);
 
   return {
     searchTerm,
@@ -71,13 +67,13 @@ export function useVetementsFilters() {
     setMarqueFilter,
     friendFilter,
     setFriendFilter,
-    activeTab,
-    setActiveTab,
-    categoryTab,
-    setCategoryTab,
     viewMode,
     handleViewModeChange,
     filterVetements,
-    resetFilters
+    resetFilters,
+    activeTab,
+    setActiveTab,
+    categoryTab,
+    setCategoryTab
   };
 }

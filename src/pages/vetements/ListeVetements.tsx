@@ -12,6 +12,7 @@ import { useVetementsFilters } from "@/hooks/useVetementsFilters";
 import { useAmis } from "@/hooks/useAmis";
 import { SearchFilterProvider } from "@/contexts/SearchFilterContext";
 import MesEnsembles from "../ensembles/MesEnsembles";
+import { useCategories } from "@/hooks/useCategories";
 
 const ListeVetements = () => {
   const { user } = useAuth();
@@ -28,8 +29,13 @@ const ListeVetements = () => {
     setFriendFilter,
     viewMode,
     handleViewModeChange,
-    filterVetements
+    filterVetements,
+    activeTab,
+    setActiveTab
   } = useVetementsFilters();
+
+  // Récupération des catégories directement de la base de données
+  const { categories: dbCategories, loadingCategories } = useCategories();
 
   const {
     vetements,
@@ -41,7 +47,9 @@ const ListeVetements = () => {
   } = useVetementsData(viewMode, friendFilter);
 
   const acceptedFriends = filteredAmis?.amisAcceptes || [];
-  const filteredVetements = filterVetements(vetements, categories);
+  
+  // Utiliser les catégories de la base de données pour le filtrage
+  const filteredVetements = filterVetements(vetements, dbCategories.length ? dbCategories : categories);
 
   const handleVetementDeleted = (id: number) => {
     console.log(`Vêtement ${id} supprimé`);
@@ -66,7 +74,7 @@ const ListeVetements = () => {
 
       <div className="container mx-auto px-4 py-8">
         <SearchFilterProvider
-          categories={categories}
+          categories={dbCategories.length ? dbCategories : categories}
           marques={marquesFormatted}
           friends={acceptedFriends}
           showFriendFilter={false}
@@ -75,10 +83,10 @@ const ListeVetements = () => {
             <TabsContent value="mes-vetements">
               <MesVetementsTab 
                 vetements={filteredVetements}
-                categories={categories}
+                categories={dbCategories.length ? dbCategories : categories}
                 marques={marquesFormatted}
                 acceptedFriends={acceptedFriends}
-                isLoading={isLoading || loadingAmis}
+                isLoading={isLoading || loadingAmis || loadingCategories}
                 error={error}
                 isAuthenticated={!!user}
                 onVetementDeleted={handleVetementDeleted}
