@@ -57,6 +57,51 @@ export type Database = {
         }
         Relationships: []
       }
+      defi_participations: {
+        Row: {
+          commentaire: string | null
+          created_at: string | null
+          defi_id: number
+          ensemble_id: number
+          id: number
+          note: number | null
+          user_id: string
+        }
+        Insert: {
+          commentaire?: string | null
+          created_at?: string | null
+          defi_id: number
+          ensemble_id: number
+          id?: number
+          note?: number | null
+          user_id: string
+        }
+        Update: {
+          commentaire?: string | null
+          created_at?: string | null
+          defi_id?: number
+          ensemble_id?: number
+          id?: number
+          note?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "defi_participations_defi_id_fkey"
+            columns: ["defi_id"]
+            isOneToOne: false
+            referencedRelation: "defis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "defi_participations_ensemble_id_fkey"
+            columns: ["ensemble_id"]
+            isOneToOne: false
+            referencedRelation: "tenues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       defis: {
         Row: {
           created_at: string | null
@@ -505,6 +550,13 @@ export type Database = {
           "": unknown
         }
         Returns: unknown
+      }
+      increment: {
+        Args: {
+          row_id: number
+          table_name: string
+        }
+        Returns: number
       }
       search_users_by_email: {
         Args: {

@@ -1,171 +1,185 @@
 
-import React, { useState, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FlameIcon, Clock, Trophy } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { PlusCircle, Flag, Calendar, Trophy } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Text } from "@/components/atoms/Typography";
 import DefiCard, { DefiType } from "@/components/molecules/DefiCard";
-import DefiCardSkeleton from "@/components/molecules/DefiCardSkeleton";
-import { getDefisByStatus, updateDefisStatus, Defi } from "@/services/defiService";
+import CreateDefiDialog from "@/components/molecules/CreateDefiDialog";
+import { fetchDefis, Defi } from "@/services/defi";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
-interface DefisTabContentProps {
-  isLoading?: boolean;
-}
+const DefisTabContent = () => {
+  const [defis, setDefis] = useState<Defi[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [openCreateDialog, setOpenCreateDialog] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-const DefisTabContent: React.FC<DefisTabContentProps> = ({ isLoading: initialLoading = false }) => {
-  const [activeTab, setActiveTab] = useState("current");
-  const [loading, setLoading] = useState(initialLoading);
-  const [currentDefis, setCurrentDefis] = useState<Defi[]>([]);
-  const [upcomingDefis, setUpcomingDefis] = useState<Defi[]>([]);
-  const [pastDefis, setPastDefis] = useState<Defi[]>([]);
-  const [refreshKey, setRefreshKey] = useState(0);
+  // Function to determine defi type based on dates
+  const getDefiType = (defi: Defi): DefiType => {
+    const now = new Date();
+    const startDate = new Date(defi.date_debut);
+    const endDate = new Date(defi.date_fin);
+    
+    if (endDate < now) return "past";
+    if (startDate > now) return "upcoming";
+    return "current";
+  };
 
-  const loadDefis = async () => {
+  // Format date range
+  const formatDateRange = (startDate: string, endDate: string) => {
+    return `Du ${format(new Date(startDate), 'dd MMM', { locale: fr })} au ${format(new Date(endDate), 'dd MMM yyyy', { locale: fr })}`;
+  };
+
+  // Group defis by type
+  const groupedDefis = defis.reduce((acc, defi) => {
+    const type = getDefiType(defi);
+    if (!acc[type]) acc[type] = [];
+    acc[type].push(defi);
+    return acc;
+  }, {} as Record<DefiType, Defi[]>);
+
+  // Load defis
+  const loadDefis = useCallback(async () => {
+    setIsLoading(true);
     try {
-      setLoading(true);
-      
-      // Mettre à jour le statut des défis en fonction des dates
-      await updateDefisStatus();
-      
-      // Charger les défis par statut
-      const [current, upcoming, past] = await Promise.all([
-        getDefisByStatus('current'),
-        getDefisByStatus('upcoming'),
-        getDefisByStatus('past')
-      ]);
-      
-      setCurrentDefis(current);
-      setUpcomingDefis(upcoming);
-      setPastDefis(past);
+      const defisData = await fetchDefis();
+      setDefis(defisData);
     } catch (error) {
       console.error("Erreur lors du chargement des défis:", error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
-  
-  // Formater la plage de dates
-  const formatDateRange = (startDate: string, endDate: string) => {
-    const start = format(new Date(startDate), 'dd MMM', { locale: fr });
-    const end = format(new Date(endDate), 'dd MMM', { locale: fr });
-    return `${start} - ${end}`;
-  };
-  
-  // Charger les défis au chargement du composant
+  }, []);
+
   useEffect(() => {
     loadDefis();
-  }, [refreshKey]);
-  
-  // Gérer la participation pour actualiser les compteurs
+  }, [loadDefis, refreshTrigger]);
+
+  const handleDefiCreated = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
   const handleParticipation = () => {
-    setRefreshKey(prev => prev + 1);
+    setRefreshTrigger(prev => prev + 1);
   };
 
   return (
-    <Tabs defaultValue="current" value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid grid-cols-3 mb-6">
-        <TabsTrigger value="current" className="flex items-center gap-2">
-          <FlameIcon className="h-4 w-4" />
-          <span>En cours</span>
-        </TabsTrigger>
-        <TabsTrigger value="upcoming" className="flex items-center gap-2">
-          <Clock className="h-4 w-4" />
-          <span>À venir</span>
-        </TabsTrigger>
-        <TabsTrigger value="past" className="flex items-center gap-2">
-          <Trophy className="h-4 w-4" />
-          <span>Terminés</span>
-        </TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="current" className="space-y-6">
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(3)].map((_, index) => (
-              <DefiCardSkeleton key={index} />
-            ))}
-          </div>
-        ) : currentDefis.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Aucun défi en cours pour le moment.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {currentDefis.map((defi) => (
-              <DefiCard
-                key={defi.id}
-                id={defi.id}
-                title={defi.titre}
-                description={defi.description}
-                dateRange={formatDateRange(defi.date_debut, defi.date_fin)}
-                type="current"
-                icon={<FlameIcon className="h-5 w-5" />}
-                participantsCount={defi.participants_count}
-                onParticipation={handleParticipation}
-              />
-            ))}
-          </div>
-        )}
-      </TabsContent>
-      
-      <TabsContent value="upcoming" className="space-y-6">
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(3)].map((_, index) => (
-              <DefiCardSkeleton key={index} />
-            ))}
-          </div>
-        ) : upcomingDefis.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Aucun défi à venir pour le moment.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {upcomingDefis.map((defi) => (
-              <DefiCard
-                key={defi.id}
-                id={defi.id}
-                title={defi.titre}
-                description={defi.description}
-                dateRange={formatDateRange(defi.date_debut, defi.date_fin)}
-                type="upcoming"
-                icon={<Clock className="h-5 w-5" />}
-                participantsCount={defi.participants_count}
-              />
-            ))}
-          </div>
-        )}
-      </TabsContent>
-      
-      <TabsContent value="past" className="space-y-6">
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(3)].map((_, index) => (
-              <DefiCardSkeleton key={index} />
-            ))}
-          </div>
-        ) : pastDefis.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Aucun défi terminé pour le moment.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {pastDefis.map((defi) => (
-              <DefiCard
-                key={defi.id}
-                id={defi.id}
-                title={defi.titre}
-                description={defi.description}
-                dateRange={formatDateRange(defi.date_debut, defi.date_fin)}
-                type="past"
-                icon={<Trophy className="h-5 w-5" />}
-                participantsCount={defi.participants_count}
-              />
-            ))}
-          </div>
-        )}
-      </TabsContent>
-    </Tabs>
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Les Défis</h2>
+          <Text className="text-muted-foreground">
+            Participez aux défis de la communauté et montrez votre style
+          </Text>
+        </div>
+        <Button onClick={() => setOpenCreateDialog(true)}>
+          <PlusCircle className="mr-2 h-4 w-4" /> Créer un défi
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="h-64 rounded-lg border border-border animate-pulse bg-muted/50"
+            />
+          ))}
+        </div>
+      ) : (
+        <>
+          {/* Défis en cours */}
+          <section>
+            <div className="flex items-center gap-2 mb-4">
+              <Flag className="h-5 w-5 text-primary" />
+              <h3 className="text-xl font-semibold">Défis en cours</h3>
+            </div>
+            {groupedDefis.current?.length ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {groupedDefis.current.map((defi) => (
+                  <DefiCard
+                    key={defi.id}
+                    id={defi.id}
+                    title={defi.titre}
+                    description={defi.description}
+                    dateRange={formatDateRange(defi.date_debut, defi.date_fin)}
+                    type="current"
+                    participantsCount={defi.participants_count}
+                    onParticipation={handleParticipation}
+                  />
+                ))}
+              </div>
+            ) : (
+              <Text className="text-muted-foreground italic">
+                Aucun défi en cours pour le moment
+              </Text>
+            )}
+          </section>
+
+          {/* Défis à venir */}
+          <section>
+            <div className="flex items-center gap-2 mb-4">
+              <Calendar className="h-5 w-5 text-secondary" />
+              <h3 className="text-xl font-semibold">Défis à venir</h3>
+            </div>
+            {groupedDefis.upcoming?.length ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {groupedDefis.upcoming.map((defi) => (
+                  <DefiCard
+                    key={defi.id}
+                    id={defi.id}
+                    title={defi.titre}
+                    description={defi.description}
+                    dateRange={formatDateRange(defi.date_debut, defi.date_fin)}
+                    type="upcoming"
+                    icon={<Calendar className="h-5 w-5" />}
+                  />
+                ))}
+              </div>
+            ) : (
+              <Text className="text-muted-foreground italic">
+                Aucun défi à venir pour le moment
+              </Text>
+            )}
+          </section>
+
+          {/* Défis passés */}
+          <section>
+            <div className="flex items-center gap-2 mb-4">
+              <Trophy className="h-5 w-5 text-muted-foreground" />
+              <h3 className="text-xl font-semibold">Défis passés</h3>
+            </div>
+            {groupedDefis.past?.length ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {groupedDefis.past.map((defi) => (
+                  <DefiCard
+                    key={defi.id}
+                    id={defi.id}
+                    title={defi.titre}
+                    description={defi.description}
+                    dateRange={formatDateRange(defi.date_debut, defi.date_fin)}
+                    type="past"
+                    icon={<Trophy className="h-5 w-5" />}
+                    participantsCount={defi.participants_count}
+                  />
+                ))}
+              </div>
+            ) : (
+              <Text className="text-muted-foreground italic">
+                Aucun défi passé pour le moment
+              </Text>
+            )}
+          </section>
+        </>
+      )}
+
+      <CreateDefiDialog
+        open={openCreateDialog}
+        onOpenChange={setOpenCreateDialog}
+        onDefiCreated={handleDefiCreated}
+      />
+    </div>
   );
 };
 
