@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import Card, { CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/molecules/Card";
@@ -118,5 +119,16 @@ const VetementCard: React.FC<VetementCardProps> = ({ vetement, onDelete, showOwn
                   vetement.couleur === "beige" ? "#ede9d9" :
                   "#cbd5e1", // fallback pour multicolore
               }}
+            />
+            <Text variant="subtle" className="capitalize">
+              {vetement.couleur}
+            </Text>
+          </div>
+          <Text variant="subtle">{vetement.taille}</Text>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+};
 
-
+export default VetementCard;
