@@ -2,7 +2,7 @@
 import React from "react";
 import { Heading, Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
-import { LogIn, Mail, Users, Clock, Shirt } from "lucide-react";
+import { LogIn, Mail, Users, Clock, Shirt, List } from "lucide-react";
 import { Link } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -24,6 +24,7 @@ const AmisPageHeader: React.FC<AmisPageHeaderProps> = ({ user, loading, children
     if (currentPath.includes("/messages")) return "messages";
     if (currentPath.includes("/mies")) return "mies";
     if (currentPath.includes("/vetements-amis")) return "vetements-amis";
+    if (currentPath.includes("/ensembles-amis")) return "ensembles-amis";
     return "amis";
   };
 
@@ -38,6 +39,9 @@ const AmisPageHeader: React.FC<AmisPageHeaderProps> = ({ user, loading, children
         break;
       case "vetements-amis":
         navigate("/vetements-amis");
+        break;
+      case "ensembles-amis":
+        navigate("/ensembles-amis");
         break;
       case "amis":
         navigate("/mes-amis");
@@ -58,7 +62,7 @@ const AmisPageHeader: React.FC<AmisPageHeaderProps> = ({ user, loading, children
         {user && !loading && (
           <div className="mt-8 flex flex-col items-center">
             <Tabs defaultValue={getActiveTab()} className="w-full max-w-md" onValueChange={handleTabChange}>
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="amis" className="flex items-center justify-center">
                   <Users className="mr-2 h-4 w-4" />
                   Amis
@@ -66,6 +70,10 @@ const AmisPageHeader: React.FC<AmisPageHeaderProps> = ({ user, loading, children
                 <TabsTrigger value="vetements-amis" className="flex items-center justify-center">
                   <Shirt className="mr-2 h-4 w-4" />
                   Vêtements
+                </TabsTrigger>
+                <TabsTrigger value="ensembles-amis" className="flex items-center justify-center">
+                  <List className="mr-2 h-4 w-4" />
+                  Ensembles
                 </TabsTrigger>
                 <TabsTrigger value="messages" className="flex items-center justify-center">
                   <Mail className="mr-2 h-4 w-4" />
