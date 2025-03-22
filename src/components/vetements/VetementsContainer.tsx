@@ -92,7 +92,7 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
         <MesVetementsTab 
           vetements={filteredVetements}
           categories={categories}
-          marques={marques}
+          marques={marques.map(m => m.nom)}
           acceptedFriends={acceptedFriends}
           activeTab={activeTab}
           isLoading={isLoading || loadingAmis}
@@ -105,7 +105,7 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
         <VetementsAmisTab 
           vetements={filteredVetements}
           categories={categories}
-          marques={marques}
+          marques={marques.map(m => m.nom)}
           acceptedFriends={acceptedFriends}
           activeTab={activeTab}
           isLoading={isLoading || loadingAmis}
@@ -117,7 +117,7 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
         
         <AjouterEnsembleTab />
         
-        <MesEnsemblesTab />
+        <MesEnsemblesTab acceptedFriends={acceptedFriends} />
       </Tabs>
     </>
   );

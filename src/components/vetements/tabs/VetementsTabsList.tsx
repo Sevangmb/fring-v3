@@ -24,7 +24,7 @@ const VetementsTabsList: React.FC<VetementsTabsListProps> = ({ onTabChange }) =>
       </TabsTrigger>
       <TabsTrigger value="mes-ensembles" className="flex items-center gap-2">
         <List className="h-4 w-4" />
-        Mes Ensembles
+        Ensembles Amis
       </TabsTrigger>
     </TabsList>
   );
