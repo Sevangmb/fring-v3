@@ -9,11 +9,10 @@ import VetementsTabsList from "./tabs/VetementsTabsList";
 import MesVetementsTab from "./tabs/MesVetementsTab";
 import AjouterEnsembleTab from "./tabs/AjouterEnsembleTab";
 import MesEnsemblesTab from "./tabs/MesEnsemblesTab";
-import VetementsAmisTab from "./tabs/VetementsAmisTab";
 import { useNavigate } from "react-router-dom";
 
 interface VetementsContainerProps {
-  defaultTab?: 'mes-vetements' | 'ajouter-vetement' | 'mes-tenues' | 'ajouter-tenue' | 'vetements-amis' | 'mes-ensembles';
+  defaultTab?: 'mes-vetements' | 'ajouter-vetement' | 'mes-tenues' | 'ajouter-tenue' | 'mes-ensembles';
 }
 
 const VetementsContainer: React.FC<VetementsContainerProps> = ({ 
@@ -61,8 +60,6 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
   useEffect(() => {
     if (defaultTab === 'mes-vetements') {
       handleViewModeChange('mes-vetements');
-    } else if (defaultTab === 'vetements-amis') {
-      handleViewModeChange('vetements-amis');
     } else if (defaultTab === 'mes-ensembles') {
       handleViewModeChange('mes-ensembles');
     }
@@ -104,12 +101,6 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
         break;
       case "ajouter-tenue":
         navigate("/ensembles/ajouter");
-        break;
-      case "vetements-amis":
-        handleViewModeChange('vetements-amis');
-        break;
-      case "mes-ensembles":
-        handleViewModeChange('mes-ensembles');
         break;
       default:
         break;
