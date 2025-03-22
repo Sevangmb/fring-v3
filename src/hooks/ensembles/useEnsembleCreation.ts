@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useEnsembleInitialization } from "./useEnsembleInitialization";
 import { useEnsembleVetements } from "./useEnsembleVetements";
-import { useEnsembleForm, SelectedItems } from "./useEnsembleForm";
+import { useEnsembleForm } from "./useEnsembleForm";
 import { createEnsemble } from "@/services/ensemble";
 import { VetementType } from "@/services/meteo/tenue";
 
