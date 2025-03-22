@@ -51,7 +51,7 @@ export const getFavorisWithDetails = async (): Promise<FavoriWithDetails[]> => {
         if (favori.type_favori === 'vetement') {
           try {
             const vetement = await fetchVetementById(parseInt(favori.element_id));
-            if (vetement) {
+            if (vetement && Object.keys(vetement).length > 0) {
               details = vetement;
               nom = vetement.nom;
             }
@@ -61,7 +61,7 @@ export const getFavorisWithDetails = async (): Promise<FavoriWithDetails[]> => {
         } else if (favori.type_favori === 'ensemble') {
           try {
             const ensemble = await fetchEnsembleById(parseInt(favori.element_id));
-            if (ensemble) {
+            if (ensemble && Object.keys(ensemble).length > 0) {
               details = ensemble;
               nom = ensemble.nom;
             }
@@ -70,9 +70,6 @@ export const getFavorisWithDetails = async (): Promise<FavoriWithDetails[]> => {
           }
         } else if (favori.type_favori === 'utilisateur') {
           // Implémentation pour les utilisateurs à ajouter ultérieurement
-          // const user = await getUserById(favori.element_id);
-          // details = user;
-          // nom = user?.email;
         }
         
         return {

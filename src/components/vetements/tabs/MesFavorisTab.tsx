@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,7 +23,7 @@ const MesFavorisTab: React.FC = () => {
 
   // Gérer la navigation lors du clic sur un favori
   const handleFavoriClick = (favori: any) => {
-    if (!favori.details) return; // Ne pas naviguer si l'élément a été supprimé
+    if (!isElementAvailable(favori)) return; // Ne pas naviguer si l'élément a été supprimé
 
     if (favori.type_favori === 'vetement') {
       navigate(`/mes-vetements/modifier/${favori.element_id}`);
@@ -59,7 +58,9 @@ const MesFavorisTab: React.FC = () => {
 
   // Fonction pour déterminer si un élément est réellement disponible
   const isElementAvailable = (favori: any) => {
-    return favori.details !== null && favori.details !== undefined;
+    return favori.details !== null && 
+           favori.details !== undefined && 
+           Object.keys(favori.details).length > 0;
   };
 
   return (
@@ -96,7 +97,7 @@ const MesFavorisTab: React.FC = () => {
                     <Card 
                       key={favori.id} 
                       className={`overflow-hidden transition-shadow ${elementAvailable ? 'cursor-pointer hover:shadow-md' : 'bg-muted/30'}`}
-                      onClick={() => elementAvailable && handleFavoriClick(favori)}
+                      onClick={() => handleFavoriClick(favori)}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-2">

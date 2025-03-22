@@ -9,7 +9,7 @@ export const fetchVetementById = async (vetementId: number): Promise<Vetement | 
   try {
     const { data, error } = await supabase
       .from('vetements')
-      .select('*, profiles(email)')
+      .select('*')
       .eq('id', vetementId)
       .single();
 
@@ -26,13 +26,7 @@ export const fetchVetementById = async (vetementId: number): Promise<Vetement | 
       return null;
     }
 
-    // Transformer la réponse pour maintenir la structure attendue
-    const vetementData = {
-      ...data,
-      owner_email: data.profiles?.email
-    };
-
-    return vetementData;
+    return data;
   } catch (error) {
     console.error("Erreur lors de la récupération du vêtement:", error);
     return null;
