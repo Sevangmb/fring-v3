@@ -70,8 +70,8 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({ user }) => {
             <User className="mr-2 h-4 w-4" />
             Profil
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleFavorites}>
-            <Star className="mr-2 h-4 w-4" />
+          <DropdownMenuItem onClick={handleFavorites} className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400">
+            <Star className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
             Mes Favoris
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleLogout}>
