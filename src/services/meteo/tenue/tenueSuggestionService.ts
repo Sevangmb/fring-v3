@@ -25,7 +25,16 @@ const selectionnerVetementAdapte = async (
   if (vetementsFiltered.length === 0) return null;
   
   // Déterminer la catégorie de température
-  const tempCategory = temperature < 10 ? 'froid' : temperature > 20 ? 'chaud' : 'tempere';
+  let tempCategory: 'froid' | 'tempere' | 'chaud';
+  if (temperature < 10) {
+    tempCategory = 'froid';
+  } else if (temperature > 20) {
+    tempCategory = 'chaud';
+  } else {
+    tempCategory = 'tempere';
+  }
+  
+  console.log(`Recherche de vêtements pour ${typeVetement}, température: ${tempCategory} (${temperature}°C), pluie: ${isRaining ? 'Oui' : 'Non'}`);
   
   // Filtrer par adaptation à la température (si disponible)
   const vetementsTemperatureOk = vetementsFiltered.filter(v => 
@@ -59,6 +68,31 @@ const selectionnerVetementAdapte = async (
     }
     
     console.log(`Aucun vêtement idéal pour la pluie trouvé pour ${typeVetement}, utilisation d'un vêtement standard`);
+  } else if (tempCategory === 'chaud') {
+    // S'il fait chaud, privilégier les vêtements légers
+    const vetementsLegers = vetementsEligibles.filter(v => 
+      v.description?.toLowerCase().includes('léger') || 
+      v.description?.toLowerCase().includes('leger') ||
+      v.temperature === 'chaud'
+    );
+    
+    if (vetementsLegers.length > 0) {
+      console.log(`${vetementsLegers.length} vêtements légers trouvés pour ${typeVetement}`);
+      return vetementsLegers[Math.floor(Math.random() * vetementsLegers.length)];
+    }
+  } else if (tempCategory === 'froid') {
+    // S'il fait froid, privilégier les vêtements chauds
+    const vetementsChauds = vetementsEligibles.filter(v => 
+      v.description?.toLowerCase().includes('chaud') || 
+      v.description?.toLowerCase().includes('épais') ||
+      v.description?.toLowerCase().includes('epais') ||
+      v.temperature === 'froid'
+    );
+    
+    if (vetementsChauds.length > 0) {
+      console.log(`${vetementsChauds.length} vêtements chauds trouvés pour ${typeVetement}`);
+      return vetementsChauds[Math.floor(Math.random() * vetementsChauds.length)];
+    }
   }
   
   // Choisir aléatoirement parmi les vêtements éligibles

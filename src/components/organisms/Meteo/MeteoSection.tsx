@@ -6,10 +6,11 @@ import PrevisionJour from './PrevisionJour';
 import TenueSuggestion from './TenueSuggestion';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/atoms/Typography";
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const MeteoSection: React.FC = () => {
-  const { meteo, loading, error, tenueSuggestion } = useMeteo();
+  const { meteo, loading, error, tenueSuggestion, isGeneratingSuggestion, regenerateSuggestion } = useMeteo();
 
   if (loading) {
     return (
@@ -41,7 +42,21 @@ const MeteoSection: React.FC = () => {
 
   return (
     <div className="my-8">
-      <Text variant="h3" className="mb-4">Météo pour les 3 prochains jours</Text>
+      <div className="flex justify-between items-center mb-4">
+        <Text variant="h3">Météo pour les 3 prochains jours</Text>
+        {tenueSuggestion && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={regenerateSuggestion}
+            disabled={isGeneratingSuggestion}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isGeneratingSuggestion ? 'animate-spin' : ''}`} />
+            Nouvelle suggestion
+          </Button>
+        )}
+      </div>
       <div className="space-y-6">
         <MeteoActuelle 
           temperature={meteo.current.temperature}

@@ -18,18 +18,20 @@ export const useMeteo = () => {
   const { vetements, vetementsLoading, vetementsError } = useVetements();
   
   // Generate outfit suggestion based on weather and available clothing
-  const { tenueSuggestion } = useTenueSuggestion(meteo, vetements);
+  const { tenueSuggestion, isGenerating: isGeneratingSuggestion, regenerateSuggestion } = useTenueSuggestion(meteo, vetements);
   
   // Combine loading states
   const loading = locationLoading || weatherLoading || vetementsLoading;
   
   // Prioritize weather errors over location errors
-  const error = weatherError || locationError;
+  const error = weatherError || locationError || vetementsError;
 
   return { 
     meteo, 
     loading, 
     error, 
-    tenueSuggestion 
+    tenueSuggestion,
+    isGeneratingSuggestion,
+    regenerateSuggestion
   };
 };
