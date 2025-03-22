@@ -30,7 +30,7 @@ const ModifierEnsembleForm: React.FC<ModifierEnsembleFormProps> = ({
   vetements
 }) => {
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault(); // Empêcher la soumission par défaut du formulaire
     onSubmit();
   };
 
@@ -40,7 +40,7 @@ const ModifierEnsembleForm: React.FC<ModifierEnsembleFormProps> = ({
         <CardTitle>Modifier l'ensemble</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           <EnsembleFormFields 
             formData={formData}
             onChange={onChange}

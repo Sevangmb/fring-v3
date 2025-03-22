@@ -62,6 +62,11 @@ const AjouterEnsemble = () => {
     selectedItems
   };
   
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleCreateEnsemble();
+  };
+  
   return (
     <Layout>
       <Helmet>
@@ -76,39 +81,41 @@ const AjouterEnsemble = () => {
               <Heading className="text-lg text-center">Créez votre ensemble</Heading>
             </div>
             <CardContent className="p-6">
-              <Text className="text-center text-muted-foreground mb-6 text-sm">
-                Sélectionnez un vêtement pour chaque catégorie, vous pouvez choisir parmi vos vêtements ou ceux de vos amis.
-              </Text>
-              
-              <div className="space-y-4 mb-6">
-                <EnsembleFormFields
-                  formData={completeFormData}
-                  onChange={handleChange}
+              <form onSubmit={handleFormSubmit} noValidate>
+                <Text className="text-center text-muted-foreground mb-6 text-sm">
+                  Sélectionnez un vêtement pour chaque catégorie, vous pouvez choisir parmi vos vêtements ou ceux de vos amis.
+                </Text>
+                
+                <div className="space-y-4 mb-6">
+                  <EnsembleFormFields
+                    formData={completeFormData}
+                    onChange={handleChange}
+                  />
+                </div>
+                
+                <EnsembleCreator 
+                  vetements={allVetements} 
+                  onItemsSelected={handleItemsSelected} 
+                  selectedItems={selectedItems}
+                  showOwner={true}
                 />
-              </div>
-              
-              <EnsembleCreator 
-                vetements={allVetements} 
-                onItemsSelected={handleItemsSelected} 
-                selectedItems={selectedItems}
-                showOwner={true}
-              />
-              
-              <div className="flex justify-center mt-8 pt-4 border-t">
-                <Button 
-                  size="lg" 
-                  className="gap-2 px-6 min-w-40" 
-                  onClick={handleCreateEnsemble} 
-                  disabled={creating || !selectedItems.haut || !selectedItems.bas || !selectedItems.chaussures}
-                >
-                  {creating ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Création...
-                    </>
-                  ) : "Créer cet ensemble"}
-                </Button>
-              </div>
+                
+                <div className="flex justify-center mt-8 pt-4 border-t">
+                  <Button 
+                    type="submit"
+                    size="lg" 
+                    className="gap-2 px-6 min-w-40" 
+                    disabled={creating || !selectedItems.haut || !selectedItems.bas || !selectedItems.chaussures}
+                  >
+                    {creating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Création...
+                      </>
+                    ) : "Créer cet ensemble"}
+                  </Button>
+                </div>
+              </form>
             </CardContent>
           </Card>
         </div>
