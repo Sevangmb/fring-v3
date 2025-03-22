@@ -1,17 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Vetement } from '@/services/vetement/types';
-import { VetementType } from '@/services/meteo/tenue';
-import { determinerTypeVetement } from '@/services/meteo/tenue';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import VetementCarouselItem from './VetementCarouselItem';
-import { Shirt, ShoppingBag, Footprints, User, Users } from 'lucide-react';
-import { Text } from '@/components/atoms/Typography';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
+import { Shirt, ShoppingBag, Footprints } from 'lucide-react';
+import CategoryCarousel from './CategoryCarousel';
+import { useVetementsFilter } from '@/hooks/useVetementsFilter';
 
 interface EnsembleCreatorProps {
   vetements: Vetement[];
@@ -28,130 +20,18 @@ interface EnsembleCreatorProps {
   showOwner?: boolean;
 }
 
-interface Owner {
-  id: string;
-  name: string;
-}
-
 const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({ 
   vetements, 
   selectedItems, 
   onItemsSelected,
   showOwner = false
 }) => {
-  const [categorizedVetements, setCategorizedVetements] = useState<{
-    hauts: Vetement[];
-    bas: Vetement[];
-    chaussures: Vetement[];
-  }>({
-    hauts: [],
-    bas: [],
-    chaussures: []
-  });
-
-  // État pour suivre les propriétaires uniques
-  const [owners, setOwners] = useState<Owner[]>([
-    { id: 'me', name: 'Moi' }
-  ]);
-
-  // État pour suivre la sélection du propriétaire pour chaque catégorie
-  const [selectedOwners, setSelectedOwners] = useState({
-    haut: 'me',
-    bas: 'me',
-    chaussures: 'me'
-  });
-
-  // Vêtements filtrés par propriétaire pour chaque catégorie
-  const [filteredVetements, setFilteredVetements] = useState<{
-    hauts: Vetement[];
-    bas: Vetement[];
-    chaussures: Vetement[];
-  }>({
-    hauts: [],
-    bas: [],
-    chaussures: []
-  });
-
-  // Effet pour extraire les propriétaires uniques des vêtements
-  useEffect(() => {
-    const uniqueOwners = new Map<string, Owner>();
-    uniqueOwners.set('me', { id: 'me', name: 'Moi' });
-    
-    vetements.forEach(vetement => {
-      if (vetement.owner_email && vetement.user_id) {
-        const ownerName = vetement.owner_email.split('@')[0];
-        uniqueOwners.set(vetement.user_id, { 
-          id: vetement.user_id, 
-          name: ownerName 
-        });
-      }
-    });
-    
-    setOwners(Array.from(uniqueOwners.values()));
-  }, [vetements]);
-
-  // Catégoriser les vêtements par type
-  useEffect(() => {
-    const categorizeVetements = async () => {
-      const hauts: Vetement[] = [];
-      const bas: Vetement[] = [];
-      const chaussures: Vetement[] = [];
-
-      for (const vetement of vetements) {
-        const type = await determinerTypeVetement(vetement);
-        
-        if (type === VetementType.HAUT) {
-          hauts.push(vetement);
-        } else if (type === VetementType.BAS) {
-          bas.push(vetement);
-        } else if (type === VetementType.CHAUSSURES) {
-          chaussures.push(vetement);
-        }
-      }
-
-      setCategorizedVetements({ hauts, bas, chaussures });
-      
-      // Auto-sélectionner le premier élément de chaque catégorie s'il n'y a pas déjà de sélection
-      if (hauts.length > 0 && !selectedItems.haut) {
-        handleSelectItem('haut', hauts[0]);
-      }
-      
-      if (bas.length > 0 && !selectedItems.bas) {
-        handleSelectItem('bas', bas[0]);
-      }
-      
-      if (chaussures.length > 0 && !selectedItems.chaussures) {
-        handleSelectItem('chaussures', chaussures[0]);
-      }
-    };
-
-    categorizeVetements();
-  }, [vetements]);
-
-  // Filtrer les vêtements par propriétaire lorsque la sélection change
-  useEffect(() => {
-    const filterByOwner = () => {
-      setFilteredVetements({
-        hauts: categorizedVetements.hauts.filter(item => 
-          selectedOwners.haut === 'me' 
-            ? !item.owner_email 
-            : item.user_id === selectedOwners.haut
-        ),
-        bas: categorizedVetements.bas.filter(item => 
-          selectedOwners.bas === 'me' 
-            ? !item.owner_email 
-            : item.user_id === selectedOwners.bas
-        ),
-        chaussures: categorizedVetements.chaussures.filter(item => 
-          selectedOwners.chaussures === 'me' 
-            ? !item.owner_email 
-            : item.user_id === selectedOwners.chaussures
-        ),
-      });
-    };
-
-    filterByOwner();
-  }, [selectedOwners, categorizedVetements]);
+  const {
+    filteredVetements,
+    owners,
+    selectedOwners,
+    handleOwnerChange
+  } = useVetementsFilter(vetements);
 
   const handleSelectItem = (type: 'haut' | 'bas' | 'chaussures', item: Vetement) => {
     onItemsSelected({
@@ -160,125 +40,46 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
     });
   };
 
-  const handleOwnerChange = (type: 'haut' | 'bas' | 'chaussures', ownerId: string) => {
-    setSelectedOwners(prev => ({
-      ...prev,
-      [type]: ownerId
-    }));
-  };
-
-  const renderOwnerButtons = (type: 'haut' | 'bas' | 'chaussures') => {
-    return (
-      <ScrollArea className="w-full max-w-full">
-        <div className="flex space-x-1 pb-2">
-          {owners.map((owner) => (
-            <Button
-              key={owner.id}
-              variant={selectedOwners[type] === owner.id ? "default" : "outline"}
-              size="sm"
-              className={cn(
-                "h-8 rounded-full flex items-center gap-1.5 px-3",
-                selectedOwners[type] === owner.id && "bg-primary text-primary-foreground"
-              )}
-              onClick={() => handleOwnerChange(type, owner.id)}
-            >
-              {owner.id === 'me' ? (
-                <User className="h-3 w-3" />
-              ) : (
-                <Users className="h-3 w-3" />
-              )}
-              {owner.name}
-            </Button>
-          ))}
-        </div>
-      </ScrollArea>
-    );
-  };
-
-  const renderCarousel = (
-    items: Vetement[], 
-    type: 'haut' | 'bas' | 'chaussures', 
-    icon: React.ReactNode, 
-    label: string
-  ) => {
-    return (
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="bg-primary/10 rounded-full p-1.5">
-            {icon}
-          </div>
-          <Text className="font-medium">{label}</Text>
-          <Text className="text-sm text-muted-foreground ml-1">({items.length})</Text>
-          <Separator className="flex-grow ml-2" />
-        </div>
-        
-        {/* Sélecteur de propriétaire */}
-        <div className="mb-3">
-          {renderOwnerButtons(type)}
-        </div>
-        
-        {items.length === 0 ? (
-          <div className="text-center py-6 bg-muted/30 rounded-lg border border-dashed border-muted">
-            <Text className="text-muted-foreground">Aucun {label.toLowerCase()} disponible</Text>
-          </div>
-        ) : (
-          <div className="px-12 relative">
-            <Carousel className="w-full mx-auto" opts={{ align: "center" }}>
-              <CarouselContent>
-                {items.map((item) => (
-                  <CarouselItem key={item.id} className="basis-full">
-                    <div className="flex justify-center">
-                      <div className="w-full max-w-[200px]">
-                        <VetementCarouselItem 
-                          vetement={item} 
-                          isSelected={selectedItems[type]?.id === item.id}
-                          onSelect={() => handleSelectItem(type, item)}
-                          compact={false}
-                        />
-                        
-                        {(showOwner || item.owner_email) && (
-                          <div className="mt-1 flex justify-center">
-                            <Badge variant="outline" className="text-xs font-normal">
-                              {item.owner_email ? `De: ${item.owner_email.split('@')[0]}` : 'Moi'}
-                            </Badge>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="-left-8 h-8 w-8" />
-              <CarouselNext className="-right-8 h-8 w-8" />
-            </Carousel>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-2">
-      {renderCarousel(
-        filteredVetements.hauts, 
-        'haut', 
-        <Shirt className="h-4 w-4 text-primary" />, 
-        'Hauts'
-      )}
+      <CategoryCarousel
+        items={filteredVetements.hauts}
+        type="haut"
+        icon={<Shirt className="h-4 w-4 text-primary" />}
+        label="Hauts"
+        selectedItem={selectedItems.haut}
+        onSelectItem={(item) => handleSelectItem('haut', item)}
+        owners={owners}
+        selectedOwnerId={selectedOwners.haut}
+        onOwnerChange={(ownerId) => handleOwnerChange('haut', ownerId)}
+        showOwner={showOwner}
+      />
 
-      {renderCarousel(
-        filteredVetements.bas, 
-        'bas', 
-        <ShoppingBag className="h-4 w-4 text-primary" />, 
-        'Bas'
-      )}
+      <CategoryCarousel
+        items={filteredVetements.bas}
+        type="bas"
+        icon={<ShoppingBag className="h-4 w-4 text-primary" />}
+        label="Bas"
+        selectedItem={selectedItems.bas}
+        onSelectItem={(item) => handleSelectItem('bas', item)}
+        owners={owners}
+        selectedOwnerId={selectedOwners.bas}
+        onOwnerChange={(ownerId) => handleOwnerChange('bas', ownerId)}
+        showOwner={showOwner}
+      />
 
-      {renderCarousel(
-        filteredVetements.chaussures, 
-        'chaussures', 
-        <Footprints className="h-4 w-4 text-primary" />, 
-        'Chaussures'
-      )}
+      <CategoryCarousel
+        items={filteredVetements.chaussures}
+        type="chaussures"
+        icon={<Footprints className="h-4 w-4 text-primary" />}
+        label="Chaussures"
+        selectedItem={selectedItems.chaussures}
+        onSelectItem={(item) => handleSelectItem('chaussures', item)}
+        owners={owners}
+        selectedOwnerId={selectedOwners.chaussures}
+        onOwnerChange={(ownerId) => handleOwnerChange('chaussures', ownerId)}
+        showOwner={showOwner}
+      />
     </div>
   );
 };
