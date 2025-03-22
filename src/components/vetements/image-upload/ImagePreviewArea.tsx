@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 interface ImagePreviewAreaProps {
   imagePreview: string | null;
   loading: boolean;
-  onClick: (e: React.MouseEvent) => void;
+  onClick: () => void;
   onDelete?: () => void;
   onDetect?: () => void;
   detectingColor?: boolean;
@@ -27,7 +27,7 @@ const ImagePreviewArea: React.FC<ImagePreviewAreaProps> = ({
 }) => {
   return (
     <div 
-      className={`w-full aspect-square rounded-lg border-2 border-dashed border-primary/20 hover:border-primary/50 transition-colors bg-background flex flex-col items-center justify-center relative ${!imagePreview ? 'cursor-pointer' : ''}`}
+      className="w-full aspect-square rounded-lg border-2 border-dashed border-primary/20 hover:border-primary/50 transition-colors bg-background flex flex-col items-center justify-center cursor-pointer relative"
       onClick={imagePreview ? undefined : onClick}
     >
       {imagePreview ? (
@@ -47,12 +47,10 @@ const ImagePreviewArea: React.FC<ImagePreviewAreaProps> = ({
                   size="icon" 
                   className="rounded-full shadow-md"
                   onClick={(e) => {
-                    e.preventDefault();
                     e.stopPropagation();
                     onDelete();
                   }}
                   title="Supprimer l'image"
-                  type="button"
                 >
                   <Trash2 size={16} />
                 </Button>
@@ -64,13 +62,11 @@ const ImagePreviewArea: React.FC<ImagePreviewAreaProps> = ({
                   size="icon" 
                   className="rounded-full shadow-md"
                   onClick={(e) => {
-                    e.preventDefault();
                     e.stopPropagation();
                     onDetect();
                   }}
                   disabled={detectingColor}
                   title="Détecter avec Google AI"
-                  type="button"
                 >
                   <Palette size={16} className={detectingColor ? "animate-pulse" : ""} />
                 </Button>

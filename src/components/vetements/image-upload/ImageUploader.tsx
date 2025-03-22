@@ -2,10 +2,10 @@
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { VetementFormValues } from "../schema/VetementFormSchema";
+import { useImageUpload } from "@/hooks/useImageUpload";
+import { useDetection } from "@/hooks/useDetection";
 import ImagePreviewArea from "./ImagePreviewArea";
 import DetectionResults from "../detection/DetectionResults";
-import { useImageUploader } from "@/hooks/useImageUploader";
-import ImageActions from "./ImageActions";
 
 interface ImageUploaderProps {
   form: UseFormReturn<VetementFormValues>;
@@ -14,39 +14,35 @@ interface ImageUploaderProps {
   setImagePreview: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
-/**
- * Composant principal pour le téléchargement et l'analyse d'images de vêtements
- */
 const ImageUploader: React.FC<ImageUploaderProps> = ({
   form,
   user,
   imagePreview,
   setImagePreview
 }) => {
-  const {
-    fileInputRef,
+  const { fileInputRef, handleImageChange } = useImageUpload(user, setImagePreview);
+  
+  const { 
     loading,
     error,
     steps,
     currentStep,
-    handleImageChange,
-    handleOpenFileSelector,
-    handleDeleteImage,
     detectImage
-  } = useImageUploader(form, user, imagePreview, setImagePreview);
+  } = useDetection(form, imagePreview);
+
+  const handleDeleteImage = () => {
+    setImagePreview(null);
+    form.setValue('couleur', '');
+    form.setValue('categorie_id', 0);
+  };
 
   return (
     <div className="flex flex-col items-center w-full">
-      <ImageActions 
-        onUploadClick={handleOpenFileSelector} 
-        loading={loading}
-      />
-      
       <div className="w-full mb-4">
         <ImagePreviewArea 
           imagePreview={imagePreview}
           loading={loading}
-          onClick={handleOpenFileSelector}
+          onClick={() => fileInputRef.current?.click()}
           onDelete={imagePreview ? handleDeleteImage : undefined}
           onDetect={imagePreview ? detectImage : undefined}
           detectingColor={loading}
@@ -63,8 +59,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       
       <DetectionResults 
         error={error}
-        // Converting the steps array to the expected format
-        steps={steps?.map(step => step.label)}
+        steps={steps}
         currentStep={currentStep}
         loading={loading}
       />
