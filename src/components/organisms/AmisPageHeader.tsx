@@ -2,10 +2,11 @@
 import React from "react";
 import { Heading, Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
-import { LogIn, Mail, Users } from "lucide-react";
+import { LogIn, Mail, Users, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
-import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from "@/components/ui/menubar";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLocation } from "react-router-dom";
 
 interface AmisPageHeaderProps {
   user: User | null;
@@ -13,6 +14,16 @@ interface AmisPageHeaderProps {
 }
 
 const AmisPageHeader: React.FC<AmisPageHeaderProps> = ({ user, loading }) => {
+  const location = useLocation();
+  const currentPath = location.pathname;
+  
+  // Déterminer quel onglet est actif
+  const getActiveTab = () => {
+    if (currentPath.includes("/messages")) return "messages";
+    if (currentPath.includes("/mies")) return "mies";
+    return "amis";
+  };
+
   return (
     <div className="pt-24 pb-6 bg-accent/10">
       <div className="container mx-auto px-4">
@@ -24,44 +35,29 @@ const AmisPageHeader: React.FC<AmisPageHeaderProps> = ({ user, loading }) => {
         </Text>
         
         {user && !loading && (
-          <div className="mt-8 flex flex-col items-center gap-4">
-            <Menubar className="mx-auto">
-              <MenubarMenu>
-                <MenubarTrigger className="font-semibold">
-                  <Mail className="mr-2 h-4 w-4" />
-                  Menu de Navigation
-                </MenubarTrigger>
-                <MenubarContent>
-                  <MenubarItem asChild>
-                    <Link to="/messages" className="flex items-center">
-                      <Mail className="mr-2 h-4 w-4" />
-                      Messages
-                    </Link>
-                  </MenubarItem>
-                  <MenubarItem asChild>
-                    <Link to="/mies" className="flex items-center">
-                      <Users className="mr-2 h-4 w-4" />
-                      Mies
-                    </Link>
-                  </MenubarItem>
-                </MenubarContent>
-              </MenubarMenu>
-            </Menubar>
-            
-            <div className="flex justify-center gap-4">
-              <Button asChild variant="default">
-                <Link to="/messages">
-                  <Mail className="mr-2 h-4 w-4" />
-                  Messages
-                </Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link to="/mies">
-                  <Users className="mr-2 h-4 w-4" />
-                  Mies
-                </Link>
-              </Button>
-            </div>
+          <div className="mt-8 flex flex-col items-center">
+            <Tabs defaultValue={getActiveTab()} className="w-full max-w-md">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="amis" asChild>
+                  <Link to="/mes-amis" className="flex items-center justify-center">
+                    <Users className="mr-2 h-4 w-4" />
+                    Amis
+                  </Link>
+                </TabsTrigger>
+                <TabsTrigger value="messages" asChild>
+                  <Link to="/messages" className="flex items-center justify-center">
+                    <Mail className="mr-2 h-4 w-4" />
+                    Messages
+                  </Link>
+                </TabsTrigger>
+                <TabsTrigger value="mies" asChild>
+                  <Link to="/mies" className="flex items-center justify-center">
+                    <Clock className="mr-2 h-4 w-4" />
+                    En attente
+                  </Link>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
         )}
         
