@@ -11,11 +11,7 @@ import { useVetementsData } from "@/hooks/useVetementsData";
 import { useVetementsFilters } from "@/hooks/useVetementsFilters";
 import { useAmis } from "@/hooks/useAmis";
 import { SearchFilterProvider } from "@/contexts/SearchFilterContext";
-
-// Import other tab components
-import AjouterVetement from "./AjouterVetement";
 import MesEnsembles from "../ensembles/MesEnsembles";
-import AjouterEnsemble from "../ensembles/AjouterEnsemble";
 
 const ListeVetements = () => {
   const { user } = useAuth();
@@ -94,22 +90,12 @@ const ListeVetements = () => {
               />
             </TabsContent>
             
-            <TabsContent value="ajouter-vetement">
-              <div className="mt-4">
-                <AjouterVetement />
-              </div>
+            <TabsContent value="mes-ensembles">
+              <MesEnsembles asTabContent={true} />
             </TabsContent>
             
-            <TabsContent value="mes-tenues">
-              <div className="mt-4">
-                <MesEnsembles asTabContent={true} />
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="ajouter-tenue">
-              <div className="mt-4">
-                <AjouterEnsemble />
-              </div>
+            <TabsContent value="vetements-amis">
+              {/* Contenu pour l'onglet Vêtements Amis */}
             </TabsContent>
           </VetementsContainer>
         </SearchFilterProvider>

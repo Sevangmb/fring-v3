@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from "@/components/templates/Layout";
 import { Helmet } from "react-helmet";
@@ -47,7 +46,6 @@ const MesEnsembles: React.FC<MesEnsemblesProps> = ({ asTabContent = false }) => 
   }, [user]);
   
   const handleEnsembleDelete = () => {
-    // Recharger la liste après suppression
     loadEnsembles();
   };
   
@@ -120,12 +118,10 @@ const MesEnsembles: React.FC<MesEnsemblesProps> = ({ asTabContent = false }) => 
     </>
   );
 
-  // If used as tab content, return only the content
   if (asTabContent) {
     return ensemblesContent;
   }
   
-  // Otherwise render with full layout
   return (
     <Layout>
       <Helmet>
