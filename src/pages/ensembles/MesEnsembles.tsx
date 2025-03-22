@@ -12,8 +12,8 @@ import EnsembleCard from '@/components/ensembles/EnsembleCard';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import VetementsTabsList from "@/components/vetements/tabs/VetementsTabsList";
+import { TabsContent } from "@/components/ui/tabs";
+import VetementsContainer from "@/components/vetements/VetementsContainer";
 
 const MesEnsembles = () => {
   const { user } = useAuth();
@@ -21,7 +21,6 @@ const MesEnsembles = () => {
   const [ensembles, setEnsembles] = useState<Ensemble[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("mes-tenues");
   
   useEffect(() => {
     const loadEnsembles = async () => {
@@ -42,10 +41,6 @@ const MesEnsembles = () => {
     
     loadEnsembles();
   }, [user]);
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-  };
   
   return (
     <Layout>
@@ -60,10 +55,8 @@ const MesEnsembles = () => {
       />
       
       <div className="container mx-auto px-4 py-6">
-        <Tabs value={activeTab} className="w-full mb-6">
-          <VetementsTabsList onTabChange={handleTabChange} activeTab={activeTab} />
-          
-          <TabsContent value="mes-tenues" className="mt-4">
+        <VetementsContainer defaultTab="mes-tenues">
+          <TabsContent value="mes-tenues">
             <div className="flex justify-between items-center mb-4">
               <h1 className="text-xl font-semibold">Mes Ensembles</h1>
               <Button 
@@ -125,7 +118,7 @@ const MesEnsembles = () => {
               </div>
             )}
           </TabsContent>
-        </Tabs>
+        </VetementsContainer>
       </div>
     </Layout>
   );
