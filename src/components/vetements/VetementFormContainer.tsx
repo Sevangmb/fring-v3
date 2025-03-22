@@ -1,13 +1,14 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Form } from "@/components/ui/form";
-import { Save } from "lucide-react";
+import { Save, FileText, Info, Tag } from "lucide-react";
 import { useVetementForm } from "@/hooks/useVetementForm";
 import VetementFormFields from "./VetementFormFields";
 import { VetementFormValues } from "./schema/VetementFormSchema";
 import ImageUploader from "./image-upload/ImageUploader";
 import FormActions from "./FormActions";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface VetementFormContainerProps {
   user: any;
@@ -32,9 +33,10 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
   submitLabel,
   submitIcon,
   mode = "create",
-  activeTab = "principal"
+  activeTab: defaultActiveTab = "principal"
 }) => {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState(defaultActiveTab);
   
   const {
     form,
@@ -46,36 +48,82 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
   } = useVetementForm(user, initialValues, onSubmit, mode);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-      <div className="md:col-span-1">
-        <ImageUploader
-          form={form}
-          user={user}
-          imagePreview={imagePreview}
-          setImagePreview={setImagePreview}
-        />
-      </div>
-      
-      <div className="md:col-span-2">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            <VetementFormFields
+    <div className="space-y-6">
+      <Tabs 
+        defaultValue={activeTab} 
+        value={activeTab} 
+        onValueChange={setActiveTab} 
+        className="w-full"
+      >
+        <TabsList className="mb-6">
+          <TabsTrigger value="principal" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Informations principales
+          </TabsTrigger>
+          <TabsTrigger value="supplementaire" className="flex items-center gap-2">
+            <Info className="h-4 w-4" />
+            Informations supplémentaires
+          </TabsTrigger>
+          <TabsTrigger value="etiquette" className="flex items-center gap-2">
+            <Tag className="h-4 w-4" />
+            Étiquette
+          </TabsTrigger>
+        </TabsList>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+          <div className="md:col-span-1">
+            <ImageUploader
               form={form}
-              marques={marques}
-              loading={loading}
-              onCategoriesChange={() => {}}
-              activeTab={activeTab}
+              user={user}
+              imagePreview={imagePreview}
+              setImagePreview={setImagePreview}
             />
-            
-            <FormActions
-              isSubmitting={isSubmitting}
-              onCancel={() => navigate("/mes-vetements/liste")}
-              submitLabel={submitLabel || (mode === "create" ? "Ajouter le vêtement" : "Enregistrer les modifications")}
-              submitIcon={submitIcon || (mode === "update" ? <Save className="mr-2 h-4 w-4" /> : undefined)}
-            />
-          </form>
-        </Form>
-      </div>
+          </div>
+          
+          <div className="md:col-span-2">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+                <TabsContent value="principal">
+                  <VetementFormFields
+                    form={form}
+                    marques={marques}
+                    loading={loading}
+                    onCategoriesChange={() => {}}
+                    activeTab="principal"
+                  />
+                </TabsContent>
+                
+                <TabsContent value="supplementaire">
+                  <VetementFormFields
+                    form={form}
+                    marques={marques}
+                    loading={loading}
+                    onCategoriesChange={() => {}}
+                    activeTab="supplementaire"
+                  />
+                </TabsContent>
+                
+                <TabsContent value="etiquette">
+                  <VetementFormFields
+                    form={form}
+                    marques={marques}
+                    loading={loading}
+                    onCategoriesChange={() => {}}
+                    activeTab="etiquette"
+                  />
+                </TabsContent>
+                
+                <FormActions
+                  isSubmitting={isSubmitting}
+                  onCancel={() => navigate("/mes-vetements/liste")}
+                  submitLabel={submitLabel || (mode === "create" ? "Ajouter le vêtement" : "Enregistrer les modifications")}
+                  submitIcon={submitIcon || (mode === "update" ? <Save className="mr-2 h-4 w-4" /> : undefined)}
+                />
+              </form>
+            </Form>
+          </div>
+        </div>
+      </Tabs>
     </div>
   );
 };

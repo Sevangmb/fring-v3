@@ -34,7 +34,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     setImagePreview(null);
     form.setValue('couleur', '');
     form.setValue('categorie_id', 0);
+    form.setValue('image_url', '');
   };
+
+  // Convertir DetectionStep[] en string[] pour corriger l'erreur de type
+  const stepLabels = steps.map(step => typeof step === 'string' ? step : step.label);
 
   return (
     <div className="flex flex-col items-center w-full">
@@ -59,7 +63,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       
       <DetectionResults 
         error={error}
-        steps={steps}
+        steps={stepLabels}
         currentStep={currentStep}
         loading={loading}
       />

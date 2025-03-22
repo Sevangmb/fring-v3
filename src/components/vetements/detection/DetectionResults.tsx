@@ -1,91 +1,56 @@
 
 import React from "react";
-import { AlertTriangle, Info, CheckCircle } from "lucide-react";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Text } from "@/components/atoms/Typography";
-import { DetectionStep } from "@/hooks/useDetection";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Loader2 } from "lucide-react";
 
 interface DetectionResultsProps {
   error: string | null;
-  steps: DetectionStep[];
+  steps: string[];
   currentStep: string | null;
   loading: boolean;
 }
 
 /**
- * Composant d'affichage des résultats de détection avec les étapes du processus
+ * Affiche les résultats et l'état du processus de détection
  */
-const DetectionResults: React.FC<DetectionResultsProps> = ({ 
-  error, 
-  steps, 
+const DetectionResults: React.FC<DetectionResultsProps> = ({
+  error,
+  steps,
   currentStep,
-  loading 
+  loading
 }) => {
-  const hasSteps = steps && steps.length > 0;
-  const hasError = error !== null;
-  
-  if (!hasError && !hasSteps && !loading) return null;
+  // Si aucune donnée à afficher, ne rien rendre
+  if (!error && steps.length === 0 && !currentStep && !loading) {
+    return null;
+  }
   
   return (
-    <div className="mt-3 space-y-2 w-full">
-      {loading && (
-        <div className="flex items-center gap-2 text-primary bg-primary/10 p-3 rounded-md">
-          <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
-          <Text className="text-primary text-sm font-medium">
-            {currentStep || "Détection en cours..."}
-          </Text>
-        </div>
-      )}
-      
+    <div className="w-full mt-4 text-center">
       {error && (
-        <div className="flex items-center gap-2 text-destructive bg-destructive/10 p-3 rounded-md">
-          <AlertTriangle size={18} />
-          <Text className="text-destructive text-sm font-medium">{error}</Text>
+        <Alert variant="destructive" className="mb-4">
+          <AlertTitle>Erreur de détection</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
+      {loading && (
+        <div className="flex items-center justify-center">
+          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          <span className="text-sm">{currentStep || "Analyse en cours..."}</span>
         </div>
       )}
       
-      {hasSteps && (
-        <Accordion type="single" collapsible className="w-full border rounded-md">
-          <AccordionItem value="steps">
-            <AccordionTrigger className="text-sm font-medium flex items-center gap-2 px-3 py-2">
-              <Info size={16} />
-              Détails du processus de détection ({steps.length} étapes)
-            </AccordionTrigger>
-            <AccordionContent className="px-3 pb-2">
-              <ul className="text-sm space-y-2 mt-1 pl-2">
-                {steps.map((step, index) => {
-                  // Déterminer si c'est une étape d'erreur
-                  const isError = step.label.toLowerCase().includes('erreur');
-                  // Déterminer si c'est une étape finale réussie
-                  const isSuccess = step.completed && (
-                    step.label.toLowerCase().includes('terminée') || 
-                    step.id === 'complete'
-                  );
-                  
-                  return (
-                    <li key={index} 
-                        className={`flex items-start gap-2 py-1 px-2 rounded-sm ${
-                          isError ? 'text-destructive bg-destructive/5' : 
-                          isSuccess ? 'text-green-600 bg-green-50' : 
-                          'text-muted-foreground'
-                        }`}>
-                      {isError ? (
-                        <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-                      ) : isSuccess ? (
-                        <CheckCircle size={14} className="mt-0.5 shrink-0" />
-                      ) : (
-                        <span className="inline-block w-4 h-4 rounded-full bg-muted text-[10px] flex items-center justify-center font-semibold shrink-0 mt-0.5">
-                          {index + 1}
-                        </span>
-                      )}
-                      <span>{step.label}{step.description ? `: ${step.description}` : ''}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+      {!loading && steps.length > 0 && (
+        <div className="text-sm text-muted-foreground space-y-1">
+          {steps.map((step, index) => (
+            <div key={index} className="flex items-center">
+              <span className="inline-block w-4 h-4 mr-2 rounded-full bg-primary/20 text-xs flex items-center justify-center">
+                ✓
+              </span>
+              {step}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

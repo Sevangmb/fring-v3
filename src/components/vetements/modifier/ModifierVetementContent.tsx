@@ -1,12 +1,11 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Save, Loader2, FileText, Info, Tag } from "lucide-react";
+import { Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import VetementFormContainer from "@/components/vetements/VetementFormContainer";
 import { VetementFormValues } from "@/components/vetements/schema/VetementFormSchema";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { updateVetement } from "@/services/vetement";
 
 interface ModifierVetementContentProps {
@@ -89,7 +88,7 @@ const ModifierVetementContent: React.FC<ModifierVetementContentProps> = ({
   if (isLoading && !vetement) {
     return (
       <div className="flex justify-center items-center py-16">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="h-8 w-8 animate-spin text-primary border-2 border-current border-t-transparent rounded-full" />
         <span className="ml-2">Chargement des données...</span>
       </div>
     );
@@ -100,61 +99,16 @@ const ModifierVetementContent: React.FC<ModifierVetementContentProps> = ({
   }
 
   return (
-    <Tabs defaultValue="principal" value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="mb-6">
-        <TabsTrigger value="principal" className="flex items-center gap-2">
-          <FileText className="h-4 w-4" />
-          Informations principales
-        </TabsTrigger>
-        <TabsTrigger value="supplementaire" className="flex items-center gap-2">
-          <Info className="h-4 w-4" />
-          Informations supplémentaires
-        </TabsTrigger>
-        <TabsTrigger value="etiquette" className="flex items-center gap-2">
-          <Tag className="h-4 w-4" />
-          Étiquette
-        </TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="principal">
-        <VetementFormContainer
-          user={user}
-          marques={marques}
-          initialValues={vetement}
-          onSubmit={handleUpdate}
-          submitLabel="Enregistrer les modifications"
-          submitIcon={<Save className="mr-2 h-4 w-4" />}
-          mode="update"
-          activeTab={activeTab}
-        />
-      </TabsContent>
-      
-      <TabsContent value="supplementaire">
-        <VetementFormContainer
-          user={user}
-          marques={marques}
-          initialValues={vetement}
-          onSubmit={handleUpdate}
-          submitLabel="Enregistrer les modifications"
-          submitIcon={<Save className="mr-2 h-4 w-4" />}
-          mode="update"
-          activeTab={activeTab}
-        />
-      </TabsContent>
-      
-      <TabsContent value="etiquette">
-        <VetementFormContainer
-          user={user}
-          marques={marques}
-          initialValues={vetement}
-          onSubmit={handleUpdate}
-          submitLabel="Enregistrer les modifications"
-          submitIcon={<Save className="mr-2 h-4 w-4" />}
-          mode="update"
-          activeTab={activeTab}
-        />
-      </TabsContent>
-    </Tabs>
+    <VetementFormContainer
+      user={user}
+      marques={marques}
+      initialValues={vetement}
+      onSubmit={handleUpdate}
+      submitLabel="Enregistrer les modifications"
+      submitIcon={<Save className="mr-2 h-4 w-4" />}
+      mode="update"
+      activeTab={activeTab}
+    />
   );
 };
 
