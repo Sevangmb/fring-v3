@@ -15,7 +15,7 @@ export interface VetementsDataState {
 }
 
 export function useVetementsData(
-  viewMode: 'mes-vetements' | 'vetements-amis',
+  viewMode: 'mes-vetements' | 'vetements-amis' | 'mes-ensembles',
   friendFilter: string
 ) {
   const { user, loading: authLoading } = useAuth();
@@ -56,10 +56,15 @@ export function useVetementsData(
         let vetementsData: Vetement[] = [];
         if (viewMode === 'mes-vetements') {
           vetementsData = await fetchVetements();
-        } else {
+        } else if (viewMode === 'vetements-amis') {
           // Si on a sélectionné un ami spécifique, on passe son ID
           const friendIdParam = friendFilter !== "all" ? friendFilter : undefined;
           console.log("Récupération des vêtements avec le filtre ami:", friendIdParam);
+          vetementsData = await fetchVetementsAmis(friendIdParam);
+        } else if (viewMode === 'mes-ensembles') {
+          // Pour l'instant, on utilise la même logique que 'vetements-amis'
+          // mais on pourrait implémenter une logique spécifique pour les ensembles plus tard
+          const friendIdParam = friendFilter !== "all" ? friendFilter : undefined;
           vetementsData = await fetchVetementsAmis(friendIdParam);
         }
         
