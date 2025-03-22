@@ -1,4 +1,3 @@
-
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { VetementFormValues } from "./schema/VetementFormSchema";
@@ -10,6 +9,7 @@ import MarqueField from "./form-fields/MarqueField";
 import DescriptionField from "./form-fields/DescriptionField";
 import TemperatureField from "./form-fields/TemperatureField";
 import WeatherTypeField from "./form-fields/WeatherTypeField";
+import { Tag } from "lucide-react";
 
 interface VetementFormFieldsProps {
   form: UseFormReturn<VetementFormValues>;
