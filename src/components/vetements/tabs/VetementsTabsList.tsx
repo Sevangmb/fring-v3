@@ -1,7 +1,7 @@
 
 import React from "react";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shirt, Plus, FileText, FilePlus } from "lucide-react";
+import { Shirt, Plus, FileText, FilePlus, Users, Layers } from "lucide-react";
 
 interface VetementsTabsListProps {
   onTabChange: (value: string) => void;
@@ -9,7 +9,7 @@ interface VetementsTabsListProps {
 
 const VetementsTabsList: React.FC<VetementsTabsListProps> = ({ onTabChange }) => {
   return (
-    <TabsList className="w-full grid grid-cols-4">
+    <TabsList className="w-full grid grid-cols-6">
       <TabsTrigger value="mes-vetements" className="flex items-center gap-2">
         <Shirt className="h-4 w-4" />
         Mes Vêtements
@@ -25,6 +25,14 @@ const VetementsTabsList: React.FC<VetementsTabsListProps> = ({ onTabChange }) =>
       <TabsTrigger value="ajouter-tenue" className="flex items-center gap-2">
         <FilePlus className="h-4 w-4" />
         Ajouter Tenue
+      </TabsTrigger>
+      <TabsTrigger value="vetements-amis" className="flex items-center gap-2">
+        <Users className="h-4 w-4" />
+        Vêtements Amis
+      </TabsTrigger>
+      <TabsTrigger value="mes-ensembles" className="flex items-center gap-2">
+        <Layers className="h-4 w-4" />
+        Ensembles Amis
       </TabsTrigger>
     </TabsList>
   );

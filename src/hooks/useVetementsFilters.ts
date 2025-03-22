@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Categorie } from "@/services/categorieService";
 import { Vetement } from "@/services/vetement";
@@ -9,7 +8,7 @@ export function useVetementsFilters() {
   const [marqueFilter, setMarqueFilter] = useState<string>("");
   const [friendFilter, setFriendFilter] = useState<string>("all");
   const [activeTab, setActiveTab] = useState("tous");
-  const [viewMode, setViewMode] = useState<'mes-vetements' | 'vetements-amis'>('mes-vetements');
+  const [viewMode, setViewMode] = useState<'mes-vetements' | 'vetements-amis' | 'mes-ensembles'>('mes-vetements');
 
   const getCategoryNameById = (categories: Categorie[], categoryId: number): string => {
     const category = categories.find(cat => Number(cat.id) === categoryId);
@@ -18,23 +17,19 @@ export function useVetementsFilters() {
 
   const filterVetements = (vetements: Vetement[], categories: Categorie[]): Vetement[] => {
     return vetements.filter(vetement => {
-      // Filtre par recherche (nom, marque, description, email)
       const matchesSearch = vetement.nom.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           (vetement.marque && vetement.marque.toLowerCase().includes(searchTerm.toLowerCase())) ||
                           (vetement.description && vetement.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
                           (vetement.owner_email && vetement.owner_email.toLowerCase().includes(searchTerm.toLowerCase()));
       
-      // Filtre par catégorie
       const matchesCategorie = categorieFilter 
         ? categorieFilter === "all" 
           ? true 
           : getCategoryNameById(categories, vetement.categorie_id) === categorieFilter 
         : true;
       
-      // Filtre par marque
       const matchesMarque = marqueFilter ? marqueFilter === "all" ? true : vetement.marque === marqueFilter : true;
       
-      // Filtre par onglet de catégorie actif
       const matchesActiveTab = activeTab === "tous" 
         ? true 
         : getCategoryNameById(categories, vetement.categorie_id) === activeTab;
@@ -43,7 +38,7 @@ export function useVetementsFilters() {
     });
   };
 
-  const handleViewModeChange = (mode: 'mes-vetements' | 'vetements-amis') => {
+  const handleViewModeChange = (mode: 'mes-vetements' | 'vetements-amis' | 'mes-ensembles') => {
     setViewMode(mode);
     resetFilters();
   };

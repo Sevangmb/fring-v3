@@ -9,6 +9,7 @@ import VetementsTabsList from "./tabs/VetementsTabsList";
 import MesVetementsTab from "./tabs/MesVetementsTab";
 import AjouterEnsembleTab from "./tabs/AjouterEnsembleTab";
 import MesEnsemblesTab from "./tabs/MesEnsemblesTab";
+import VetementsAmisTab from "./tabs/VetementsAmisTab";
 import { useNavigate } from "react-router-dom";
 
 interface VetementsContainerProps {
@@ -63,7 +64,6 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
     } else if (defaultTab === 'vetements-amis') {
       handleViewModeChange('vetements-amis');
     } else if (defaultTab === 'mes-ensembles') {
-      // Handle for the additional tab
       handleViewModeChange('mes-ensembles');
     }
   }, [defaultTab, handleViewModeChange]);
@@ -137,6 +137,8 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
           onVetementDeleted={handleVetementDeleted}
           onTabChange={setActiveTab}
         />
+        
+        <MesEnsemblesTab />
         
         {/* Les autres onglets sont gérés par des redirections vers les pages correspondantes */}
       </Tabs>
