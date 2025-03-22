@@ -6,40 +6,75 @@ import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { toast } from "@/components/ui/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { defiFormSchema, DefiFormValues, validateDateRange } from "./schema/DefiFormSchema";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
-// Type pour le formulaire de création de défi
-export type DefiFormValues = {
-  titre: string;
-  description: string;
-  dateDebut: string;
-  dateFin: string;
-};
+interface DefiFormProps {
+  onClose?: () => void;
+  initialValues?: Partial<DefiFormValues>;
+}
 
-const DefiForm = ({ onClose }: { onClose?: () => void }) => {
-  // Configuration du formulaire pour créer un défi
+const DefiForm: React.FC<DefiFormProps> = ({ onClose, initialValues }) => {
+  const [dateRangeError, setDateRangeError] = React.useState<string | null>(null);
+  const [submissionError, setSubmissionError] = React.useState<string | null>(null);
+  
+  // Configuration du formulaire avec validation Zod
   const form = useForm<DefiFormValues>({
+    resolver: zodResolver(defiFormSchema),
     defaultValues: {
-      titre: "",
-      description: "",
-      dateDebut: "",
-      dateFin: ""
+      titre: initialValues?.titre || "",
+      description: initialValues?.description || "",
+      dateDebut: initialValues?.dateDebut || "",
+      dateFin: initialValues?.dateFin || ""
     }
   });
   
-  const onSubmit = (data: DefiFormValues) => {
-    console.log("Formulaire soumis:", data);
-    toast({
-      title: "Défi créé",
-      description: "Votre défi a été créé avec succès.",
-    });
-    // Réinitialiser le formulaire
-    form.reset();
-    if (onClose) onClose();
+  const onSubmit = async (data: DefiFormValues) => {
+    try {
+      // Reset errors
+      setSubmissionError(null);
+      setDateRangeError(null);
+      
+      // Validate date range
+      const dateValidation = validateDateRange(data);
+      if (!dateValidation.success) {
+        setDateRangeError(dateValidation.error);
+        return;
+      }
+      
+      console.log("Formulaire soumis:", data);
+      
+      // Here you would add the actual API call to save the defi
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      toast({
+        title: "Défi créé",
+        description: "Votre défi a été créé avec succès.",
+      });
+      
+      // Réinitialiser le formulaire
+      form.reset();
+      if (onClose) onClose();
+    } catch (error) {
+      console.error("Erreur lors de la création du défi:", error);
+      setSubmissionError("Une erreur est survenue lors de la création du défi. Veuillez réessayer.");
+    }
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {submissionError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{submissionError}</AlertDescription>
+          </Alert>
+        )}
+        
         <FormField
           control={form.control}
           name="titre"
@@ -61,7 +96,11 @@ const DefiForm = ({ onClose }: { onClose?: () => void }) => {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Décrivez votre défi" />
+                <Textarea 
+                  {...field} 
+                  placeholder="Décrivez votre défi" 
+                  className="min-h-[100px]"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -76,7 +115,11 @@ const DefiForm = ({ onClose }: { onClose?: () => void }) => {
               <FormItem>
                 <FormLabel>Date de début</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input 
+                    type="date" 
+                    {...field} 
+                    min={new Date().toISOString().split('T')[0]} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -90,7 +133,11 @@ const DefiForm = ({ onClose }: { onClose?: () => void }) => {
               <FormItem>
                 <FormLabel>Date de fin</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input 
+                    type="date" 
+                    {...field} 
+                    min={form.watch('dateDebut') || new Date().toISOString().split('T')[0]} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -98,8 +145,18 @@ const DefiForm = ({ onClose }: { onClose?: () => void }) => {
           />
         </div>
         
+        {dateRangeError && (
+          <p className="text-sm font-medium text-destructive">{dateRangeError}</p>
+        )}
+        
         <DialogFooter>
-          <Button type="submit">Créer le défi</Button>
+          <Button 
+            type="submit" 
+            disabled={form.formState.isSubmitting}
+            className="w-full sm:w-auto"
+          >
+            {form.formState.isSubmitting ? "Création en cours..." : "Créer le défi"}
+          </Button>
         </DialogFooter>
       </form>
     </Form>

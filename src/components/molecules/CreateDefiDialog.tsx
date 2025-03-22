@@ -16,7 +16,7 @@ const CreateDefiDialog: React.FC = () => {
           Créer un défi
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Créer un nouveau défi</DialogTitle>
           <DialogDescription>
