@@ -4,10 +4,47 @@ import Layout from "@/components/templates/Layout";
 import { Helmet } from "react-helmet";
 import { useAuth } from "@/contexts/AuthContext";
 import AmisPageHeader from "@/components/organisms/AmisPageHeader";
-import VetementsContainer from "@/components/vetements/VetementsContainer";
+import { useVetementsData } from "@/hooks/useVetementsData";
+import { useVetementsFilters } from "@/hooks/useVetementsFilters";
+import { useAmis } from "@/hooks/useAmis";
+import VetementsList from "@/components/organisms/VetementsList";
+import CategoryTabs from "@/components/molecules/CategoryTabs";
+import { SearchFilterProvider } from "@/contexts/SearchFilterContext";
+import SearchFilterBar from "@/components/molecules/SearchFilterBar";
 
 const VetementsAmis = () => {
   const { user, loading } = useAuth();
+  const { filteredAmis, loadingAmis, chargerAmis } = useAmis();
+  const {
+    activeTab,
+    setActiveTab,
+    filterVetements
+  } = useVetementsFilters();
+
+  const {
+    vetements,
+    categories,
+    marques,
+    isLoading,
+    error,
+    reloadVetements
+  } = useVetementsData('vetements-amis', 'all');
+
+  const acceptedFriends = filteredAmis?.amisAcceptes || [];
+
+  // Charger les amis au montage du composant
+  React.useEffect(() => {
+    if (user) {
+      chargerAmis();
+    }
+  }, [user, chargerAmis]);
+
+  const filteredVetements = filterVetements(vetements, categories);
+
+  const handleVetementDeleted = (id: number) => {
+    console.log(`Vêtement ${id} supprimé`);
+    reloadVetements();
+  };
 
   return (
     <Layout>
@@ -20,7 +57,33 @@ const VetementsAmis = () => {
       
       {user && (
         <div className="container mx-auto px-4 py-8">
-          <VetementsContainer defaultTab="vetements-amis" />
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold mb-4">Vêtements de mes amis</h1>
+            
+            <SearchFilterProvider
+              categories={categories}
+              marques={marques.map(m => m.nom)}
+              friends={acceptedFriends}
+              showFriendFilter={true}
+            >
+              <SearchFilterBar />
+            </SearchFilterProvider>
+            
+            <CategoryTabs 
+              categories={categories}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            >
+              <VetementsList 
+                vetements={filteredVetements}
+                isLoading={isLoading || loadingAmis}
+                error={error}
+                isAuthenticated={!!user}
+                onVetementDeleted={handleVetementDeleted}
+                showOwner={true}
+              />
+            </CategoryTabs>
+          </div>
         </div>
       )}
     </Layout>

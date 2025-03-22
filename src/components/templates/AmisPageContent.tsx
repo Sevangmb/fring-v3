@@ -19,11 +19,8 @@ const AmisPageContent: React.FC<AmisPageContentProps> = (props) => {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  // Afficher le contenu des vêtements des amis si l'utilisateur est sur cette page
-  if (currentPath.includes("/vetements-amis")) {
-    return <VetementsContainer defaultTab="vetements-amis" />;
-  }
-
+  // On n'utilise plus VetementsContainer pour la page des vêtements des amis
+  // L'affichage est directement géré dans la page VetementsAmis.tsx
   return <AmisList {...props} />;
 };
 
