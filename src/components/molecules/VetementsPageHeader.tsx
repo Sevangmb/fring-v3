@@ -21,7 +21,7 @@ const VetementsPageHeader: React.FC<VetementsPageHeaderProps> = ({
       <div className="container mx-auto px-4">
         <div className="flex items-center gap-4">
           
-          {!hideHeading && <Heading>Liste des vêtements</Heading>}
+          {!hideHeading && <Heading>Créer une tenue</Heading>}
           
           {viewMode === 'vetements-amis' && selectedFriendEmail && <Badge variant="secondary" className="ml-2 flex items-center gap-1">
               <User size={12} />
