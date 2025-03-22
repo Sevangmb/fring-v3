@@ -1,6 +1,7 @@
+
 import React from "react";
 import { TabsContent } from "@/components/ui/tabs";
-import MesFavorisTab from "./tabs/MesFavorisTab";
+import AjouterEnsembleTab from "./tabs/AjouterEnsembleTab";
 
 interface TabContentRendererProps {
   children?: React.ReactNode;
@@ -9,8 +10,8 @@ interface TabContentRendererProps {
 const TabContentRenderer: React.FC<TabContentRendererProps> = ({ children }) => {
   return (
     <>
-      <TabsContent value="mes-favoris">
-        <MesFavorisTab />
+      <TabsContent value="ajouter-ensemble">
+        <AjouterEnsembleTab />
       </TabsContent>
       {/* Other tab contents will be provided via children */}
       {children}

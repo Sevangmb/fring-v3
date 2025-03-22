@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { TabType } from "@/components/vetements/types/TabTypes";
 
-export function useVetementsTabState(defaultTab: TabType = 'mes-favoris') {
+export function useVetementsTabState(defaultTab: TabType = 'mes-vetements') {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<TabType>(
     location.state?.activeTab ? (location.state.activeTab as TabType) : defaultTab
