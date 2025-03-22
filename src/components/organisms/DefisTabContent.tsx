@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { PlusCircle, Flag, Calendar, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,9 +8,13 @@ import { fetchDefis, Defi } from "@/services/defi";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
-const DefisTabContent = () => {
+interface DefisTabContentProps {
+  isLoading?: boolean;
+}
+
+const DefisTabContent: React.FC<DefisTabContentProps> = ({ isLoading: externalLoading }) => {
   const [defis, setDefis] = useState<Defi[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(externalLoading || false);
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -41,16 +44,20 @@ const DefisTabContent = () => {
 
   // Load defis
   const loadDefis = useCallback(async () => {
-    setIsLoading(true);
+    if (!externalLoading) {
+      setIsLoading(true);
+    }
     try {
       const defisData = await fetchDefis();
       setDefis(defisData);
     } catch (error) {
       console.error("Erreur lors du chargement des défis:", error);
     } finally {
-      setIsLoading(false);
+      if (!externalLoading) {
+        setIsLoading(false);
+      }
     }
-  }, []);
+  }, [externalLoading]);
 
   useEffect(() => {
     loadDefis();
