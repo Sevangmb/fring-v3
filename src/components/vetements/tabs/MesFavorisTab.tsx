@@ -4,9 +4,10 @@ import { TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFavoris } from "@/hooks/useFavoris";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
 const MesFavorisTab: React.FC = () => {
   const { favoris, loading } = useFavoris();
@@ -65,40 +66,52 @@ const MesFavorisTab: React.FC = () => {
                     onClick={() => handleFavoriClick(favori)}
                   >
                     <CardContent className="p-4">
-                      <div className="flex items-center space-x-2">
-                        <div className={`w-2 h-2 rounded-full ${
-                          favori.type_favori === 'vetement' 
-                            ? 'bg-blue-500' 
-                            : favori.type_favori === 'ensemble' 
-                              ? 'bg-green-500' 
-                              : 'bg-purple-500'
-                        }`} />
-                        <span className="text-xs text-muted-foreground capitalize">
-                          {favori.type_favori}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <Badge variant={
+                            favori.type_favori === 'vetement' 
+                              ? 'default' 
+                              : favori.type_favori === 'ensemble' 
+                                ? 'secondary' 
+                                : 'outline'
+                          }>
+                            {favori.type_favori}
+                          </Badge>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          ID: {favori.element_id}
                         </span>
                       </div>
                       
-                      <h3 className="font-medium mt-2 line-clamp-1">{favori.nom || "Sans nom"}</h3>
-                      
-                      {favori.details ? (
-                        <div className="mt-2 text-sm text-muted-foreground">
-                          {favori.type_favori === 'vetement' && (
-                            <div className="flex flex-col">
-                              <span>Couleur: {favori.details.couleur}</span>
-                              <span>Taille: {favori.details.taille}</span>
-                            </div>
-                          )}
-                          {favori.type_favori === 'ensemble' && (
-                            <span>{favori.details.description || `Ensemble avec ${favori.details.vetements?.length || 0} vêtements`}</span>
-                          )}
-                          {favori.type_favori === 'utilisateur' && (
-                            <span>{favori.details.email}</span>
-                          )}
+                      {!favori.details ? (
+                        <div className="mt-2 bg-muted p-3 rounded-md">
+                          <div className="flex items-center space-x-2 text-muted-foreground">
+                            <AlertTriangle size={16} />
+                            <h3 className="font-medium">Vêtement supprimé</h3>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Élément supprimé ou indisponible
+                          </p>
                         </div>
                       ) : (
-                        <p className="mt-2 text-sm text-muted-foreground italic">
-                          Élément supprimé ou indisponible
-                        </p>
+                        <>
+                          <h3 className="font-medium mt-2 line-clamp-1">{favori.nom || "Sans nom"}</h3>
+                          
+                          <div className="mt-2 text-sm text-muted-foreground">
+                            {favori.type_favori === 'vetement' && (
+                              <div className="flex flex-col">
+                                <span>Couleur: {favori.details.couleur}</span>
+                                <span>Taille: {favori.details.taille}</span>
+                              </div>
+                            )}
+                            {favori.type_favori === 'ensemble' && (
+                              <span>{favori.details.description || `Ensemble avec ${favori.details.vetements?.length || 0} vêtements`}</span>
+                            )}
+                            {favori.type_favori === 'utilisateur' && (
+                              <span>{favori.details.email}</span>
+                            )}
+                          </div>
+                        </>
                       )}
                     </CardContent>
                   </Card>

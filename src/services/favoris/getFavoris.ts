@@ -1,6 +1,8 @@
+
 import { supabase } from '@/lib/supabase';
 import { Favori, FavoriWithDetails } from './types';
 import { fetchVetementById } from '../vetement/fetchVetementById';
+import { fetchEnsembleById } from '../ensemble/fetchEnsembleById';
 
 /**
  * Récupère tous les favoris de l'utilisateur
@@ -47,14 +49,21 @@ export const getFavorisWithDetails = async (): Promise<FavoriWithDetails[]> => {
         
         // Récupérer les détails en fonction du type de favori
         if (favori.type_favori === 'vetement') {
-          const vetement = await fetchVetementById(parseInt(favori.element_id));
-          details = vetement;
-          nom = vetement?.nom;
+          try {
+            const vetement = await fetchVetementById(parseInt(favori.element_id));
+            details = vetement;
+            nom = vetement?.nom;
+          } catch (err) {
+            console.error("Erreur lors de la récupération du vêtement favori:", err);
+          }
         } else if (favori.type_favori === 'ensemble') {
-          // Implémentation pour les ensembles à ajouter ultérieurement
-          // const ensemble = await fetchEnsembleById(parseInt(favori.element_id));
-          // details = ensemble;
-          // nom = ensemble?.nom;
+          try {
+            const ensemble = await fetchEnsembleById(parseInt(favori.element_id));
+            details = ensemble;
+            nom = ensemble?.nom;
+          } catch (err) {
+            console.error("Erreur lors de la récupération de l'ensemble favori:", err);
+          }
         } else if (favori.type_favori === 'utilisateur') {
           // Implémentation pour les utilisateurs à ajouter ultérieurement
           // const user = await getUserById(favori.element_id);
