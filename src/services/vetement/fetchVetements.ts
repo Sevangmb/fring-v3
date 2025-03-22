@@ -57,6 +57,7 @@ export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]>
         }
         
         // Vérifier d'abord si c'est un ami avec status 'accepted'
+        console.log(`Vérification de l'amitié entre ${currentUserId} et ${friendId}`);
         const { data: amisData, error: amisError } = await supabase
           .from('amis')
           .select('*')
@@ -69,6 +70,7 @@ export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]>
         }
         
         console.log('Statut de l\'amitié avec', friendId, ':', amisData ? 'Accepté' : 'Non accepté ou inexistant');
+        console.log('Données de l\'amitié:', amisData);
         
         // Si l'amitié n'est pas acceptée, retourner un tableau vide au lieu de lancer une exception
         if (!amisData) {
@@ -76,23 +78,27 @@ export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]>
           return [];
         }
         
-        // Utiliser la fonction RPC personnalisée pour récupérer les vêtements de l'ami spécifique
+        // Utiliser directement une requête SQL au lieu de la fonction RPC pour contourner les problèmes RLS
+        console.log('Récupération directe des vêtements de l\'ami:', friendId);
         const { data, error } = await supabase
-          .rpc('get_friend_vetements', { friend_id_param: friendId });
+          .from('vetements')
+          .select('*, profiles!inner(email)')
+          .eq('user_id', friendId)
+          .order('created_at', { ascending: false });
         
         if (error) {
           console.error('Erreur lors de la récupération des vêtements de l\'ami:', error);
-          // Vérifier si l'erreur est liée à l'amitié non acceptée
-          if (error.message && error.message.includes('amis')) {
-            console.warn('Erreur d\'amitié détectée, retourne tableau vide');
-            return [];
-          }
-          // Pour les autres erreurs, continuer à retourner un tableau vide
           return [];
         }
         
-        console.log('Vêtements de l\'ami récupérés:', data?.length || 0, 'vêtements');
-        return data as Vetement[];
+        // Transformer les données pour inclure l'email
+        const vetementsWithEmail = data.map(vetement => ({
+          ...vetement,
+          owner_email: vetement.profiles.email
+        }));
+        
+        console.log('Vêtements de l\'ami récupérés:', vetementsWithEmail.length || 0, 'vêtements');
+        return vetementsWithEmail as Vetement[];
         
       } catch (innerError) {
         console.error('Erreur inattendue lors de la récupération des vêtements de l\'ami:', innerError);
@@ -101,17 +107,59 @@ export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]>
     } else {
       console.log('Récupération des vêtements de tous les amis');
       try {
-        // Sinon, utiliser la fonction RPC pour récupérer tous les vêtements des amis
+        // Obtenir la session courante pour récupérer l'ID utilisateur
+        const { data: sessionData } = await supabase.auth.getSession();
+        const currentUserId = sessionData.session?.user?.id;
+        
+        if (!currentUserId) {
+          console.error('Utilisateur non connecté');
+          return [];
+        }
+        
+        // Récupérer d'abord la liste des amis avec status 'accepted'
+        const { data: amisList, error: amisError } = await supabase
+          .from('amis')
+          .select('*')
+          .or(`user_id.eq.${currentUserId},ami_id.eq.${currentUserId}`)
+          .eq('status', 'accepted');
+        
+        if (amisError) {
+          console.error('Erreur lors de la récupération des amis:', amisError);
+          return [];
+        }
+        
+        // Extraire les IDs des amis
+        const friendIds = amisList.map(ami => 
+          ami.user_id === currentUserId ? ami.ami_id : ami.user_id
+        );
+        
+        console.log('IDs des amis récupérés:', friendIds);
+        
+        if (friendIds.length === 0) {
+          console.log('Aucun ami trouvé, retourne un tableau vide');
+          return [];
+        }
+        
+        // Récupérer les vêtements de tous les amis
         const { data, error } = await supabase
-          .rpc('get_friends_vetements');
+          .from('vetements')
+          .select('*, profiles!inner(email)')
+          .in('user_id', friendIds)
+          .order('created_at', { ascending: false });
         
         if (error) {
           console.error('Erreur lors de la récupération des vêtements des amis:', error);
           return [];
         }
         
-        console.log('Vêtements des amis récupérés:', data?.length || 0, 'vêtements');
-        return data as Vetement[];
+        // Transformer les données pour inclure l'email
+        const vetementsWithEmail = data.map(vetement => ({
+          ...vetement,
+          owner_email: vetement.profiles.email
+        }));
+        
+        console.log('Vêtements des amis récupérés:', vetementsWithEmail.length || 0, 'vêtements');
+        return vetementsWithEmail as Vetement[];
       } catch (innerError) {
         console.error('Erreur inattendue lors de la récupération des vêtements des amis:', innerError);
         return [];

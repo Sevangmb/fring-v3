@@ -76,6 +76,7 @@ const VetementsAmis = () => {
           }
           
           console.log('Statut d\'amitié avec', friendFilter, ':', amisData ? 'Accepté' : 'Non accepté ou inexistant');
+          console.log('Données d\'amitié:', amisData);
           
           if (!amisData) {
             // Afficher un toast seulement si aucun vêtement n'est affiché
