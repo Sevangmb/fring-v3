@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { VetementFormValues } from "../components/vetements/schema/VetementFormSchema";
@@ -33,13 +34,11 @@ export const useEtiquetteUpload = (
     try {
       setLoading(true);
       
-      // Envoi à l'Edge Function pour analyse
       toast({
         title: "Analyse en cours",
         description: "L'étiquette est en cours d'analyse...",
       });
       
-      // Corriger ici - utiliser les bons paramètres pour la requête
       const { data, error } = await supabase.functions.invoke('analyze-etiquette', {
         body: {
           image: imagePreview,
@@ -49,7 +48,6 @@ export const useEtiquetteUpload = (
 
       if (error) throw new Error(`Erreur lors de l'analyse de l'étiquette: ${error.message}`);
       
-      // Mettre à jour le formulaire avec les données extraites
       if (data && data.results) {
         const results = data.results;
         
@@ -92,49 +90,77 @@ export const useEtiquetteUpload = (
       // Afficher l'aperçu de l'image
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        const base64Image = reader.result as string;
+        setImagePreview(base64Image);
+        form.setValue('etiquette_image_url', base64Image);
       };
       reader.readAsDataURL(file);
 
-      // Télécharger l'image
-      setLoading(true);
-
-      // 1. Upload de l'image vers le bucket Supabase
-      const fileExt = file.name.split('.').pop();
-      const fileName = `etiquette-${Date.now()}.${fileExt}`;
-      
-      let uploadResult;
-      try {
-        uploadResult = await supabase.storage
-          .from('vetements')
-          .upload(`etiquettes/${fileName}`, file);
-        
-        if (uploadResult.error) throw uploadResult.error;
-      } catch (error) {
-        console.error("Erreur d'upload:", error);
+      // Vérifie si on a besoin de télécharger l'image vers Supabase Storage
+      if (file.size > 5 * 1024 * 1024) {
         toast({
-          title: "Erreur d'upload",
-          description: "Impossible de télécharger l'image. Utilisation de l'image locale.",
-          variant: "destructive",
+          title: "Attention",
+          description: "L'image est volumineuse, ce qui peut ralentir le traitement.",
+          variant: "warning",
         });
-        // En cas d'erreur, on utilise l'image locale
-        form.setValue('etiquette_image_url', reader.result as string);
-        setLoading(false);
-        return;
       }
 
-      // 2. Obtenir l'URL publique
-      const { data: publicUrlData } = supabase.storage
-        .from('vetements')
-        .getPublicUrl(`etiquettes/${fileName}`);
-      
-      // Enregistrer l'URL de l'image
-      form.setValue('etiquette_image_url', publicUrlData.publicUrl);
-      
-      toast({
-        title: "Image téléchargée",
-        description: "L'image a été téléchargée avec succès. Vous pouvez maintenant l'analyser.",
-      });
+      setLoading(true);
+
+      try {
+        // 1. Upload de l'image vers le bucket Supabase
+        const fileExt = file.name.split('.').pop();
+        const fileName = `etiquette-${Date.now()}.${fileExt}`;
+        
+        const { error: bucketError } = await supabase.storage.getBucket('vetements');
+        
+        // Si le bucket n'existe pas, on le crée
+        if (bucketError && bucketError.message.includes('does not exist')) {
+          await supabase.storage.createBucket('vetements', {
+            public: true,
+            fileSizeLimit: 10485760 // 10MB
+          });
+        }
+        
+        const { data, error } = await supabase.storage
+          .from('vetements')
+          .upload(`etiquettes/${fileName}`, file, {
+            cacheControl: '3600',
+            upsert: true
+          });
+        
+        if (error) {
+          console.error("Erreur d'upload:", error);
+          toast({
+            title: "Erreur d'upload",
+            description: "Impossible de télécharger l'image. L'image locale sera utilisée.",
+            variant: "destructive",
+          });
+          // En cas d'erreur, on garde l'image locale
+          setLoading(false);
+          return;
+        }
+        
+        // 2. Obtenir l'URL publique
+        const { data: publicUrlData } = supabase.storage
+          .from('vetements')
+          .getPublicUrl(`etiquettes/${fileName}`);
+        
+        // Mettre à jour le formulaire avec l'URL de l'image
+        form.setValue('etiquette_image_url', publicUrlData.publicUrl);
+        
+        toast({
+          title: "Image téléchargée",
+          description: "L'image a été téléchargée avec succès.",
+        });
+      } catch (uploadError) {
+        console.error("Erreur lors de l'upload:", uploadError);
+        toast({
+          title: "Erreur d'upload",
+          description: "Problème lors du téléchargement. L'image locale sera utilisée.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error("Erreur:", error);
       toast({
