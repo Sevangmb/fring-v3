@@ -5,16 +5,18 @@ import { Button } from "@/components/ui/button";
 import { LogIn, Mail, Users, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useLocation } from "react-router-dom";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface AmisPageHeaderProps {
   user: User | null;
   loading: boolean;
+  children?: React.ReactNode;
 }
 
-const AmisPageHeader: React.FC<AmisPageHeaderProps> = ({ user, loading }) => {
+const AmisPageHeader: React.FC<AmisPageHeaderProps> = ({ user, loading, children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
   
   // Déterminer quel onglet est actif
@@ -22,6 +24,21 @@ const AmisPageHeader: React.FC<AmisPageHeaderProps> = ({ user, loading }) => {
     if (currentPath.includes("/messages")) return "messages";
     if (currentPath.includes("/mies")) return "mies";
     return "amis";
+  };
+
+  // Gérer le changement d'onglet
+  const handleTabChange = (value: string) => {
+    switch (value) {
+      case "messages":
+        navigate("/messages");
+        break;
+      case "mies":
+        navigate("/mies");
+        break;
+      case "amis":
+        navigate("/mes-amis");
+        break;
+    }
   };
 
   return (
@@ -36,25 +53,19 @@ const AmisPageHeader: React.FC<AmisPageHeaderProps> = ({ user, loading }) => {
         
         {user && !loading && (
           <div className="mt-8 flex flex-col items-center">
-            <Tabs defaultValue={getActiveTab()} className="w-full max-w-md">
+            <Tabs defaultValue={getActiveTab()} className="w-full max-w-md" onValueChange={handleTabChange}>
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="amis" asChild>
-                  <Link to="/mes-amis" className="flex items-center justify-center">
-                    <Users className="mr-2 h-4 w-4" />
-                    Amis
-                  </Link>
+                <TabsTrigger value="amis" className="flex items-center justify-center">
+                  <Users className="mr-2 h-4 w-4" />
+                  Amis
                 </TabsTrigger>
-                <TabsTrigger value="messages" asChild>
-                  <Link to="/messages" className="flex items-center justify-center">
-                    <Mail className="mr-2 h-4 w-4" />
-                    Messages
-                  </Link>
+                <TabsTrigger value="messages" className="flex items-center justify-center">
+                  <Mail className="mr-2 h-4 w-4" />
+                  Messages
                 </TabsTrigger>
-                <TabsTrigger value="mies" asChild>
-                  <Link to="/mies" className="flex items-center justify-center">
-                    <Clock className="mr-2 h-4 w-4" />
-                    En attente
-                  </Link>
+                <TabsTrigger value="mies" className="flex items-center justify-center">
+                  <Clock className="mr-2 h-4 w-4" />
+                  En attente
                 </TabsTrigger>
               </TabsList>
             </Tabs>
