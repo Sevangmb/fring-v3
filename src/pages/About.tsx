@@ -3,10 +3,46 @@ import React, { useState } from "react";
 import Layout from "@/components/templates/Layout";
 import { Heading, Text } from "@/components/atoms/Typography";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Award, BookOpen, Flag, Newspaper, Trophy } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Award, BookOpen, Calendar, ChevronRight, Clock, Flag, Newspaper, Plus, Trophy } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/atoms/Input";
+import { useForm } from "react-hook-form";
+import { toast } from "@/components/ui/use-toast";
+
+// Type pour le formulaire de création de défi
+type DefiFormValues = {
+  titre: string;
+  description: string;
+  dateDebut: string;
+  dateFin: string;
+};
 
 const AboutPage = () => {
+  const [defisTab, setDefisTab] = useState("en-cours");
+  
+  // Configuration du formulaire pour créer un défi
+  const form = useForm<DefiFormValues>({
+    defaultValues: {
+      titre: "",
+      description: "",
+      dateDebut: "",
+      dateFin: ""
+    }
+  });
+  
+  const onSubmit = (data: DefiFormValues) => {
+    console.log("Formulaire soumis:", data);
+    toast({
+      title: "Défi créé",
+      description: "Votre défi a été créé avec succès.",
+    });
+    // Réinitialiser le formulaire
+    form.reset();
+  };
+
   return (
     <Layout>
       <div className="pt-24 pb-6 bg-accent/10">
@@ -33,42 +69,247 @@ const AboutPage = () => {
           
           <TabsContent value="defis" className="space-y-6 animate-fade-in">
             <Card>
-              <CardContent className="p-6 space-y-4">
-                <div className="flex items-center gap-3">
-                  <Trophy className="h-6 w-6 text-primary" />
-                  <Heading as="h2" variant="h3">Défis en cours</Heading>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Card className="overflow-hidden hover:shadow-md transition-all duration-300 animate-fade-in delay-100">
-                    <div className="bg-primary/10 p-4 border-b flex items-center gap-2">
-                      <Flag className="h-5 w-5 text-primary" />
-                      <Heading as="h3" variant="h4">Défi hebdomadaire</Heading>
-                    </div>
-                    <CardContent className="p-4">
-                      <Text>Créez un ensemble avec au moins un vêtement partagé par un ami.</Text>
-                    </CardContent>
-                  </Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Trophy className="h-6 w-6 text-primary" />
+                    <Heading as="h2" variant="h3">Défis</Heading>
+                  </div>
                   
-                  <Card className="overflow-hidden hover:shadow-md transition-all duration-300 animate-fade-in delay-200">
-                    <div className="bg-primary/10 p-4 border-b flex items-center gap-2">
-                      <Award className="h-5 w-5 text-primary" />
-                      <Heading as="h3" variant="h4">Défi mensuel</Heading>
-                    </div>
-                    <CardContent className="p-4">
-                      <Text>Partagez 5 vêtements et créez un ensemble complet pour chaque type de météo.</Text>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="overflow-hidden hover:shadow-md transition-all duration-300 animate-fade-in delay-300">
-                    <div className="bg-primary/10 p-4 border-b flex items-center gap-2">
-                      <BookOpen className="h-5 w-5 text-primary" />
-                      <Heading as="h3" variant="h4">Défi communautaire</Heading>
-                    </div>
-                    <CardContent className="p-4">
-                      <Text>Créez un ensemble inspiré par votre saison préférée et partagez-le avec 3 amis.</Text>
-                    </CardContent>
-                  </Card>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button className="flex items-center gap-2">
+                        <Plus className="h-4 w-4" />
+                        Créer un défi
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Créer un nouveau défi</DialogTitle>
+                        <DialogDescription>
+                          Remplissez le formulaire ci-dessous pour créer un nouveau défi pour la communauté.
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="titre"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Titre du défi</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="Entrez un titre accrocheur" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Description</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="Décrivez votre défi" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="dateDebut"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Date de début</FormLabel>
+                                  <FormControl>
+                                    <Input type="date" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name="dateFin"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Date de fin</FormLabel>
+                                  <FormControl>
+                                    <Input type="date" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          
+                          <DialogFooter>
+                            <Button type="submit">Créer le défi</Button>
+                          </DialogFooter>
+                        </form>
+                      </Form>
+                      
+                    </DialogContent>
+                  </Dialog>
                 </div>
+              </CardHeader>
+              
+              <CardContent className="p-6 pt-0">
+                <Tabs value={defisTab} onValueChange={setDefisTab} className="w-full">
+                  <TabsList className="grid w-full grid-cols-3 mb-6">
+                    <TabsTrigger value="en-cours" className="flex items-center gap-2">
+                      <Flag className="h-4 w-4" />
+                      <span>En cours</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="a-venir" className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      <span>À venir</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="passes" className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      <span>Passés</span>
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  {/* Défis en cours */}
+                  <TabsContent value="en-cours" className="space-y-4">
+                    <Card className="overflow-hidden hover:shadow-md transition-all duration-300">
+                      <CardHeader className="bg-primary/10 p-4 border-b flex items-center gap-2">
+                        <Flag className="h-5 w-5 text-primary" />
+                        <CardTitle className="text-lg">Défi hebdomadaire</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        <Text>Créez un ensemble avec au moins un vêtement partagé par un ami.</Text>
+                        <div className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          <span>15 juin - 22 juin 2024</span>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="border-t p-3 bg-muted/20">
+                        <Button variant="outline" size="sm" className="ml-auto flex items-center gap-1">
+                          Participer <ChevronRight className="h-3 w-3" />
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                    
+                    <Card className="overflow-hidden hover:shadow-md transition-all duration-300">
+                      <CardHeader className="bg-primary/10 p-4 border-b flex items-center gap-2">
+                        <Award className="h-5 w-5 text-primary" />
+                        <CardTitle className="text-lg">Défi mensuel</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        <Text>Partagez 5 vêtements et créez un ensemble complet pour chaque type de météo.</Text>
+                        <div className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          <span>1 juin - 30 juin 2024</span>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="border-t p-3 bg-muted/20">
+                        <Button variant="outline" size="sm" className="ml-auto flex items-center gap-1">
+                          Participer <ChevronRight className="h-3 w-3" />
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  </TabsContent>
+                  
+                  {/* Défis à venir */}
+                  <TabsContent value="a-venir" className="space-y-4">
+                    <Card className="overflow-hidden hover:shadow-md transition-all duration-300">
+                      <CardHeader className="bg-secondary/10 p-4 border-b flex items-center gap-2">
+                        <Calendar className="h-5 w-5 text-secondary" />
+                        <CardTitle className="text-lg">Défi de la saison</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        <Text>Créez votre meilleur ensemble d'été et partagez-le avec la communauté.</Text>
+                        <div className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          <span>1 juillet - 31 août 2024</span>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="border-t p-3 bg-muted/20">
+                        <Button variant="outline" size="sm" className="ml-auto flex items-center gap-1 opacity-70" disabled>
+                          Bientôt disponible <Calendar className="h-3 w-3" />
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                    
+                    <Card className="overflow-hidden hover:shadow-md transition-all duration-300">
+                      <CardHeader className="bg-secondary/10 p-4 border-b flex items-center gap-2">
+                        <Trophy className="h-5 w-5 text-secondary" />
+                        <CardTitle className="text-lg">Challenge minimaliste</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        <Text>Créez 10 ensembles différents en utilisant un maximum de 15 vêtements.</Text>
+                        <div className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          <span>15 juillet - 15 août 2024</span>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="border-t p-3 bg-muted/20">
+                        <Button variant="outline" size="sm" className="ml-auto flex items-center gap-1 opacity-70" disabled>
+                          Bientôt disponible <Calendar className="h-3 w-3" />
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  </TabsContent>
+                  
+                  {/* Défis passés */}
+                  <TabsContent value="passes" className="space-y-4">
+                    <Card className="overflow-hidden hover:shadow-md transition-all duration-300 opacity-80">
+                      <CardHeader className="bg-muted p-4 border-b flex items-center gap-2">
+                        <Flag className="h-5 w-5" />
+                        <CardTitle className="text-lg">Challenge des tendances</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        <Text>Créer un ensemble qui intègre au moins une tendance mode du printemps 2024.</Text>
+                        <div className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          <span>1 avril - 30 avril 2024</span>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="border-t p-3 bg-muted/20">
+                        <Text className="text-sm text-muted-foreground">
+                          <Award className="h-4 w-4 inline mr-1" />
+                          158 participants
+                        </Text>
+                        <Button variant="outline" size="sm" className="ml-auto">
+                          Voir les résultats
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                    
+                    <Card className="overflow-hidden hover:shadow-md transition-all duration-300 opacity-80">
+                      <CardHeader className="bg-muted p-4 border-b flex items-center gap-2">
+                        <Flag className="h-5 w-5" />
+                        <CardTitle className="text-lg">Défi des couleurs</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        <Text>Créez des ensembles en utilisant uniquement des vêtements de trois couleurs maximum.</Text>
+                        <div className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          <span>1 mars - 31 mars 2024</span>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="border-t p-3 bg-muted/20">
+                        <Text className="text-sm text-muted-foreground">
+                          <Award className="h-4 w-4 inline mr-1" />
+                          127 participants
+                        </Text>
+                        <Button variant="outline" size="sm" className="ml-auto">
+                          Voir les résultats
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </Card>
           </TabsContent>
