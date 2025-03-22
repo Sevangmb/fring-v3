@@ -26,7 +26,7 @@ interface VetementWithCategories {
   categories?: {
     id: number;
     nom: string;
-  };
+  }[];  // Changed from an object to an array of objects
 }
 
 interface DashboardStats {
@@ -115,10 +115,10 @@ export const useDashboardStats = () => {
       const couleurCount: Record<string, number> = {};
       const marqueCount: Record<string, number> = {};
 
-      vetements?.forEach((vetement: VetementWithCategories) => {
-        // Catégories - utiliser la relation explicite
-        if (vetement.categories && vetement.categories.nom) {
-          const categoryName = vetement.categories.nom;
+      vetements?.forEach((vetement: any) => {
+        // Catégories - accéder au premier élément du tableau si disponible
+        if (vetement.categories && vetement.categories.length > 0 && vetement.categories[0].nom) {
+          const categoryName = vetement.categories[0].nom;
           categorieCount[categoryName] = (categorieCount[categoryName] || 0) + 1;
         }
 
@@ -155,13 +155,13 @@ export const useDashboardStats = () => {
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
 
-      // Préparer l'activité récente
+      // Préparer l'activité récente - cast any pour éviter les problèmes de typage
       const recentActivity = (vetements || [])
-        .sort((a: VetementWithCategories, b: VetementWithCategories) => {
+        .sort((a: any, b: any) => {
           return new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime();
         })
         .slice(0, 5)
-        .map((vetement: VetementWithCategories) => ({
+        .map((vetement: any) => ({
           type: "vêtement",
           date: vetement.created_at || "",
           description: `Ajout de ${vetement.nom}`,
