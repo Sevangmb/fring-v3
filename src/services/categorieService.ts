@@ -1,51 +1,32 @@
 
 import { supabase } from '@/lib/supabase';
 
-// Type pour une catégorie
-export interface Categorie {
-  id: number;
-  nom: string;
-  description?: string;
-  created_at: string;
-}
-
-// Fonction pour récupérer toutes les catégories
-export const fetchCategories = async (): Promise<Categorie[]> => {
+/**
+ * Initialise la table des catégories
+ */
+export const initializeCategories = async (): Promise<boolean> => {
   try {
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .order('nom');
-    
-    if (error) {
-      console.error('Erreur lors de la récupération des catégories:', error);
-      throw error;
-    }
-    
-    return data as Categorie[];
-  } catch (error) {
-    console.error('Erreur lors de la récupération des catégories:', error);
-    throw error;
-  }
-};
+    const categories = [
+      { nom: 'T-shirts', description: 'T-shirts et hauts à manches courtes' },
+      { nom: 'Pantalons', description: 'Pantalons, jeans et shorts' },
+      { nom: 'Chaussures', description: 'Chaussures, baskets et bottes' },
+      { nom: 'Vestes', description: 'Vestes, manteaux et pulls' },
+      { nom: 'Accessoires', description: 'Accessoires, chapeaux, écharpes, etc.' }
+    ];
 
-// Fonction pour ajouter une catégorie
-export const addCategorie = async (categorie: Omit<Categorie, 'id' | 'created_at'>): Promise<Categorie> => {
-  try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('categories')
-      .insert([categorie])
-      .select()
-      .single();
-    
+      .insert(categories);
+
     if (error) {
-      console.error('Erreur lors de l\'ajout d\'une catégorie:', error);
-      throw error;
+      console.error('Erreur lors de l\'initialisation des catégories:', error);
+      return false;
     }
-    
-    return data as Categorie;
+
+    console.log('Catégories initialisées avec succès');
+    return true;
   } catch (error) {
-    console.error('Erreur lors de l\'ajout d\'une catégorie:', error);
-    throw error;
+    console.error('Erreur lors de l\'initialisation des catégories:', error);
+    return false;
   }
 };

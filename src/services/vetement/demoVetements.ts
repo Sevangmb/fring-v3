@@ -1,90 +1,59 @@
 
 import { supabase } from '@/lib/supabase';
+import { Vetement } from './types';
 
 /**
- * Creates demo vetements for a new user
+ * Ajoute des vêtements de démonstration à la base de données
  */
-export const createDemoVetementsForUser = async (): Promise<boolean> => {
+export const addDemoVetements = async (): Promise<boolean> => {
   try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = sessionData.session?.user?.id;
-
-    if (!userId) {
-      console.error('Utilisateur non connecté');
-      return false;
-    }
-
-    // Vérifier si l'utilisateur a déjà des vêtements
-    const { data: countData, error: countError } = await supabase
-      .rpc('check_user_has_vetements', { user_id_param: userId });
-    
-    if (countError) {
-      console.error('Erreur lors de la vérification des vêtements:', countError);
-      return false;
-    }
-    
-    // Si l'utilisateur a déjà des vêtements, ne rien faire
-    if (countData && countData > 0) {
-      console.log('L\'utilisateur a déjà des vêtements, pas besoin d\'ajouter des démos');
-      return false;
-    }
-    
-    console.log('Ajout de vêtements de démo pour l\'utilisateur:', userId);
-    
-    // Données de démo à ajouter
-    const demoVetements = [
+    const demoVetements: Partial<Vetement>[] = [
       {
         nom: 'T-shirt blanc',
-        categorie: 't-shirt',
+        categorie_id: 1, // Supposons que 1 est l'ID pour les T-shirts
         couleur: 'blanc',
         taille: 'M',
-        description: 'T-shirt basique en coton bio',
-        marque: 'Nike',
-        user_id: userId
+        marque: 'Basique',
+        description: 'T-shirt blanc basique',
+        temperature: 'tempere',
+        weather_type: 'normal'
       },
       {
         nom: 'Jean bleu',
-        categorie: 'jeans',
+        categorie_id: 2, // Supposons que 2 est l'ID pour les pantalons
         couleur: 'bleu',
         taille: '40',
-        description: 'Jean slim en denim stretch',
-        marque: 'Levi\'s',
-        user_id: userId
+        marque: 'Jeaniste',
+        description: 'Jean bleu classique',
+        temperature: 'tempere',
+        weather_type: 'normal'
       },
       {
-        nom: 'Veste noire',
-        categorie: 'veste',
+        nom: 'Baskets noires',
+        categorie_id: 3, // Supposons que 3 est l'ID pour les chaussures
         couleur: 'noir',
-        taille: 'L',
-        description: 'Veste légère pour la mi-saison',
-        marque: 'Zara',
-        user_id: userId
-      },
-      {
-        nom: 'Pull gris',
-        categorie: 'pull',
-        couleur: 'gris',
-        taille: 'S',
-        description: 'Pull chaud en laine mélangée',
-        marque: 'H&M',
-        user_id: userId
+        taille: '42',
+        marque: 'SportPlus',
+        description: 'Baskets noires confortables',
+        temperature: 'tempere',
+        weather_type: 'normal'
       }
     ];
-    
-    // Insérer les vêtements de démo
+
+    // Insérer les vêtements de démonstration
     const { error } = await supabase
       .from('vetements')
       .insert(demoVetements);
-    
+
     if (error) {
-      console.error('Erreur lors de l\'ajout des vêtements de démo:', error);
+      console.error('Erreur lors de l\'ajout des vêtements de démonstration:', error);
       return false;
     }
-    
-    console.log('Vêtements de démo ajoutés avec succès');
+
+    console.log('Vêtements de démonstration ajoutés avec succès');
     return true;
   } catch (error) {
-    console.error('Erreur lors de l\'ajout des vêtements de démo:', error);
+    console.error('Erreur lors de l\'ajout des vêtements de démonstration:', error);
     return false;
   }
 };

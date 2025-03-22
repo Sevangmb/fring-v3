@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import Layout from "@/components/templates/Layout";
 import { Helmet } from "react-helmet";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,10 +11,10 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import EnsembleCreator from "@/components/ensembles/EnsembleCreator";
 import { Vetement } from "@/services/vetement/types";
-import { fetchVetements } from "@/services/vetement";
 import { useState, useEffect } from "react";
 import { VetementType } from "@/services/meteo/tenue";
 import { createEnsemble } from "@/services/ensembleService";
+import { fetchVetements } from "@/services/vetement";
 
 const AjouterEnsemble = () => {
   const { user } = useAuth();
@@ -63,7 +63,7 @@ const AjouterEnsemble = () => {
       toast({
         title: "Sélection incomplète",
         description: "Veuillez sélectionner un haut, un bas et des chaussures pour créer un ensemble.",
-        variant: "warning",
+        variant: "destructive",
       });
       return;
     }
@@ -85,7 +85,7 @@ const AjouterEnsemble = () => {
       toast({
         title: "Ensemble créé",
         description: "Votre ensemble a été créé avec succès.",
-        variant: "success",
+        variant: "default",
       });
 
       // Rediriger vers la page des ensembles

@@ -1,9 +1,10 @@
+
 import { supabase, checkTableExists, checkFunctionExists } from '@/lib/supabase';
-import { initializeCategories } from './categorieService';
-import { initializeMarques } from './marqueService';
-import { initializeVetements } from './vetementService';
-import { addDemoVetements } from '../vetement/demoVetements';
-import { initializeAmisTable } from './amisService';
+import { initializeCategories } from '@/services/categorieService';
+import { initializeMarques } from '@/services/marqueService';
+import { initializeVetements } from '@/services/vetement';
+import { addDemoVetements } from '@/services/vetement/demoVetements';
+import { initializeAmisTable } from '@/services/amis';
 import { initializeEnsembleData } from './ensembleInitialization';
 
 export const initializeDatabase = async () => {
