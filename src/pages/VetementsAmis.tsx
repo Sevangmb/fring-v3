@@ -95,6 +95,9 @@ const VetementsAmis = () => {
     reloadVetements();
   };
 
+  // S'assurer que les marques sont au bon format
+  const marquesFormatted = marques ? marques.map(m => typeof m === 'string' ? m : m.nom) : [];
+
   return (
     <Layout>
       <Helmet>
@@ -111,29 +114,29 @@ const VetementsAmis = () => {
             
             <SearchFilterProvider
               categories={categories}
-              marques={marques.map(m => m.nom)}
+              marques={marquesFormatted}
               friends={acceptedFriends}
               showFriendFilter={true}
               onFriendFilterChange={handleFriendFilterChange}
               currentFriendFilter={friendFilter}
             >
               <SearchFilterBar />
+              
+              <CategoryTabs 
+                categories={categories}
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+              >
+                <VetementsList 
+                  vetements={filteredVetements}
+                  isLoading={isLoading || loadingAmis}
+                  error={error}
+                  isAuthenticated={!!user}
+                  onVetementDeleted={handleVetementDeleted}
+                  showOwner={true}
+                />
+              </CategoryTabs>
             </SearchFilterProvider>
-            
-            <CategoryTabs 
-              categories={categories}
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-            >
-              <VetementsList 
-                vetements={filteredVetements}
-                isLoading={isLoading || loadingAmis}
-                error={error}
-                isAuthenticated={!!user}
-                onVetementDeleted={handleVetementDeleted}
-                showOwner={true}
-              />
-            </CategoryTabs>
           </div>
         </div>
       )}

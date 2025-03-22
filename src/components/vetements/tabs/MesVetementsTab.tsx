@@ -3,7 +3,6 @@ import React, { useEffect } from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import VetementsList from "@/components/organisms/VetementsList";
 import CategoryTabs from "@/components/molecules/CategoryTabs";
-import { SearchFilterProvider } from "@/contexts/SearchFilterContext";
 import SearchFilterBar from "@/components/molecules/SearchFilterBar";
 import { Categorie } from "@/services/categorieService";
 import { Vetement } from "@/services/vetement/types";
@@ -48,30 +47,23 @@ const MesVetementsTab: React.FC<MesVetementsTabProps> = ({
 
   return (
     <TabsContent value="mes-vetements">
-      <SearchFilterProvider
+      <SearchFilterBar />
+      
+      <CategoryTabs 
         categories={categories}
-        marques={marques}
-        friends={acceptedFriends}
-        showFriendFilter={false}
+        activeTab={activeTab}
+        onTabChange={onTabChange}
       >
-        <SearchFilterBar />
-        
-        <CategoryTabs 
-          categories={categories}
-          activeTab={activeTab}
-          onTabChange={onTabChange}
-        >
-          <VetementsList 
-            vetements={vetements}
-            isLoading={isLoading}
-            error={error}
-            isAuthenticated={isAuthenticated}
-            onVetementDeleted={onVetementDeleted}
-            showOwner={false}
-            hideTitle={hideTitle}
-          />
-        </CategoryTabs>
-      </SearchFilterProvider>
+        <VetementsList 
+          vetements={vetements}
+          isLoading={isLoading}
+          error={error}
+          isAuthenticated={isAuthenticated}
+          onVetementDeleted={onVetementDeleted}
+          showOwner={false}
+          hideTitle={hideTitle}
+        />
+      </CategoryTabs>
     </TabsContent>
   );
 };
