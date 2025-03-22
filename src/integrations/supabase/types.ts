@@ -57,6 +57,42 @@ export type Database = {
         }
         Relationships: []
       }
+      defis: {
+        Row: {
+          created_at: string | null
+          date_debut: string
+          date_fin: string
+          description: string
+          id: number
+          participants_count: number | null
+          status: string
+          titre: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date_debut: string
+          date_fin: string
+          description: string
+          id?: number
+          participants_count?: number | null
+          status?: string
+          titre: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date_debut?: string
+          date_fin?: string
+          description?: string
+          id?: number
+          participants_count?: number | null
+          status?: string
+          titre?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       favoris: {
         Row: {
           created_at: string

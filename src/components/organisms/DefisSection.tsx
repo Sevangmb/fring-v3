@@ -8,16 +8,23 @@ import DefisTabContent from "./DefisTabContent";
 
 const DefisSection: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Simulate loading data
   useEffect(() => {
     // Simulate API call with a delay
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 1500);
+    }, 1000);
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [refreshKey]);
+
+  const handleDefiCreated = () => {
+    // Force a refresh of the DefisTabContent
+    setIsLoading(true);
+    setRefreshKey(prev => prev + 1);
+  };
 
   return (
     <Card>
@@ -28,12 +35,12 @@ const DefisSection: React.FC = () => {
             <Heading as="h2" variant="h3">Défis</Heading>
           </div>
           
-          <CreateDefiDialog />
+          <CreateDefiDialog onDefiCreated={handleDefiCreated} />
         </div>
       </CardHeader>
       
       <CardContent className="p-6 pt-0">
-        <DefisTabContent isLoading={isLoading} />
+        <DefisTabContent key={refreshKey} isLoading={isLoading} />
       </CardContent>
     </Card>
   );

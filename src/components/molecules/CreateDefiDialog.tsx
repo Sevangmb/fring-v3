@@ -5,8 +5,19 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Plus } from "lucide-react";
 import DefiForm from "./DefiForm";
 
-const CreateDefiDialog: React.FC = () => {
+interface CreateDefiDialogProps {
+  onDefiCreated?: () => void;
+}
+
+const CreateDefiDialog: React.FC<CreateDefiDialogProps> = ({ onDefiCreated }) => {
   const [open, setOpen] = React.useState(false);
+
+  const handleDefiCreated = () => {
+    setOpen(false);
+    if (onDefiCreated) {
+      onDefiCreated();
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -24,7 +35,10 @@ const CreateDefiDialog: React.FC = () => {
           </DialogDescription>
         </DialogHeader>
         
-        <DefiForm onClose={() => setOpen(false)} />
+        <DefiForm 
+          onClose={() => setOpen(false)} 
+          onSuccess={handleDefiCreated}
+        />
         
       </DialogContent>
     </Dialog>

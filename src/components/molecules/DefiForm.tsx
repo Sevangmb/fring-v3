@@ -11,15 +11,18 @@ import { defiFormSchema, DefiFormValues, validateDateRange } from "./schema/Defi
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { createDefi, DefiFormData } from "@/services/defiService";
 
 interface DefiFormProps {
   onClose?: () => void;
   initialValues?: Partial<DefiFormValues>;
+  onSuccess?: () => void;
 }
 
-const DefiForm: React.FC<DefiFormProps> = ({ onClose, initialValues }) => {
+const DefiForm: React.FC<DefiFormProps> = ({ onClose, initialValues, onSuccess }) => {
   const [dateRangeError, setDateRangeError] = React.useState<string | null>(null);
   const [submissionError, setSubmissionError] = React.useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   
   // Configuration du formulaire avec validation Zod
   const form = useForm<DefiFormValues>({
@@ -37,31 +40,47 @@ const DefiForm: React.FC<DefiFormProps> = ({ onClose, initialValues }) => {
       // Reset errors
       setSubmissionError(null);
       setDateRangeError(null);
+      setIsSubmitting(true);
       
       // Validate date range
       const dateValidation = validateDateRange(data);
       if (!dateValidation.success) {
         setDateRangeError(dateValidation.error);
+        setIsSubmitting(false);
         return;
       }
       
-      console.log("Formulaire soumis:", data);
+      // Créer le défi dans Supabase
+      const defiFormData: DefiFormData = {
+        titre: data.titre,
+        description: data.description,
+        dateDebut: data.dateDebut,
+        dateFin: data.dateFin
+      };
       
-      // Here you would add the actual API call to save the defi
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const result = await createDefi(defiFormData);
       
-      toast({
-        title: "Défi créé",
-        description: "Votre défi a été créé avec succès.",
-      });
-      
-      // Réinitialiser le formulaire
-      form.reset();
-      if (onClose) onClose();
+      if (result) {
+        // Réinitialiser le formulaire
+        form.reset();
+        
+        // Appeler le callback de succès si fourni
+        if (onSuccess) {
+          onSuccess();
+        }
+        
+        // Fermer le dialogue si nécessaire
+        if (onClose) {
+          onClose();
+        }
+      } else {
+        setSubmissionError("Une erreur est survenue lors de la création du défi. Veuillez réessayer.");
+      }
     } catch (error) {
       console.error("Erreur lors de la création du défi:", error);
       setSubmissionError("Une erreur est survenue lors de la création du défi. Veuillez réessayer.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -152,10 +171,10 @@ const DefiForm: React.FC<DefiFormProps> = ({ onClose, initialValues }) => {
         <DialogFooter>
           <Button 
             type="submit" 
-            disabled={form.formState.isSubmitting}
+            disabled={isSubmitting}
             className="w-full sm:w-auto"
           >
-            {form.formState.isSubmitting ? "Création en cours..." : "Créer le défi"}
+            {isSubmitting ? "Création en cours..." : "Créer le défi"}
           </Button>
         </DialogFooter>
       </form>

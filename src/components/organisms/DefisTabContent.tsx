@@ -1,91 +1,88 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DefiCard, { DefiType } from "../molecules/DefiCard";
 import DefiCardSkeleton from "../molecules/DefiCardSkeleton";
 import { Award, Calendar, Clock, Flag, Trophy } from "lucide-react";
-
-// Define a common interface for all defi objects
-interface DefiItem {
-  title: string;
-  description: string;
-  dateRange: string;
-  icon: React.ReactNode;
-  type: DefiType;
-  participantsCount?: number; // Make this property optional
-}
+import { getDefisByStatus, Defi, updateDefisStatus } from "@/services/defiService";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface DefisTabContentProps {
   isLoading?: boolean;
 }
 
-const DefisTabContent: React.FC<DefisTabContentProps> = ({ isLoading = false }) => {
+const DefisTabContent: React.FC<DefisTabContentProps> = ({ isLoading: initialLoading = false }) => {
   const [defisTab, setDefisTab] = useState<DefiType>("current");
+  const [defis, setDefis] = useState<Defi[]>([]);
+  const [isLoading, setIsLoading] = useState(initialLoading);
   
-  const currentDefis: DefiItem[] = [
-    {
-      title: "Défi hebdomadaire",
-      description: "Créez un ensemble avec au moins un vêtement partagé par un ami.",
-      dateRange: "15 juin - 22 juin 2024",
-      icon: <Flag className="h-5 w-5" />,
-      type: "current" as DefiType
-    },
-    {
-      title: "Défi mensuel",
-      description: "Partagez 5 vêtements et créez un ensemble complet pour chaque type de météo.",
-      dateRange: "1 juin - 30 juin 2024",
-      icon: <Award className="h-5 w-5" />,
-      type: "current" as DefiType
+  const fetchDefis = async () => {
+    setIsLoading(true);
+    try {
+      // D'abord, mettre à jour le statut des défis en fonction des dates
+      await updateDefisStatus();
+      
+      // Ensuite, récupérer les défis en fonction de l'onglet actif
+      const data = await getDefisByStatus(defisTab);
+      setDefis(data);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des défis:", error);
+    } finally {
+      setIsLoading(false);
     }
-  ];
-
-  const upcomingDefis: DefiItem[] = [
-    {
-      title: "Défi de la saison",
-      description: "Créez votre meilleur ensemble d'été et partagez-le avec la communauté.",
-      dateRange: "1 juillet - 31 août 2024",
-      icon: <Calendar className="h-5 w-5" />,
-      type: "upcoming" as DefiType
-    },
-    {
-      title: "Challenge minimaliste",
-      description: "Créez 10 ensembles différents en utilisant un maximum de 15 vêtements.",
-      dateRange: "15 juillet - 15 août 2024",
-      icon: <Trophy className="h-5 w-5" />,
-      type: "upcoming" as DefiType
-    }
-  ];
-
-  const pastDefis: DefiItem[] = [
-    {
-      title: "Challenge des tendances",
-      description: "Créer un ensemble qui intègre au moins une tendance mode du printemps 2024.",
-      dateRange: "1 avril - 30 avril 2024",
-      icon: <Flag className="h-5 w-5" />,
-      type: "past" as DefiType,
-      participantsCount: 158
-    },
-    {
-      title: "Défi des couleurs",
-      description: "Créez des ensembles en utilisant uniquement des vêtements de trois couleurs maximum.",
-      dateRange: "1 mars - 31 mars 2024",
-      icon: <Flag className="h-5 w-5" />,
-      type: "past" as DefiType,
-      participantsCount: 127
-    }
-  ];
-
-  const getDefisForTab = () => {
-    if (defisTab === "current") return currentDefis;
-    if (defisTab === "upcoming") return upcomingDefis;
-    return pastDefis;
   };
-
+  
+  useEffect(() => {
+    fetchDefis();
+  }, [defisTab]);
+  
+  // Fonction pour formater l'affichage de la plage de dates
+  const formatDateRange = (dateDebut: string, dateFin: string) => {
+    const dateDebutObj = new Date(dateDebut);
+    const dateFinObj = new Date(dateFin);
+    
+    const debutFormatted = format(dateDebutObj, 'd MMMM yyyy', { locale: fr });
+    const finFormatted = format(dateFinObj, 'd MMMM yyyy', { locale: fr });
+    
+    return `${debutFormatted} - ${finFormatted}`;
+  };
+  
+  // Fonction pour déterminer l'icône en fonction du titre du défi
+  const getIconForDefi = (defi: Defi) => {
+    const title = defi.titre.toLowerCase();
+    
+    if (title.includes('hebdomadaire') || title.includes('semaine')) {
+      return <Flag className="h-5 w-5" />;
+    } else if (title.includes('mensuel') || title.includes('mois')) {
+      return <Award className="h-5 w-5" />;
+    } else if (title.includes('saison') || title.includes('été') || title.includes('hiver') || title.includes('printemps') || title.includes('automne')) {
+      return <Calendar className="h-5 w-5" />;
+    } else {
+      return <Trophy className="h-5 w-5" />;
+    }
+  };
+  
   const renderLoadingSkeletons = () => {
     return Array(3).fill(0).map((_, index) => (
       <DefiCardSkeleton key={`skeleton-${index}`} />
     ));
   };
+  
+  const renderEmptyState = () => (
+    <div className="text-center py-10">
+      <Trophy className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+      <h3 className="text-lg font-medium mb-2">
+        {defisTab === "current" ? "Aucun défi en cours" : 
+         defisTab === "upcoming" ? "Aucun défi à venir" : "Aucun défi passé"}
+      </h3>
+      <p className="text-muted-foreground">
+        {defisTab === "current" ? "Il n'y a pas de défis en cours pour le moment." : 
+         defisTab === "upcoming" ? "Revenez plus tard pour découvrir les prochains défis." : 
+         "Aucun défi passé n'a été trouvé."}
+      </p>
+    </div>
+  );
 
   return (
     <Tabs value={defisTab} onValueChange={(value) => setDefisTab(value as DefiType)} className="w-full">
@@ -107,16 +104,18 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({ isLoading = false }) 
       <TabsContent value={defisTab} className="space-y-4">
         {isLoading ? (
           renderLoadingSkeletons()
+        ) : defis.length === 0 ? (
+          renderEmptyState()
         ) : (
-          getDefisForTab().map((defi, index) => (
+          defis.map((defi) => (
             <DefiCard
-              key={`${defisTab}-${index}`}
-              title={defi.title}
+              key={defi.id}
+              title={defi.titre}
               description={defi.description}
-              dateRange={defi.dateRange}
-              type={defi.type}
-              icon={defi.icon}
-              participantsCount={defi.participantsCount}
+              dateRange={formatDateRange(defi.date_debut, defi.date_fin)}
+              type={defisTab as DefiType}
+              icon={getIconForDefi(defi)}
+              participantsCount={defi.participants_count}
             />
           ))
         )}
