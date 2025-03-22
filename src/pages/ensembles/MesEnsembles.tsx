@@ -7,7 +7,7 @@ import VetementsPageHeader from "@/components/molecules/VetementsPageHeader";
 import { Text } from "@/components/atoms/Typography";
 import { Shirt, Plus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Ensemble, fetchEnsembles } from '@/services/ensembleService';
+import { Ensemble, fetchEnsembles } from '@/services/ensemble';
 import EnsembleCard from '@/components/ensembles/EnsembleCard';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';

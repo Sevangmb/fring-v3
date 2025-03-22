@@ -1,13 +1,13 @@
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Ensemble } from '@/services/ensembleService';
+import { Ensemble } from '@/services/ensemble';
 import { VetementType } from '@/services/meteo/tenue';
 import { CalendarIcon, TagIcon, Edit, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { deleteEnsemble } from '@/services/ensembleService';
+import { deleteEnsemble } from '@/services/ensemble';
 
 interface EnsembleCardProps {
   ensemble: Ensemble;

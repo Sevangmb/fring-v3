@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Vetement } from "@/services/vetement/types";
-import { createEnsemble } from "@/services/ensembleService";
+import { createEnsemble } from "@/services/ensemble";
 import { VetementType } from "@/services/meteo/tenue";
 
 export type SelectedItems = {

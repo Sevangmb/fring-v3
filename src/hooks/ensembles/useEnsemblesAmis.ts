@@ -1,8 +1,7 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Ensemble } from "@/services/ensembleService";
-import { fetchEnsemblesAmis } from "@/services/ensembleService";
+import { Ensemble } from "@/services/ensemble";
+import { fetchEnsemblesAmis } from "@/services/ensemble";
 
 export const useEnsemblesAmis = (friendId?: string) => {
   const { toast } = useToast();
