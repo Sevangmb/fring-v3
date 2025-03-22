@@ -8,7 +8,6 @@ export function useVetementsFilters() {
   const [categorieFilter, setCategorieFilter] = useState<string>("all");
   const [marqueFilter, setMarqueFilter] = useState<string>("all");
   const [friendFilter, setFriendFilter] = useState<string>("all");
-  const [activeTab, setActiveTab] = useState("tous");
   const [viewMode, setViewMode] = useState<'mes-vetements' | 'vetements-amis' | 'mes-ensembles'>('mes-vetements');
 
   const getCategoryNameById = (categories: Categorie[], categoryId: number): string => {
@@ -20,8 +19,7 @@ export function useVetementsFilters() {
     console.log('Filtering vetements with:', {
       searchTerm,
       categorieFilter,
-      marqueFilter,
-      activeTab
+      marqueFilter
     });
     
     return vetements.filter(vetement => {
@@ -44,17 +42,10 @@ export function useVetementsFilters() {
       if (marqueFilter && marqueFilter !== "all") {
         matchesMarque = vetement.marque === marqueFilter;
       }
-      
-      // Filtrage par onglet actif (catégorie)
-      let matchesActiveTab = true;
-      if (activeTab !== "tous") {
-        const categoryName = getCategoryNameById(categories, vetement.categorie_id);
-        matchesActiveTab = categoryName === activeTab;
-      }
 
-      return matchesSearch && matchesCategorie && matchesMarque && matchesActiveTab;
+      return matchesSearch && matchesCategorie && matchesMarque;
     });
-  }, [searchTerm, categorieFilter, marqueFilter, activeTab]);
+  }, [searchTerm, categorieFilter, marqueFilter]);
 
   const handleViewModeChange = (mode: 'mes-vetements' | 'vetements-amis' | 'mes-ensembles') => {
     setViewMode(mode);
@@ -62,7 +53,6 @@ export function useVetementsFilters() {
   };
 
   const resetFilters = () => {
-    setActiveTab("tous");
     setSearchTerm("");
     setCategorieFilter("all");
     setMarqueFilter("all");
@@ -78,8 +68,6 @@ export function useVetementsFilters() {
     setMarqueFilter,
     friendFilter,
     setFriendFilter,
-    activeTab,
-    setActiveTab,
     viewMode,
     handleViewModeChange,
     filterVetements,

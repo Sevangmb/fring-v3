@@ -8,7 +8,6 @@ import { useVetementsData } from "@/hooks/useVetementsData";
 import { useVetementsFilters } from "@/hooks/useVetementsFilters";
 import { useAmis } from "@/hooks/useAmis";
 import VetementsList from "@/components/organisms/VetementsList";
-import CategoryTabs from "@/components/molecules/CategoryTabs";
 import { SearchFilterProvider } from "@/contexts/SearchFilterContext";
 import SearchFilterBar from "@/components/molecules/SearchFilterBar";
 import { toast } from "@/hooks/use-toast";
@@ -122,20 +121,14 @@ const VetementsAmis = () => {
             >
               <SearchFilterBar />
               
-              <CategoryTabs 
-                categories={categories}
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-              >
-                <VetementsList 
-                  vetements={filteredVetements}
-                  isLoading={isLoading || loadingAmis}
-                  error={error}
-                  isAuthenticated={!!user}
-                  onVetementDeleted={handleVetementDeleted}
-                  showOwner={true}
-                />
-              </CategoryTabs>
+              <VetementsList 
+                vetements={filteredVetements}
+                isLoading={isLoading || loadingAmis}
+                error={error}
+                isAuthenticated={!!user}
+                onVetementDeleted={handleVetementDeleted}
+                showOwner={true}
+              />
             </SearchFilterProvider>
           </div>
         </div>

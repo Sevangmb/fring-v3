@@ -2,7 +2,6 @@
 import React from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import VetementsList from "@/components/organisms/VetementsList";
-import CategoryTabs from "@/components/molecules/CategoryTabs";
 import SearchFilterBar from "@/components/molecules/SearchFilterBar";
 import { Categorie } from "@/services/categorieService";
 import { Vetement } from "@/services/vetement/types";
@@ -43,20 +42,14 @@ const VetementsAmisTab: React.FC<VetementsAmisTabProps> = ({
       
       <SearchFilterBar />
       
-      <CategoryTabs 
-        categories={categories}
-        activeTab={activeTab}
-        onTabChange={onTabChange}
-      >
-        <VetementsList 
-          vetements={vetements}
-          isLoading={isLoading}
-          error={error}
-          isAuthenticated={isAuthenticated}
-          onVetementDeleted={onVetementDeleted}
-          showOwner={true}
-        />
-      </CategoryTabs>
+      <VetementsList 
+        vetements={vetements}
+        isLoading={isLoading}
+        error={error}
+        isAuthenticated={isAuthenticated}
+        onVetementDeleted={onVetementDeleted}
+        showOwner={true}
+      />
     </TabsContent>
   );
 };
