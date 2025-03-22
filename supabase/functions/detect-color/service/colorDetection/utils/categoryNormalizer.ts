@@ -76,12 +76,17 @@ export function normalizeCategory(category: string): string {
     // Chaussures
     "shoes": "Chaussures",
     "chaussures": "Chaussures",
+    "chaussure": "Chaussures",
     "sneakers": "Chaussures",
     "baskets": "Chaussures",
     "boots": "Chaussures",
     "bottines": "Chaussures",
     "sandals": "Chaussures",
-    "sandales": "Chaussures"
+    "sandales": "Chaussures",
+    "tongs": "Chaussures",
+    "tong": "Chaussures",
+    "flip-flops": "Chaussures",
+    "flip flops": "Chaussures"
   };
   
   if (!category) return "T-shirt"; // Valeur par défaut
@@ -103,7 +108,8 @@ export function normalizeCategory(category: string): string {
     return "Pantalon";
   } else if (categoryLower.includes("veste") || categoryLower.includes("jacket")) {
     return "Veste";
-  } else if (categoryLower.includes("chauss") || categoryLower.includes("shoe")) {
+  } else if (categoryLower.includes("chauss") || categoryLower.includes("shoe") || 
+             categoryLower.includes("tong") || categoryLower.includes("sandal")) {
     return "Chaussures";
   }
   

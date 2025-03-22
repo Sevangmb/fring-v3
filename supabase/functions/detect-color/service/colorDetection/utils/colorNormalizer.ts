@@ -35,7 +35,20 @@ export function normalizeColor(color: string): string {
     "grey": "gris",
     "purple": "violet",
     "pink": "rose",
-    "brown": "marron"
+    "brown": "marron",
+    // Nuances de bleu
+    "navy": "bleu",
+    "azure": "bleu",
+    "cyan": "bleu",
+    "teal": "bleu",
+    "turquoise": "bleu",
+    "marine": "bleu",
+    "bleu marine": "bleu",
+    "bleu clair": "bleu",
+    "bleu foncé": "bleu",
+    "sky blue": "bleu",
+    "light blue": "bleu",
+    "dark blue": "bleu"
   };
   
   if (!color) return "bleu"; // Valeur par défaut

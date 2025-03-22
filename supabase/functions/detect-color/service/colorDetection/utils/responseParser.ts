@@ -1,104 +1,128 @@
 
 /**
- * Analyse la réponse de l'API pour extraire les informations structurées
- * @param response Réponse textuelle de l'API
- * @returns Informations structurées sur le vêtement
+ * Utilities pour extraire les données structurées des réponses de Google AI
  */
-export function parseAIResponse(response: string): {
-  color: string;
-  category: string;
-  description?: string;
-  brand?: string;
-  rainSuitable?: boolean;
-  temperature?: string;
-  weatherType?: string;
+
+/**
+ * Extrait les informations du vêtement depuis la réponse de l'API Google AI
+ * @param responseText Texte de réponse de l'API Google AI
+ * @returns Objet contenant les informations extraites
+ */
+export function parseAIResponse(responseText: string): {
+  color?: string,
+  category?: string,
+  description?: string,
+  brand?: string,
+  rainSuitable?: boolean,
+  temperature?: string,
+  weatherType?: string
 } {
-  try {
-    console.log("Parsing AI response:", response);
-    
-    // Extraire la couleur
-    const colorMatch = response.match(/COULEUR:\s*(.*)/i);
-    const color = colorMatch ? colorMatch[1].trim() : "";
-    
-    // Extraire la catégorie
-    const categoryMatch = response.match(/CATÉGORIE:\s*(.*)/i) || 
-                          response.match(/CATEGORIE:\s*(.*)/i);
-    const category = categoryMatch ? categoryMatch[1].trim() : "";
-    
-    // Extraire la description
-    const descriptionMatch = response.match(/DESCRIPTION:\s*(.*)/i);
-    const description = descriptionMatch ? descriptionMatch[1].trim() : undefined;
-    
-    // Extraire la marque
-    const brandMatch = response.match(/MARQUE:\s*(.*)/i);
-    const brand = brandMatch && !brandMatch[1].includes("Inconnue") ? 
-                 brandMatch[1].trim() : undefined;
-    
-    // Extraire si le vêtement est adapté à la pluie
-    const rainMatch = response.match(/ADAPTÉ PLUIE:\s*(.*)/i) || 
-                      response.match(/ADAPTE PLUIE:\s*(.*)/i);
-    const rainSuitable = rainMatch ? 
-                        rainMatch[1].trim().toLowerCase() === "oui" : undefined;
-    
-    // Extraire la température
-    const temperatureMatch = response.match(/TEMPÉRATURE:\s*(.*)/i) ||
-                             response.match(/TEMPERATURE:\s*(.*)/i);
-    let temperature = temperatureMatch ? temperatureMatch[1].trim().toLowerCase() : undefined;
-    
-    // Normaliser la température
-    if (temperature) {
-      if (temperature.includes("froid")) {
-        temperature = "froid";
-      } else if (temperature.includes("chaud")) {
-        temperature = "chaud";
-      } else if (temperature.includes("tempéré") || temperature.includes("tempere")) {
-        temperature = "tempere";
-      } else {
-        // Par défaut si la valeur n'est pas reconnue
-        temperature = "tempere";
-      }
-    }
-    
-    // Extraire le type de météo
-    const weatherTypeMatch = response.match(/TYPE DE MÉTÉO:\s*(.*)/i) ||
-                             response.match(/TYPE DE METEO:\s*(.*)/i);
-    let weatherType = weatherTypeMatch ? weatherTypeMatch[1].trim().toLowerCase() : undefined;
-    
-    // Normaliser le type de météo
-    if (weatherType) {
-      if (weatherType.includes("pluie")) {
-        weatherType = "pluie";
-      } else if (weatherType.includes("neige")) {
-        weatherType = "neige";
-      } else if (weatherType.includes("normal")) {
-        weatherType = "normal";
-      } else {
-        // Par défaut si la valeur n'est pas reconnue
-        weatherType = "normal";
-      }
-    }
-    
-    console.log("Parsed information:", { 
-      color, 
-      category, 
-      description, 
-      brand, 
-      rainSuitable,
-      temperature,
-      weatherType 
-    });
-    
-    return { 
-      color, 
-      category, 
-      description, 
-      brand, 
-      rainSuitable,
-      temperature,
-      weatherType
-    };
-  } catch (error) {
-    console.error("Error parsing AI response:", error);
-    return { color: "", category: "" };
+  if (!responseText) return {}; // Vérification de base
+  
+  console.log("Parsing AI response:", responseText);
+  
+  // Object pour stocker les résultats extraits
+  const result: {
+    color?: string,
+    category?: string,
+    description?: string,
+    brand?: string,
+    rainSuitable?: boolean,
+    temperature?: string,
+    weatherType?: string
+  } = {};
+  
+  // Extraire la couleur
+  const colorMatch = responseText.match(/COULEUR:?\s*([^\n]+)/i);
+  if (colorMatch && colorMatch[1]) {
+    result.color = colorMatch[1].trim();
+    console.log("Extracted color:", result.color);
   }
+  
+  // Extraire la catégorie
+  const categoryMatch = responseText.match(/CATÉGORIE:?\s*([^\n]+)/i);
+  if (categoryMatch && categoryMatch[1]) {
+    result.category = categoryMatch[1].trim();
+    console.log("Extracted category:", result.category);
+    
+    // Traitement spécial pour les chaussures/tongs
+    if (result.category.toLowerCase().includes('tong') || 
+        result.category.toLowerCase().includes('sandale') || 
+        result.category.toLowerCase().includes('chaussure')) {
+      result.category = 'Chaussures';
+    }
+  }
+  
+  // Extraire la description
+  const descriptionMatch = responseText.match(/DESCRIPTION:?\s*([^\n]+)/i);
+  if (descriptionMatch && descriptionMatch[1]) {
+    result.description = descriptionMatch[1].trim();
+    console.log("Extracted description:", result.description);
+    
+    // Si "tong" est dans la description mais pas la catégorie, on modifie la catégorie
+    if (result.description.toLowerCase().includes('tong') && 
+        (!result.category || !result.category.toLowerCase().includes('chaussure'))) {
+      result.category = 'Chaussures';
+    }
+    
+    // Si "bleu" est dans la description mais pas la couleur, on modifie la couleur
+    if (result.description.toLowerCase().includes('bleu') && 
+        (!result.color || !result.color.toLowerCase().includes('bleu'))) {
+      result.color = 'bleu';
+    }
+  }
+  
+  // Extraire la marque
+  const brandMatch = responseText.match(/MARQUE:?\s*([^\n]+)/i);
+  if (brandMatch && brandMatch[1]) {
+    result.brand = brandMatch[1].trim();
+    console.log("Extracted brand:", result.brand);
+  }
+  
+  // Extraire la température
+  const temperatureMatch = responseText.match(/TEMPÉRATURE:?\s*([^\n]+)/i);
+  if (temperatureMatch && temperatureMatch[1]) {
+    const temperatureValue = temperatureMatch[1].trim().toLowerCase();
+    
+    // Normaliser les valeurs de température
+    if (temperatureValue.includes('chaud')) {
+      result.temperature = 'chaud';
+    } else if (temperatureValue.includes('froid')) {
+      result.temperature = 'froid';
+    } else {
+      result.temperature = 'tempere';
+    }
+    
+    console.log("Extracted temperature:", result.temperature);
+  }
+  
+  // Extraire le type de météo
+  const weatherMatch = responseText.match(/TYPE DE MÉTÉO:?\s*([^\n]+)/i);
+  if (weatherMatch && weatherMatch[1]) {
+    const weatherValue = weatherMatch[1].trim().toLowerCase();
+    
+    // Normaliser les valeurs de météo
+    if (weatherValue.includes('pluie')) {
+      result.weatherType = 'pluie';
+      result.rainSuitable = true;
+    } else if (weatherValue.includes('neige')) {
+      result.weatherType = 'neige';
+      result.rainSuitable = false;
+    } else {
+      result.weatherType = 'normal';
+      result.rainSuitable = false;
+    }
+    
+    console.log("Extracted weather type:", result.weatherType);
+  }
+  
+  // Spécial pour les tongs - généralement pour temps chaud et normal
+  if ((result.category?.toLowerCase().includes('tong') || 
+      result.description?.toLowerCase().includes('tong')) && 
+      !result.temperature) {
+    result.temperature = 'chaud';
+    console.log("Setting default temperature for sandals/flip-flops to 'chaud'");
+  }
+  
+  return result;
 }
