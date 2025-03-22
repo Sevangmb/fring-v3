@@ -84,8 +84,8 @@ const SearchFilterBar: React.FC = () => {
           <SelectContent>
             <SelectItem value="all">Toutes</SelectItem>
             {marques.map((marque) => (
-              <SelectItem key={marque.id} value={marque.nom}>
-                {marque.nom}
+              <SelectItem key={marque} value={marque}>
+                {marque}
               </SelectItem>
             ))}
           </SelectContent>
