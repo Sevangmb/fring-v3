@@ -1,4 +1,3 @@
-
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { VetementFormValues } from "./schema/VetementFormSchema";
@@ -11,7 +10,6 @@ import DescriptionField from "./form-fields/DescriptionField";
 import TemperatureField from "./form-fields/TemperatureField";
 import WeatherTypeField from "./form-fields/WeatherTypeField";
 import { Tag } from "lucide-react";
-import EtiquetteUploader from "./etiquette/EtiquetteUploader";
 
 interface VetementFormFieldsProps {
   form: UseFormReturn<VetementFormValues>;
@@ -19,7 +17,6 @@ interface VetementFormFieldsProps {
   loading: boolean;
   onCategoriesChange?: () => void;
   activeTab?: string;
-  user?: any;
 }
 
 /**
@@ -31,8 +28,7 @@ const VetementFormFields: React.FC<VetementFormFieldsProps> = ({
   marques,
   loading,
   onCategoriesChange,
-  activeTab = "principal",
-  user
+  activeTab = "principal"
 }) => {
   if (activeTab === "principal") {
     return (
@@ -76,17 +72,18 @@ const VetementFormFields: React.FC<VetementFormFieldsProps> = ({
     return (
       <div className="space-y-4">
         <div className="p-6 bg-muted/30 rounded-lg border border-muted">
-          <div className="flex flex-col items-center justify-center text-center space-y-4 mb-4">
+          <div className="flex flex-col items-center justify-center text-center space-y-4">
             <div className="bg-primary/10 p-4 rounded-full">
               <Tag className="h-8 w-8 text-primary" />
             </div>
             <h3 className="text-lg font-medium">Informations d'étiquette</h3>
             <p className="text-muted-foreground">
-              Prenez une photo de l'étiquette de votre vêtement pour extraire automatiquement les informations comme la composition, les instructions de lavage et l'origine.
+              Cette section vous permettra d'ajouter des informations détaillées sur l'étiquette du vêtement comme les instructions de lavage, la composition des matériaux, etc.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Cette fonctionnalité sera bientôt disponible.
             </p>
           </div>
-          
-          <EtiquetteUploader form={form} user={user} />
         </div>
       </div>
     );
