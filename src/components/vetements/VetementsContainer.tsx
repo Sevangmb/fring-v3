@@ -12,9 +12,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Shirt, Users, ListPlus, List } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Text } from "@/components/atoms/Typography";
-import { Button } from "@/components/ui/button";
 
-const VetementsContainer: React.FC = () => {
+interface VetementsContainerProps {
+  defaultTab?: 'mes-vetements' | 'vetements-amis' | 'ajouter-ensemble' | 'mes-ensembles';
+}
+
+const VetementsContainer: React.FC<VetementsContainerProps> = ({ 
+  defaultTab = 'mes-vetements' 
+}) => {
   const { user } = useAuth();
   const { filteredAmis, loadingAmis } = useAmis();
   const {
@@ -39,6 +44,13 @@ const VetementsContainer: React.FC = () => {
   } = useVetementsData(viewMode, friendFilter);
 
   const acceptedFriends = filteredAmis?.amisAcceptes || [];
+
+  useEffect(() => {
+    // Set initial view mode based on defaultTab
+    if (defaultTab === 'vetements-amis') {
+      handleViewModeChange('vetements-amis');
+    }
+  }, [defaultTab, handleViewModeChange]);
 
   useEffect(() => {
     if (viewMode === 'vetements-amis' && friendFilter !== "all") {
@@ -85,7 +97,7 @@ const VetementsContainer: React.FC = () => {
 
   return (
     <>
-      <Tabs defaultValue="mes-vetements" onValueChange={handleTabChange} className="w-full mb-6">
+      <Tabs defaultValue={defaultTab} onValueChange={handleTabChange} className="w-full mb-6">
         <TabsList className="w-full grid grid-cols-4">
           <TabsTrigger value="mes-vetements" className="flex items-center gap-2">
             <Shirt className="h-4 w-4" />
