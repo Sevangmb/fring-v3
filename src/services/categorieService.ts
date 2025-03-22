@@ -2,6 +2,15 @@
 import { supabase } from '@/lib/supabase';
 
 /**
+ * Interface for Categorie
+ */
+export interface Categorie {
+  id: number | string;
+  nom: string;
+  description?: string | null;
+}
+
+/**
  * Initialise la table des catégories
  */
 export const initializeCategories = async (): Promise<boolean> => {
@@ -28,5 +37,49 @@ export const initializeCategories = async (): Promise<boolean> => {
   } catch (error) {
     console.error('Erreur lors de l\'initialisation des catégories:', error);
     return false;
+  }
+};
+
+/**
+ * Récupère toutes les catégories
+ */
+export const fetchCategories = async (): Promise<Categorie[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*');
+
+    if (error) {
+      console.error('Erreur lors de la récupération des catégories:', error);
+      throw new Error('Impossible de récupérer les catégories');
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Erreur lors de la récupération des catégories:', error);
+    throw new Error('Impossible de récupérer les catégories');
+  }
+};
+
+/**
+ * Ajoute une nouvelle catégorie
+ */
+export const addCategorie = async (categorie: Partial<Categorie>): Promise<Categorie> => {
+  try {
+    const { data, error } = await supabase
+      .from('categories')
+      .insert(categorie)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erreur lors de l\'ajout de la catégorie:', error);
+      throw new Error('Impossible d\'ajouter la catégorie');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Erreur lors de l\'ajout de la catégorie:', error);
+    throw new Error('Impossible d\'ajouter la catégorie');
   }
 };

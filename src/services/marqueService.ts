@@ -2,6 +2,16 @@
 import { supabase } from '@/lib/supabase';
 
 /**
+ * Interface for Marque
+ */
+export interface Marque {
+  id: number;
+  nom: string;
+  site_web?: string | null;
+  logo_url?: string | null;
+}
+
+/**
  * Initialise la table des marques
  */
 export const initializeMarques = async (): Promise<boolean> => {
@@ -28,5 +38,26 @@ export const initializeMarques = async (): Promise<boolean> => {
   } catch (error) {
     console.error('Erreur lors de l\'initialisation des marques:', error);
     return false;
+  }
+};
+
+/**
+ * Récupère toutes les marques
+ */
+export const fetchMarques = async (): Promise<Marque[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('marques')
+      .select('*');
+
+    if (error) {
+      console.error('Erreur lors de la récupération des marques:', error);
+      throw new Error('Impossible de récupérer les marques');
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Erreur lors de la récupération des marques:', error);
+    throw new Error('Impossible de récupérer les marques');
   }
 };

@@ -3,7 +3,7 @@ import { supabase, checkTableExists, checkFunctionExists } from '@/lib/supabase'
 import { initializeCategories } from '@/services/categorieService';
 import { initializeMarques } from '@/services/marqueService';
 import { initializeVetements } from '@/services/vetement';
-import { addDemoVetements } from '@/services/vetement/demoVetements';
+import { addDemoVetements, createDemoVetementsForUser } from '@/services/vetement/demoVetements';
 import { initializeAmisTable } from '@/services/amis';
 import { initializeEnsembleData } from './ensembleInitialization';
 

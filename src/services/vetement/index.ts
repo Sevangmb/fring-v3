@@ -60,6 +60,7 @@ export * from './deleteVetement';
 export * from './fetchVetements';
 export * from './updateVetement';
 export * from './types';
+export * from './demoVetements';
 
 // Re-export the fetchVetements function as the default export
 export { fetchVetements as default } from './fetchVetements';
