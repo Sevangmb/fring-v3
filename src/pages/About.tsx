@@ -8,7 +8,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Award, BookOpen, Calendar, ChevronRight, Clock, Flag, Newspaper, Plus, Trophy } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/atoms/Input";
+import Input from "@/components/atoms/Input";
 import { useForm } from "react-hook-form";
 import { toast } from "@/components/ui/use-toast";
 
