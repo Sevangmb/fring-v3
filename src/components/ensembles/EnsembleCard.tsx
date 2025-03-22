@@ -11,30 +11,7 @@ interface EnsembleCardProps {
 }
 
 const EnsembleCard: React.FC<EnsembleCardProps> = ({ ensemble }) => {
-  // Ordonner les vêtements par type
-  const vetementsByType = React.useMemo(() => {
-    const result: Record<string, any[]> = {
-      [VetementType.HAUT]: [],
-      [VetementType.BAS]: [],
-      [VetementType.CHAUSSURES]: [],
-      'autre': [] // Using string literal instead of enum value that doesn't exist
-    };
-    
-    // Trier les vêtements par position
-    const orderedVetements = [...ensemble.vetements].sort(
-      (a, b) => a.position_ordre - b.position_ordre
-    );
-    
-    orderedVetements.forEach(item => {
-      // Instead of trying to use the async function directly, use a simple string-based check
-      const type = determineVetementTypeSync(item.vetement);
-      result[type].push(item.vetement);
-    });
-    
-    return result;
-  }, [ensemble]);
-
-  // Non-async function to determine vetement type
+  // Define the function before using it in useMemo
   const determineVetementTypeSync = (vetement: any): string => {
     const nomLower = vetement.nom ? vetement.nom.toLowerCase() : '';
     const descriptionLower = vetement.description ? vetement.description.toLowerCase() : '';
@@ -60,6 +37,29 @@ const EnsembleCard: React.FC<EnsembleCardProps> = ({ ensemble }) => {
     
     return 'autre';
   };
+
+  // Ordonner les vêtements par type
+  const vetementsByType = React.useMemo(() => {
+    const result: Record<string, any[]> = {
+      [VetementType.HAUT]: [],
+      [VetementType.BAS]: [],
+      [VetementType.CHAUSSURES]: [],
+      'autre': [] // Using string literal instead of enum value that doesn't exist
+    };
+    
+    // Trier les vêtements par position
+    const orderedVetements = [...ensemble.vetements].sort(
+      (a, b) => a.position_ordre - b.position_ordre
+    );
+    
+    orderedVetements.forEach(item => {
+      // Now we can safely call the function
+      const type = determineVetementTypeSync(item.vetement);
+      result[type].push(item.vetement);
+    });
+    
+    return result;
+  }, [ensemble]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
