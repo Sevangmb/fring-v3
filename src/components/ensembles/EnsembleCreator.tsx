@@ -8,6 +8,7 @@ import VetementCarouselItem from './VetementCarouselItem';
 import { Shirt, ShoppingBag, Footprints } from 'lucide-react';
 import { Text } from '@/components/atoms/Typography';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 
 interface EnsembleCreatorProps {
   vetements: Vetement[];
@@ -21,12 +22,14 @@ interface EnsembleCreatorProps {
     bas: Vetement | null;
     chaussures: Vetement | null;
   }) => void;
+  showOwner?: boolean;
 }
 
 const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({ 
   vetements, 
   selectedItems, 
-  onItemsSelected 
+  onItemsSelected,
+  showOwner = false
 }) => {
   const [categorizedVetements, setCategorizedVetements] = useState<{
     hauts: Vetement[];
@@ -58,6 +61,7 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
 
       setCategorizedVetements({ hauts, bas, chaussures });
       
+      // Auto-sélectionner le premier élément de chaque catégorie s'il n'y a pas déjà de sélection
       if (hauts.length > 0 && !selectedItems.haut) {
         handleSelectItem('haut', hauts[0]);
       }
@@ -116,6 +120,14 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
                           onSelect={() => handleSelectItem(type, item)}
                           compact={false}
                         />
+                        
+                        {showOwner && item.owner_email && (
+                          <div className="mt-1 flex justify-center">
+                            <Badge variant="outline" className="text-xs font-normal">
+                              De: {item.owner_email.split('@')[0]}
+                            </Badge>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CarouselItem>
