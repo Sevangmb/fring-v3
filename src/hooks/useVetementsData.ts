@@ -57,8 +57,13 @@ export function useVetementsData(
         let vetementsData: Vetement[] = [];
         if (viewMode === 'mes-vetements') {
           vetementsData = await fetchVetements();
+          console.log("Mes vêtements récupérés:", vetementsData.length);
         } else if (viewMode === 'vetements-amis') {
-          // Utilise la nouvelle fonction fetchVetementsAmis qui appelle désormais les RPC
+          console.log("Récupération des vêtements des amis avec le filtre:", friendFilter);
+          // Pour déboguer: afficher friendFilter avant l'appel
+          console.log(`Type de friendFilter: ${typeof friendFilter}, Valeur: ${friendFilter}`);
+          
+          // Utilise la fonction fetchVetementsAmis qui appelle désormais les RPC
           vetementsData = await fetchVetementsAmis(friendFilter !== "all" ? friendFilter : undefined);
           console.log("Vêtements récupérés pour", friendFilter !== "all" ? "l'ami spécifique" : "tous les amis", ":", vetementsData.length);
         } else if (viewMode === 'mes-ensembles') {

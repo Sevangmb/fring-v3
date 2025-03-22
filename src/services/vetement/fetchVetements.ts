@@ -41,6 +41,38 @@ export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]>
   try {
     console.log('fetchVetementsAmis appelé avec friendId:', friendId);
     
+    // Vérifier l'état de la session utilisateur
+    const { data: sessionData } = await supabase.auth.getSession();
+    const currentUserId = sessionData.session?.user?.id;
+    
+    console.log('Utilisateur courant:', currentUserId);
+    
+    if (!currentUserId) {
+      console.error('Utilisateur non connecté, impossible de récupérer les vêtements des amis');
+      return [];
+    }
+    
+    // Vérifier si l'amitié existe pour déboguer
+    if (friendId && friendId !== 'all') {
+      console.log('Vérification de l\'amitié entre', currentUserId, 'et', friendId);
+      
+      const { data: amitieData, error: amitieError } = await supabase
+        .from('amis')
+        .select('*')
+        .or(`and(user_id.eq.${currentUserId},ami_id.eq.${friendId}),and(user_id.eq.${friendId},ami_id.eq.${currentUserId})`)
+        .eq('status', 'accepted');
+      
+      console.log('Résultat de la vérification d\'amitié:', amitieData, amitieError);
+      
+      if (amitieError) {
+        console.error('Erreur lors de la vérification de l\'amitié:', amitieError);
+      } else if (!amitieData || amitieData.length === 0) {
+        console.warn(`Aucune relation d'amitié acceptée trouvée entre ${currentUserId} et ${friendId}`);
+      } else {
+        console.log('Relation d\'amitié confirmée:', amitieData);
+      }
+    }
+    
     // Si un ID d'ami spécifique est fourni et n'est pas 'all', utiliser la fonction get_specific_friend_clothes
     if (friendId && friendId !== 'all') {
       console.log('Récupération des vêtements pour l\'ami spécifique:', friendId);
