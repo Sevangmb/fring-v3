@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Layout from "@/components/templates/Layout";
@@ -15,15 +16,30 @@ import VetementsTabsList from "@/components/vetements/tabs/VetementsTabsList";
 import MesVetementsTab from "@/components/vetements/tabs/MesVetementsTab";
 import VetementsAmisTab from "@/components/vetements/tabs/VetementsAmisTab";
 import MesEnsemblesTab from "@/components/vetements/tabs/MesEnsemblesTab";
-import MesFavorisTab from "@/components/vetements/tabs/MesFavorisTab";
+import { useVetementsData } from "@/hooks/useVetementsData";
+import { useAmis } from "@/hooks/useAmis";
 
 const MesVetements: React.FC = () => {
   const [initialized, setInitialized] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
   const [activeTab, setActiveTab] = useState("mes-vetements");
+  const [categoryTab, setCategoryTab] = useState("");
   const { user, loading } = useAuth();
   const { toast } = useToast();
   const location = useLocation();
+  const { filteredAmis, loadingAmis } = useAmis();
+  
+  const {
+    vetements,
+    categories,
+    marques,
+    isLoading,
+    error,
+    reloadVetements
+  } = useVetementsData(
+    activeTab as 'mes-vetements' | 'vetements-amis' | 'mes-ensembles',
+    ""
+  );
 
   useEffect(() => {
     if (location.state?.activeTab) {
@@ -117,6 +133,13 @@ const MesVetements: React.FC = () => {
     setActiveTab(value);
   };
 
+  const handleVetementDeleted = (id: number) => {
+    console.log(`Vêtement ${id} supprimé`);
+    reloadVetements();
+  };
+
+  const acceptedFriends = filteredAmis?.amisAcceptes || [];
+
   return (
     <Layout>
       <VetementsContainer>
@@ -133,45 +156,41 @@ const MesVetements: React.FC = () => {
             
             <TabsContent value="mes-vetements">
               <MesVetementsTab
-                vetements={[]}
-                categories={[]}
-                marques={[]}
-                acceptedFriends={[]}
-                activeTab=""
-                isLoading={false}
-                error={null}
+                vetements={vetements}
+                categories={categories}
+                marques={marques.map(m => typeof m === 'string' ? m : m.nom)}
+                acceptedFriends={acceptedFriends}
+                activeTab={categoryTab}
+                isLoading={isLoading || loadingAmis}
+                error={error}
                 isAuthenticated={!!user}
-                onVetementDeleted={() => {}}
-                onTabChange={() => {}}
+                onVetementDeleted={handleVetementDeleted}
+                onTabChange={setCategoryTab}
               />
             </TabsContent>
             
             <TabsContent value="vetements-amis">
               <VetementsAmisTab
-                vetements={[]}
-                categories={[]}
-                marques={[]}
-                acceptedFriends={[]}
-                activeTab=""
-                isLoading={false}
-                error={null}
+                vetements={vetements}
+                categories={categories}
+                marques={marques.map(m => typeof m === 'string' ? m : m.nom)}
+                acceptedFriends={acceptedFriends}
+                activeTab={categoryTab}
+                isLoading={isLoading || loadingAmis}
+                error={error}
                 isAuthenticated={!!user}
-                onVetementDeleted={() => {}}
-                onTabChange={() => {}}
+                onVetementDeleted={handleVetementDeleted}
+                onTabChange={setCategoryTab}
               />
             </TabsContent>
             
             <TabsContent value="mes-ensembles">
               <MesEnsemblesTab
-                categories={[]}
-                marques={[]}
-                acceptedFriends={[]}
-                isLoading={false}
+                categories={categories}
+                marques={marques.map(m => typeof m === 'string' ? m : m.nom)}
+                acceptedFriends={acceptedFriends}
+                isLoading={isLoading || loadingAmis}
               />
-            </TabsContent>
-            
-            <TabsContent value="mes-favoris">
-              <MesFavorisTab />
             </TabsContent>
           </Tabs>
         </section>

@@ -45,14 +45,6 @@ const VetementsTabsList: React.FC<VetementsTabsListProps> = ({ onTabChange, acti
         <Layers className="mr-2 h-4 w-4" />
         Mes Tenues
       </TabsTrigger>
-      <TabsTrigger 
-        value="mes-favoris" 
-        onClick={() => handleTabChange("mes-favoris")}
-        className="rounded-b-none border-b-2 pb-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-      >
-        <Star className="mr-2 h-4 w-4" />
-        Mes Favoris
-      </TabsTrigger>
     </TabsList>
   );
 };
