@@ -56,7 +56,9 @@ export const useAmis = () => {
         description: "Acceptation de la demande d'ami...",
       });
       
+      console.log("Début de l'acceptation de la demande", amiId);
       const amiAccepte = await accepterDemandeAmi(amiId);
+      console.log("Résultat de l'acceptation:", amiAccepte);
       
       if (loadingToast) {
         loadingToast.dismiss();
@@ -77,7 +79,7 @@ export const useAmis = () => {
         });
       }
     } catch (error: any) {
-      console.error("Erreur lors de l'acceptation de la demande:", error);
+      console.error("Erreur détaillée lors de l'acceptation de la demande:", error);
       toast({
         title: "Erreur",
         description: error.message || "Une erreur inattendue est survenue",
