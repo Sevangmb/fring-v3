@@ -9,8 +9,9 @@ import { Shirt, ShoppingBag, Footprints, User, Users } from 'lucide-react';
 import { Text } from '@/components/atoms/Typography';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { fetchVetementsAmis } from '@/services/vetement';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 interface EnsembleCreatorProps {
   vetements: Vetement[];
@@ -50,7 +51,7 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
 
   // État pour suivre les propriétaires uniques
   const [owners, setOwners] = useState<Owner[]>([
-    { id: 'me', name: 'Mes vêtements' }
+    { id: 'me', name: 'Moi' }
   ]);
 
   // État pour suivre la sélection du propriétaire pour chaque catégorie
@@ -74,7 +75,7 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
   // Effet pour extraire les propriétaires uniques des vêtements
   useEffect(() => {
     const uniqueOwners = new Map<string, Owner>();
-    uniqueOwners.set('me', { id: 'me', name: 'Mes vêtements' });
+    uniqueOwners.set('me', { id: 'me', name: 'Moi' });
     
     vetements.forEach(vetement => {
       if (vetement.owner_email && vetement.user_id) {
@@ -109,7 +110,6 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
       }
 
       setCategorizedVetements({ hauts, bas, chaussures });
-      setFilteredVetements({ hauts, bas, chaussures });
       
       // Auto-sélectionner le premier élément de chaque catégorie s'il n'y a pas déjà de sélection
       if (hauts.length > 0 && !selectedItems.haut) {
@@ -167,6 +167,34 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
     }));
   };
 
+  const renderOwnerButtons = (type: 'haut' | 'bas' | 'chaussures') => {
+    return (
+      <ScrollArea className="w-full max-w-full">
+        <div className="flex space-x-1 pb-2">
+          {owners.map((owner) => (
+            <Button
+              key={owner.id}
+              variant={selectedOwners[type] === owner.id ? "default" : "outline"}
+              size="sm"
+              className={cn(
+                "h-8 rounded-full flex items-center gap-1.5 px-3",
+                selectedOwners[type] === owner.id && "bg-primary text-primary-foreground"
+              )}
+              onClick={() => handleOwnerChange(type, owner.id)}
+            >
+              {owner.id === 'me' ? (
+                <User className="h-3 w-3" />
+              ) : (
+                <Users className="h-3 w-3" />
+              )}
+              {owner.name}
+            </Button>
+          ))}
+        </div>
+      </ScrollArea>
+    );
+  };
+
   const renderCarousel = (
     items: Vetement[], 
     type: 'haut' | 'bas' | 'chaussures', 
@@ -182,32 +210,11 @@ const EnsembleCreator: React.FC<EnsembleCreatorProps> = ({
           <Text className="font-medium">{label}</Text>
           <Text className="text-sm text-muted-foreground ml-1">({items.length})</Text>
           <Separator className="flex-grow ml-2" />
-          
-          {/* Sélecteur de propriétaire */}
-          <div className="min-w-40">
-            <Select 
-              value={selectedOwners[type]} 
-              onValueChange={(value) => handleOwnerChange(type, value)}
-            >
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="Choisir source" />
-              </SelectTrigger>
-              <SelectContent>
-                {owners.map((owner) => (
-                  <SelectItem key={owner.id} value={owner.id} className="text-xs">
-                    <div className="flex items-center gap-1.5">
-                      {owner.id === 'me' ? (
-                        <User className="h-3 w-3" />
-                      ) : (
-                        <Users className="h-3 w-3" />
-                      )}
-                      {owner.name}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        </div>
+        
+        {/* Sélecteur de propriétaire */}
+        <div className="mb-3">
+          {renderOwnerButtons(type)}
         </div>
         
         {items.length === 0 ? (
