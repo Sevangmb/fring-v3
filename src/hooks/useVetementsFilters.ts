@@ -18,22 +18,31 @@ export function useVetementsFilters() {
 
   const filterVetements = (vetements: Vetement[], categories: Categorie[]): Vetement[] => {
     return vetements.filter(vetement => {
+      // Filtrage par terme de recherche
       const matchesSearch = vetement.nom.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           (vetement.marque && vetement.marque.toLowerCase().includes(searchTerm.toLowerCase())) ||
                           (vetement.description && vetement.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
                           (vetement.owner_email && vetement.owner_email.toLowerCase().includes(searchTerm.toLowerCase()));
       
-      const matchesCategorie = categorieFilter 
-        ? categorieFilter === "all" 
-          ? true 
-          : getCategoryNameById(categories, vetement.categorie_id) === categorieFilter 
-        : true;
+      // Filtrage par catégorie
+      let matchesCategorie = true;
+      if (categorieFilter && categorieFilter !== "all") {
+        const categoryName = getCategoryNameById(categories, vetement.categorie_id);
+        matchesCategorie = categoryName === categorieFilter;
+      }
       
-      const matchesMarque = marqueFilter ? marqueFilter === "all" ? true : vetement.marque === marqueFilter : true;
+      // Filtrage par marque
+      let matchesMarque = true;
+      if (marqueFilter && marqueFilter !== "all") {
+        matchesMarque = vetement.marque === marqueFilter;
+      }
       
-      const matchesActiveTab = activeTab === "tous" 
-        ? true 
-        : getCategoryNameById(categories, vetement.categorie_id) === activeTab;
+      // Filtrage par onglet actif (catégorie)
+      let matchesActiveTab = true;
+      if (activeTab !== "tous") {
+        const categoryName = getCategoryNameById(categories, vetement.categorie_id);
+        matchesActiveTab = categoryName === activeTab;
+      }
 
       return matchesSearch && matchesCategorie && matchesMarque && matchesActiveTab;
     });

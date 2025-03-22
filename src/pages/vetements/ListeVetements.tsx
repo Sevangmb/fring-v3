@@ -22,12 +22,17 @@ const ListeVetements = () => {
   
   const {
     searchTerm,
+    setSearchTerm,
     categorieFilter,
+    setCategorieFilter,
     marqueFilter,
+    setMarqueFilter,
     friendFilter,
+    setFriendFilter,
     activeTab: categoryTab,
     setActiveTab: setCategoryTab,
     viewMode,
+    handleViewModeChange,
     filterVetements
   } = useVetementsFilters();
 

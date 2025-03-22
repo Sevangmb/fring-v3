@@ -12,7 +12,7 @@ import { Ami } from "@/services/amis/types";
 interface MesVetementsTabProps {
   vetements: Vetement[];
   categories: Categorie[];
-  marques: string[]; // Changed from Marque[] to string[]
+  marques: string[];
   acceptedFriends: Ami[];
   activeTab: string;
   isLoading: boolean;
@@ -45,23 +45,23 @@ const MesVetementsTab: React.FC<MesVetementsTabProps> = ({
         showFriendFilter={false}
       >
         <SearchFilterBar />
+        
+        <CategoryTabs 
+          categories={categories}
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+        >
+          <VetementsList 
+            vetements={vetements}
+            isLoading={isLoading}
+            error={error}
+            isAuthenticated={isAuthenticated}
+            onVetementDeleted={onVetementDeleted}
+            showOwner={false}
+            hideTitle={hideTitle}
+          />
+        </CategoryTabs>
       </SearchFilterProvider>
-      
-      <CategoryTabs 
-        categories={categories}
-        activeTab={activeTab}
-        onTabChange={onTabChange}
-      >
-        <VetementsList 
-          vetements={vetements}
-          isLoading={isLoading}
-          error={error}
-          isAuthenticated={isAuthenticated}
-          onVetementDeleted={onVetementDeleted}
-          showOwner={false}
-          hideTitle={hideTitle}
-        />
-      </CategoryTabs>
     </TabsContent>
   );
 };
