@@ -52,6 +52,8 @@ const VetementsAmis = () => {
   const handleFriendFilterChange = (friendId: string) => {
     console.log("Changement de filtre ami:", friendId);
     setFriendFilter(friendId);
+    // Force le rechargement des vêtements avec le nouveau filtre ami
+    reloadVetements();
   };
 
   return (

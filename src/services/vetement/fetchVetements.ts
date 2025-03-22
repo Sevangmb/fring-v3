@@ -40,10 +40,10 @@ export const fetchVetements = async (): Promise<Vetement[]> => {
 export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]> => {
   try {
     // Si un ID d'ami spécifique est fourni, filtrer uniquement ses vêtements
-    if (friendId) {
+    if (friendId && friendId !== 'all') {
       console.log('Récupération des vêtements pour l\'ami spécifique:', friendId);
       
-      // Utiliser directement le RPC personnalisé pour récupérer les vêtements de l'ami spécifique
+      // Utiliser directement la fonction RPC personnalisée pour récupérer les vêtements de l'ami spécifique
       const { data, error } = await supabase
         .rpc('get_friend_vetements', { friend_id_param: friendId });
       
