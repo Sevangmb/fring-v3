@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -51,19 +50,24 @@ const App = () => {
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/mes-vetements" element={<MesVetements />} />
-              <Route path="/mes-vetements/ajouter" element={<AjouterVetement />} />
+              
+              {/* Main vetements route - now shows all tabs */}
+              <Route path="/mes-vetements" element={<ListeVetements />} />
+              
+              {/* Keep these routes for direct access, but content will be shown in tabs */}
+              <Route path="/mes-vetements/ajouter" element={<ListeVetements />} />
               <Route path="/mes-vetements/liste" element={<ListeVetements />} />
               <Route path="/mes-vetements/modifier/:id" element={<ModifierVetement />} />
               <Route path="/mes-amis" element={<MesAmis />} />
               <Route path="/vetements-amis" element={<VetementsAmisPage />} />
-              <Route path="/ensembles-amis" element={<EnsemblesAmisPage />} />
               <Route path="/messages" element={<Messages />} />
               <Route path="/messages/:friendId" element={<Messages />} />
               <Route path="/mies" element={<MiesPage />} />
               <Route path="/about" element={<About />} />
-              <Route path="/ensembles" element={<MesEnsembles />} />
-              <Route path="/ensembles/ajouter" element={<AjouterEnsemble />} />
+              
+              {/* Ensemble routes - content will be shown in tabs */}
+              <Route path="/ensembles" element={<ListeVetements />} />
+              <Route path="/ensembles/ajouter" element={<ListeVetements />} />
               
               {/* Protected Routes */}
               <Route path="/dashboard" element={

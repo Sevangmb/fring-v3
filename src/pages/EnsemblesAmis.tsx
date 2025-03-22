@@ -4,10 +4,7 @@ import Layout from "@/components/templates/Layout";
 import { Helmet } from "react-helmet";
 import { useAuth } from "@/contexts/AuthContext";
 import AmisPageHeader from "@/components/organisms/AmisPageHeader";
-import VetementsContainer from "@/components/vetements/VetementsContainer";
-import { TabType } from "@/components/vetements/VetementsContainer";
 import MesEnsemblesTab from "@/components/vetements/tabs/MesEnsemblesTab";
-import { TabsContent } from "@/components/ui/tabs";
 
 const EnsemblesAmis = () => {
   const { user, loading } = useAuth();
@@ -23,11 +20,7 @@ const EnsemblesAmis = () => {
       
       {user && (
         <div className="container mx-auto px-4 py-8">
-          <VetementsContainer defaultTab="mes-ensembles">
-            <TabsContent value="mes-ensembles">
-              <MesEnsemblesTab />
-            </TabsContent>
-          </VetementsContainer>
+          <MesEnsemblesTab />
         </div>
       )}
     </Layout>

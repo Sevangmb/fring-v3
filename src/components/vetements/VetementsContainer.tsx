@@ -1,10 +1,11 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs } from "@/components/ui/tabs";
 import VetementsTabsList from "./tabs/VetementsTabsList";
 
-export type TabType = 'mes-vetements' | 'ajouter-vetement' | 'mes-tenues' | 'ajouter-tenue' | 'mes-ensembles';
+export type TabType = 'mes-vetements' | 'ajouter-vetement' | 'mes-tenues' | 'ajouter-tenue';
 
 interface VetementsContainerProps {
   defaultTab?: TabType;
@@ -29,8 +30,6 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
       setActiveTab("mes-tenues");
     } else if (location.pathname === "/ensembles/ajouter") {
       setActiveTab("ajouter-tenue");
-    } else if (location.pathname === "/ensembles-amis") {
-      setActiveTab("mes-ensembles");
     }
   }, [location.pathname]);
 
@@ -47,7 +46,7 @@ const VetementsContainer: React.FC<VetementsContainerProps> = ({
       <Tabs value={activeTab} className="w-full mb-6">
         <VetementsTabsList onTabChange={handleTabChange} activeTab={activeTab} />
         
-        {/* Le contenu est maintenant injecté depuis l'extérieur */}
+        {/* Render tab content below the tabs */}
         {children}
       </Tabs>
     </>

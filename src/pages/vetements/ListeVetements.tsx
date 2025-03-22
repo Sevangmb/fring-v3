@@ -11,6 +11,11 @@ import { useVetementsData } from "@/hooks/useVetementsData";
 import { useVetementsFilters } from "@/hooks/useVetementsFilters";
 import { useAmis } from "@/hooks/useAmis";
 
+// Import other tab components
+import AjouterVetement from "./AjouterVetement";
+import MesEnsembles from "../ensembles/MesEnsembles";
+import AjouterEnsemble from "../ensembles/AjouterEnsemble";
+
 const ListeVetements = () => {
   const { user } = useAuth();
   const { filteredAmis, loadingAmis } = useAmis();
@@ -70,6 +75,24 @@ const ListeVetements = () => {
               onVetementDeleted={handleVetementDeleted}
               onTabChange={setCategoryTab}
             />
+          </TabsContent>
+          
+          <TabsContent value="ajouter-vetement">
+            <div className="mt-4">
+              <AjouterVetement />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="mes-tenues">
+            <div className="mt-4">
+              <MesEnsembles />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="ajouter-tenue">
+            <div className="mt-4">
+              <AjouterEnsemble />
+            </div>
           </TabsContent>
         </VetementsContainer>
       </div>
