@@ -16,6 +16,9 @@ export interface VoteButtonsProps {
   className?: string;
 }
 
+// Define a type for the button size values accepted by the Button component
+type ButtonSizeType = "sm" | "lg" | "default" | "icon";
+
 const VoteButtons: React.FC<VoteButtonsProps> = ({
   ensembleId,
   userVote,
@@ -28,9 +31,9 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
 }) => {
   // Size mappings for different button sizes
   const sizeClasses = {
-    sm: { button: "px-2 py-1", icon: "h-4 w-4", buttonSize: "sm" },
-    md: { button: "px-3 py-2", icon: "h-5 w-5", buttonSize: "default" },
-    lg: { button: "px-4 py-2", icon: "h-5 w-5", buttonSize: "lg" }
+    sm: { button: "px-2 py-1", icon: "h-4 w-4", buttonSize: "sm" as ButtonSizeType },
+    md: { button: "px-3 py-2", icon: "h-5 w-5", buttonSize: "default" as ButtonSizeType },
+    lg: { button: "px-4 py-2", icon: "h-5 w-5", buttonSize: "lg" as ButtonSizeType }
   };
   
   // Get the appropriate sizes based on the size prop
