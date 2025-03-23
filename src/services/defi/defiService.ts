@@ -11,6 +11,7 @@ export interface Defi {
   participants_count: number;
   status: 'current' | 'upcoming' | 'past';
   created_at: string;
+  ensemble_id?: number; // Added optional ensemble_id property
 }
 
 /**
