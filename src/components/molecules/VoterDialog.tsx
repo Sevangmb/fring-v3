@@ -1,138 +1,161 @@
-
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { 
+  ThumbsUp, 
+  ThumbsDown, 
+  X, 
+  Loader2
+} from "lucide-react";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, ThumbsDown, WifiOff } from "lucide-react";
-import { useEntityVote } from "@/hooks/useEntityVote";
-import { EntityType, VoteType } from "@/hooks/useVote";
-import { Alert, Box } from "@mui/material";
+import { useToast } from "@/hooks/use-toast";
+import { VoteType } from "@/services/votes/types";
+import { submitVote as submitEntityVote } from "@/services/votes/voteService";
+import { getUserVote } from "@/services/votes/getUserVote";
+import { submitVote } from "@/services/defi/votes";
 
 interface VoterDialogProps {
-  elementId?: number;
-  elementType?: EntityType;
+  elementId: number;
+  elementType: 'vetement' | 'ensemble' | 'defi';
   onVoteSubmitted?: (vote: VoteType) => void;
 }
 
-const VoterDialog: React.FC<VoterDialogProps> = ({
-  elementId,
-  elementType = "vetement",
-  onVoteSubmitted,
+const VoterDialog: React.FC<VoterDialogProps> = ({ 
+  elementId, 
+  elementType,
+  onVoteSubmitted
 }) => {
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [userVote, setUserVote] = useState<VoteType>(null);
+  const [isVoting, setIsVoting] = useState(false);
+  const [selectedVote, setSelectedVote] = useState<VoteType>(null);
   
-  const { 
-    handleVote, 
-    loading, 
-    userVote, 
-    connectionError, 
-    isSubmitting,
-    refresh
-  } = useEntityVote({
-    entityType: elementType,
-    entityId: elementId,
-    onVoteSubmitted
-  });
-  
-  // Refresh vote data when dialog opens
   useEffect(() => {
-    if (open && elementId) {
-      refresh();
+    const fetchUserVote = async () => {
+      try {
+        const vote = await getUserVote(elementId, elementType);
+        setUserVote(vote);
+      } catch (error) {
+        console.error("Erreur lors de la récupération du vote:", error);
+      }
+    };
+    
+    if (open) {
+      fetchUserVote();
     }
-  }, [open, elementId, refresh]);
+  }, [open, elementId, elementType]);
   
   const handleVoteClick = async (vote: VoteType) => {
-    // Ensure entity ID is defined before proceeding
-    if (isSubmitting || loading || connectionError || !elementId) {
-      console.log("Cannot vote:", { isSubmitting, loading, connectionError, elementId });
-      return;
-    }
+    setIsVoting(true);
+    setSelectedVote(vote);
     
-    console.log("Attempting to vote:", { elementType, elementId, vote });
-    const success = await handleVote(vote);
-    if (success) {
-      setTimeout(() => setOpen(false), 500);
+    try {
+      console.info("Attempting to vote:", { elementType, elementId, vote });
+      console.info("Soumission du vote: type=" + elementType + ", id=" + elementId + ", vote=" + vote);
+      
+      let success = false;
+      
+      if (elementType === 'defi') {
+        // Pour un vote sur un défi, passer null comme ensemble_id
+        success = await submitVote(elementId, null, vote);
+      } else {
+        success = await submitEntityVote(elementType, elementId, vote);
+      }
+      
+      if (success) {
+        // Si le vote a réussi, mettre à jour l'état local
+        setUserVote(vote);
+        
+        // Notifier le parent
+        if (onVoteSubmitted) {
+          onVoteSubmitted(vote);
+        }
+        
+        toast({
+          title: "Vote enregistré",
+          description: vote === 'up' ? "Vous avez aimé cet élément" : "Vous n'avez pas aimé cet élément",
+          variant: vote === 'up' ? 'default' : 'destructive',
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: "Impossible d'enregistrer votre vote",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Erreur lors du vote:", error);
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Impossible d'enregistrer votre vote",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVoting(false);
     }
   };
   
-  // Disable the trigger button if elementId is not provided
-  const isTriggerDisabled = !elementId;
-  
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className={`gap-2 ${isTriggerDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-          type="button"
-          disabled={isTriggerDisabled}
-          title={isTriggerDisabled ? "Impossible de voter: ID de l'élément manquant" : "Voter"}
-        >
-          Voter
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Voter pour cet élément</DialogTitle>
-          <DialogDescription>
-            Donnez votre avis sur {elementType === "vetement" ? "ce vêtement" : 
-                                 elementType === "ensemble" ? "cet ensemble" : 
-                                 "ce défi"}.
-          </DialogDescription>
-        </DialogHeader>
-        
-        {!elementId && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <span>Impossible de voter: ID de l'élément manquant.</span>
-            </Box>
-          </Alert>
+    <>
+      <Button 
+        variant="outline" 
+        size="icon"
+        onClick={() => setOpen(true)}
+        disabled={isVoting}
+      >
+        {isVoting && selectedVote === 'up' ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <ThumbsUp className="h-4 w-4" />
         )}
-        
-        {connectionError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <WifiOff size={16} />
-              <span>Problème de connexion. Vérifiez votre connexion internet.</span>
-            </Box>
-          </Alert>
-        )}
-        
-        <div className="flex justify-center gap-4 py-4">
-          <Button 
-            onClick={() => handleVoteClick("up")}
-            variant={userVote === "up" ? "default" : "outline"}
-            size="lg"
-            disabled={loading || isSubmitting || connectionError || !elementId}
-            className={`flex-1 max-w-40 flex flex-col items-center p-6 ${
-              userVote === "up" 
-                ? "bg-green-500 hover:bg-green-600 text-white" 
-                : "hover:bg-green-50 hover:border-green-200"
-            } ${(loading || isSubmitting || !elementId) && "opacity-50 cursor-not-allowed"}`}
-            type="button"
-          >
-            <ThumbsUp className={`h-8 w-8 mb-2 ${userVote === "up" ? "text-white" : "text-green-500"}`} />
-            <span>J'aime</span>
-          </Button>
-          
-          <Button 
-            onClick={() => handleVoteClick("down")}
-            variant={userVote === "down" ? "default" : "outline"}
-            size="lg"
-            disabled={loading || isSubmitting || connectionError || !elementId}
-            className={`flex-1 max-w-40 flex flex-col items-center p-6 ${
-              userVote === "down" 
-                ? "bg-red-500 hover:bg-red-600 text-white" 
-                : "hover:bg-red-50 hover:border-red-200"
-            } ${(loading || isSubmitting || !elementId) && "opacity-50 cursor-not-allowed"}`}
-            type="button"
-          >
-            <ThumbsDown className={`h-8 w-8 mb-2 ${userVote === "down" ? "text-white" : "text-red-500"}`} />
-            <span>Je n'aime pas</span>
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+      </Button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Votez pour cet élément</DialogTitle>
+            <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </DialogClose>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant={userVote === 'up' ? 'default' : 'outline'}
+                onClick={() => handleVoteClick('up')}
+                disabled={isVoting}
+              >
+                {isVoting && selectedVote === 'up' ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <ThumbsUp className="mr-2 h-4 w-4" />
+                )}
+                <span>J'aime</span>
+              </Button>
+              <Button 
+                variant={userVote === 'down' ? 'default' : 'outline'}
+                onClick={() => handleVoteClick('down')}
+                disabled={isVoting}
+              >
+                {isVoting && selectedVote === 'down' ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <ThumbsDown className="mr-2 h-4 w-4" />
+                )}
+                <span>Je n'aime pas</span>
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
