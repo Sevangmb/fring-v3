@@ -28,13 +28,13 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
 }) => {
   // Size mappings for different button sizes
   const sizeClasses = {
-    sm: { button: "px-2 py-1", icon: "h-4 w-4" },
-    md: { button: "px-3 py-2", icon: "h-5 w-5" },
-    lg: { button: "px-4 py-2", icon: "h-5 w-5" }
+    sm: { button: "px-2 py-1", icon: "h-4 w-4", buttonSize: "sm" },
+    md: { button: "px-3 py-2", icon: "h-5 w-5", buttonSize: "default" },
+    lg: { button: "px-4 py-2", icon: "h-5 w-5", buttonSize: "lg" }
   };
   
   // Get the appropriate sizes based on the size prop
-  const { button: buttonSize, icon: iconSize } = sizeClasses[size];
+  const { button: buttonSize, icon: iconSize, buttonSize: buttonSizeValue } = sizeClasses[size];
   
   // Determine the spacing between buttons based on the variant
   const spacing = variant === 'compact' ? 2 : 6;
@@ -52,7 +52,7 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
       <Button 
         onClick={() => !disabled && onVote(ensembleId, 'up')}
         variant={userVote === 'up' ? 'default' : 'outline'} 
-        size={size}
+        size={buttonSizeValue}
         disabled={disabled}
         className={cn(
           "flex items-center gap-2",
@@ -77,7 +77,7 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
       <Button 
         onClick={() => !disabled && onVote(ensembleId, 'down')}
         variant={userVote === 'down' ? 'default' : 'outline'} 
-        size={size}
+        size={buttonSizeValue}
         disabled={disabled}
         className={cn(
           "flex items-center gap-2",
