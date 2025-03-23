@@ -2,12 +2,14 @@
 import React from "react";
 import { TabsList } from "@/components/ui/tabs";
 import { TabsTrigger } from "@/components/ui/tabs";
-import { Shirt, Plus, Users, Layers, PlusCircle, Heart } from "lucide-react";
+import { Shirt, Plus, Layers, Users, PlusCircle } from "lucide-react";
 import { TabType, TabChangeHandler } from "../types/TabTypes";
+
 interface VetementsTabsListProps {
   onTabChange?: TabChangeHandler;
   activeTab?: TabType | string;
 }
+
 const VetementsTabsList: React.FC<VetementsTabsListProps> = ({
   onTabChange,
   activeTab
@@ -41,25 +43,26 @@ const VetementsTabsList: React.FC<VetementsTabsListProps> = ({
       </TabsTrigger>
       
       <TabsTrigger 
-        value="ajouter" 
-        onClick={() => handleTabChange("ajouter")}
+        value="ajouter-vetement" 
+        onClick={() => handleTabChange("ajouter-vetement")}
         className="flex items-center gap-2"
-        data-state={activeTab === "ajouter" ? "active" : "inactive"}
+        data-state={activeTab === "ajouter-vetement" ? "active" : "inactive"}
       >
-        <PlusCircle className="h-4 w-4" />
-        <span className="hidden md:inline">Ajouter</span>
+        <Plus className="h-4 w-4" />
+        <span className="hidden md:inline">Ajouter Vêtement</span>
       </TabsTrigger>
       
       <TabsTrigger 
-        value="vetements-amis" 
-        onClick={() => handleTabChange("vetements-amis")}
+        value="ajouter-ensemble" 
+        onClick={() => handleTabChange("ajouter-ensemble")}
         className="flex items-center gap-2"
-        data-state={activeTab === "vetements-amis" ? "active" : "inactive"}
+        data-state={activeTab === "ajouter-ensemble" ? "active" : "inactive"}
       >
-        <Users className="h-4 w-4" />
-        <span className="hidden md:inline">Amis</span>
+        <PlusCircle className="h-4 w-4" />
+        <span className="hidden md:inline">Ajouter Ensemble</span>
       </TabsTrigger>
     </TabsList>
   );
 };
+
 export default VetementsTabsList;

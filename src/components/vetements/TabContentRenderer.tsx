@@ -4,8 +4,6 @@ import AjouterEnsembleTab from "./tabs/AjouterEnsembleTab";
 import MesVetementsTab from "./tabs/MesVetementsTab";
 import AjouterVetement from "@/pages/vetements/AjouterVetement";
 import MesEnsembles from "@/pages/ensembles/MesEnsembles";
-import { Vetement } from "@/services/vetement/types";
-import { Categorie } from "@/services/categorieService";
 import { useVetementsData } from "@/hooks/useVetementsData";
 import { useCategories } from "@/hooks/useCategories";
 
