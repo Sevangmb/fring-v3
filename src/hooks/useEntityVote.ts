@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useVote, VoteType, EntityType } from "./useVote";
-import { supabase } from "@/lib/supabase";
+import { checkConnection } from "@/services/network/retryUtils";
 
 interface UseEntityVoteProps {
   entityType: EntityType;
@@ -24,31 +24,6 @@ export const useEntityVote = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
   
-  // Check if Supabase connection is available
-  const checkConnection = useCallback(async (): Promise<boolean> => {
-    if (!navigator.onLine) {
-      setConnectionError(true);
-      return false;
-    }
-    
-    try {
-      // Simple check if we can reach Supabase
-      const { data, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error("Erreur de connexion à Supabase:", error);
-        setConnectionError(true);
-        return false;
-      }
-      
-      setConnectionError(false);
-      return true;
-    } catch (error) {
-      console.error("Erreur de connexion à Supabase:", error);
-      setConnectionError(true);
-      return false;
-    }
-  }, []);
-  
   // Load initial vote data
   const loadVoteData = useCallback(async () => {
     if (!entityId) return;
@@ -63,6 +38,7 @@ export const useEntityVote = ({
           description: "Impossible de se connecter au serveur. Vérifiez votre connexion internet.",
           variant: "destructive"
         });
+        setConnectionError(true);
         setLoading(false);
         return;
       }
@@ -74,6 +50,8 @@ export const useEntityVote = ({
       // Get vote counts
       const voteCounts = await getVotesCount(entityId);
       setVotes(voteCounts);
+      
+      setConnectionError(false);
     } catch (error) {
       console.error(`Erreur lors du chargement des votes pour ${entityType}:`, error);
       toast({
@@ -81,26 +59,32 @@ export const useEntityVote = ({
         description: "Impossible de charger les votes. Veuillez réessayer plus tard.",
         variant: "destructive"
       });
+      setConnectionError(true);
     } finally {
       setLoading(false);
     }
-  }, [entityId, entityType, getUserVote, getVotesCount, toast, checkConnection]);
+  }, [entityId, entityType, getUserVote, getVotesCount, toast]);
   
   useEffect(() => {
     loadVoteData();
     
-    // Ajouter un gestionnaire d'événement pour détecter les changements de connectivité
+    // Add event listener to detect connectivity changes
     const handleOnlineStatusChange = () => {
       if (navigator.onLine) {
-        // Recharger les données lorsque la connexion est rétablie
+        // Reload data when connection is restored
+        setConnectionError(false);
         loadVoteData();
+      } else {
+        setConnectionError(true);
       }
     };
     
     window.addEventListener('online', handleOnlineStatusChange);
+    window.addEventListener('offline', handleOnlineStatusChange);
     
     return () => {
       window.removeEventListener('online', handleOnlineStatusChange);
+      window.removeEventListener('offline', handleOnlineStatusChange);
     };
   }, [loadVoteData]);
   

@@ -5,6 +5,7 @@ import { fetchEnsembleById } from "@/services/ensemble/fetchEnsembleById";
 import { organizeVetementsByType } from "@/components/defis/voting/helpers/vetementOrganizer";
 import { useToast } from "@/hooks/use-toast";
 import { useEntityVote } from "@/hooks/useEntityVote";
+import { checkConnection } from "@/services/network/retryUtils";
 
 interface UseEnsembleVoteDialogProps {
   ensembleId: number;
@@ -27,7 +28,7 @@ export const useEnsembleVoteDialog = ({
   });
 
   const { userVote, votes, handleVote, isSubmitting, connectionError } = useEntityVote({
-    entityType: "defi",
+    entityType: "ensemble",
     entityId: ensembleId,
   });
 
@@ -48,7 +49,8 @@ export const useEnsembleVoteDialog = ({
     setLoading(true);
     setError(null);
     try {
-      if (!navigator.onLine) {
+      const isConnected = await checkConnection();
+      if (!isConnected) {
         throw new Error("Pas de connexion internet");
       }
       
@@ -112,7 +114,7 @@ export const useEnsembleVoteDialog = ({
   };
 
   useEffect(() => {
-    // Gestionnaire d'événements pour les changements de connexion
+    // Event handler for connection changes
     const handleOnlineStatusChange = () => {
       if (navigator.onLine && ensemble === null) {
         loadEnsemble();

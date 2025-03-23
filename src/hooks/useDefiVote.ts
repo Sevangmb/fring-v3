@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useVote, VoteType } from "./useVote";
 import { supabase } from "@/lib/supabase";
+import { fetchWithRetry } from "@/services/network/retryUtils";
 
 interface EnsembleVoteState {
   [ensembleId: number]: VoteType;
@@ -23,36 +24,44 @@ export const useDefiVote = (defiId: number) => {
       
       try {
         // Fetch participations for this defi
-        const { data: participationsData, error: participationsError } = await supabase
-          .from('defi_participations')
-          .select(`
-            id, 
-            defi_id, 
-            user_id, 
-            ensemble_id, 
-            commentaire, 
-            created_at
-          `)
-          .eq('defi_id', defiId);
+        const { data: participationsData, error: participationsError } = await fetchWithRetry(
+          async () => {
+            return await supabase
+              .from('defi_participations')
+              .select(`
+                id, 
+                defi_id, 
+                user_id, 
+                ensemble_id, 
+                commentaire, 
+                created_at
+              `)
+              .eq('defi_id', defiId);
+          }
+        );
         
         if (participationsError) throw participationsError;
         
         // Fetch ensemble details for each participation
         const participationsWithDetails = await Promise.all(participationsData.map(async (participation) => {
           // Get ensemble details
-          const { data: ensemble } = await supabase
-            .from('tenues')
-            .select(`
-              id, 
-              nom, 
-              description, 
-              occasion, 
-              saison, 
-              created_at, 
-              user_id
-            `)
-            .eq('id', participation.ensemble_id)
-            .single();
+          const { data: ensemble } = await fetchWithRetry(
+            async () => {
+              return await supabase
+                .from('tenues')
+                .select(`
+                  id, 
+                  nom, 
+                  description, 
+                  occasion, 
+                  saison, 
+                  created_at, 
+                  user_id
+                `)
+                .eq('id', participation.ensemble_id)
+                .single();
+            }
+          );
           
           // Get vote counts
           const votes = await getVotesCount(participation.ensemble_id);

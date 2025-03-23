@@ -1,6 +1,7 @@
 
 import { supabase } from "@/lib/supabase";
-import { VoteType } from "@/hooks/useVote";
+import { VoteType } from "@/services/votes/types";
+import { fetchWithRetry } from "@/services/network/retryUtils";
 
 /**
  * Récupérer les participations à un défi avec les informations de votes
@@ -8,47 +9,59 @@ import { VoteType } from "@/hooks/useVote";
 export const getDefiParticipationsWithVotes = async (defiId: number) => {
   try {
     // Récupérer les participations pour ce défi
-    const { data: participationsData, error: participationsError } = await supabase
-      .from('defi_participations')
-      .select(`
-        id, 
-        defi_id, 
-        user_id, 
-        ensemble_id, 
-        commentaire, 
-        created_at
-      `)
-      .eq('defi_id', defiId);
+    const { data: participationsData, error: participationsError } = await fetchWithRetry(
+      async () => {
+        return await supabase
+          .from('defi_participations')
+          .select(`
+            id, 
+            defi_id, 
+            user_id, 
+            ensemble_id, 
+            commentaire, 
+            created_at
+          `)
+          .eq('defi_id', defiId);
+      }
+    );
     
     if (participationsError) throw participationsError;
     
     // Récupérer les détails pour chaque participation
     const participationsWithDetails = await Promise.all(participationsData.map(async (participation) => {
       // Récupérer les détails de l'ensemble
-      const { data: ensemble } = await supabase
-        .from('tenues')
-        .select(`
-          id, 
-          nom, 
-          description, 
-          occasion, 
-          saison, 
-          created_at, 
-          user_id,
-          vetements:tenues_vetements(
-            id,
-            vetement:vetement_id(*),
-            position_ordre
-          )
-        `)
-        .eq('id', participation.ensemble_id)
-        .single();
+      const { data: ensemble } = await fetchWithRetry(
+        async () => {
+          return await supabase
+            .from('tenues')
+            .select(`
+              id, 
+              nom, 
+              description, 
+              occasion, 
+              saison, 
+              created_at, 
+              user_id,
+              vetements:tenues_vetements(
+                id,
+                vetement:vetement_id(*),
+                position_ordre
+              )
+            `)
+            .eq('id', participation.ensemble_id)
+            .single();
+        }
+      );
       
       // Récupérer les votes pour cet ensemble
-      const { data: votesData } = await supabase
-        .from('defi_votes')
-        .select('vote')
-        .eq('ensemble_id', participation.ensemble_id);
+      const { data: votesData } = await fetchWithRetry(
+        async () => {
+          return await supabase
+            .from('defi_votes')
+            .select('vote')
+            .eq('ensemble_id', participation.ensemble_id);
+        }
+      );
       
       // Compter les votes
       const votes = {
@@ -81,7 +94,12 @@ export const getDefiParticipationsWithVotes = async (defiId: number) => {
 export const submitVote = async (defiId: number, ensembleId: number, vote: VoteType): Promise<boolean> => {
   try {
     // Vérifier la session utilisateur
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await fetchWithRetry(
+      async () => {
+        return await supabase.auth.getSession();
+      }
+    );
+    
     const userId = session?.user?.id;
     
     if (!userId) {
@@ -89,33 +107,45 @@ export const submitVote = async (defiId: number, ensembleId: number, vote: VoteT
     }
     
     // Vérifier si l'utilisateur a déjà voté
-    const { data: existingVote, error: fetchError } = await supabase
-      .from('defi_votes')
-      .select('id')
-      .eq('ensemble_id', ensembleId)
-      .eq('user_id', userId)
-      .maybeSingle();
+    const { data: existingVote, error: fetchError } = await fetchWithRetry(
+      async () => {
+        return await supabase
+          .from('defi_votes')
+          .select('id')
+          .eq('ensemble_id', ensembleId)
+          .eq('user_id', userId)
+          .maybeSingle();
+      }
+    );
     
     if (fetchError) throw fetchError;
     
     if (existingVote) {
       // Mettre à jour le vote existant
-      const { error: updateError } = await supabase
-        .from('defi_votes')
-        .update({ vote })
-        .eq('id', existingVote.id);
+      const { error: updateError } = await fetchWithRetry(
+        async () => {
+          return await supabase
+            .from('defi_votes')
+            .update({ vote })
+            .eq('id', existingVote.id);
+        }
+      );
       
       if (updateError) throw updateError;
     } else {
       // Créer un nouveau vote
-      const { error: insertError } = await supabase
-        .from('defi_votes')
-        .insert({
-          defi_id: defiId,
-          ensemble_id: ensembleId,
-          user_id: userId,
-          vote
-        });
+      const { error: insertError } = await fetchWithRetry(
+        async () => {
+          return await supabase
+            .from('defi_votes')
+            .insert({
+              defi_id: defiId,
+              ensemble_id: ensembleId,
+              user_id: userId,
+              vote
+            });
+        }
+      );
       
       if (insertError) throw insertError;
     }
@@ -133,17 +163,26 @@ export const submitVote = async (defiId: number, ensembleId: number, vote: VoteT
 export const getUserVote = async (defiId: number, ensembleId: number): Promise<VoteType> => {
   try {
     // Vérifier la session utilisateur
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await fetchWithRetry(
+      async () => {
+        return await supabase.auth.getSession();
+      }
+    );
+    
     const userId = session?.user?.id;
     
     if (!userId) return null;
     
-    const { data } = await supabase
-      .from('defi_votes')
-      .select('vote')
-      .eq('ensemble_id', ensembleId)
-      .eq('user_id', userId)
-      .maybeSingle();
+    const { data } = await fetchWithRetry(
+      async () => {
+        return await supabase
+          .from('defi_votes')
+          .select('vote')
+          .eq('ensemble_id', ensembleId)
+          .eq('user_id', userId)
+          .maybeSingle();
+      }
+    );
     
     return data ? data.vote : null;
   } catch (error) {
@@ -157,11 +196,15 @@ export const getUserVote = async (defiId: number, ensembleId: number): Promise<V
  */
 export const fetchDefiById = async (defiId: number) => {
   try {
-    const { data, error } = await supabase
-      .from('defis')
-      .select('*')
-      .eq('id', defiId)
-      .single();
+    const { data, error } = await fetchWithRetry(
+      async () => {
+        return await supabase
+          .from('defis')
+          .select('*')
+          .eq('id', defiId)
+          .single();
+      }
+    );
     
     if (error) throw error;
     
