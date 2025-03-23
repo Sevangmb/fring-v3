@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import EnsembleImages from "@/components/ensembles/EnsembleImages";
 import VoteProgress from "./VoteProgress";
 import VoteButtons from "./VoteButtons";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Alert } from "@mui/material";
+import { WifiOff } from "lucide-react";
 
 interface EnsembleDetailProps {
   ensemble: any;
@@ -14,6 +15,7 @@ interface EnsembleDetailProps {
   vetementsByType: Record<string, any[]>;
   onVote: (ensembleId: number, vote: 'up' | 'down') => void;
   isLoading?: boolean;
+  connectionError?: boolean;
 }
 
 const EnsembleDetail: React.FC<EnsembleDetailProps> = ({
@@ -23,7 +25,8 @@ const EnsembleDetail: React.FC<EnsembleDetailProps> = ({
   userVote,
   vetementsByType,
   onVote,
-  isLoading = false
+  isLoading = false,
+  connectionError = false
 }) => {
   return (
     <Card className="overflow-hidden">
@@ -32,6 +35,17 @@ const EnsembleDetail: React.FC<EnsembleDetailProps> = ({
       </CardHeader>
       
       <CardContent>
+        {connectionError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <WifiOff size={16} />
+              <Typography variant="body2">
+                Problème de connexion. Vérifiez votre connexion internet.
+              </Typography>
+            </Box>
+          </Alert>
+        )}
+        
         {ensemble && (
           <>
             <Box sx={{ 
@@ -71,6 +85,7 @@ const EnsembleDetail: React.FC<EnsembleDetailProps> = ({
           showLabels={true}
           isLoading={isLoading}
           disabled={isLoading}
+          connectionError={connectionError}
         />
       </CardFooter>
     </Card>

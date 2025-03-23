@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { getDefiParticipationsWithVotes, submitVote, getUserVote } from "@/services/defi/voteService";
 import { fetchDefiById } from "@/services/defi";
@@ -15,6 +15,11 @@ const fetchWithRetry = async (
   
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
+      // Vérifier la connectivité d'abord
+      if (!navigator.onLine) {
+        throw new Error('Pas de connexion internet');
+      }
+      
       return await fetchFn();
     } catch (error) {
       console.log(`Tentative ${attempt + 1}/${maxRetries} échouée:`, error);
@@ -38,25 +43,33 @@ export const useVotingCarousel = (defiId: number) => {
   const [votingState, setVotingState] = useState<Record<number, 'up' | 'down' | null>>({});
   const [defi, setDefi] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
 
   // Vérifier la connexion à Supabase
-  const checkConnection = async (): Promise<boolean> => {
-    try {
-      // Tenter une requête très simple pour vérifier la connexion
-      const { data, error } = await supabase.from('health_check').select('*').limit(1);
-      
-      // Si la table n'existe pas, une autre approche simple
-      if (error && error.code === '42P01') {
-        const { data: session } = await supabase.auth.getSession();
-        return !!session;
-      }
-      
-      return !error;
-    } catch (error) {
-      console.error("Erreur de connexion à Supabase:", error);
+  const checkConnection = useCallback(async (): Promise<boolean> => {
+    if (!navigator.onLine) {
+      setConnectionError(true);
       return false;
     }
-  };
+    
+    try {
+      // Tenter une requête très simple pour vérifier la connexion
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error("Erreur de connexion à Supabase:", error);
+        setConnectionError(true);
+        return false;
+      }
+      
+      setConnectionError(false);
+      return true;
+    } catch (error) {
+      console.error("Erreur de connexion à Supabase:", error);
+      setConnectionError(true);
+      return false;
+    }
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
@@ -76,7 +89,7 @@ export const useVotingCarousel = (defiId: number) => {
         
         // Charger le défi
         const defiData = await fetchWithRetry(
-          () => fetchDefiById(defiId),
+          async () => await fetchDefiById(defiId),
           3
         );
         
@@ -86,7 +99,7 @@ export const useVotingCarousel = (defiId: number) => {
         
         // Charger les participations avec les votes
         const data = await fetchWithRetry(
-          () => getDefiParticipationsWithVotes(defiId),
+          async () => await getDefiParticipationsWithVotes(defiId),
           3
         );
         
@@ -96,7 +109,7 @@ export const useVotingCarousel = (defiId: number) => {
         const userVotes: Record<number, 'up' | 'down' | null> = {};
         for (const participation of data) {
           const userVote = await fetchWithRetry(
-            () => getUserVote(defiId, participation.ensemble_id),
+            async () => await getUserVote(defiId, participation.ensemble_id),
             3
           );
           
@@ -110,13 +123,32 @@ export const useVotingCarousel = (defiId: number) => {
           description: "Impossible de charger les participations du défi",
           variant: "destructive"
         });
+        setConnectionError(true);
       } finally {
         setLoading(false);
       }
     };
     
     loadData();
-  }, [defiId, toast]);
+    
+    // Ajouter un gestionnaire d'événement pour détecter les changements de connectivité
+    const handleOnlineStatusChange = () => {
+      if (navigator.onLine) {
+        setConnectionError(false);
+        loadData();
+      } else {
+        setConnectionError(true);
+      }
+    };
+    
+    window.addEventListener('online', handleOnlineStatusChange);
+    window.addEventListener('offline', handleOnlineStatusChange);
+    
+    return () => {
+      window.removeEventListener('online', handleOnlineStatusChange);
+      window.removeEventListener('offline', handleOnlineStatusChange);
+    };
+  }, [defiId, toast, checkConnection]);
 
   const handleVote = async (ensembleId: number, vote: 'up' | 'down') => {
     // Vérifier si déjà en train de voter
@@ -137,7 +169,7 @@ export const useVotingCarousel = (defiId: number) => {
       }
       
       const success = await fetchWithRetry(
-        () => submitVote(defiId, ensembleId, vote),
+        async () => await submitVote(defiId, ensembleId, vote),
         3
       );
       
@@ -207,6 +239,7 @@ export const useVotingCarousel = (defiId: number) => {
     loading,
     votingState,
     isSubmitting,
+    connectionError,
     handleVote,
     navigatePrevious,
     navigateNext

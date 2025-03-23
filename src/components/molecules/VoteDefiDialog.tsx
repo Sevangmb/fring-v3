@@ -8,10 +8,11 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, X } from "lucide-react";
+import { ThumbsUp, X, WifiOff } from "lucide-react";
 import VoteButtons from "@/components/defis/voting/VoteButtons";
 import EnsembleContentDisplay from "./EnsembleContentDisplay";
 import { useEnsembleVoteDialog } from "@/hooks/useEnsembleVoteDialog";
+import { Alert, Box, Typography } from "@mui/material";
 
 interface VoteDefiDialogProps {
   defiId: number;
@@ -35,6 +36,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
     vetementsByType,
     userVote,
     isSubmitting,
+    connectionError,
     resetState,
     loadEnsemble,
     onVote
@@ -85,6 +87,17 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
             </p>
           </DialogHeader>
           
+          {connectionError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <WifiOff size={16} />
+                <Typography variant="body2">
+                  Problème de connexion. Vérifiez votre connexion internet.
+                </Typography>
+              </Box>
+            </Alert>
+          )}
+          
           <EnsembleContentDisplay
             ensemble={ensemble}
             loading={loading}
@@ -99,6 +112,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
             size="lg"
             isLoading={isSubmitting}
             disabled={loading || isSubmitting}
+            connectionError={connectionError}
             className="pt-4"
           />
         </DialogContent>

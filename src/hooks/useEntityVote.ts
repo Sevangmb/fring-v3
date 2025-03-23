@@ -22,22 +22,29 @@ export const useEntityVote = ({
   const [votes, setVotes] = useState<{ up: number; down: number }>({ up: 0, down: 0 });
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
   
   // Check if Supabase connection is available
   const checkConnection = useCallback(async (): Promise<boolean> => {
+    if (!navigator.onLine) {
+      setConnectionError(true);
+      return false;
+    }
+    
     try {
-      // Tenter une requête très simple pour vérifier la connexion
-      const { data, error } = await supabase.from('health_check').select('*').limit(1);
-      
-      // Si la table n'existe pas, une autre approche simple
-      if (error && error.code === '42P01') {
-        const { data: session } = await supabase.auth.getSession();
-        return !!session;
+      // Simple check if we can reach Supabase
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error("Erreur de connexion à Supabase:", error);
+        setConnectionError(true);
+        return false;
       }
       
-      return !error;
+      setConnectionError(false);
+      return true;
     } catch (error) {
       console.error("Erreur de connexion à Supabase:", error);
+      setConnectionError(true);
       return false;
     }
   }, []);
@@ -81,6 +88,20 @@ export const useEntityVote = ({
   
   useEffect(() => {
     loadVoteData();
+    
+    // Ajouter un gestionnaire d'événement pour détecter les changements de connectivité
+    const handleOnlineStatusChange = () => {
+      if (navigator.onLine) {
+        // Recharger les données lorsque la connexion est rétablie
+        loadVoteData();
+      }
+    };
+    
+    window.addEventListener('online', handleOnlineStatusChange);
+    
+    return () => {
+      window.removeEventListener('online', handleOnlineStatusChange);
+    };
   }, [loadVoteData]);
   
   // Handle vote submission
@@ -155,6 +176,7 @@ export const useEntityVote = ({
     score,
     loading: loading || voteLoading,
     isSubmitting,
+    connectionError,
     handleVote,
     refresh: loadVoteData
   };

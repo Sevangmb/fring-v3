@@ -14,7 +14,7 @@ interface VoteOptions {
   voteField?: string; // Field that stores the vote value (default: "vote")
 }
 
-// Fonction utilitaire pour les retries de requêtes - MODIFIED
+// Fonction utilitaire pour les retries de requêtes avec backoff exponentiel
 const fetchWithRetry = async (
   fetchFn: () => Promise<any>,
   maxRetries: number = 3,
@@ -24,6 +24,11 @@ const fetchWithRetry = async (
   
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
+      // Vérifier la connectivité d'abord
+      if (!navigator.onLine) {
+        throw new Error('Pas de connexion internet');
+      }
+      
       return await fetchFn();
     } catch (error) {
       console.log(`Tentative ${attempt + 1}/${maxRetries} échouée:`, error);
@@ -70,7 +75,11 @@ export const useVote = (
     setError(null);
     
     try {
-      // Get current user session - FIXED
+      if (!navigator.onLine) {
+        throw new Error('Pas de connexion internet');
+      }
+      
+      // Get current user session with improved error handling
       const sessionResponse = await fetchWithRetry(
         async () => {
           const response = await supabase.auth.getSession();
@@ -85,7 +94,7 @@ export const useVote = (
         throw new Error('Vous devez être connecté pour voter');
       }
 
-      // Check if user already voted - FIXED
+      // Check if user already voted with improved error handling
       const existingVoteResponse = await fetchWithRetry(
         async () => {
           const response = await supabase
@@ -111,7 +120,7 @@ export const useVote = (
       };
 
       if (existingVote) {
-        // Update existing vote - FIXED
+        // Update existing vote with improved error handling
         const updateResponse = await fetchWithRetry(
           async () => {
             const response = await supabase
@@ -125,7 +134,7 @@ export const useVote = (
         
         if (updateResponse.error) throw updateResponse.error;
       } else {
-        // Create new vote - FIXED
+        // Create new vote with improved error handling
         const insertResponse = await fetchWithRetry(
           async () => {
             const response = await supabase
@@ -146,7 +155,7 @@ export const useVote = (
       });
       
       return true;
-    } catch (err) {
+    } catch (err: any) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors du vote';
       setError(err instanceof Error ? err : new Error(errorMessage));
       
@@ -167,7 +176,12 @@ export const useVote = (
    */
   const getUserVote = async (entityId: number): Promise<VoteType> => {
     try {
-      // Get current user session - FIXED
+      if (!navigator.onLine) {
+        console.warn('Pas de connexion internet, impossible de récupérer le vote');
+        return null;
+      }
+      
+      // Get current user session with improved error handling
       const sessionResponse = await fetchWithRetry(
         async () => {
           const response = await supabase.auth.getSession();
@@ -180,7 +194,7 @@ export const useVote = (
       
       if (!userId) return null;
       
-      // Get user vote - FIXED
+      // Get user vote with improved error handling
       const voteResponse = await fetchWithRetry(
         async () => {
           const response = await supabase
@@ -194,7 +208,10 @@ export const useVote = (
         3
       );
       
-      if (voteResponse.error) throw voteResponse.error;
+      if (voteResponse.error) {
+        console.error('Erreur lors de la récupération du vote:', voteResponse.error);
+        return null;
+      }
       
       return voteResponse.data ? voteResponse.data[voteField] : null;
     } catch (err) {
@@ -208,7 +225,12 @@ export const useVote = (
    */
   const getVotesCount = async (entityId: number): Promise<{ up: number; down: number }> => {
     try {
-      // Get votes - FIXED
+      if (!navigator.onLine) {
+        console.warn('Pas de connexion internet, impossible de récupérer les votes');
+        return { up: 0, down: 0 };
+      }
+      
+      // Get votes with improved error handling
       const votesResponse = await fetchWithRetry(
         async () => {
           const response = await supabase
@@ -220,7 +242,10 @@ export const useVote = (
         3
       );
       
-      if (votesResponse.error) throw votesResponse.error;
+      if (votesResponse.error) {
+        console.error('Erreur lors de la récupération des votes:', votesResponse.error);
+        return { up: 0, down: 0 };
+      }
       
       // Count votes
       const votes = votesResponse.data || [];

@@ -26,7 +26,7 @@ export const useEnsembleVoteDialog = ({
     'autre': []
   });
 
-  const { userVote, votes, handleVote, isSubmitting } = useEntityVote({
+  const { userVote, votes, handleVote, isSubmitting, connectionError } = useEntityVote({
     entityType: "defi",
     entityId: ensembleId,
   });
@@ -48,6 +48,10 @@ export const useEnsembleVoteDialog = ({
     setLoading(true);
     setError(null);
     try {
+      if (!navigator.onLine) {
+        throw new Error("Pas de connexion internet");
+      }
+      
       const ensembleData = await fetchEnsembleById(ensembleId);
       
       if (!ensembleData) {
@@ -64,13 +68,26 @@ export const useEnsembleVoteDialog = ({
       }
     } catch (error) {
       console.error("Erreur lors du chargement de l'ensemble:", error);
-      setError("Erreur lors du chargement de l'ensemble");
+      if (!navigator.onLine) {
+        setError("Pas de connexion internet");
+      } else {
+        setError("Erreur lors du chargement de l'ensemble");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const onVote = async (vote: 'up' | 'down') => {
+    if (!navigator.onLine || connectionError) {
+      toast({
+        title: "Erreur",
+        description: "Pas de connexion internet. Veuillez vérifier votre connexion et réessayer.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
     const success = await handleVote(vote);
     
     if (success) {
@@ -90,7 +107,24 @@ export const useEnsembleVoteDialog = ({
         variant: "destructive",
       });
     }
+    
+    return success;
   };
+
+  useEffect(() => {
+    // Gestionnaire d'événements pour les changements de connexion
+    const handleOnlineStatusChange = () => {
+      if (navigator.onLine && ensemble === null) {
+        loadEnsemble();
+      }
+    };
+    
+    window.addEventListener('online', handleOnlineStatusChange);
+    
+    return () => {
+      window.removeEventListener('online', handleOnlineStatusChange);
+    };
+  }, [ensemble]);
 
   return {
     ensemble,
@@ -98,7 +132,9 @@ export const useEnsembleVoteDialog = ({
     error,
     vetementsByType,
     userVote,
+    votes,
     isSubmitting,
+    connectionError,
     resetState,
     loadEnsemble,
     onVote
