@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { PlusCircle, Flag, Calendar, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/atoms/Typography";
 import DefiCard, { DefiType } from "@/components/molecules/DefiCard";
 import CreateDefiDialog from "@/components/molecules/CreateDefiDialog";
+import VoterDialog from "@/components/molecules/VoterDialog";
 import { fetchDefis, Defi } from "@/services/defi";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -70,15 +72,26 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
   const handleParticipation = () => {
     setRefreshTrigger(prev => prev + 1);
   };
+  
+  const handleVoteSubmitted = (defiId: number, vote: "up" | "down") => {
+    console.log(`Vote ${vote} pour défi #${defiId} enregistré`);
+    // Ici, vous pourriez mettre à jour l'interface ou recharger les défis
+    setRefreshTrigger(prev => prev + 1);
+  };
+  
   return <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
-          
+          <h2 className="text-2xl font-bold">Défis de la communauté</h2>
           <Text className="text-muted-foreground">
             Participez aux défis de la communauté et montrez votre style
           </Text>
         </div>
         
+        <div className="flex gap-2">
+          <VoterDialog elementType="defi" />
+          <CreateDefiDialog open={openCreateDialog} onOpenChange={setOpenCreateDialog} onDefiCreated={handleDefiCreated} />
+        </div>
       </div>
 
       {isLoading ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -91,7 +104,26 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
               <h3 className="text-xl font-semibold">Défis en cours</h3>
             </div>
             {groupedDefis.current?.length ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {groupedDefis.current.map(defi => <DefiCard key={defi.id} id={defi.id} title={defi.titre} description={defi.description} dateRange={formatDateRange(defi.date_debut, defi.date_fin)} type="current" participantsCount={defi.participants_count} onParticipation={handleParticipation} />)}
+                {groupedDefis.current.map(defi => (
+                  <div key={defi.id} className="relative">
+                    <DefiCard 
+                      id={defi.id} 
+                      title={defi.titre} 
+                      description={defi.description} 
+                      dateRange={formatDateRange(defi.date_debut, defi.date_fin)} 
+                      type="current" 
+                      participantsCount={defi.participants_count} 
+                      onParticipation={handleParticipation} 
+                    />
+                    <div className="absolute top-3 right-3">
+                      <VoterDialog 
+                        elementId={defi.id} 
+                        elementType="defi"
+                        onVoteSubmitted={(vote) => handleVoteSubmitted(defi.id, vote)}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div> : <Text className="text-muted-foreground italic">
                 Aucun défi en cours pour le moment
               </Text>}
@@ -104,7 +136,25 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
               <h3 className="text-xl font-semibold">Défis à venir</h3>
             </div>
             {groupedDefis.upcoming?.length ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {groupedDefis.upcoming.map(defi => <DefiCard key={defi.id} id={defi.id} title={defi.titre} description={defi.description} dateRange={formatDateRange(defi.date_debut, defi.date_fin)} type="upcoming" icon={<Calendar className="h-5 w-5" />} />)}
+                {groupedDefis.upcoming.map(defi => (
+                  <div key={defi.id} className="relative">
+                    <DefiCard 
+                      id={defi.id} 
+                      title={defi.titre} 
+                      description={defi.description} 
+                      dateRange={formatDateRange(defi.date_debut, defi.date_fin)} 
+                      type="upcoming" 
+                      icon={<Calendar className="h-5 w-5" />} 
+                    />
+                    <div className="absolute top-3 right-3">
+                      <VoterDialog 
+                        elementId={defi.id} 
+                        elementType="defi"
+                        onVoteSubmitted={(vote) => handleVoteSubmitted(defi.id, vote)}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div> : <Text className="text-muted-foreground italic">
                 Aucun défi à venir pour le moment
               </Text>}
@@ -117,7 +167,26 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
               <h3 className="text-xl font-semibold">Défis passés</h3>
             </div>
             {groupedDefis.past?.length ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {groupedDefis.past.map(defi => <DefiCard key={defi.id} id={defi.id} title={defi.titre} description={defi.description} dateRange={formatDateRange(defi.date_debut, defi.date_fin)} type="past" icon={<Trophy className="h-5 w-5" />} participantsCount={defi.participants_count} />)}
+                {groupedDefis.past.map(defi => (
+                  <div key={defi.id} className="relative">
+                    <DefiCard 
+                      id={defi.id} 
+                      title={defi.titre} 
+                      description={defi.description} 
+                      dateRange={formatDateRange(defi.date_debut, defi.date_fin)} 
+                      type="past" 
+                      icon={<Trophy className="h-5 w-5" />} 
+                      participantsCount={defi.participants_count} 
+                    />
+                    <div className="absolute top-3 right-3">
+                      <VoterDialog 
+                        elementId={defi.id} 
+                        elementType="defi"
+                        onVoteSubmitted={(vote) => handleVoteSubmitted(defi.id, vote)}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div> : <Text className="text-muted-foreground italic">
                 Aucun défi passé pour le moment
               </Text>}
