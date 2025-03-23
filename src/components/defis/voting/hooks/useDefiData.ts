@@ -1,8 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { fetchDefiById } from "@/services/defi";
-import { getDefiParticipationsWithVotes, getUserVote } from "@/services/defi/voteService";
+import { fetchDefiById, getDefiParticipationsWithVotes, getUserVote } from "@/services/defi/voteService";
 import { fetchWithRetry, checkConnection } from "../utils/networkUtils";
 
 export const useDefiData = (defiId: number) => {
