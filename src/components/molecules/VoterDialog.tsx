@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   ThumbsUp, 
@@ -14,14 +15,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { VoteType } from "@/services/votes/types";
+import { VoteType, EntityType } from "@/services/votes/types";
 import { submitVote as submitEntityVote } from "@/services/votes/voteService";
 import { getUserVote } from "@/services/votes/getUserVote";
 import { submitVote } from "@/services/defi/votes";
 
 interface VoterDialogProps {
   elementId: number;
-  elementType: 'vetement' | 'ensemble' | 'defi';
+  elementType: EntityType;
   onVoteSubmitted?: (vote: VoteType) => void;
 }
 
@@ -39,7 +40,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
   useEffect(() => {
     const fetchUserVote = async () => {
       try {
-        const vote = await getUserVote(elementId, elementType);
+        const vote = await getUserVote(elementType, elementId);
         setUserVote(vote);
       } catch (error) {
         console.error("Erreur lors de la récupération du vote:", error);

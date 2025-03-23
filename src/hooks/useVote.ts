@@ -73,7 +73,7 @@ export const useVote = (
     
     try {
       console.log(`Soumission du vote: type=${entityType}, id=${entityId}, vote=${vote}`);
-      const success = await submitVoteApi(entityType, entityId, vote, options, extraFields);
+      const success = await submitVoteApi(entityType, entityId, vote);
       
       if (success) {
         toast({
@@ -100,7 +100,7 @@ export const useVote = (
     } finally {
       setIsLoading(false);
     }
-  }, [entityType, options, toast]);
+  }, [entityType, toast]);
 
   /**
    * Obtenir le vote de l'utilisateur pour une entité

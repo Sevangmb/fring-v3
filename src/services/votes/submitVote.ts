@@ -1,6 +1,6 @@
 
 import { supabase } from "@/lib/supabase";
-import { VoteType } from "./types";
+import { VoteType, EntityType } from "./types";
 import { fetchWithRetry } from "@/services/network/retryUtils";
 
 interface VoteOptions {
@@ -18,7 +18,7 @@ interface VoteOptions {
  * Fonction générique pour soumettre un vote dans une table
  */
 export const submitVote = async (
-  elementType: string,
+  elementType: EntityType,
   elementId: number,
   vote: VoteType
 ): Promise<boolean> => {
@@ -98,7 +98,7 @@ export const submitVote = async (
  * Obtenir les options de vote en fonction du type d'élément
  */
 function getVoteOptions(
-  elementType: string,
+  elementType: EntityType,
   elementId: number,
   userId: string,
   vote: VoteType
