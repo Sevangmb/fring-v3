@@ -16,7 +16,7 @@ export const useEntityVote = ({
   onVoteSubmitted 
 }: UseEntityVoteProps) => {
   const { toast } = useToast();
-  const { submitVote, getUserVote, getVotesCount, isLoading: voteLoading } = useVote(entityType);
+  const { submitVote, getUserVote, getVotesCount, calculateScore, isLoading: voteLoading } = useVote(entityType);
   
   const [userVote, setUserVote] = useState<VoteType>(null);
   const [votes, setVotes] = useState<{ up: number; down: number }>({ up: 0, down: 0 });
@@ -151,8 +151,8 @@ export const useEntityVote = ({
     }
   };
   
-  // Calculate score
-  const score = votes.up - votes.down;
+  // Calculate score using the utility function from useVote
+  const score = calculateScore(votes);
   
   return {
     userVote,
