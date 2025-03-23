@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { VetementType } from '@/services/meteo/tenue';
+import { Tshirt, Pants, Footprints } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface EnsembleImagesProps {
   vetementsByType: Record<string, any[]>;
@@ -18,43 +20,59 @@ const EnsembleImages: React.FC<EnsembleImagesProps> = ({ vetementsByType, classN
     );
   }
   
+  const renderVetementImage = (type: string, placeholderIcon: React.ReactNode, label: string) => {
+    const vetements = vetementsByType[type];
+    const hasVetement = vetements && vetements.length > 0;
+    const imageUrl = hasVetement && vetements[0].image_url ? vetements[0].image_url : null;
+    
+    return (
+      <div className="bg-muted/40 rounded-md p-1 flex items-center justify-center overflow-hidden">
+        {imageUrl ? (
+          <div className="relative w-full h-full min-h-24 flex items-center justify-center">
+            <img 
+              src={imageUrl} 
+              alt={label} 
+              className="max-h-full max-w-full object-contain"
+              onError={(e) => {
+                console.error(`Erreur de chargement d'image pour ${type}:`, imageUrl);
+                (e.target as HTMLImageElement).style.display = 'none';
+                (e.target as HTMLImageElement).parentElement!.classList.add('fallback-active');
+              }}
+            />
+            <div className="fallback hidden items-center justify-center flex-col text-muted-foreground">
+              {placeholderIcon}
+              <span className="text-xs mt-1">{label}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center flex-col text-muted-foreground p-2">
+            {placeholderIcon}
+            <span className="text-xs mt-1">{label}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+  
   return (
     <div className={`grid grid-cols-3 gap-2 ${className}`}>
-      <div className="bg-muted/40 rounded-md p-1 flex items-center justify-center">
-        {vetementsByType[VetementType.HAUT][0]?.image_url ? (
-          <img 
-            src={vetementsByType[VetementType.HAUT][0].image_url} 
-            alt="Haut" 
-            className="max-h-full max-w-full object-contain"
-          />
-        ) : (
-          <div className="text-xs text-muted-foreground">Haut</div>
-        )}
-      </div>
+      {renderVetementImage(
+        VetementType.HAUT, 
+        <Tshirt className="h-8 w-8 opacity-50" />, 
+        "Haut"
+      )}
       
-      <div className="bg-muted/40 rounded-md p-1 flex items-center justify-center">
-        {vetementsByType[VetementType.BAS][0]?.image_url ? (
-          <img 
-            src={vetementsByType[VetementType.BAS][0].image_url} 
-            alt="Bas" 
-            className="max-h-full max-w-full object-contain"
-          />
-        ) : (
-          <div className="text-xs text-muted-foreground">Bas</div>
-        )}
-      </div>
+      {renderVetementImage(
+        VetementType.BAS, 
+        <Pants className="h-8 w-8 opacity-50" />, 
+        "Bas"
+      )}
       
-      <div className="bg-muted/40 rounded-md p-1 flex items-center justify-center">
-        {vetementsByType[VetementType.CHAUSSURES][0]?.image_url ? (
-          <img 
-            src={vetementsByType[VetementType.CHAUSSURES][0].image_url} 
-            alt="Chaussures" 
-            className="max-h-full max-w-full object-contain"
-          />
-        ) : (
-          <div className="text-xs text-muted-foreground">Chaussures</div>
-        )}
-      </div>
+      {renderVetementImage(
+        VetementType.CHAUSSURES, 
+        <Footprints className="h-8 w-8 opacity-50" />, 
+        "Chaussures"
+      )}
     </div>
   );
 };

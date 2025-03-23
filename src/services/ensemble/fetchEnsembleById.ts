@@ -36,7 +36,18 @@ export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | 
         tenue_id,
         vetement_id,
         position_ordre,
-        vetement:vetement_id(*)
+        vetement:vetements(
+          id,
+          nom,
+          description,
+          image_url,
+          couleur,
+          taille,
+          categorie_id,
+          marque,
+          weather_type,
+          temperature
+        )
       `)
       .eq('tenue_id', ensembleId)
       .order('position_ordre', { ascending: true });
@@ -47,6 +58,17 @@ export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | 
     }
 
     console.log(`Nombre de vêtements trouvés: ${vetementsData?.length || 0}`);
+    
+    // Vérifier si les données des vêtements sont correctes
+    if (vetementsData) {
+      vetementsData.forEach((item, index) => {
+        if (!item.vetement) {
+          console.warn(`Vêtement ${index} sans données de vêtement:`, item);
+        } else {
+          console.log(`Vêtement ${index}:`, item.vetement.nom, `URL image: ${item.vetement.image_url || 'Aucune'}`);
+        }
+      });
+    }
 
     return {
       ...ensembleData,

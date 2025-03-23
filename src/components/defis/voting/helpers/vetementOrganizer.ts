@@ -33,14 +33,22 @@ export const organizeVetementsByType = (ensemble: any) => {
       return;
     }
     
-    const type = determineVetementTypeSync(item.vetement);
-    result[type].push(item.vetement);
-    console.log(`Vêtement '${item.vetement.nom || "Sans nom"}' classé comme '${type}'`);
+    const vetementData = item.vetement;
+    console.log("Traitement du vêtement:", vetementData);
+    
+    const type = determineVetementTypeSync(vetementData);
+    result[type].push(vetementData);
+    console.log(`Vêtement '${vetementData.nom || "Sans nom"}' classé comme '${type}'`);
   });
   
   // Log pour debug
   Object.entries(result).forEach(([type, items]) => {
     console.log(`Type ${type}: ${items.length} vêtements`);
+    if (items.length > 0) {
+      items.forEach((item, index) => {
+        console.log(`  ${index}. ${item.nom || 'Sans nom'} - URL: ${item.image_url || 'Aucune image'}`);
+      });
+    }
   });
   
   return result;
