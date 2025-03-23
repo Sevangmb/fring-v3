@@ -64,6 +64,9 @@ const EnsembleDetail: React.FC<EnsembleDetailProps> = ({
           ensembleId={ensembleId}
           userVote={userVote}
           onVote={onVote}
+          size="md"
+          variant="default"
+          showLabels={true}
         />
       </CardFooter>
     </Card>

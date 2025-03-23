@@ -95,6 +95,8 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
             ensembleId={ensembleId}
             userVote={userVote}
             onVote={handleVote}
+            size="lg"
+            className="pt-4"
           />
         </DialogContent>
       </Dialog>
