@@ -9,6 +9,7 @@ interface VotingControlsProps {
   onPrevious: () => void;
   onNext: () => void;
   score: number;
+  disabled?: boolean;
 }
 
 const VotingControls: React.FC<VotingControlsProps> = ({
@@ -16,7 +17,8 @@ const VotingControls: React.FC<VotingControlsProps> = ({
   totalItems,
   onPrevious,
   onNext,
-  score
+  score,
+  disabled = false
 }) => {
   return (
     <div className="flex items-center justify-between mb-4">
@@ -25,7 +27,7 @@ const VotingControls: React.FC<VotingControlsProps> = ({
           variant="outline"
           size="icon"
           onClick={onPrevious}
-          disabled={currentIndex === 0}
+          disabled={currentIndex === 0 || disabled}
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -36,7 +38,7 @@ const VotingControls: React.FC<VotingControlsProps> = ({
           variant="outline"
           size="icon"
           onClick={onNext}
-          disabled={currentIndex === totalItems - 1}
+          disabled={currentIndex === totalItems - 1 || disabled}
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
