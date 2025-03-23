@@ -3,8 +3,9 @@ import React from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
-import { Award, Calendar, ChevronRight, Flag } from "lucide-react";
+import { Award, Calendar, ChevronRight, Flag, Vote } from "lucide-react";
 import ParticiperDefiDialog from "./ParticiperDefiDialog";
+import VoteDefiDialog from "./VoteDefiDialog";
 
 export type DefiType = "current" | "upcoming" | "past";
 
@@ -56,9 +57,12 @@ const DefiCard: React.FC<DefiCardProps> = ({
               <Award className="h-4 w-4 inline mr-1" />
               {participantsCount} participants
             </Text>
-            <Button variant="outline" size="sm" className="ml-auto">
-              Voir les résultats
-            </Button>
+            <div className="ml-auto flex gap-2">
+              <VoteDefiDialog defiId={id} defiTitle={title} />
+              <Button variant="outline" size="sm">
+                Voir les résultats
+              </Button>
+            </div>
           </>
         ) : isUpcoming ? (
           <Button variant="outline" size="sm" className="ml-auto flex items-center gap-1 opacity-70" disabled>
@@ -70,11 +74,16 @@ const DefiCard: React.FC<DefiCardProps> = ({
               <Award className="h-4 w-4 inline mr-1" />
               {participantsCount} participants
             </Text>
-            <ParticiperDefiDialog 
-              defiId={id} 
-              defiTitle={title} 
-              onParticipation={onParticipation}
-            />
+            <div className="flex gap-2">
+              {participantsCount > 0 && (
+                <VoteDefiDialog defiId={id} defiTitle={title} />
+              )}
+              <ParticiperDefiDialog 
+                defiId={id} 
+                defiTitle={title} 
+                onParticipation={onParticipation}
+              />
+            </div>
           </div>
         )}
       </CardFooter>
