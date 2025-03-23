@@ -15,7 +15,8 @@ export const submitVote = async (
 ): Promise<boolean> => {
   try {
     if (!navigator.onLine) {
-      throw new Error('Pas de connexion Internet');
+      console.warn('Pas de connexion Internet');
+      return false;
     }
     
     // Options par défaut
@@ -27,12 +28,18 @@ export const submitVote = async (
     } = options || {};
     
     // Obtenir la session utilisateur actuelle
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.error("Erreur de session:", sessionError);
+      return false;
+    }
     
     const userId = session?.user?.id;
     
     if (!userId) {
-      throw new Error('Vous devez être connecté pour voter');
+      console.error("Utilisateur non connecté");
+      return false;
     }
 
     // Vérifier si l'utilisateur a déjà voté
@@ -43,7 +50,10 @@ export const submitVote = async (
       .eq(userIdField, userId)
       .maybeSingle();
     
-    if (existingVoteError) throw existingVoteError;
+    if (existingVoteError) {
+      console.error("Erreur lors de la vérification du vote existant:", existingVoteError);
+      return false;
+    }
 
     // Préparer les données du vote
     const voteData = {
@@ -60,14 +70,20 @@ export const submitVote = async (
         .update({ [voteField]: vote })
         .eq("id", existingVote.id);
       
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("Erreur lors de la mise à jour du vote:", updateError);
+        return false;
+      }
     } else {
       // Créer un nouveau vote
       const { error: insertError } = await supabase
         .from(tableName)
         .insert(voteData);
       
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error("Erreur lors de l'insertion du vote:", insertError);
+        return false;
+      }
     }
     
     return true;
@@ -100,7 +116,12 @@ export const getUserVote = async (
     } = options || {};
     
     // Obtenir la session utilisateur actuelle
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.error("Erreur de session:", sessionError);
+      return null;
+    }
     
     const userId = session?.user?.id;
     
@@ -147,19 +168,19 @@ export const getVotesCount = async (
       voteField = "vote"
     } = options || {};
     
-    // Obtenir les votes
-    const { data, error } = await supabase
-      .from(tableName)
-      .select(`${voteField}`)
-      .eq(entityIdField, entityId);
-    
-    if (error) {
-      console.error('Erreur lors de la récupération des votes:', error);
-      return { up: 0, down: 0 };
-    }
+    // Obtenir les votes avec retry
+    const response = await fetchWithRetry(async () => {
+      const { data, error } = await supabase
+        .from(tableName)
+        .select(`${voteField}`)
+        .eq(entityIdField, entityId);
+      
+      if (error) throw error;
+      return data || [];
+    }, 2);
     
     // Compter les votes
-    const votes = data || [];
+    const votes = response || [];
     const upVotes = votes.filter(item => item[voteField] === 'up').length;
     const downVotes = votes.filter(item => item[voteField] === 'down').length;
     

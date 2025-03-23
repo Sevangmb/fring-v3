@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   VoteType, 
@@ -23,15 +23,40 @@ export const useVote = (
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  // Monitor online status
+  useState(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  });
 
   /**
    * Soumettre un vote pour une entité
    */
-  const submitVote = async (
+  const submitVote = useCallback(async (
     entityId: number,
     vote: VoteType,
     extraFields?: Record<string, any>
   ): Promise<boolean> => {
+    // Check network connection first
+    if (!navigator.onLine) {
+      toast({
+        title: "Pas de connexion",
+        description: "Vérifiez votre connexion internet et réessayez.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
     setIsLoading(true);
     setError(null);
     
@@ -63,21 +88,35 @@ export const useVote = (
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [entityType, options, toast]);
 
   /**
    * Obtenir le vote de l'utilisateur pour une entité
    */
-  const getUserVote = async (entityId: number): Promise<VoteType> => {
-    return await getUserVoteApi(entityType, entityId, options);
-  };
+  const getUserVote = useCallback(async (entityId: number): Promise<VoteType> => {
+    if (!navigator.onLine) return null;
+    
+    try {
+      return await getUserVoteApi(entityType, entityId, options);
+    } catch (error) {
+      console.error("Erreur lors de la récupération du vote:", error);
+      return null;
+    }
+  }, [entityType, options]);
 
   /**
    * Obtenir tous les votes pour une entité
    */
-  const getVotesCount = async (entityId: number) => {
-    return await getVotesCountApi(entityType, entityId, options);
-  };
+  const getVotesCount = useCallback(async (entityId: number) => {
+    if (!navigator.onLine) return { up: 0, down: 0 };
+    
+    try {
+      return await getVotesCountApi(entityType, entityId, options);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des votes:", error);
+      return { up: 0, down: 0 };
+    }
+  }, [entityType, options]);
 
   /**
    * Calculer le score (votes positifs - votes négatifs)
@@ -90,6 +129,7 @@ export const useVote = (
     getVotesCount,
     calculateScore,
     isLoading,
+    isOffline,
     error
   };
 };
