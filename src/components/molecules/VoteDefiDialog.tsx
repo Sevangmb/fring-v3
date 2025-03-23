@@ -1,29 +1,83 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
   DialogContent, 
   DialogTitle,
   DialogContentText,
   Button,
-  IconButton
+  IconButton,
+  Box
 } from "@mui/material";
 import { Vote } from "lucide-react";
-import VotingCarousel from "@/components/defis/VotingCarousel";
+import { fetchEnsembleById } from "@/services/ensemble/fetchEnsembleById";
+import { organizeVetementsByType } from "@/components/defis/voting/helpers/vetementOrganizer";
+import EnsembleImages from "@/components/ensembles/EnsembleImages";
+import VoteButtons from "@/components/defis/voting/VoteButtons";
+import { useEntityVote } from "@/hooks/useEntityVote";
+import { VetementType } from "@/services/meteo/tenue";
 
 interface VoteDefiDialogProps {
   defiId: number;
   defiTitle?: string;
+  ensembleId: number;
 }
 
 const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
   defiId,
-  defiTitle
+  defiTitle,
+  ensembleId
 }) => {
   const [open, setOpen] = useState(false);
+  const [ensemble, setEnsemble] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [vetementsByType, setVetementsByType] = useState<Record<string, any[]>>({
+    [VetementType.HAUT]: [],
+    [VetementType.BAS]: [],
+    [VetementType.CHAUSSURES]: [],
+    'autre': []
+  });
+
+  const { userVote, votes, handleVote } = useEntityVote({
+    entityType: "defi",
+    entityId: ensembleId,
+  });
+
+  useEffect(() => {
+    if (open && ensembleId) {
+      loadEnsemble();
+    }
+  }, [open, ensembleId]);
+
+  const loadEnsemble = async () => {
+    if (!ensembleId) return;
+    
+    setLoading(true);
+    try {
+      const ensembleData = await fetchEnsembleById(ensembleId);
+      setEnsemble(ensembleData);
+      
+      if (ensembleData) {
+        const organizedVetements = organizeVetementsByType(ensembleData);
+        setVetementsByType(organizedVetements);
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement de l'ensemble:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+
+  const onVote = (ensembleId: number, vote: 'up' | 'down') => {
+    handleVote(vote);
+    // Fermer le dialogue après le vote
+    setTimeout(() => {
+      handleClose();
+    }, 500);
+  };
 
   return (
     <>
@@ -47,7 +101,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
       <Dialog 
         open={open} 
         onClose={handleClose}
-        maxWidth="lg"
+        maxWidth="sm"
         fullWidth
       >
         <DialogTitle sx={{ fontSize: '1.25rem', fontWeight: 600 }}>
@@ -56,12 +110,41 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
         
         <DialogContent>
           <DialogContentText sx={{ mb: 3, color: 'text.secondary' }}>
-            Parcourez les ensembles et votez pour vos favoris.
+            Donnez votre avis sur ce défi.
           </DialogContentText>
           
-          <div className="mt-4">
-            <VotingCarousel defiId={defiId} />
-          </div>
+          {ensemble && (
+            <Box sx={{ textAlign: 'center', mb: 3 }}>
+              <h3 className="text-lg font-medium mb-2">{ensemble.nom || "Ensemble sans nom"}</h3>
+              
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center',
+                mb: 3,
+                p: 2,
+                bgcolor: 'background.paper',
+                borderRadius: 1
+              }}>
+                <EnsembleImages 
+                  vetementsByType={vetementsByType} 
+                  className="w-full max-w-md mx-auto"
+                />
+              </Box>
+              
+              {ensemble.description && (
+                <p className="text-sm text-gray-600 mb-4">{ensemble.description}</p>
+              )}
+            </Box>
+          )}
+          
+          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <VoteButtons
+              ensembleId={ensembleId}
+              userVote={userVote}
+              onVote={onVote}
+            />
+          </Box>
         </DialogContent>
       </Dialog>
     </>
