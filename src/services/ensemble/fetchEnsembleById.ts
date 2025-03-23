@@ -28,7 +28,7 @@ export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | 
 
     console.log("Ensemble trouvé:", ensembleData);
 
-    // Récupérer les vêtements associés à cet ensemble
+    // Récupérer les vêtements associés à cet ensemble avec tous les détails
     const { data: vetementsData, error: vetementsError } = await supabase
       .from('tenues_vetements')
       .select(`
@@ -59,7 +59,7 @@ export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | 
 
     console.log(`Nombre de vêtements trouvés: ${vetementsData?.length || 0}`);
     
-    // Vérifier si les données des vêtements sont correctes
+    // Vérifier si les données des vêtements sont correctes et structurées
     if (vetementsData) {
       vetementsData.forEach((item, index) => {
         if (!item.vetement) {
@@ -75,6 +75,7 @@ export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | 
       });
     }
 
+    // Retourner l'ensemble avec ses vêtements
     return {
       ...ensembleData,
       vetements: vetementsData || []

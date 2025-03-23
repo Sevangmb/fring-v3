@@ -33,7 +33,14 @@ export const organizeVetementsByType = (ensemble: any) => {
       return;
     }
     
-    const vetementData = item.vetement;
+    // S'assurer que nous traitons item.vetement comme un objet
+    const vetementData = typeof item.vetement === 'object' ? item.vetement : null;
+    
+    if (!vetementData) {
+      console.warn("Format de vêtement invalide:", item.vetement);
+      return;
+    }
+    
     console.log("Traitement du vêtement:", vetementData);
     
     // Si l'image_url est présente, affichez-la pour débogage

@@ -4,12 +4,12 @@ import {
   Dialog, 
   DialogContent, 
   DialogTitle,
+  DialogHeader,
   DialogContentText,
-  Button,
-  Box,
-  CircularProgress
-} from "@mui/material";
-import { Vote } from "lucide-react";
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { ThumbsUp, X } from "lucide-react";
 import { fetchEnsembleById } from "@/services/ensemble/fetchEnsembleById";
 import { organizeVetementsByType } from "@/components/defis/voting/helpers/vetementOrganizer";
 import EnsembleImages from "@/components/ensembles/EnsembleImages";
@@ -17,6 +17,7 @@ import VoteButtons from "@/components/defis/voting/VoteButtons";
 import { useEntityVote } from "@/hooks/useEntityVote";
 import { VetementType } from "@/services/meteo/tenue";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 interface VoteDefiDialogProps {
   defiId: number;
@@ -29,6 +30,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
   defiTitle,
   ensembleId
 }) => {
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [ensemble, setEnsemble] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -100,118 +102,109 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
   const handleClose = () => setOpen(false);
 
   const onVote = (ensembleId: number, vote: 'up' | 'down') => {
-    handleVote(vote);
-    // Fermer le dialogue après le vote
-    setTimeout(() => {
-      handleClose();
-    }, 500);
+    handleVote(vote).then(success => {
+      if (success) {
+        toast({
+          title: "Vote enregistré",
+          description: vote === 'up' ? "Vous aimez cet ensemble" : "Vous n'aimez pas cet ensemble",
+          variant: vote === 'up' ? "default" : "destructive",
+        });
+        
+        // Fermer le dialogue après le vote
+        setTimeout(() => {
+          handleClose();
+        }, 500);
+      } else {
+        toast({
+          title: "Erreur",
+          description: "Impossible d'enregistrer votre vote",
+          variant: "destructive",
+        });
+      }
+    });
   };
 
   const renderEnsembleContent = () => {
     if (loading) {
       return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-          <CircularProgress size={40} />
-        </Box>
+        <div className="flex justify-center my-4">
+          <div className="grid grid-cols-3 gap-2 w-full max-w-md">
+            <Skeleton className="h-32" />
+            <Skeleton className="h-32" />
+            <Skeleton className="h-32" />
+          </div>
+        </div>
       );
     }
     
     if (error) {
       return (
-        <Box sx={{ textAlign: 'center', my: 4, color: 'error.main' }}>
+        <div className="text-center my-4 text-destructive">
           <p>{error}</p>
-        </Box>
+        </div>
       );
     }
     
     if (!ensemble) {
       return (
-        <Box sx={{ textAlign: 'center', my: 4 }}>
+        <div className="text-center my-4">
           <p className="text-muted-foreground">Aucune information d'ensemble disponible</p>
-        </Box>
+        </div>
       );
     }
     
     return (
-      <Box sx={{ textAlign: 'center', mb: 3 }}>
+      <div className="text-center mb-3">
         <h3 className="text-lg font-medium mb-2">{ensemble.nom || "Ensemble sans nom"}</h3>
         
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center',
-          mb: 3,
-          p: 2,
-          bgcolor: 'background.paper',
-          borderRadius: 1,
-          border: '1px solid',
-          borderColor: 'divider',
-          minHeight: '150px'
-        }}>
-          {loading ? (
-            <div className="grid grid-cols-3 gap-2 w-full">
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-            </div>
-          ) : (
-            <EnsembleImages 
-              vetementsByType={vetementsByType} 
-              className="w-full max-w-md mx-auto h-40"
-            />
-          )}
-        </Box>
+        <div className="flex justify-center items-center mb-3 p-2 bg-background/50 border border-input rounded-md min-h-[150px]">
+          <EnsembleImages 
+            vetementsByType={vetementsByType} 
+            className="w-full max-w-md mx-auto"
+          />
+        </div>
         
         {ensemble.description && (
-          <p className="text-sm text-gray-600 mb-4">{ensemble.description}</p>
+          <p className="text-sm text-muted-foreground mb-4">{ensemble.description}</p>
         )}
-      </Box>
+      </div>
     );
   };
 
   return (
     <>
       <Button 
-        variant="contained" 
-        size="small"
+        variant="outline" 
+        size="sm"
         onClick={handleOpen}
-        startIcon={<Vote className="h-4 w-4" />}
-        sx={{ 
-          textTransform: 'none', 
-          gap: '0.5rem', 
-          fontSize: '0.875rem',
-          padding: '0.5rem 0.75rem',
-          lineHeight: '1.25rem',
-          fontWeight: '500'
-        }}
+        className="flex items-center gap-1 text-sm font-medium"
       >
-        Voter
+        <ThumbsUp className="h-4 w-4" />
+        <span>Voter</span>
       </Button>
 
-      <Dialog 
-        open={open} 
-        onClose={handleClose}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle sx={{ fontSize: '1.25rem', fontWeight: 600 }}>
-          Voter pour {defiTitle || 'ce défi'}
-        </DialogTitle>
-        
-        <DialogContent>
-          <DialogContentText sx={{ mb: 3, color: 'text.secondary' }}>
-            Donnez votre avis sur ce défi.
-          </DialogContentText>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Voter pour {defiTitle || 'ce défi'}
+              <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </DialogClose>
+            </DialogTitle>
+            <DialogContentText className="text-center text-muted-foreground">
+              Donnez votre avis sur ce défi.
+            </DialogContentText>
+          </DialogHeader>
           
           {renderEnsembleContent()}
           
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-            <VoteButtons
-              ensembleId={ensembleId}
-              userVote={userVote}
-              onVote={onVote}
-            />
-          </Box>
+          <VoteButtons
+            ensembleId={ensembleId}
+            userVote={userVote}
+            onVote={onVote}
+          />
         </DialogContent>
       </Dialog>
     </>
