@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
   DialogContent, 
   DialogTitle,
   DialogHeader,
-  DialogContentText,
   DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -88,7 +86,6 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
 
   const handleOpen = () => {
     setOpen(true);
-    // Reset the error and ensemble states when opening the dialog
     setError(null);
     setEnsemble(null);
     setVetementsByType({
@@ -110,7 +107,6 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
           variant: vote === 'up' ? "default" : "destructive",
         });
         
-        // Fermer le dialogue après le vote
         setTimeout(() => {
           handleClose();
         }, 500);
@@ -193,9 +189,9 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
                 <span className="sr-only">Close</span>
               </DialogClose>
             </DialogTitle>
-            <DialogContentText className="text-center text-muted-foreground">
+            <p className="text-center text-muted-foreground">
               Donnez votre avis sur ce défi.
-            </DialogContentText>
+            </p>
           </DialogHeader>
           
           {renderEnsembleContent()}
