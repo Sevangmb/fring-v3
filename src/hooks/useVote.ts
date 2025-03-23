@@ -14,7 +14,7 @@ interface VoteOptions {
   voteField?: string; // Field that stores the vote value (default: "vote")
 }
 
-// Fonction utilitaire pour les retries de requêtes
+// Fonction utilitaire pour les retries de requêtes - MODIFIED
 const fetchWithRetry = async (
   fetchFn: () => Promise<any>,
   maxRetries: number = 3,
@@ -70,9 +70,12 @@ export const useVote = (
     setError(null);
     
     try {
-      // Get current user session
+      // Get current user session - FIXED
       const sessionResponse = await fetchWithRetry(
-        () => supabase.auth.getSession(),
+        async () => {
+          const response = await supabase.auth.getSession();
+          return response;
+        },
         3
       );
       
@@ -82,14 +85,17 @@ export const useVote = (
         throw new Error('Vous devez être connecté pour voter');
       }
 
-      // Check if user already voted
+      // Check if user already voted - FIXED
       const existingVoteResponse = await fetchWithRetry(
-        () => supabase
-          .from(tableName)
-          .select("id")
-          .eq(entityIdField, entityId)
-          .eq(userIdField, userId)
-          .maybeSingle(),
+        async () => {
+          const response = await supabase
+            .from(tableName)
+            .select("id")
+            .eq(entityIdField, entityId)
+            .eq(userIdField, userId)
+            .maybeSingle();
+          return response;
+        },
         3
       );
       
@@ -105,22 +111,28 @@ export const useVote = (
       };
 
       if (existingVote) {
-        // Update existing vote
+        // Update existing vote - FIXED
         const updateResponse = await fetchWithRetry(
-          () => supabase
-            .from(tableName)
-            .update({ [voteField]: vote })
-            .eq("id", existingVote.id),
+          async () => {
+            const response = await supabase
+              .from(tableName)
+              .update({ [voteField]: vote })
+              .eq("id", existingVote.id);
+            return response;
+          },
           3
         );
         
         if (updateResponse.error) throw updateResponse.error;
       } else {
-        // Create new vote
+        // Create new vote - FIXED
         const insertResponse = await fetchWithRetry(
-          () => supabase
-            .from(tableName)
-            .insert(voteData),
+          async () => {
+            const response = await supabase
+              .from(tableName)
+              .insert(voteData);
+            return response;
+          },
           3
         );
         
@@ -155,9 +167,12 @@ export const useVote = (
    */
   const getUserVote = async (entityId: number): Promise<VoteType> => {
     try {
-      // Get current user session
+      // Get current user session - FIXED
       const sessionResponse = await fetchWithRetry(
-        () => supabase.auth.getSession(),
+        async () => {
+          const response = await supabase.auth.getSession();
+          return response;
+        },
         3
       );
       
@@ -165,13 +180,17 @@ export const useVote = (
       
       if (!userId) return null;
       
+      // Get user vote - FIXED
       const voteResponse = await fetchWithRetry(
-        () => supabase
-          .from(tableName)
-          .select(voteField)
-          .eq(entityIdField, entityId)
-          .eq(userIdField, userId)
-          .maybeSingle(),
+        async () => {
+          const response = await supabase
+            .from(tableName)
+            .select(voteField)
+            .eq(entityIdField, entityId)
+            .eq(userIdField, userId)
+            .maybeSingle();
+          return response;
+        },
         3
       );
       
@@ -189,11 +208,15 @@ export const useVote = (
    */
   const getVotesCount = async (entityId: number): Promise<{ up: number; down: number }> => {
     try {
+      // Get votes - FIXED
       const votesResponse = await fetchWithRetry(
-        () => supabase
-          .from(tableName)
-          .select(`${voteField}`)
-          .eq(entityIdField, entityId),
+        async () => {
+          const response = await supabase
+            .from(tableName)
+            .select(`${voteField}`)
+            .eq(entityIdField, entityId);
+          return response;
+        },
         3
       );
       
