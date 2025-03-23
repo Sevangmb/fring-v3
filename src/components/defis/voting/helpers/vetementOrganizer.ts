@@ -36,6 +36,13 @@ export const organizeVetementsByType = (ensemble: any) => {
     const vetementData = item.vetement;
     console.log("Traitement du vêtement:", vetementData);
     
+    // Si l'image_url est présente, affichez-la pour débogage
+    if (vetementData.image_url) {
+      console.log(`Image URL pour ${vetementData.nom || "Sans nom"}: ${vetementData.image_url}`);
+    } else {
+      console.warn(`Pas d'image URL pour ${vetementData.nom || "Sans nom"}`);
+    }
+    
     const type = determineVetementTypeSync(vetementData);
     result[type].push(vetementData);
     console.log(`Vêtement '${vetementData.nom || "Sans nom"}' classé comme '${type}'`);

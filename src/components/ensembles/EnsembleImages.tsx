@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { VetementType } from '@/services/meteo/tenue';
-import { Tshirt, Pants, Footprints } from 'lucide-react';
+import { Shirt, Clothing, Footprints } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface EnsembleImagesProps {
@@ -24,6 +24,8 @@ const EnsembleImages: React.FC<EnsembleImagesProps> = ({ vetementsByType, classN
     const vetements = vetementsByType[type];
     const hasVetement = vetements && vetements.length > 0;
     const imageUrl = hasVetement && vetements[0].image_url ? vetements[0].image_url : null;
+    
+    console.log(`Rendering ${type} with image URL:`, imageUrl);
     
     return (
       <div className="bg-muted/40 rounded-md p-1 flex items-center justify-center overflow-hidden">
@@ -58,13 +60,13 @@ const EnsembleImages: React.FC<EnsembleImagesProps> = ({ vetementsByType, classN
     <div className={`grid grid-cols-3 gap-2 ${className}`}>
       {renderVetementImage(
         VetementType.HAUT, 
-        <Tshirt className="h-8 w-8 opacity-50" />, 
+        <Shirt className="h-8 w-8 opacity-50" />, 
         "Haut"
       )}
       
       {renderVetementImage(
         VetementType.BAS, 
-        <Pants className="h-8 w-8 opacity-50" />, 
+        <Clothing className="h-8 w-8 opacity-50" />, 
         "Bas"
       )}
       

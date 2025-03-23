@@ -84,7 +84,19 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
     }
   };
 
-  const handleOpen = () => setOpen(true);
+  const handleOpen = () => {
+    setOpen(true);
+    // Reset the error and ensemble states when opening the dialog
+    setError(null);
+    setEnsemble(null);
+    setVetementsByType({
+      [VetementType.HAUT]: [],
+      [VetementType.BAS]: [],
+      [VetementType.CHAUSSURES]: [],
+      'autre': []
+    });
+  };
+  
   const handleClose = () => setOpen(false);
 
   const onVote = (ensembleId: number, vote: 'up' | 'down') => {
