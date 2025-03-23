@@ -4,11 +4,12 @@ import { VetementType } from '@/services/meteo/tenue';
 
 interface EnsembleImagesProps {
   vetementsByType: Record<string, any[]>;
+  className?: string; // Added className prop
 }
 
-const EnsembleImages: React.FC<EnsembleImagesProps> = ({ vetementsByType }) => {
+const EnsembleImages: React.FC<EnsembleImagesProps> = ({ vetementsByType, className = "" }) => {
   return (
-    <div className="grid grid-cols-3 gap-2 h-32">
+    <div className={`grid grid-cols-3 gap-2 h-32 ${className}`}>
       {vetementsByType[VetementType.HAUT][0] && (
         <div className="bg-muted/40 rounded-md p-1 flex items-center justify-center">
           {vetementsByType[VetementType.HAUT][0].image_url ? (
