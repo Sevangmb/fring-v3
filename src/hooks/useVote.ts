@@ -14,7 +14,7 @@ import {
 } from "@/services/votes/voteService";
 
 /**
- * Hook for handling votes on different entity types
+ * Hook pour gérer les votes sur différents types d'entités
  */
 export const useVote = (
   entityType: EntityType,
@@ -25,7 +25,7 @@ export const useVote = (
   const [error, setError] = useState<Error | null>(null);
 
   /**
-   * Submit a vote for an entity
+   * Soumettre un vote pour une entité
    */
   const submitVote = async (
     entityId: number,
@@ -66,21 +66,21 @@ export const useVote = (
   };
 
   /**
-   * Get the user's vote for an entity
+   * Obtenir le vote de l'utilisateur pour une entité
    */
   const getUserVote = async (entityId: number): Promise<VoteType> => {
     return await getUserVoteApi(entityType, entityId, options);
   };
 
   /**
-   * Get all votes for an entity
+   * Obtenir tous les votes pour une entité
    */
   const getVotesCount = async (entityId: number) => {
     return await getVotesCountApi(entityType, entityId, options);
   };
 
   /**
-   * Calculate score (up votes - down votes)
+   * Calculer le score (votes positifs - votes négatifs)
    */
   const calculateScore = calculateScoreApi;
 
@@ -94,5 +94,5 @@ export const useVote = (
   };
 };
 
-// Re-export types from the types file for convenience
+// Réexporter les types depuis le fichier de types pour commodité
 export type { VoteType, EntityType } from "@/services/votes/types";

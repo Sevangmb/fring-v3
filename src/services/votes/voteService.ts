@@ -4,7 +4,7 @@ import { VoteType, EntityType, VoteOptions, VotesCount } from "./types";
 import { fetchWithRetry } from "../network/retryUtils";
 
 /**
- * Submit a vote for an entity
+ * Soumettre un vote pour une entité
  */
 export const submitVote = async (
   entityType: EntityType,
@@ -15,10 +15,10 @@ export const submitVote = async (
 ): Promise<boolean> => {
   try {
     if (!navigator.onLine) {
-      throw new Error('Pas de connexion internet');
+      throw new Error('Pas de connexion Internet');
     }
     
-    // Default options
+    // Options par défaut
     const {
       tableName = `${entityType}_votes`,
       userIdField = "user_id",
@@ -26,38 +26,26 @@ export const submitVote = async (
       voteField = "vote"
     } = options || {};
     
-    // Get current user session
-    const sessionResponse = await fetchWithRetry(
-      async () => {
-        const response = await supabase.auth.getSession();
-        return response;
-      },
-      3
-    );
+    // Obtenir la session utilisateur actuelle
+    const { data: { session } } = await supabase.auth.getSession();
     
-    const userId = sessionResponse?.data?.session?.user?.id;
+    const userId = session?.user?.id;
     
     if (!userId) {
       throw new Error('Vous devez être connecté pour voter');
     }
 
-    // Check if user already voted
-    const existingVoteResponse = await fetchWithRetry(
-      async () => {
-        return await supabase
-          .from(tableName)
-          .select("id")
-          .eq(entityIdField, entityId)
-          .eq(userIdField, userId)
-          .maybeSingle();
-      },
-      3
-    );
+    // Vérifier si l'utilisateur a déjà voté
+    const { data: existingVote, error: existingVoteError } = await supabase
+      .from(tableName)
+      .select("id")
+      .eq(entityIdField, entityId)
+      .eq(userIdField, userId)
+      .maybeSingle();
     
-    if (existingVoteResponse.error) throw existingVoteResponse.error;
-    const existingVote = existingVoteResponse.data;
+    if (existingVoteError) throw existingVoteError;
 
-    // Prepare vote data
+    // Préparer les données du vote
     const voteData = {
       [entityIdField]: entityId,
       [userIdField]: userId,
@@ -66,41 +54,31 @@ export const submitVote = async (
     };
 
     if (existingVote) {
-      // Update existing vote
-      const updateResponse = await fetchWithRetry(
-        async () => {
-          return await supabase
-            .from(tableName)
-            .update({ [voteField]: vote })
-            .eq("id", existingVote.id);
-        },
-        3
-      );
+      // Mettre à jour le vote existant
+      const { error: updateError } = await supabase
+        .from(tableName)
+        .update({ [voteField]: vote })
+        .eq("id", existingVote.id);
       
-      if (updateResponse.error) throw updateResponse.error;
+      if (updateError) throw updateError;
     } else {
-      // Create new vote
-      const insertResponse = await fetchWithRetry(
-        async () => {
-          return await supabase
-            .from(tableName)
-            .insert(voteData);
-        },
-        3
-      );
+      // Créer un nouveau vote
+      const { error: insertError } = await supabase
+        .from(tableName)
+        .insert(voteData);
       
-      if (insertResponse.error) throw insertResponse.error;
+      if (insertError) throw insertError;
     }
     
     return true;
   } catch (err: any) {
-    console.error("Error submitting vote:", err);
+    console.error("Erreur lors de la soumission du vote:", err);
     return false;
   }
 };
 
 /**
- * Get the user's vote for an entity
+ * Obtenir le vote de l'utilisateur pour une entité
  */
 export const getUserVote = async (
   entityType: EntityType,
@@ -109,11 +87,11 @@ export const getUserVote = async (
 ): Promise<VoteType> => {
   try {
     if (!navigator.onLine) {
-      console.warn('No internet connection, unable to retrieve vote');
+      console.warn('Pas de connexion Internet, impossible de récupérer le vote');
       return null;
     }
     
-    // Default options
+    // Options par défaut
     const {
       tableName = `${entityType}_votes`,
       userIdField = "user_id",
@@ -121,45 +99,35 @@ export const getUserVote = async (
       voteField = "vote"
     } = options || {};
     
-    // Get current user session
-    const sessionResponse = await fetchWithRetry(
-      async () => {
-        return await supabase.auth.getSession();
-      },
-      3
-    );
+    // Obtenir la session utilisateur actuelle
+    const { data: { session } } = await supabase.auth.getSession();
     
-    const userId = sessionResponse?.data?.session?.user?.id;
+    const userId = session?.user?.id;
     
     if (!userId) return null;
     
-    // Get user vote
-    const voteResponse = await fetchWithRetry(
-      async () => {
-        return await supabase
-          .from(tableName)
-          .select(voteField)
-          .eq(entityIdField, entityId)
-          .eq(userIdField, userId)
-          .maybeSingle();
-      },
-      3
-    );
+    // Obtenir le vote de l'utilisateur
+    const { data, error } = await supabase
+      .from(tableName)
+      .select(voteField)
+      .eq(entityIdField, entityId)
+      .eq(userIdField, userId)
+      .maybeSingle();
     
-    if (voteResponse.error) {
-      console.error('Error retrieving vote:', voteResponse.error);
+    if (error) {
+      console.error('Erreur lors de la récupération du vote:', error);
       return null;
     }
     
-    return voteResponse.data ? voteResponse.data[voteField] : null;
+    return data ? data[voteField] : null;
   } catch (err) {
-    console.error('Error retrieving vote:', err);
+    console.error('Erreur lors de la récupération du vote:', err);
     return null;
   }
 };
 
 /**
- * Get all votes for an entity
+ * Obtenir tous les votes pour une entité
  */
 export const getVotesCount = async (
   entityType: EntityType,
@@ -168,47 +136,42 @@ export const getVotesCount = async (
 ): Promise<VotesCount> => {
   try {
     if (!navigator.onLine) {
-      console.warn('No internet connection, unable to retrieve votes');
+      console.warn('Pas de connexion Internet, impossible de récupérer les votes');
       return { up: 0, down: 0 };
     }
     
-    // Default options
+    // Options par défaut
     const {
       tableName = `${entityType}_votes`,
       entityIdField = `${entityType}_id`,
       voteField = "vote"
     } = options || {};
     
-    // Get votes
-    const votesResponse = await fetchWithRetry(
-      async () => {
-        return await supabase
-          .from(tableName)
-          .select(`${voteField}`)
-          .eq(entityIdField, entityId);
-      },
-      3
-    );
+    // Obtenir les votes
+    const { data, error } = await supabase
+      .from(tableName)
+      .select(`${voteField}`)
+      .eq(entityIdField, entityId);
     
-    if (votesResponse.error) {
-      console.error('Error retrieving votes:', votesResponse.error);
+    if (error) {
+      console.error('Erreur lors de la récupération des votes:', error);
       return { up: 0, down: 0 };
     }
     
-    // Count votes
-    const votes = votesResponse.data || [];
+    // Compter les votes
+    const votes = data || [];
     const upVotes = votes.filter(item => item[voteField] === 'up').length;
     const downVotes = votes.filter(item => item[voteField] === 'down').length;
     
     return { up: upVotes, down: downVotes };
   } catch (err) {
-    console.error('Error retrieving votes:', err);
+    console.error('Erreur lors de la récupération des votes:', err);
     return { up: 0, down: 0 };
   }
 };
 
 /**
- * Calculate score (up votes - down votes)
+ * Calculer le score (votes positifs - votes négatifs)
  */
 export const calculateScore = (votes: VotesCount): number => {
   return votes.up - votes.down;

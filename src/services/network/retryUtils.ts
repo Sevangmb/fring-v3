@@ -1,6 +1,6 @@
 
 /**
- * Utility for retrying failed API requests with exponential backoff
+ * Utilitaire pour réessayer les requêtes API échouées avec backoff exponentiel
  */
 export const fetchWithRetry = async (
   fetchFn: () => Promise<any>,
@@ -11,18 +11,18 @@ export const fetchWithRetry = async (
   
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      // Check internet connectivity first
+      // Vérifier d'abord la connectivité Internet
       if (!navigator.onLine) {
-        throw new Error('No internet connection');
+        throw new Error('Pas de connexion Internet');
       }
       
       return await fetchFn();
     } catch (error) {
-      console.log(`Attempt ${attempt + 1}/${maxRetries} failed:`, error);
+      console.log(`Tentative ${attempt + 1}/${maxRetries} échouée:`, error);
       lastError = error;
       
       if (attempt < maxRetries - 1) {
-        // Wait before retrying with exponential backoff
+        // Attendre avant de réessayer avec un backoff exponentiel
         await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, attempt)));
       }
     }
@@ -32,8 +32,8 @@ export const fetchWithRetry = async (
 };
 
 /**
- * Utility function to check if the application is connected to the internet
- * and can reach the Supabase backend
+ * Fonction utilitaire pour vérifier si l'application est connectée à Internet
+ * et peut atteindre le backend Supabase
  */
 export const checkConnection = async (): Promise<boolean> => {
   if (!navigator.onLine) {
@@ -41,15 +41,15 @@ export const checkConnection = async (): Promise<boolean> => {
   }
   
   try {
-    // Check if we can connect to Supabase
-    const response = await fetch('https://api.supabase.com/health', { 
+    // Vérifier si nous pouvons nous connecter à notre backend
+    const response = await fetch('/api/health-check', { 
       method: 'HEAD',
-      // Using a short timeout to quickly determine connectivity
-      signal: AbortSignal.timeout(3000)
+      // Utiliser un court timeout pour déterminer rapidement la connectivité
+      signal: AbortSignal.timeout(2000)
     });
     return response.ok;
   } catch (error) {
-    console.error("Error checking connection:", error);
-    return false;
+    console.error("Erreur lors de la vérification de la connexion:", error);
+    return navigator.onLine; // Fallback sur l'état de connexion du navigateur
   }
 };

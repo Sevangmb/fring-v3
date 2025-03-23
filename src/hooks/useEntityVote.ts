@@ -24,14 +24,14 @@ export const useEntityVote = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
   
-  // Load initial vote data
+  // Charger les données initiales des votes
   const loadVoteData = useCallback(async () => {
     if (!entityId) return;
     
     setLoading(true);
     try {
-      // Check connection first
-      const isConnected = await checkConnection();
+      // Vérifier d'abord la connexion
+      const isConnected = navigator.onLine;
       if (!isConnected) {
         toast({
           title: "Problème de connexion",
@@ -43,11 +43,11 @@ export const useEntityVote = ({
         return;
       }
       
-      // Get user's current vote
+      // Obtenir le vote actuel de l'utilisateur
       const currentVote = await getUserVote(entityId);
       setUserVote(currentVote);
       
-      // Get vote counts
+      // Obtenir les compteurs de votes
       const voteCounts = await getVotesCount(entityId);
       setVotes(voteCounts);
       
@@ -68,10 +68,10 @@ export const useEntityVote = ({
   useEffect(() => {
     loadVoteData();
     
-    // Add event listener to detect connectivity changes
+    // Ajouter un écouteur d'événements pour détecter les changements de connectivité
     const handleOnlineStatusChange = () => {
       if (navigator.onLine) {
-        // Reload data when connection is restored
+        // Recharger les données lorsque la connexion est rétablie
         setConnectionError(false);
         loadVoteData();
       } else {
@@ -88,19 +88,18 @@ export const useEntityVote = ({
     };
   }, [loadVoteData]);
   
-  // Handle vote submission
+  // Gérer la soumission de vote
   const handleVote = async (vote: VoteType): Promise<boolean> => {
     if (!entityId) return false;
     
-    // Check if already submitting
+    // Vérifier si déjà en cours de soumission
     if (isSubmitting) return false;
     
     setIsSubmitting(true);
     
     try {
-      // Check connection first
-      const isConnected = await checkConnection();
-      if (!isConnected) {
+      // Vérifier d'abord la connexion
+      if (!navigator.onLine) {
         toast({
           title: "Problème de connexion",
           description: "Impossible de se connecter au serveur. Vérifiez votre connexion internet.",
@@ -112,26 +111,26 @@ export const useEntityVote = ({
       const success = await submitVote(entityId, vote);
       
       if (success) {
-        // Update local state optimistically
+        // Mettre à jour l'état local de manière optimiste
         setUserVote(vote);
         
-        // Update vote counts
+        // Mettre à jour les compteurs de votes
         const oldVote = userVote;
         const newVotes = { ...votes };
         
-        // If user is changing their vote
+        // Si l'utilisateur change son vote
         if (oldVote) {
           if (oldVote === 'up') newVotes.up = Math.max(0, newVotes.up - 1);
           if (oldVote === 'down') newVotes.down = Math.max(0, newVotes.down - 1);
         }
         
-        // Add new vote
+        // Ajouter le nouveau vote
         if (vote === 'up') newVotes.up += 1;
         if (vote === 'down') newVotes.down += 1;
         
         setVotes(newVotes);
         
-        // Call callback if provided
+        // Appeler le callback si fourni
         if (onVoteSubmitted) {
           onVoteSubmitted(vote);
         }
@@ -151,7 +150,7 @@ export const useEntityVote = ({
     }
   };
   
-  // Calculate score using the utility function from useVote
+  // Calculer le score en utilisant la fonction utilitaire de useVote
   const score = calculateScore(votes);
   
   return {
