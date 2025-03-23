@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import EnsembleImages from "@/components/ensembles/EnsembleImages";
 import VoteProgress from "./VoteProgress";
 import VoteButtons from "./VoteButtons";
+import { Box, Typography } from "@mui/material";
 
 interface EnsembleDetailProps {
   ensemble: any;
@@ -31,12 +32,26 @@ const EnsembleDetail: React.FC<EnsembleDetailProps> = ({
       <CardContent>
         {ensemble && (
           <>
-            <EnsembleImages vetementsByType={vetementsByType} />
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center',
+              mb: 2
+            }}>
+              <EnsembleImages 
+                vetementsByType={vetementsByType} 
+                className="w-full max-w-md mx-auto"
+              />
+            </Box>
             
             {ensemble.description && (
-              <p className="mt-4 text-sm text-muted-foreground">
+              <Typography 
+                variant="body2" 
+                color="text.secondary" 
+                className="mt-4"
+              >
                 {ensemble.description}
-              </p>
+              </Typography>
             )}
             
             <VoteProgress upVotes={votes.up} downVotes={votes.down} />
