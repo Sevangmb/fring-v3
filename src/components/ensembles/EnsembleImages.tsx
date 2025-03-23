@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { VetementType } from '@/services/meteo/tenue';
-import { Shirt, Pants, Footprints } from 'lucide-react';
+import { Shirt, ShoppingBag, Footprints } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface EnsembleImagesProps {
@@ -66,7 +66,7 @@ const EnsembleImages: React.FC<EnsembleImagesProps> = ({ vetementsByType, classN
       
       {renderVetementImage(
         VetementType.BAS, 
-        <Pants className="h-8 w-8 opacity-50" />, 
+        <ShoppingBag className="h-8 w-8 opacity-50" />, 
         "Bas"
       )}
       
