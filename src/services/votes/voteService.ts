@@ -8,12 +8,18 @@ import { fetchWithRetry } from "../network/retryUtils";
  */
 export const submitVote = async (
   entityType: EntityType,
-  entityId: number,
+  entityId: number | undefined,
   vote: VoteType,
   options?: VoteOptions,
   extraFields?: Record<string, any>
 ): Promise<boolean> => {
   try {
+    // Verify that entityId is provided
+    if (entityId === undefined || entityId === null) {
+      console.error("Erreur: ID de l'entité manquant");
+      return false;
+    }
+    
     if (!navigator.onLine) {
       console.warn('Pas de connexion Internet');
       return false;
@@ -98,10 +104,16 @@ export const submitVote = async (
  */
 export const getUserVote = async (
   entityType: EntityType,
-  entityId: number,
+  entityId: number | undefined,
   options?: VoteOptions
 ): Promise<VoteType> => {
   try {
+    // Verify that entityId is provided
+    if (entityId === undefined || entityId === null) {
+      console.warn("ID de l'entité manquant lors de la récupération du vote");
+      return null;
+    }
+    
     if (!navigator.onLine) {
       console.warn('Pas de connexion Internet, impossible de récupérer le vote');
       return null;
@@ -152,10 +164,16 @@ export const getUserVote = async (
  */
 export const getVotesCount = async (
   entityType: EntityType,
-  entityId: number,
+  entityId: number | undefined,
   options?: VoteOptions
 ): Promise<VotesCount> => {
   try {
+    // Verify that entityId is provided
+    if (entityId === undefined || entityId === null) {
+      console.warn("ID de l'entité manquant lors de la récupération des votes");
+      return { up: 0, down: 0 };
+    }
+    
     if (!navigator.onLine) {
       console.warn('Pas de connexion Internet, impossible de récupérer les votes');
       return { up: 0, down: 0 };

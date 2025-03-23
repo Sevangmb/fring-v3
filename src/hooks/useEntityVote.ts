@@ -32,7 +32,10 @@ export const useEntityVote = ({
   
   // Charger les données initiales des votes
   const loadVoteData = useCallback(async () => {
-    if (!entityId) return;
+    if (!entityId) {
+      setLoading(false);
+      return;
+    }
     
     setLoading(true);
     try {
@@ -68,6 +71,8 @@ export const useEntityVote = ({
   useEffect(() => {
     if (entityId) {
       loadVoteData();
+    } else {
+      setLoading(false); // No loading if no entityId
     }
     
     // Ajouter un écouteur d'événements pour détecter les changements de connectivité
@@ -75,7 +80,9 @@ export const useEntityVote = ({
       if (navigator.onLine) {
         // Recharger les données lorsque la connexion est rétablie
         setConnectionError(false);
-        loadVoteData();
+        if (entityId) {
+          loadVoteData();
+        }
       } else {
         setConnectionError(true);
       }
@@ -92,7 +99,14 @@ export const useEntityVote = ({
   
   // Gérer la soumission de vote
   const handleVote = async (vote: VoteType): Promise<boolean> => {
-    if (!entityId) return false;
+    if (!entityId) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de voter: ID de l'élément manquant.",
+        variant: "destructive"
+      });
+      return false;
+    }
     
     // Vérifier si déjà en cours de soumission
     if (isSubmitting || loading) return false;
