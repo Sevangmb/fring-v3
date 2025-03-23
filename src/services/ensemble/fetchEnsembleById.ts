@@ -65,9 +65,10 @@ export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | 
         if (!item.vetement) {
           console.warn(`Vêtement ${index} sans données de vêtement:`, item);
         } else {
+          const vetement = item.vetement;
           // Accès sécurisé aux propriétés du vêtement
-          const vetementNom = item.vetement?.nom || 'Sans nom';
-          const vetementImageUrl = item.vetement?.image_url || 'Aucune';
+          const vetementNom = vetement.nom || 'Sans nom';
+          const vetementImageUrl = vetement.image_url || 'Aucune';
           console.log(`Vêtement ${index}:`, vetementNom, `URL image: ${vetementImageUrl}`);
         }
       });
