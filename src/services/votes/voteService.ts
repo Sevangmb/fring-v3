@@ -14,9 +14,9 @@ export const submitVote = async (
   extraFields?: Record<string, any>
 ): Promise<boolean> => {
   try {
-    // Verify that entityId is provided
-    if (entityId === undefined || entityId === null) {
-      console.error("Erreur: ID de l'entité manquant");
+    // Verify that entityId is provided and valid
+    if (entityId === undefined || entityId === null || isNaN(entityId)) {
+      console.error(`Erreur: ID de l'entité manquant ou invalide: ${entityId}`);
       return false;
     }
     
@@ -47,6 +47,18 @@ export const submitVote = async (
       console.error("Utilisateur non connecté");
       return false;
     }
+
+    // Log les données avant insertion pour débogage
+    console.log("Données de vote:", {
+      tableName,
+      entityIdField,
+      entityId,
+      userIdField,
+      userId,
+      voteField,
+      vote,
+      extraFields
+    });
 
     // Vérifier si l'utilisateur a déjà voté
     const { data: existingVote, error: existingVoteError } = await supabase

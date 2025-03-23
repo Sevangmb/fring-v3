@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { PlusCircle, Flag, Calendar, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -88,7 +87,7 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
         </div>
         
         <div className="flex gap-2">
-          <VoterDialog elementType="defi" />
+          {/* Don't render VoterDialog without a specific element ID */}
           <CreateDefiDialog open={openCreateDialog} onOpenChange={setOpenCreateDialog} onDefiCreated={handleDefiCreated} />
         </div>
       </div>
@@ -112,7 +111,7 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
                       type="current" 
                       participantsCount={defi.participants_count} 
                       onParticipation={handleParticipation}
-                      ensembleId={defi.ensemble_id || defi.id} // Use ensemble_id if available, otherwise fallback to defi.id
+                      ensembleId={defi.ensemble_id || undefined} 
                     />
                     <div className="absolute top-3 right-3">
                       <VoterDialog 
@@ -143,7 +142,7 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
                       dateRange={formatDateRange(defi.date_debut, defi.date_fin)} 
                       type="upcoming" 
                       icon={<Calendar className="h-5 w-5" />}
-                      ensembleId={defi.ensemble_id || defi.id} // Use ensemble_id if available, otherwise fallback to defi.id
+                      ensembleId={defi.ensemble_id || undefined}
                     />
                     <div className="absolute top-3 right-3">
                       <VoterDialog 
@@ -175,7 +174,7 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
                       type="past" 
                       icon={<Trophy className="h-5 w-5" />} 
                       participantsCount={defi.participants_count}
-                      ensembleId={defi.ensemble_id || defi.id} // Use ensemble_id if available, otherwise fallback to defi.id
+                      ensembleId={defi.ensemble_id || undefined}
                     />
                     <div className="absolute top-3 right-3">
                       <VoterDialog 

@@ -41,18 +41,33 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
   }, [open, elementId, refresh]);
   
   const handleVoteClick = async (vote: VoteType) => {
-    if (isSubmitting || loading || connectionError || !elementId) return;
+    // Ensure entity ID is defined before proceeding
+    if (isSubmitting || loading || connectionError || !elementId) {
+      console.log("Cannot vote:", { isSubmitting, loading, connectionError, elementId });
+      return;
+    }
     
+    console.log("Attempting to vote:", { elementType, elementId, vote });
     const success = await handleVote(vote);
     if (success) {
       setTimeout(() => setOpen(false), 500);
     }
   };
   
+  // Disable the trigger button if elementId is not provided
+  const isTriggerDisabled = !elementId;
+  
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2" type="button">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className={`gap-2 ${isTriggerDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          type="button"
+          disabled={isTriggerDisabled}
+          title={isTriggerDisabled ? "Impossible de voter: ID de l'élément manquant" : "Voter"}
+        >
           Voter
         </Button>
       </DialogTrigger>

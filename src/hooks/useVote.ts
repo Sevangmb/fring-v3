@@ -47,6 +47,17 @@ export const useVote = (
     vote: VoteType,
     extraFields?: Record<string, any>
   ): Promise<boolean> => {
+    // Validate entityId
+    if (entityId === undefined || entityId === null || isNaN(entityId)) {
+      console.error(`Tentative de vote avec ID invalide: ${entityId}`);
+      toast({
+        title: "Erreur",
+        description: "ID de l'élément manquant ou invalide.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
     // Check network connection first
     if (!navigator.onLine) {
       toast({
@@ -61,6 +72,7 @@ export const useVote = (
     setError(null);
     
     try {
+      console.log(`Soumission du vote: type=${entityType}, id=${entityId}, vote=${vote}`);
       const success = await submitVoteApi(entityType, entityId, vote, options, extraFields);
       
       if (success) {

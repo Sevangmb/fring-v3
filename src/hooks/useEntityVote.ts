@@ -32,7 +32,8 @@ export const useEntityVote = ({
   
   // Charger les données initiales des votes
   const loadVoteData = useCallback(async () => {
-    if (!entityId) {
+    if (!entityId || entityId === undefined || isNaN(entityId)) {
+      console.log(`No valid entityId provided: ${entityId}`);
       setLoading(false);
       return;
     }
@@ -69,7 +70,7 @@ export const useEntityVote = ({
   }, [entityId, entityType, getUserVote, getVotesCount, toast]);
   
   useEffect(() => {
-    if (entityId) {
+    if (entityId && !isNaN(entityId)) {
       loadVoteData();
     } else {
       setLoading(false); // No loading if no entityId
@@ -80,7 +81,7 @@ export const useEntityVote = ({
       if (navigator.onLine) {
         // Recharger les données lorsque la connexion est rétablie
         setConnectionError(false);
-        if (entityId) {
+        if (entityId && !isNaN(entityId)) {
           loadVoteData();
         }
       } else {
@@ -99,10 +100,12 @@ export const useEntityVote = ({
   
   // Gérer la soumission de vote
   const handleVote = async (vote: VoteType): Promise<boolean> => {
-    if (!entityId) {
+    // Validate entityId
+    if (!entityId || entityId === undefined || isNaN(entityId)) {
+      console.error(`Tentative de vote avec ID invalide: ${entityId}`);
       toast({
         title: "Erreur",
-        description: "Impossible de voter: ID de l'élément manquant.",
+        description: "Impossible de voter: ID de l'élément manquant ou invalide.",
         variant: "destructive"
       });
       return false;
