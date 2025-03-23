@@ -65,9 +65,11 @@ export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | 
         if (!item.vetement) {
           console.warn(`Vêtement ${index} sans données de vêtement:`, item);
         } else {
-          // Accès sécurisé aux propriétés du vêtement
-          const vetementNom = item.vetement?.nom || 'Sans nom';
-          const vetementImageUrl = item.vetement?.image_url || 'Aucune';
+          // Traiter item.vetement comme un objet unique et non comme un tableau
+          // TypeScript ne comprend pas bien le format retourné par Supabase ici
+          const vetementObj = item.vetement as any; // Cast temporaire pour résoudre l'erreur TypeScript
+          const vetementNom = vetementObj.nom || 'Sans nom';
+          const vetementImageUrl = vetementObj.image_url || 'Aucune';
           console.log(`Vêtement ${index}:`, vetementNom, `URL image: ${vetementImageUrl}`);
         }
       });
