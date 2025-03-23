@@ -13,6 +13,7 @@ interface EnsembleDetailProps {
   userVote: 'up' | 'down' | null;
   vetementsByType: Record<string, any[]>;
   onVote: (ensembleId: number, vote: 'up' | 'down') => void;
+  isLoading?: boolean;
 }
 
 const EnsembleDetail: React.FC<EnsembleDetailProps> = ({
@@ -21,7 +22,8 @@ const EnsembleDetail: React.FC<EnsembleDetailProps> = ({
   ensembleId,
   userVote,
   vetementsByType,
-  onVote
+  onVote,
+  isLoading = false
 }) => {
   return (
     <Card className="overflow-hidden">
@@ -67,6 +69,8 @@ const EnsembleDetail: React.FC<EnsembleDetailProps> = ({
           size="md"
           variant="default"
           showLabels={true}
+          isLoading={isLoading}
+          disabled={isLoading}
         />
       </CardFooter>
     </Card>

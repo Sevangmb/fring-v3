@@ -3,6 +3,32 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { getDefiParticipationsWithVotes, submitVote, getUserVote } from "@/services/defi/voteService";
 import { fetchDefiById } from "@/services/defi";
+import { supabase } from "@/lib/supabase";
+
+// Fonction utilitaire pour les retries de requêtes
+const fetchWithRetry = async (
+  fetchFn: () => Promise<any>,
+  maxRetries: number = 3,
+  delay: number = 1000
+): Promise<any> => {
+  let lastError;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fetchFn();
+    } catch (error) {
+      console.log(`Tentative ${attempt + 1}/${maxRetries} échouée:`, error);
+      lastError = error;
+      
+      if (attempt < maxRetries - 1) {
+        // Attendre avant de réessayer avec un délai exponentiel
+        await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, attempt)));
+      }
+    }
+  }
+  
+  throw lastError;
+};
 
 export const useVotingCarousel = (defiId: number) => {
   const { toast } = useToast();
@@ -11,25 +37,69 @@ export const useVotingCarousel = (defiId: number) => {
   const [loading, setLoading] = useState(true);
   const [votingState, setVotingState] = useState<Record<number, 'up' | 'down' | null>>({});
   const [defi, setDefi] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Vérifier la connexion à Supabase
+  const checkConnection = async (): Promise<boolean> => {
+    try {
+      // Tenter une requête très simple pour vérifier la connexion
+      const { data, error } = await supabase.from('health_check').select('*').limit(1);
+      
+      // Si la table n'existe pas, une autre approche simple
+      if (error && error.code === '42P01') {
+        const { data: session } = await supabase.auth.getSession();
+        return !!session;
+      }
+      
+      return !error;
+    } catch (error) {
+      console.error("Erreur de connexion à Supabase:", error);
+      return false;
+    }
+  };
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
+        // Vérifier d'abord la connexion
+        const isConnected = await checkConnection();
+        if (!isConnected) {
+          toast({
+            title: "Problème de connexion",
+            description: "Impossible de se connecter au serveur. Vérifiez votre connexion internet.",
+            variant: "destructive"
+          });
+          setLoading(false);
+          return;
+        }
+        
         // Charger le défi
-        const defiData = await fetchDefiById(defiId);
+        const defiData = await fetchWithRetry(
+          () => fetchDefiById(defiId),
+          3
+        );
+        
         if (defiData) {
           setDefi(defiData);
         }
         
         // Charger les participations avec les votes
-        const data = await getDefiParticipationsWithVotes(defiId);
+        const data = await fetchWithRetry(
+          () => getDefiParticipationsWithVotes(defiId),
+          3
+        );
+        
         setParticipations(data);
         
         // Initialiser l'état des votes de l'utilisateur
         const userVotes: Record<number, 'up' | 'down' | null> = {};
         for (const participation of data) {
-          const userVote = await getUserVote(defiId, participation.ensemble_id);
+          const userVote = await fetchWithRetry(
+            () => getUserVote(defiId, participation.ensemble_id),
+            3
+          );
+          
           userVotes[participation.ensemble_id] = userVote;
         }
         setVotingState(userVotes);
@@ -49,8 +119,27 @@ export const useVotingCarousel = (defiId: number) => {
   }, [defiId, toast]);
 
   const handleVote = async (ensembleId: number, vote: 'up' | 'down') => {
+    // Vérifier si déjà en train de voter
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
+    
     try {
-      const success = await submitVote(defiId, ensembleId, vote);
+      // Vérifier d'abord la connexion
+      const isConnected = await checkConnection();
+      if (!isConnected) {
+        toast({
+          title: "Problème de connexion",
+          description: "Impossible de se connecter au serveur. Vérifiez votre connexion internet.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const success = await fetchWithRetry(
+        () => submitVote(defiId, ensembleId, vote),
+        3
+      );
       
       if (success) {
         // Mettre à jour l'état local des votes
@@ -98,6 +187,8 @@ export const useVotingCarousel = (defiId: number) => {
         description: "Impossible d'enregistrer votre vote",
         variant: "destructive"
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -115,6 +206,7 @@ export const useVotingCarousel = (defiId: number) => {
     currentIndex,
     loading,
     votingState,
+    isSubmitting,
     handleVote,
     navigatePrevious,
     navigateNext

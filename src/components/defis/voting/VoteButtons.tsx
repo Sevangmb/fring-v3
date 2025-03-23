@@ -2,8 +2,9 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, CircularProgress } from "@mui/material";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 export interface VoteButtonsProps {
   ensembleId: number;
@@ -13,6 +14,7 @@ export interface VoteButtonsProps {
   variant?: 'default' | 'compact';
   showLabels?: boolean;
   disabled?: boolean;
+  isLoading?: boolean;
   className?: string;
 }
 
@@ -27,8 +29,11 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
   variant = 'default',
   showLabels = true,
   disabled = false,
+  isLoading = false,
   className
 }) => {
+  const { toast } = useToast();
+  
   // Size mappings for different button sizes
   const sizeClasses = {
     sm: { button: "px-2 py-1", icon: "h-4 w-4", buttonSize: "sm" as ButtonSizeType },
@@ -42,6 +47,23 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
   // Determine the spacing between buttons based on the variant
   const spacing = variant === 'compact' ? 2 : 6;
   
+  const handleVote = async (vote: 'up' | 'down') => {
+    try {
+      // Check if the button is already disabled or if the user has already voted this way
+      if (disabled || isLoading || userVote === vote) return;
+      
+      // Call the onVote callback
+      onVote(ensembleId, vote);
+    } catch (error) {
+      console.error("Erreur lors du vote:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors du vote. Veuillez réessayer.",
+        variant: "destructive"
+      });
+    }
+  };
+  
   return (
     <Box
       sx={{ 
@@ -53,23 +75,27 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
       className={className}
     >
       <Button 
-        onClick={() => !disabled && onVote(ensembleId, 'up')}
+        onClick={() => handleVote('up')}
         variant={userVote === 'up' ? 'default' : 'outline'} 
         size={buttonSizeValue}
-        disabled={disabled}
+        disabled={disabled || isLoading}
         className={cn(
           "flex items-center gap-2",
           buttonSize,
           userVote === 'up' 
             ? 'bg-green-500 hover:bg-green-600 text-white' 
             : 'hover:bg-green-50 hover:border-green-200',
-          disabled && "opacity-50 cursor-not-allowed"
+          (disabled || isLoading) && "opacity-50 cursor-not-allowed"
         )}
       >
-        <ThumbsUp className={cn(
-          iconSize,
-          userVote === 'up' ? 'text-white' : 'text-green-500'
-        )} />
+        {isLoading ? (
+          <CircularProgress size={16} color="inherit" />
+        ) : (
+          <ThumbsUp className={cn(
+            iconSize,
+            userVote === 'up' ? 'text-white' : 'text-green-500'
+          )} />
+        )}
         {showLabels && (
           <Typography variant="button" component="span">
             J'aime
@@ -78,23 +104,27 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
       </Button>
       
       <Button 
-        onClick={() => !disabled && onVote(ensembleId, 'down')}
+        onClick={() => handleVote('down')}
         variant={userVote === 'down' ? 'default' : 'outline'} 
         size={buttonSizeValue}
-        disabled={disabled}
+        disabled={disabled || isLoading}
         className={cn(
           "flex items-center gap-2",
           buttonSize,
           userVote === 'down' 
             ? 'bg-red-500 hover:bg-red-600 text-white' 
             : 'hover:bg-red-50 hover:border-red-200',
-          disabled && "opacity-50 cursor-not-allowed"
+          (disabled || isLoading) && "opacity-50 cursor-not-allowed"
         )}
       >
-        <ThumbsDown className={cn(
-          iconSize,
-          userVote === 'down' ? 'text-white' : 'text-red-500'
-        )} />
+        {isLoading ? (
+          <CircularProgress size={16} color="inherit" />
+        ) : (
+          <ThumbsDown className={cn(
+            iconSize,
+            userVote === 'down' ? 'text-white' : 'text-red-500'
+          )} />
+        )}
         {showLabels && (
           <Typography variant="button" component="span">
             Je n'aime pas

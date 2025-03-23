@@ -21,6 +21,7 @@ const VotingCarousel: React.FC<VotingCarouselProps> = ({ defiId }) => {
     currentIndex,
     loading,
     votingState,
+    isSubmitting,
     handleVote,
     navigatePrevious,
     navigateNext
@@ -65,6 +66,7 @@ const VotingCarousel: React.FC<VotingCarouselProps> = ({ defiId }) => {
         userVote={userVote}
         vetementsByType={vetementsByType}
         onVote={handleVote}
+        isLoading={isSubmitting}
       />
       
       <RankingList participations={participations} />

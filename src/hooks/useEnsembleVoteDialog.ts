@@ -26,7 +26,7 @@ export const useEnsembleVoteDialog = ({
     'autre': []
   });
 
-  const { userVote, votes, handleVote } = useEntityVote({
+  const { userVote, votes, handleVote, isSubmitting } = useEntityVote({
     entityType: "defi",
     entityId: ensembleId,
   });
@@ -98,6 +98,7 @@ export const useEnsembleVoteDialog = ({
     error,
     vetementsByType,
     userVote,
+    isSubmitting,
     resetState,
     loadEnsemble,
     onVote

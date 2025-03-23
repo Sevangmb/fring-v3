@@ -34,6 +34,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
     error,
     vetementsByType,
     userVote,
+    isSubmitting,
     resetState,
     loadEnsemble,
     onVote
@@ -96,6 +97,8 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
             userVote={userVote}
             onVote={handleVote}
             size="lg"
+            isLoading={isSubmitting}
+            disabled={loading || isSubmitting}
             className="pt-4"
           />
         </DialogContent>
