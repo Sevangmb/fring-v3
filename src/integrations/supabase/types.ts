@@ -102,6 +102,48 @@ export type Database = {
           },
         ]
       }
+      defi_votes: {
+        Row: {
+          created_at: string
+          defi_id: number
+          ensemble_id: number
+          id: number
+          user_id: string
+          vote: string
+        }
+        Insert: {
+          created_at?: string
+          defi_id: number
+          ensemble_id: number
+          id?: number
+          user_id: string
+          vote: string
+        }
+        Update: {
+          created_at?: string
+          defi_id?: number
+          ensemble_id?: number
+          id?: number
+          user_id?: string
+          vote?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "defi_votes_defi_id_fkey"
+            columns: ["defi_id"]
+            isOneToOne: false
+            referencedRelation: "defis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "defi_votes_ensemble_id_fkey"
+            columns: ["ensemble_id"]
+            isOneToOne: false
+            referencedRelation: "tenues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       defis: {
         Row: {
           created_at: string | null
