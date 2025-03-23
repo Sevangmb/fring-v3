@@ -3,12 +3,13 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useEntityVote } from "@/hooks/useEntityVote";
+import { EntityType, VoteType } from "@/hooks/useVote";
 
 interface VoterDialogProps {
   elementId?: number;
-  elementType?: "vetement" | "ensemble" | "defi";
-  onVoteSubmitted?: (vote: "up" | "down") => void;
+  elementType?: EntityType;
+  onVoteSubmitted?: (vote: VoteType) => void;
 }
 
 const VoterDialog: React.FC<VoterDialogProps> = ({
@@ -17,25 +18,17 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
   onVoteSubmitted,
 }) => {
   const [open, setOpen] = useState(false);
-  const { toast } = useToast();
   
-  const handleVote = (vote: "up" | "down") => {
-    // Ici, vous pouvez implémenter la logique pour enregistrer le vote en base de données
-    console.log(`Vote ${vote} enregistré pour ${elementType} #${elementId}`);
-    
-    // Afficher un toast pour confirmer le vote
-    toast({
-      title: "Vote enregistré !",
-      description: `Vous avez ${vote === "up" ? "aimé" : "disliké"} cet élément.`,
-      variant: vote === "up" ? "default" : "destructive",
-    });
-    
-    // Fermer le dialog
-    setOpen(false);
-    
-    // Appeler le callback si fourni
-    if (onVoteSubmitted) {
-      onVoteSubmitted(vote);
+  const { handleVote, loading } = useEntityVote({
+    entityType: elementType,
+    entityId: elementId,
+    onVoteSubmitted
+  });
+  
+  const handleVoteClick = async (vote: VoteType) => {
+    const success = await handleVote(vote);
+    if (success) {
+      setOpen(false);
     }
   };
   
@@ -58,9 +51,10 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
         
         <div className="flex justify-center gap-4 py-4">
           <Button 
-            onClick={() => handleVote("up")}
+            onClick={() => handleVoteClick("up")}
             variant="outline" 
             size="lg"
+            disabled={loading}
             className="flex-1 max-w-40 flex flex-col items-center p-6 hover:bg-green-50 hover:border-green-200"
           >
             <ThumbsUp className="h-8 w-8 mb-2 text-green-500" />
@@ -68,9 +62,10 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
           </Button>
           
           <Button 
-            onClick={() => handleVote("down")}
+            onClick={() => handleVoteClick("down")}
             variant="outline" 
             size="lg"
+            disabled={loading}
             className="flex-1 max-w-40 flex flex-col items-center p-6 hover:bg-red-50 hover:border-red-200"
           >
             <ThumbsDown className="h-8 w-8 mb-2 text-red-500" />
