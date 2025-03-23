@@ -7,6 +7,9 @@ import { Ensemble } from './types';
  */
 export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | null> => {
   try {
+    console.log(`Récupération de l'ensemble avec ID: ${ensembleId}`);
+    
+    // Récupérer l'ensemble
     const { data: ensembleData, error: ensembleError } = await supabase
       .from('tenues')
       .select('*')
@@ -18,11 +21,21 @@ export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | 
       throw ensembleError;
     }
 
+    if (!ensembleData) {
+      console.error("Aucun ensemble trouvé avec l'ID:", ensembleId);
+      return null;
+    }
+
+    console.log("Ensemble trouvé:", ensembleData);
+
     // Récupérer les vêtements associés à cet ensemble
     const { data: vetementsData, error: vetementsError } = await supabase
       .from('tenues_vetements')
       .select(`
-        *,
+        id,
+        tenue_id,
+        vetement_id,
+        position_ordre,
         vetement:vetement_id(*)
       `)
       .eq('tenue_id', ensembleId)
@@ -32,6 +45,8 @@ export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | 
       console.error("Erreur lors de la récupération des vêtements de l'ensemble:", vetementsError);
       throw vetementsError;
     }
+
+    console.log(`Nombre de vêtements trouvés: ${vetementsData?.length || 0}`);
 
     return {
       ...ensembleData,
