@@ -18,6 +18,7 @@ export interface DefiCardProps {
   icon?: React.ReactNode;
   participantsCount?: number;
   onParticipation?: () => void;
+  ensembleId?: number; // Added ensembleId prop
 }
 
 const DefiCard: React.FC<DefiCardProps> = ({
@@ -28,7 +29,8 @@ const DefiCard: React.FC<DefiCardProps> = ({
   type,
   icon = <Flag className="h-5 w-5" />,
   participantsCount = 0,
-  onParticipation
+  onParticipation,
+  ensembleId
 }) => {
   const isPast = type === "past";
   const isUpcoming = type === "upcoming";
@@ -58,7 +60,11 @@ const DefiCard: React.FC<DefiCardProps> = ({
               {participantsCount} participants
             </Text>
             <div className="ml-auto flex gap-2">
-              <VoteDefiDialog defiId={id} defiTitle={title} />
+              <VoteDefiDialog 
+                defiId={id} 
+                defiTitle={title} 
+                ensembleId={ensembleId || id} // Use the ensembleId prop or fallback to defi id
+              />
               <Button variant="outline" size="sm">
                 Voir les résultats
               </Button>
@@ -76,7 +82,11 @@ const DefiCard: React.FC<DefiCardProps> = ({
             </Text>
             <div className="flex gap-2">
               {participantsCount > 0 && (
-                <VoteDefiDialog defiId={id} defiTitle={title} />
+                <VoteDefiDialog 
+                  defiId={id} 
+                  defiTitle={title} 
+                  ensembleId={ensembleId || id} // Use the ensembleId prop or fallback to defi id
+                />
               )}
               <ParticiperDefiDialog 
                 defiId={id} 

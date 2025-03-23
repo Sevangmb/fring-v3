@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { PlusCircle, Flag, Calendar, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,9 +8,11 @@ import VoterDialog from "@/components/molecules/VoterDialog";
 import { fetchDefis, Defi } from "@/services/defi";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+
 interface DefisTabContentProps {
   isLoading?: boolean;
 }
+
 const DefisTabContent: React.FC<DefisTabContentProps> = ({
   isLoading: externalLoading
 }) => {
@@ -20,7 +21,6 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Function to determine defi type based on dates
   const getDefiType = (defi: Defi): DefiType => {
     const now = new Date();
     const startDate = new Date(defi.date_debut);
@@ -30,7 +30,6 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
     return "current";
   };
 
-  // Format date range
   const formatDateRange = (startDate: string, endDate: string) => {
     return `Du ${format(new Date(startDate), 'dd MMM', {
       locale: fr
@@ -39,7 +38,6 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
     })}`;
   };
 
-  // Group defis by type
   const groupedDefis = defis.reduce((acc, defi) => {
     const type = getDefiType(defi);
     if (!acc[type]) acc[type] = [];
@@ -47,7 +45,6 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
     return acc;
   }, {} as Record<DefiType, Defi[]>);
 
-  // Load defis
   const loadDefis = useCallback(async () => {
     if (!externalLoading) {
       setIsLoading(true);
@@ -66,19 +63,20 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
   useEffect(() => {
     loadDefis();
   }, [loadDefis, refreshTrigger]);
+
   const handleDefiCreated = () => {
     setRefreshTrigger(prev => prev + 1);
   };
+
   const handleParticipation = () => {
     setRefreshTrigger(prev => prev + 1);
   };
-  
+
   const handleVoteSubmitted = (defiId: number, vote: "up" | "down") => {
     console.log(`Vote ${vote} pour défi #${defiId} enregistré`);
-    // Ici, vous pourriez mettre à jour l'interface ou recharger les défis
     setRefreshTrigger(prev => prev + 1);
   };
-  
+
   return <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
@@ -97,7 +95,6 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
       {isLoading ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map(i => <div key={i} className="h-64 rounded-lg border border-border animate-pulse bg-muted/50" />)}
         </div> : <>
-          {/* Défis en cours */}
           <section>
             <div className="flex items-center gap-2 mb-4">
               <Flag className="h-5 w-5 text-primary" />
@@ -113,7 +110,8 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
                       dateRange={formatDateRange(defi.date_debut, defi.date_fin)} 
                       type="current" 
                       participantsCount={defi.participants_count} 
-                      onParticipation={handleParticipation} 
+                      onParticipation={handleParticipation}
+                      ensembleId={defi.ensemble_id}
                     />
                     <div className="absolute top-3 right-3">
                       <VoterDialog 
@@ -129,7 +127,6 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
               </Text>}
           </section>
 
-          {/* Défis à venir */}
           <section>
             <div className="flex items-center gap-2 mb-4">
               <Calendar className="h-5 w-5 text-secondary" />
@@ -144,7 +141,8 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
                       description={defi.description} 
                       dateRange={formatDateRange(defi.date_debut, defi.date_fin)} 
                       type="upcoming" 
-                      icon={<Calendar className="h-5 w-5" />} 
+                      icon={<Calendar className="h-5 w-5" />}
+                      ensembleId={defi.ensemble_id}
                     />
                     <div className="absolute top-3 right-3">
                       <VoterDialog 
@@ -160,7 +158,6 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
               </Text>}
           </section>
 
-          {/* Défis passés */}
           <section>
             <div className="flex items-center gap-2 mb-4">
               <Trophy className="h-5 w-5 text-muted-foreground" />
@@ -176,7 +173,8 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
                       dateRange={formatDateRange(defi.date_debut, defi.date_fin)} 
                       type="past" 
                       icon={<Trophy className="h-5 w-5" />} 
-                      participantsCount={defi.participants_count} 
+                      participantsCount={defi.participants_count}
+                      ensembleId={defi.ensemble_id}
                     />
                     <div className="absolute top-3 right-3">
                       <VoterDialog 
@@ -196,4 +194,5 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
       <CreateDefiDialog open={openCreateDialog} onOpenChange={setOpenCreateDialog} onDefiCreated={handleDefiCreated} />
     </div>;
 };
+
 export default DefisTabContent;
