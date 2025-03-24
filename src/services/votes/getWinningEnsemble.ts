@@ -82,6 +82,7 @@ export const getWinningEnsemble = async (defiId: number): Promise<EnsembleVoteRe
       
       if (ensembleData) {
         winningEnsemble.ensembleName = ensembleData.nom;
+        // Fix: Access email property from the profiles object correctly
         winningEnsemble.userName = ensembleData.profiles?.email || 'Utilisateur inconnu';
       }
     } catch (error) {
