@@ -8,19 +8,37 @@ import { Label } from "@/components/ui/label";
 interface EnsembleSelectorProps {
   ensembles: Ensemble[];
   selectedEnsembleId: number | null;
-  onSelectEnsemble: (id: number) => void;
+  onChange: (id: number) => void;
+  loading?: boolean;
 }
 
 const EnsembleSelector: React.FC<EnsembleSelectorProps> = ({
   ensembles,
   selectedEnsembleId,
-  onSelectEnsemble
+  onChange,
+  loading = false
 }) => {
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-[200px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (ensembles.length === 0) {
+    return (
+      <div className="flex justify-center items-center h-[200px] text-center text-muted-foreground">
+        <p>Aucun ensemble disponible. Veuillez en créer un avant de participer.</p>
+      </div>
+    );
+  }
+
   return (
     <ScrollArea className="h-[400px] rounded-md border p-4">
       <RadioGroup
         value={selectedEnsembleId?.toString() || ""}
-        onValueChange={(value) => onSelectEnsemble(parseInt(value))}
+        onValueChange={(value) => onChange(parseInt(value))}
         className="space-y-4"
       >
         {ensembles.map((ensemble) => {
