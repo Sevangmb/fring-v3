@@ -11,9 +11,8 @@ import { Button } from "@/components/ui/button";
 import { ThumbsUp, X, WifiOff } from "lucide-react";
 import VoteButtons from "@/components/defis/voting/VoteButtons";
 import EnsembleContentDisplay from "./EnsembleContentDisplay";
-import { useEnsembleVoteDialog } from "@/hooks/useEnsembleVoteDialog";
 import { Alert, Box, Typography } from "@mui/material";
-import { useEntityVote } from "@/hooks/useEntityVote";
+import { useVote } from "@/hooks/useVote";
 import { useToast } from "@/hooks/use-toast";
 
 interface VoteDefiDialogProps {
@@ -29,76 +28,104 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const handleClose = () => setOpen(false);
+  const [ensemble, setEnsemble] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [vetementsByType, setVetementsByType] = useState<any>({});
   
-  // Utiliser useEntityVote pour voter directement sur le défi si ensembleId n'est pas fourni
-  const {
-    userVote: defiVote,
-    handleVote: handleDefiVote,
-    isSubmitting: isDefiVoting,
-    connectionError: defiConnectionError
-  } = useEntityVote({
-    entityType: 'defi',
-    entityId: defiId
-  });
+  // Use our hook with the proper entity type
+  const entityType = ensembleId ? 'ensemble' : 'defi';
+  const entityId = ensembleId || defiId;
   
-  // Utiliser useEnsembleVoteDialog seulement si ensembleId est fourni
   const {
-    ensemble,
-    loading,
-    error,
-    vetementsByType,
+    submitVote,
     userVote,
-    isSubmitting,
-    connectionError,
-    resetState,
-    loadEnsemble,
-    onVote
-  } = useEnsembleVoteDialog({ 
-    ensembleId: ensembleId || 0, 
-    onClose: handleClose,
-    skip: !ensembleId // Skip if ensembleId is not provided
-  });
-
-  const handleOpen = () => {
-    setOpen(true);
-    if (ensembleId) {
-      resetState();
-    }
-  };
-
-  useEffect(() => {
-    if (open && ensembleId) {
-      loadEnsemble();
-    }
-  }, [open, ensembleId, loadEnsemble]);
-  
-  const handleVote = async (voteValue: 'up' | 'down') => {
-    if (ensembleId) {
-      // Vote sur l'ensemble
-      onVote(voteValue);
-    } else {
-      // Vote directement sur le défi
-      const success = await handleDefiVote(voteValue);
-      if (success) {
-        handleClose();
+    votesCount,
+    isLoading: isVoting,
+    isOffline,
+    loadVoteData
+  } = useVote(entityType, entityId, {
+    onVoteSuccess: () => {
+      if (!ensembleId) {
+        // Close dialog after voting directly on a defi
+        setOpen(false);
       }
     }
-  };
-
-  // Déterminer si c'est un vote sur un défi direct ou sur un ensemble
-  const isDefiDirectVote = !ensembleId;
+  });
   
-  // Variables d'état à utiliser dans le rendu
-  const activeVote = isDefiDirectVote ? defiVote : userVote;
-  const activeIsSubmitting = isDefiDirectVote ? isDefiVoting : isSubmitting;
-  const activeConnectionError = isDefiDirectVote ? defiConnectionError : connectionError;
-
-  // Adapter la fonction handleVote pour correspondre à la signature attendue par VoteButtons
-  const adaptedHandleVote = (ensembleId: number, vote: 'up' | 'down') => {
-    handleVote(vote);
+  const handleClose = () => setOpen(false);
+  
+  const handleOpen = () => {
+    setOpen(true);
+    loadVoteData();
+    
+    if (ensembleId) {
+      loadEnsemble();
+    }
   };
-
+  
+  const loadEnsemble = async () => {
+    if (!ensembleId) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      
+      const { data, error } = await supabase
+        .from('tenues')
+        .select(`
+          id, 
+          nom, 
+          description, 
+          occasion, 
+          saison, 
+          created_at, 
+          user_id,
+          vetements:tenues_vetements(
+            id,
+            vetement:vetement_id(*),
+            position_ordre
+          )
+        `)
+        .eq('id', ensembleId)
+        .single();
+      
+      if (error) throw error;
+      
+      setEnsemble(data);
+      
+      // Organize vetements by type
+      const byType: any = {};
+      if (data?.vetements) {
+        data.vetements.forEach((item: any) => {
+          const vetement = item.vetement;
+          if (vetement) {
+            const categorie = vetement.categorie_id;
+            if (!byType[categorie]) {
+              byType[categorie] = [];
+            }
+            byType[categorie].push(vetement);
+          }
+        });
+      }
+      
+      setVetementsByType(byType);
+    } catch (err) {
+      console.error('Error loading ensemble:', err);
+      setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleVote = async (vote: 'up' | 'down') => {
+    await submitVote(vote);
+  };
+  
+  const connectionError = isOffline;
+  
   return (
     <>
       <Button 
@@ -122,13 +149,13 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
               </DialogClose>
             </DialogTitle>
             <p className="text-center text-muted-foreground">
-              {isDefiDirectVote 
+              {!ensembleId 
                 ? "Donnez votre avis sur ce défi." 
                 : "Donnez votre avis sur cet ensemble."}
             </p>
           </DialogHeader>
           
-          {activeConnectionError && (
+          {connectionError && (
             <Alert severity="error" sx={{ mb: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <WifiOff size={16} />
@@ -139,24 +166,23 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
             </Alert>
           )}
           
-          {/* Afficher l'aperçu de l'ensemble seulement si ensembleId est fourni */}
-          {!isDefiDirectVote && (
+          {/* Display ensemble preview only if ensembleId is provided */}
+          {ensembleId && (
             <EnsembleContentDisplay
               ensemble={ensemble}
               loading={loading}
-              error={error ? error.message : ''}
+              error={error || ''}
               vetementsByType={vetementsByType}
             />
           )}
           
           <VoteButtons
-            ensembleId={ensembleId || defiId} // Utiliser defiId si ensembleId n'est pas fourni
-            userVote={activeVote}
-            onVote={adaptedHandleVote}
+            userVote={userVote}
+            onVote={handleVote}
             size="lg"
-            isLoading={activeIsSubmitting}
-            disabled={!isDefiDirectVote && loading || activeIsSubmitting}
-            connectionError={activeConnectionError}
+            isLoading={isVoting}
+            disabled={(ensembleId && loading) || isVoting}
+            connectionError={connectionError}
             className="pt-4"
           />
         </DialogContent>

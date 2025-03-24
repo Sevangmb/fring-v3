@@ -1,27 +1,31 @@
 
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  VoteType, 
-  EntityType, 
-  VoteOptions 
-} from "@/services/votes/types";
+import { VoteType, EntityType, VotesCount } from "@/services/votes/types";
 import { 
   submitVote as submitVoteApi,
   getUserVote as getUserVoteApi,
   getVotesCount as getVotesCountApi,
-  calculateScore as calculateScoreApi
+  calculateScore
 } from "@/services/votes/voteService";
 
+interface UseVoteOptions {
+  onVoteSuccess?: (vote: VoteType) => void;
+  onVoteError?: (error: Error) => void;
+}
+
 /**
- * Hook pour gérer les votes sur différents types d'entités
+ * Hook for managing votes on different entity types
  */
 export const useVote = (
   entityType: EntityType,
-  options?: VoteOptions
+  entityId?: number,
+  options?: UseVoteOptions
 ) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [userVote, setUserVote] = useState<VoteType>(null);
+  const [votesCount, setVotesCount] = useState<VotesCount>({ up: 0, down: 0 });
   const [error, setError] = useState<Error | null>(null);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
@@ -40,26 +44,38 @@ export const useVote = (
   });
 
   /**
-   * Soumettre un vote pour une entité
+   * Load current vote data
    */
-  const submitVote = useCallback(async (
-    entityId: number,
-    vote: VoteType,
-    extraFields?: Record<string, any>
-  ): Promise<boolean> => {
-    // Validate entityId
-    if (entityId === undefined || entityId === null || isNaN(entityId)) {
-      console.error(`Tentative de vote avec ID invalide: ${entityId}`);
+  const loadVoteData = useCallback(async () => {
+    if (!entityId) return;
+    
+    try {
+      // Get user's current vote
+      const vote = await getUserVoteApi(entityType, entityId);
+      setUserVote(vote);
+      
+      // Get all votes
+      const votes = await getVotesCountApi(entityType, entityId);
+      setVotesCount(votes);
+    } catch (err) {
+      console.error("Erreur lors du chargement des votes:", err);
+    }
+  }, [entityType, entityId]);
+
+  /**
+   * Submit a vote for an entity
+   */
+  const submitVote = useCallback(async (vote: VoteType): Promise<boolean> => {
+    if (!entityId) {
       toast({
         title: "Erreur",
-        description: "ID de l'élément manquant ou invalide.",
+        description: "ID de l'élément manquant.",
         variant: "destructive",
       });
       return false;
     }
     
-    // Check network connection first
-    if (!navigator.onLine) {
+    if (isOffline) {
       toast({
         title: "Pas de connexion",
         description: "Vérifiez votre connexion internet et réessayez.",
@@ -72,7 +88,25 @@ export const useVote = (
     setError(null);
     
     try {
-      console.log(`Soumission du vote: type=${entityType}, id=${entityId}, vote=${vote}`);
+      // Save vote optimistically
+      setUserVote(vote);
+      
+      // Update local vote count optimistically
+      const newVotesCount = { ...votesCount };
+      
+      // If changing existing vote
+      if (userVote) {
+        if (userVote === 'up') newVotesCount.up = Math.max(0, newVotesCount.up - 1);
+        if (userVote === 'down') newVotesCount.down = Math.max(0, newVotesCount.down - 1);
+      }
+      
+      // Add new vote
+      if (vote === 'up') newVotesCount.up++;
+      if (vote === 'down') newVotesCount.down++;
+      
+      setVotesCount(newVotesCount);
+      
+      // Send to API
       const success = await submitVoteApi(entityType, entityId, vote);
       
       if (success) {
@@ -81,6 +115,11 @@ export const useVote = (
           description: `Vous avez ${vote === 'up' ? 'aimé' : 'disliké'} cet élément.`,
           variant: vote === 'up' ? "default" : "destructive",
         });
+        
+        // Call success callback if provided
+        if (options?.onVoteSuccess) {
+          options.onVoteSuccess(vote);
+        }
       } else {
         throw new Error('Erreur lors du vote');
       }
@@ -88,7 +127,12 @@ export const useVote = (
       return success;
     } catch (err: any) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors du vote';
-      setError(err instanceof Error ? err : new Error(errorMessage));
+      const errorObj = err instanceof Error ? err : new Error(errorMessage);
+      
+      setError(errorObj);
+      
+      // Revert optimistic updates on error
+      loadVoteData();
       
       toast({
         title: "Erreur",
@@ -96,55 +140,31 @@ export const useVote = (
         variant: "destructive"
       });
       
+      // Call error callback if provided
+      if (options?.onVoteError) {
+        options.onVoteError(errorObj);
+      }
+      
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, [entityType, toast]);
+  }, [entityType, entityId, userVote, votesCount, isOffline, toast, loadVoteData, options]);
 
-  /**
-   * Obtenir le vote de l'utilisateur pour une entité
-   */
-  const getUserVote = useCallback(async (entityId: number): Promise<VoteType> => {
-    if (!navigator.onLine) return null;
-    
-    try {
-      return await getUserVoteApi(entityType, entityId);
-    } catch (error) {
-      console.error("Erreur lors de la récupération du vote:", error);
-      return null;
-    }
-  }, [entityType]);
-
-  /**
-   * Obtenir tous les votes pour une entité
-   */
-  const getVotesCount = useCallback(async (entityId: number) => {
-    if (!navigator.onLine) return { up: 0, down: 0 };
-    
-    try {
-      return await getVotesCountApi(entityType, entityId);
-    } catch (error) {
-      console.error("Erreur lors de la récupération des votes:", error);
-      return { up: 0, down: 0 };
-    }
-  }, [entityType]);
-
-  /**
-   * Calculer le score (votes positifs - votes négatifs)
-   */
-  const calculateScore = calculateScoreApi;
+  // Calculate score
+  const score = calculateScore(votesCount);
 
   return {
     submitVote,
-    getUserVote,
-    getVotesCount,
-    calculateScore,
+    userVote,
+    votesCount,
+    score,
     isLoading,
     isOffline,
-    error
+    error,
+    loadVoteData
   };
 };
 
-// Réexporter les types depuis le fichier de types pour commodité
-export type { VoteType, EntityType } from "@/services/votes/types";
+export { calculateScore };
+export type { VoteType, EntityType, VotesCount };

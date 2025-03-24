@@ -2,16 +2,14 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ThumbsDown, ThumbsUp, WifiOff } from "lucide-react";
-import { Box, Typography, CircularProgress, Tooltip } from "@mui/material";
+import { CircularProgress, Tooltip } from "@mui/material";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
+import { VoteType } from "@/services/votes/types";
 
 export interface VoteButtonsProps {
-  ensembleId: number;
-  userVote: 'up' | 'down' | null;
-  onVote: (ensembleId: number, vote: 'up' | 'down') => void;
+  userVote: VoteType;
+  onVote: (vote: 'up' | 'down') => void;
   size?: 'sm' | 'md' | 'lg';
-  variant?: 'default' | 'compact';
   showLabels?: boolean;
   disabled?: boolean;
   isLoading?: boolean;
@@ -23,19 +21,15 @@ export interface VoteButtonsProps {
 type ButtonSizeType = "sm" | "lg" | "default" | "icon";
 
 const VoteButtons: React.FC<VoteButtonsProps> = ({
-  ensembleId,
   userVote,
   onVote,
   size = 'md',
-  variant = 'default',
   showLabels = true,
   disabled = false,
   isLoading = false,
   connectionError = false,
   className
 }) => {
-  const { toast } = useToast();
-  
   // Size mappings for different button sizes
   const sizeClasses = {
     sm: { button: "px-2 py-1", icon: "h-4 w-4", buttonSize: "sm" as ButtonSizeType },
@@ -46,42 +40,19 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
   // Get the appropriate sizes based on the size prop
   const { button: buttonSize, icon: iconSize, buttonSize: buttonSizeValue } = sizeClasses[size];
   
-  // Determine the spacing between buttons based on the variant
-  const spacing = variant === 'compact' ? 2 : 6;
-  
   const handleVote = (vote: 'up' | 'down') => {
     if (disabled || isLoading) return;
-    
-    if (connectionError || !navigator.onLine) {
-      toast({
-        title: "Problème de connexion",
-        description: "Vérifiez votre connexion internet et réessayez.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    onVote(ensembleId, vote);
+    onVote(vote);
   };
   
   // Affiche un message d'erreur en cas de problème de connexion
   if (connectionError) {
     return (
-      <Box
-        sx={{ 
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 1,
-          pt: 2
-        }}
-        className={className}
-      >
+      <div className={cn("flex flex-col items-center justify-center gap-2 pt-2", className)}>
         <WifiOff className="text-red-500 h-8 w-8" />
-        <Typography variant="body2" color="error">
+        <p className="text-red-500 text-sm">
           Problème de connexion. Vérifiez votre connexion internet.
-        </Typography>
+        </p>
         <Button 
           onClick={() => window.location.reload()}
           variant="outline" 
@@ -90,20 +61,12 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
         >
           Réessayer
         </Button>
-      </Box>
+      </div>
     );
   }
   
   return (
-    <Box
-      sx={{ 
-        display: 'flex',
-        justifyContent: 'center',
-        gap: spacing,
-        pt: 2
-      }}
-      className={className}
-    >
+    <div className={cn("flex justify-center gap-4 pt-2", className)}>
       <Tooltip title={userVote === 'up' ? "Vous avez aimé" : "J'aime"}>
         <span> {/* Use span instead of the direct Button to avoid Tooltip warning */}
           <Button 
@@ -119,7 +82,7 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
                 : 'hover:bg-green-50 hover:border-green-200',
               (disabled || isLoading) && "opacity-50 cursor-not-allowed"
             )}
-            type="button" // Explicitly set type to avoid form submission
+            type="button"
           >
             {isLoading ? (
               <CircularProgress size={16} color="inherit" />
@@ -137,7 +100,7 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
       </Tooltip>
       
       <Tooltip title={userVote === 'down' ? "Vous n'avez pas aimé" : "Je n'aime pas"}>
-        <span> {/* Use span instead of the direct Button to avoid Tooltip warning */}
+        <span>
           <Button 
             onClick={() => handleVote('down')}
             variant={userVote === 'down' ? 'default' : 'outline'} 
@@ -151,7 +114,7 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
                 : 'hover:bg-red-50 hover:border-red-200',
               (disabled || isLoading) && "opacity-50 cursor-not-allowed"
             )}
-            type="button" // Explicitly set type to avoid form submission
+            type="button"
           >
             {isLoading ? (
               <CircularProgress size={16} color="inherit" />
@@ -167,7 +130,7 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
           </Button>
         </span>
       </Tooltip>
-    </Box>
+    </div>
   );
 };
 
