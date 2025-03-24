@@ -1,8 +1,10 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { initializeVoteTables } from './services/database/voteTables';
 
 // Import pages
 import Index from './pages/Index';

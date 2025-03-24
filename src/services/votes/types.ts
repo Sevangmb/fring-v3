@@ -8,6 +8,12 @@ export interface VotesCount {
   down: number;
 }
 
+export interface VoteOptions {
+  tableName?: string;
+  entityIdField?: string;
+  voteField?: string;
+}
+
 export const calculateScore = (votes: VotesCount): number => {
   return (votes.up || 0) - (votes.down || 0);
 };

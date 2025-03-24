@@ -13,3 +13,10 @@ export const isValidEntityId = (entityId: number | null | undefined): boolean =>
   
   return true;
 };
+
+/**
+ * Vérifier si l'application est en ligne
+ */
+export const isOnline = (): boolean => {
+  return navigator.onLine;
+};
