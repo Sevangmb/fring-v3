@@ -14,6 +14,7 @@ import EnsembleContentDisplay from "./EnsembleContentDisplay";
 import { useEnsembleVoteDialog } from "@/hooks/useEnsembleVoteDialog";
 import { Alert, Box, Typography } from "@mui/material";
 import { useEntityVote } from "@/hooks/useEntityVote";
+import { useToast } from "@/hooks/use-toast";
 
 interface VoteDefiDialogProps {
   defiId: number;
@@ -72,17 +73,16 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
     }
   }, [open, ensembleId, loadEnsemble]);
   
-  const handleVote = (voteValue: 'up' | 'down') => {
+  const handleVote = async (voteValue: 'up' | 'down') => {
     if (ensembleId) {
       // Vote sur l'ensemble
       onVote(voteValue);
     } else {
       // Vote directement sur le défi
-      handleDefiVote(voteValue).then(success => {
-        if (success) {
-          handleClose();
-        }
-      });
+      const success = await handleDefiVote(voteValue);
+      if (success) {
+        handleClose();
+      }
     }
   };
 
@@ -139,7 +139,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
             <EnsembleContentDisplay
               ensemble={ensemble}
               loading={loading}
-              error={error}
+              error={error ? error.message : ''}
               vetementsByType={vetementsByType}
             />
           )}
