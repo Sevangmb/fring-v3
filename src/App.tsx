@@ -1,161 +1,143 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { AuthProvider } from './context/AuthContext';
+import { TooltipProvider } from "@/components/ui/tooltip"
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
-import ProtectedRoute from "./components/atoms/ProtectedRoute";
+// Import pages
+import Index from './pages/Index';
+import AboutPage from './pages/AboutPage';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import MesAmis from './pages/MesAmis';
+import MesFavoris from './pages/MesFavoris';
+import MesVetements from './pages/MesVetements';
+import Messages from './pages/Messages';
+import AjouterVetement from './pages/AjouterVetement';
+import ModifierVetement from './pages/ModifierVetement';
+import VetementsAmisPage from './pages/VetementsAmisPage';
+import AjouterEnsemble from './pages/AjouterEnsemble';
+import ModifierEnsemble from './pages/ModifierEnsemble';
+import EnsemblesAmisPage from './pages/EnsemblesAmisPage';
+import Profile from './pages/Profile';
+import Dashboard from './pages/Dashboard';
+import NotFound from './pages/NotFound';
 
-// Pages
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import Profile from "./pages/Profile";
-import NotFound from "./pages/NotFound";
-import MesVetements from "./pages/MesVetements";
-import AjouterVetement from "./pages/vetements/AjouterVetement";
-import ListeVetements from "./pages/vetements/ListeVetements";
-import ModifierVetement from "./pages/vetements/ModifierVetement";
-import MesAmis from "./pages/MesAmis";
-import Messages from "./pages/Messages";
-import About from "./pages/About";
-import MiesPage from "./pages/Mies";
-import MesFavoris from "./pages/MesFavoris";
-import MesEnsembles from "./pages/ensembles/MesEnsembles";
-import AjouterEnsemble from "./pages/ensembles/AjouterEnsemble";
-import ModifierEnsemble from "./pages/ensembles/ModifierEnsemble";
-import VetementsAmisPage from "./pages/VetementsAmisPage";
-import EnsemblesAmis from "./pages/EnsemblesAmis";
+// Import components
+import ProtectedRoute from './components/ProtectedRoute';
 
-// Create a new query client instance
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 30000 // 30 secondes avant qu'une requête soit considérée comme périmée
-    }
-  }
-});
+// Import styles
+import './App.css';
+import ResultatsDefi from './pages/defis/ResultatsDefi';
 
-const App = () => {
+const queryClient = new QueryClient();
+
+function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              
-              {/* Protected Routes */}
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              } />
-              
-              {/* Vêtements Routes */}
-              <Route path="/mes-vetements" element={
-                <ProtectedRoute>
-                  <ListeVetements />
-                </ProtectedRoute>
-              } />
-              <Route path="/mes-vetements/ajouter" element={
-                <ProtectedRoute>
-                  <AjouterVetement />
-                </ProtectedRoute>
-              } />
-              <Route path="/mes-vetements/liste" element={
-                <ProtectedRoute>
-                  <ListeVetements />
-                </ProtectedRoute>
-              } />
-              <Route path="/mes-vetements/modifier/:id" element={
-                <ProtectedRoute>
-                  <ModifierVetement />
-                </ProtectedRoute>
-              } />
-              
-              {/* Favoris Route - Séparée */}
-              <Route path="/mes-favoris" element={
-                <ProtectedRoute>
-                  <MesFavoris />
-                </ProtectedRoute>
-              } />
-              
-              {/* Ensembles Routes */}
-              <Route path="/ensembles" element={
-                <ProtectedRoute>
-                  <MesEnsembles />
-                </ProtectedRoute>
-              } />
-              <Route path="/ensembles/ajouter" element={
-                <ProtectedRoute>
-                  <AjouterEnsemble />
-                </ProtectedRoute>
-              } />
-              <Route path="/ensembles/modifier/:id" element={
-                <ProtectedRoute>
-                  <ModifierEnsemble />
-                </ProtectedRoute>
-              } />
-              
-              {/* Social Routes */}
-              <Route path="/mes-amis" element={
-                <ProtectedRoute>
-                  <MesAmis />
-                </ProtectedRoute>
-              } />
-              <Route path="/vetements-amis" element={
-                <ProtectedRoute>
-                  <VetementsAmisPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/ensembles-amis" element={
-                <ProtectedRoute>
-                  <EnsemblesAmis />
-                </ProtectedRoute>
-              } />
-              <Route path="/messages" element={
-                <ProtectedRoute>
-                  <Messages />
-                </ProtectedRoute>
-              } />
-              <Route path="/messages/:friendId" element={
-                <ProtectedRoute>
-                  <Messages />
-                </ProtectedRoute>
-              } />
-              
-              {/* Autres Routes */}
-              <Route path="/mies" element={
-                <ProtectedRoute>
-                  <MiesPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/about" element={<About />} />
-              
-              {/* Fallback Routes */}
-              <Route path="/404" element={<NotFound />} />
-              <Route path="*" element={<Navigate to="/404" replace />} />
-            </Routes>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <div className="App">
+      <BrowserRouter>
+        <TooltipProvider>
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                
+                <Route path="/mes-amis" element={
+                  <ProtectedRoute>
+                    <MesAmis />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/mes-favoris" element={
+                  <ProtectedRoute>
+                    <MesFavoris />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/vetements" element={
+                  <ProtectedRoute>
+                    <MesVetements />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/messages" element={
+                  <ProtectedRoute>
+                    <Messages />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/messages/:id" element={
+                  <ProtectedRoute>
+                    <Messages />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/vetements/ajouter" element={
+                  <ProtectedRoute>
+                    <AjouterVetement />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/vetements/modifier/:id" element={
+                  <ProtectedRoute>
+                    <ModifierVetement />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/vetements/amis" element={
+                  <ProtectedRoute>
+                    <VetementsAmisPage />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/ensembles/ajouter" element={
+                  <ProtectedRoute>
+                    <AjouterEnsemble />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/ensembles/modifier/:id" element={
+                  <ProtectedRoute>
+                    <ModifierEnsemble />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/ensembles/amis" element={
+                  <ProtectedRoute>
+                    <EnsemblesAmisPage />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Nouvelle route pour les résultats de défis */}
+                <Route path="/defis/:id/resultats" element={
+                  <ProtectedRoute>
+                    <ResultatsDefi />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AuthProvider>
+          </QueryClientProvider>
+        </TooltipProvider>
+      </BrowserRouter>
+    </div>
   );
-};
+}
 
 export default App;

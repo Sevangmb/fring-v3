@@ -7,6 +7,7 @@ import { Award, Calendar, ChevronRight, Flag, Vote } from "lucide-react";
 import ParticiperDefiDialog from "./ParticiperDefiDialog";
 import VoteDefiDialog from "./VoteDefiDialog";
 import VoterDialog from "./VoterDialog";
+import { Link } from "react-router-dom";
 
 export type DefiType = "current" | "upcoming" | "past";
 
@@ -69,7 +70,7 @@ const DefiCard: React.FC<DefiCardProps> = ({
                 ensembleId={ensembleId}
               />
               <Button variant="outline" size="sm" asChild>
-                <a href={`/defis/${id}/resultats`}>Voir les résultats</a>
+                <Link to={`/defis/${id}/resultats`}>Voir les résultats</Link>
               </Button>
             </div>
           </>
