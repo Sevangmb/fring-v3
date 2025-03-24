@@ -82,8 +82,20 @@ export const getWinningEnsemble = async (defiId: number): Promise<EnsembleVoteRe
       
       if (ensembleData) {
         winningEnsemble.ensembleName = ensembleData.nom;
-        // Fix: Access email property from the profiles object correctly
-        winningEnsemble.userName = ensembleData.profiles?.email || 'Utilisateur inconnu';
+        
+        // Fix: Access email property correctly - profiles could be an array or an object
+        // Let's handle it safely based on the structure returned by Supabase
+        if (ensembleData.profiles) {
+          if (Array.isArray(ensembleData.profiles)) {
+            // If profiles is an array, take the first element's email
+            winningEnsemble.userName = ensembleData.profiles[0]?.email || 'Utilisateur inconnu';
+          } else {
+            // If profiles is an object, access email directly
+            winningEnsemble.userName = ensembleData.profiles.email || 'Utilisateur inconnu';
+          }
+        } else {
+          winningEnsemble.userName = 'Utilisateur inconnu';
+        }
       }
     } catch (error) {
       console.error("Erreur lors de la récupération des détails de l'ensemble gagnant:", error);
