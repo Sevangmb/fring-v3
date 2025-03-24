@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Text } from "@/components/atoms/Typography";
@@ -139,8 +138,16 @@ const DefiCard: React.FC<DefiCardProps> = ({
           // Pour simplifier, on prend le participant le plus récent
           // Dans une version plus avancée, on pourrait compter les votes pour chaque participation
           const leader = participations[0];
-          if (leader.tenue && leader.tenue.nom) {
-            setLeaderName(leader.tenue.nom);
+          // Fix the TypeScript error by checking if tenue is an array or an object
+          if (leader.tenue) {
+            // Handle the case where tenue might be returned as an array
+            if (Array.isArray(leader.tenue) && leader.tenue.length > 0) {
+              setLeaderName(leader.tenue[0].nom);
+            } 
+            // Handle the case where tenue is returned as an object
+            else if (typeof leader.tenue === 'object' && leader.tenue !== null) {
+              setLeaderName(leader.tenue.nom);
+            }
           }
         }
       } catch (error) {
