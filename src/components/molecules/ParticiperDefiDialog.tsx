@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Award } from "lucide-react";
 import { fetchEnsembles } from "@/services/ensemble";
-import { participerDefi, checkUserParticipation } from "@/services/defi/participationService";
+import { participerDefi, checkUserParticipation, updateDefiParticipantsCount } from "@/services/defi/participationService";
 import EnsembleSelector from "@/components/molecules/EnsembleSelector";
 import { Ensemble } from "@/services/ensemble/types";
 
@@ -79,6 +79,10 @@ const ParticiperDefiDialog: React.FC<ParticiperDefiDialogProps> = ({
         });
         setOpen(false);
         setAlreadyParticipating(true);
+        
+        // S'assurer que le compteur est correctement mis à jour
+        await updateDefiParticipantsCount(defiId);
+        
         if (onParticipation) onParticipation();
       } else {
         toast({

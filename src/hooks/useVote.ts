@@ -1,12 +1,16 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { submitVote, getUserVote, getVotesCount } from "@/services/votes/voteService";
-import { useToast } from "@/hooks/use-toast";
-import { VoteType, EntityType } from "@/services/votes/types";
+import { useState, useCallback, useEffect } from 'react';
+import { 
+  submitVote, 
+  getUserVote, 
+  getVotesCount 
+} from '@/services/votes/voteService';
+import { VoteType, EntityType, VotesCount } from '@/services/votes/types';
+import { useToast } from './use-toast';
 
 interface UseVoteOptions {
-  onVoteSuccess?: () => void;
-  onVoteError?: (error: any) => void;
+  onVoteSuccess?: (vote: VoteType) => void;
+  initialVote?: VoteType;
 }
 
 export const useVote = (
@@ -15,92 +19,95 @@ export const useVote = (
   options?: UseVoteOptions
 ) => {
   const { toast } = useToast();
-  const [userVote, setUserVote] = useState<VoteType>(null);
-  const [votesCount, setVotesCount] = useState({ up: 0, down: 0 });
+  const [userVote, setUserVote] = useState<VoteType>(options?.initialVote || null);
+  const [votesCount, setVotesCount] = useState<VotesCount>({ up: 0, down: 0 });
   const [isLoading, setIsLoading] = useState(false);
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [isOffline, setIsOffline] = useState(false);
 
-  // Vérifier l'état de la connexion
-  useEffect(() => {
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  // Charger les données de vote
   const loadVoteData = useCallback(async () => {
-    if (!entityId || isOffline) return;
-
+    if (!entityId) return;
+    
+    setIsLoading(true);
     try {
+      // Vérifier d'abord si le navigateur est en ligne
+      if (!navigator.onLine) {
+        setIsOffline(true);
+        setIsLoading(false);
+        return;
+      }
+      
       const [vote, counts] = await Promise.all([
         getUserVote(entityType, entityId),
         getVotesCount(entityType, entityId)
       ]);
-
+      
       setUserVote(vote);
       setVotesCount(counts);
+      setIsOffline(false);
     } catch (error) {
-      console.error("Erreur lors du chargement des votes:", error);
+      console.error('Erreur lors du chargement des votes:', error);
+      setIsOffline(true);
+    } finally {
+      setIsLoading(false);
     }
-  }, [entityType, entityId, isOffline]);
+  }, [entityType, entityId]);
 
-  // Charger les données au montage du composant
-  useEffect(() => {
-    loadVoteData();
-  }, [loadVoteData]);
-
-  // Soumettre un vote
-  const submitUserVote = async (vote: VoteType) => {
-    if (isOffline) {
-      toast({
-        title: "Vous êtes hors ligne",
-        description: "Impossible de voter sans connexion internet",
-        variant: "destructive"
-      });
-      return;
-    }
-
+  const submitVoteHandler = useCallback(async (vote: VoteType) => {
+    if (!entityId || isLoading) return;
+    
     setIsLoading(true);
-
     try {
-      await submitVote(entityType, entityId, vote);
+      // Vérifier si le navigateur est en ligne
+      if (!navigator.onLine) {
+        setIsOffline(true);
+        toast({
+          title: "Erreur de connexion",
+          description: "Impossible de voter sans connexion internet",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
       
-      // Mettre à jour l'état local
+      // Optimistic update
       setUserVote(vote);
       
-      // Mettre à jour le compteur de votes
-      const newCounts = { ...votesCount };
-      
-      // Si l'utilisateur avait déjà voté, décrémenter l'ancien vote
-      if (userVote === 'up') newCounts.up--;
-      if (userVote === 'down') newCounts.down--;
-      
-      // Incrémenter le nouveau vote
-      if (vote === 'up') newCounts.up++;
-      if (vote === 'down') newCounts.down++;
-      
-      setVotesCount(newCounts);
-
-      // Notifier le succès
-      toast({
-        title: "Vote enregistré",
-        description: vote === 'up' ? "Vous avez aimé" : "Vous n'avez pas aimé",
-        variant: vote === 'up' ? "default" : "destructive"
+      // Mettre à jour le compteur de votes de manière optimiste
+      setVotesCount(prev => {
+        const newCounts = { ...prev };
+        
+        // Si l'utilisateur avait déjà voté, décrémenter l'ancien vote
+        if (userVote) {
+          newCounts[userVote] = Math.max(0, newCounts[userVote] - 1);
+        }
+        
+        // Incrémenter le nouveau vote
+        newCounts[vote] = (newCounts[vote] || 0) + 1;
+        
+        return newCounts;
       });
-
-      // Callback success optionnel
+      
+      // Effectuer le vote
+      await submitVote(entityType, entityId, vote);
+      
+      // Si tout s'est bien passé, définir le vote de l'utilisateur
+      setUserVote(vote);
+      
+      // Rafraîchir le compteur
+      const counts = await getVotesCount(entityType, entityId);
+      setVotesCount(counts);
+      
+      // Appeler le callback en cas de succès
       if (options?.onVoteSuccess) {
-        options.onVoteSuccess();
+        options.onVoteSuccess(vote);
       }
+      
+      setIsOffline(false);
     } catch (error) {
-      console.error("Erreur lors du vote:", error);
+      console.error('Erreur lors du vote:', error);
+      
+      // Annuler les mises à jour optimistes
+      loadVoteData();
       
       toast({
         title: "Erreur",
@@ -108,21 +115,43 @@ export const useVote = (
         variant: "destructive"
       });
       
-      // Callback error optionnel
-      if (options?.onVoteError) {
-        options.onVoteError(error);
-      }
+      setIsOffline(true);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [entityType, entityId, userVote, isLoading, options, loadVoteData, toast]);
+
+  // Charger les données au montage et configurer les gestionnaires d'événements réseau
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOffline(false);
+      loadVoteData();
+    };
+    
+    const handleOffline = () => {
+      setIsOffline(true);
+    };
+    
+    // Configurer les gestionnaires d'événements
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    // Charger les données initiales
+    loadVoteData();
+    
+    // Nettoyer les gestionnaires d'événements à la destruction
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [loadVoteData]);
 
   return {
     userVote,
     votesCount,
+    submitVote: submitVoteHandler,
     isLoading,
     isOffline,
-    submitVote: submitUserVote,
     loadVoteData
   };
 };
