@@ -1,7 +1,6 @@
 
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, Box, Card, CardContent, Grid, Typography } from "@mui/material";
 import { formatDistance } from "date-fns";
 import { fr } from "date-fns/locale";
 import { VoteType } from "@/services/votes/types";
@@ -37,39 +36,44 @@ const EnsembleDetail: React.FC<EnsembleDetailProps> = ({
   const vetements = ensemble.vetements || [];
   
   return (
-    <div className="space-y-4">
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {ensemble.description && (
-        <p className="text-sm text-muted-foreground">{ensemble.description}</p>
+        <Typography variant="body2" color="text.secondary">
+          {ensemble.description}
+        </Typography>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <Grid container spacing={2}>
         {vetements.map((item: any) => (
-          <Card key={item.id} className="overflow-hidden">
-            <CardContent className="p-2">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-12 w-12 rounded-md">
-                  <AvatarImage 
-                    src={item.vetement?.image_url} 
-                    alt={item.vetement?.nom || "Vêtement"} 
-                  />
-                  <AvatarFallback className="rounded-md">
+          <Grid item xs={12} md={6} key={item.id}>
+            <Card variant="outlined" sx={{ overflow: 'hidden' }}>
+              <CardContent sx={{ p: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar 
+                    src={item.vetement?.image_url}
+                    alt={item.vetement?.nom || "Vêtement"}
+                    variant="rounded"
+                    sx={{ width: 48, height: 48 }}
+                  >
                     {item.vetement?.nom?.charAt(0) || "V"}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h4 className="text-sm font-medium">{item.vetement?.nom}</h4>
-                  <p className="text-xs text-muted-foreground">
-                    {item.vetement?.marque}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                  </Avatar>
+                  <Box>
+                    <Typography variant="subtitle2">
+                      {item.vetement?.nom}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {item.vetement?.marque}
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
         ))}
-      </div>
+      </Grid>
       
       {onVote && (
-        <div className="mt-4 flex justify-center">
+        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
           <VoteButtons
             userVote={userVote}
             onVote={onVote}
@@ -78,13 +82,17 @@ const EnsembleDetail: React.FC<EnsembleDetailProps> = ({
             connectionError={connectionError}
             size="md"
           />
-        </div>
+        </Box>
       )}
       
-      <div className="text-xs text-muted-foreground text-right">
+      <Typography 
+        variant="caption" 
+        color="text.secondary" 
+        sx={{ textAlign: 'right', mt: 1 }}
+      >
         Publié {timeAgo}
-      </div>
-    </div>
+      </Typography>
+    </Box>
   );
 };
 

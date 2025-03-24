@@ -1,9 +1,7 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
+import { Box, Button, CircularProgress, Tooltip, Typography } from "@mui/material";
 import { ThumbsDown, ThumbsUp, WifiOff } from "lucide-react";
-import { CircularProgress, Tooltip } from "@mui/material";
-import { cn } from "@/lib/utils";
 import { VoteType } from "@/services/votes/types";
 
 export interface VoteButtonsProps {
@@ -17,9 +15,6 @@ export interface VoteButtonsProps {
   className?: string;
 }
 
-// Define a type for the button size values accepted by the Button component
-type ButtonSizeType = "sm" | "lg" | "default" | "icon";
-
 const VoteButtons: React.FC<VoteButtonsProps> = ({
   userVote,
   onVote,
@@ -30,62 +25,79 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
   connectionError = false,
   className
 }) => {
-  // Size mappings for different button sizes
-  const sizeClasses = {
-    sm: { button: "px-2 py-1", icon: "h-4 w-4", buttonSize: "sm" as ButtonSizeType },
-    md: { button: "px-3 py-2", icon: "h-5 w-5", buttonSize: "default" as ButtonSizeType },
-    lg: { button: "px-4 py-2", icon: "h-5 w-5", buttonSize: "lg" as ButtonSizeType }
+  // Size mappings for Material UI
+  const sizeMap = {
+    sm: { button: 'small', iconSize: 16, padding: '4px 10px' },
+    md: { button: 'medium', iconSize: 20, padding: '6px 16px' },
+    lg: { button: 'large', iconSize: 24, padding: '8px 22px' }
   };
   
-  // Get the appropriate sizes based on the size prop
-  const { button: buttonSize, icon: iconSize, buttonSize: buttonSizeValue } = sizeClasses[size];
+  const { button: buttonSize, iconSize, padding } = sizeMap[size];
   
   // Affiche un message d'erreur en cas de problème de connexion
   if (connectionError) {
     return (
-      <div className={cn("flex flex-col items-center justify-center gap-2 pt-2", className)}>
-        <WifiOff className="text-red-500 h-8 w-8" />
-        <p className="text-red-500 text-sm">
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        gap: 1, 
+        pt: 2 
+      }}>
+        <WifiOff color="error" style={{ width: 32, height: 32 }} />
+        <Typography variant="body2" color="error">
           Problème de connexion. Vérifiez votre connexion internet.
-        </p>
+        </Typography>
         <Button 
           onClick={() => window.location.reload()}
-          variant="outline" 
-          size="sm"
-          className="mt-2"
+          variant="outlined" 
+          color="error"
+          size="small"
+          sx={{ mt: 1 }}
         >
           Réessayer
         </Button>
-      </div>
+      </Box>
     );
   }
   
   return (
-    <div className={cn("flex justify-center gap-4 pt-2", className)}>
+    <Box sx={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      gap: 2, 
+      pt: 2
+    }}>
       <Tooltip title={userVote === 'up' ? "Vous avez aimé" : "J'aime"}>
-        <span> {/* Use span instead of the direct Button to avoid Tooltip warning */}
+        <span> {/* Use span to avoid Tooltip warning */}
           <Button 
             onClick={() => onVote('up')}
-            variant={userVote === 'up' ? 'default' : 'outline'} 
-            size={buttonSizeValue}
+            variant={userVote === 'up' ? 'contained' : 'outlined'} 
+            size={buttonSize as any}
             disabled={disabled || isLoading}
-            className={cn(
-              "flex items-center gap-2",
-              buttonSize,
-              userVote === 'up' 
-                ? 'bg-green-500 hover:bg-green-600 text-white' 
-                : 'hover:bg-green-50 hover:border-green-200',
-              (disabled || isLoading) && "opacity-50 cursor-not-allowed"
-            )}
-            type="button"
+            color={userVote === 'up' ? 'success' : 'primary'}
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1,
+              padding: padding,
+              opacity: (disabled || isLoading) ? 0.5 : 1,
+              cursor: (disabled || isLoading) ? 'not-allowed' : 'pointer',
+              backgroundColor: userVote === 'up' ? '#4caf50' : undefined,
+              '&:hover': {
+                backgroundColor: userVote === 'up' ? '#388e3c' : undefined,
+              }
+            }}
           >
             {isLoading ? (
               <CircularProgress size={16} color="inherit" />
             ) : (
-              <ThumbsUp className={cn(
-                iconSize,
-                userVote === 'up' ? 'text-white' : 'text-green-500'
-              )} />
+              <ThumbsUp style={{ 
+                width: iconSize, 
+                height: iconSize,
+                color: userVote === 'up' ? 'white' : '#4caf50'
+              }} />
             )}
             {showLabels && (
               <span>J'aime</span>
@@ -98,26 +110,31 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
         <span>
           <Button 
             onClick={() => onVote('down')}
-            variant={userVote === 'down' ? 'default' : 'outline'} 
-            size={buttonSizeValue}
+            variant={userVote === 'down' ? 'contained' : 'outlined'} 
+            size={buttonSize as any}
             disabled={disabled || isLoading}
-            className={cn(
-              "flex items-center gap-2",
-              buttonSize,
-              userVote === 'down' 
-                ? 'bg-red-500 hover:bg-red-600 text-white' 
-                : 'hover:bg-red-50 hover:border-red-200',
-              (disabled || isLoading) && "opacity-50 cursor-not-allowed"
-            )}
-            type="button"
+            color={userVote === 'down' ? 'error' : 'primary'}
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1,
+              padding: padding,
+              opacity: (disabled || isLoading) ? 0.5 : 1,
+              cursor: (disabled || isLoading) ? 'not-allowed' : 'pointer',
+              backgroundColor: userVote === 'down' ? '#f44336' : undefined,
+              '&:hover': {
+                backgroundColor: userVote === 'down' ? '#d32f2f' : undefined,
+              }
+            }}
           >
             {isLoading ? (
               <CircularProgress size={16} color="inherit" />
             ) : (
-              <ThumbsDown className={cn(
-                iconSize,
-                userVote === 'down' ? 'text-white' : 'text-red-500'
-              )} />
+              <ThumbsDown style={{ 
+                width: iconSize, 
+                height: iconSize,
+                color: userVote === 'down' ? 'white' : '#f44336'
+              }} />
             )}
             {showLabels && (
               <span>Je n'aime pas</span>
@@ -125,7 +142,7 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
           </Button>
         </span>
       </Tooltip>
-    </div>
+    </Box>
   );
 };
 
