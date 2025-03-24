@@ -59,6 +59,7 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [allVoted, setAllVoted] = useState(false);
+  const [votingResults, setVotingResults] = useState<{[key: number]: {id: number, name: string, upVotes: number, totalVotes: number}}>({});
   
   // Reset index when dialog opens
   useEffect(() => {
@@ -66,6 +67,7 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
       setCurrentIndex(0);
       setShowWinner(false);
       setAllVoted(false);
+      setVotingResults({});
     }
   }, [open]);
   
@@ -99,8 +101,39 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
     
     setIsSubmitting(true);
     try {
-      // Pour un vote pouce-, on compte quand même le vote mais l'utilisateur n'ajoute pas de "point"
+      // Pour un vote pouce+, on compte le vote, pour pouce- on n'ajoute pas de point
       await submitVote('ensemble', currentEnsemble.id, vote);
+      
+      // Mettre à jour les résultats de vote (seulement pour les votes positifs)
+      if (vote === 'up') {
+        setVotingResults(prev => {
+          const ensembleName = currentEnsemble.nom || "Ensemble sans nom";
+          const currentVotes = prev[currentEnsemble.id] || { id: currentEnsemble.id, name: ensembleName, upVotes: 0, totalVotes: 0 };
+          
+          return {
+            ...prev,
+            [currentEnsemble.id]: {
+              ...currentVotes,
+              upVotes: currentVotes.upVotes + 1,
+              totalVotes: currentVotes.totalVotes + 1
+            }
+          };
+        });
+      } else {
+        // Pour les votes négatifs, on augmente juste le compteur total
+        setVotingResults(prev => {
+          const ensembleName = currentEnsemble.nom || "Ensemble sans nom";
+          const currentVotes = prev[currentEnsemble.id] || { id: currentEnsemble.id, name: ensembleName, upVotes: 0, totalVotes: 0 };
+          
+          return {
+            ...prev,
+            [currentEnsemble.id]: {
+              ...currentVotes,
+              totalVotes: currentVotes.totalVotes + 1
+            }
+          };
+        });
+      }
       
       toast({
         title: "Vote enregistré !",
@@ -112,11 +145,11 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
         onVoteSubmitted(currentEnsemble.id, vote);
       }
       
-      // Move to next ensemble
+      // Passer à l'ensemble suivant, sans fermer la fenêtre
       if (currentIndex < ensembles.length - 1) {
         setCurrentIndex(prevIndex => prevIndex + 1);
       } else {
-        // All ensembles have been voted on
+        // Tous les ensembles ont été votés
         setAllVoted(true);
       }
     } catch (error) {
@@ -131,8 +164,19 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
     }
   };
 
+  // Calculer le gagnant local basé sur les votes
+  const calculateLocalWinner = () => {
+    const results = Object.values(votingResults);
+    if (results.length === 0) return null;
+    
+    return results.reduce((max, current) => 
+      (current.upVotes > max.upVotes) ? current : max, results[0]);
+  };
+
   // Render winner screen if all ensembles have been voted on
   if (showWinner) {
+    const localWinner = calculateLocalWinner();
+    
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md">
@@ -169,6 +213,24 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
                     </span>
                   </div>
                 </div>
+                
+                {localWinner && (
+                  <div className="mt-4">
+                    <h4 className="font-medium text-sm text-muted-foreground">Votes pour cette session:</h4>
+                    <div className="mt-2">
+                      {Object.values(votingResults).map(result => (
+                        <div key={result.id} className="flex justify-between items-center py-1">
+                          <span className={result.id === localWinner.id ? "font-semibold text-primary" : ""}>
+                            {result.name}
+                          </span>
+                          <span className="flex items-center text-green-500">
+                            <ThumbsUp className="h-3 w-3 mr-1" /> {result.upVotes}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-6 text-muted-foreground">
@@ -218,10 +280,10 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
         {/* Progress bar for voting progress */}
         <div className="mt-2 mb-2">
           <div className="flex justify-between text-xs text-muted-foreground mb-1">
-            <span>{votedCount} votés</span>
-            <span>{totalCount} total</span>
+            <span>{currentIndex + 1} sur {ensembles.length}</span>
+            <span>{Math.round((currentIndex + 1) / ensembles.length * 100)}%</span>
           </div>
-          <Progress value={progressPercentage} className="h-2" />
+          <Progress value={(currentIndex + 1) / ensembles.length * 100} className="h-2" />
         </div>
         
         <ScrollArea className="mt-4 max-h-60 rounded-md">
