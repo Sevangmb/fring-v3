@@ -109,12 +109,12 @@ export const useVote = (
     if (!navigator.onLine) return null;
     
     try {
-      return await getUserVoteApi(entityType, entityId, options);
+      return await getUserVoteApi(entityType, entityId);
     } catch (error) {
       console.error("Erreur lors de la récupération du vote:", error);
       return null;
     }
-  }, [entityType, options]);
+  }, [entityType]);
 
   /**
    * Obtenir tous les votes pour une entité
@@ -123,12 +123,12 @@ export const useVote = (
     if (!navigator.onLine) return { up: 0, down: 0 };
     
     try {
-      return await getVotesCountApi(entityType, entityId, options);
+      return await getVotesCountApi(entityType, entityId);
     } catch (error) {
       console.error("Erreur lors de la récupération des votes:", error);
       return { up: 0, down: 0 };
     }
-  }, [entityType, options]);
+  }, [entityType]);
 
   /**
    * Calculer le score (votes positifs - votes négatifs)
