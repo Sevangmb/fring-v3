@@ -143,11 +143,17 @@ const DefiCard: React.FC<DefiCardProps> = ({
           if (leader.tenue) {
             // Handle the case where tenue might be returned as an array
             if (Array.isArray(leader.tenue) && leader.tenue.length > 0) {
-              setLeaderName(leader.tenue[0].nom);
+              const nomValue = leader.tenue[0].nom;
+              if (typeof nomValue === 'string') {
+                setLeaderName(nomValue);
+              }
             } 
             // Handle the case where tenue is returned as an object
             else if (typeof leader.tenue === 'object' && leader.tenue !== null && 'nom' in leader.tenue) {
-              setLeaderName(leader.tenue.nom);
+              const nomValue = leader.tenue.nom;
+              if (typeof nomValue === 'string') {
+                setLeaderName(nomValue);
+              }
             }
           }
         }
