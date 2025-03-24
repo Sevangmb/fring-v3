@@ -1,6 +1,6 @@
 
 import { supabase } from "@/lib/supabase";
-import { VoteType, EntityType, VotesCount, calculateScore } from "./types";
+import { VoteType, EntityType, VotesCount } from "./types";
 
 /**
  * Submit a vote for a specific entity
@@ -17,7 +17,7 @@ export const submitVote = async (
       throw new Error("Vous devez être connecté pour voter");
     }
 
-    // Get table info based on entity type
+    // Get table and field names based on entity type
     const { tableName, idField } = getEntityTableInfo(entityType);
 
     // Check if user already voted
@@ -130,4 +130,4 @@ function getEntityTableInfo(entityType: EntityType): { tableName: string; idFiel
   }
 }
 
-export { calculateScore };
+export { calculateScore } from "./types";

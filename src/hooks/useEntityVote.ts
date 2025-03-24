@@ -1,7 +1,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useVote, VoteType, EntityType } from "./useVote";
+import { VoteType, EntityType } from "@/services/votes/types";
+import { useVote } from "./useVote";
 
 interface UseEntityVoteProps {
   entityType: EntityType;
@@ -17,108 +18,54 @@ export const useEntityVote = ({
   const { toast } = useToast();
   const { 
     submitVote, 
-    getUserVote, 
-    getVotesCount, 
-    calculateScore, 
+    loadVoteData,
+    userVote,
+    votes: votesCount,
+    score,
     isLoading: voteLoading,
     isOffline
-  } = useVote(entityType);
+  } = useVote(entityType, entityId);
   
-  const [userVote, setUserVote] = useState<VoteType>(null);
-  const [votes, setVotes] = useState<{ up: number; down: number }>({ up: 0, down: 0 });
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
   
-  // Charger les données initiales des votes
-  const loadVoteData = useCallback(async () => {
-    if (!entityId || entityId === undefined || isNaN(entityId)) {
-      console.log(`No valid entityId provided: ${entityId}`);
-      setLoading(false);
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      // Vérifier d'abord la connexion
-      if (!navigator.onLine) {
-        setConnectionError(true);
-        setLoading(false);
-        return;
-      }
-      
-      // Obtenir le vote actuel de l'utilisateur
-      const currentVote = await getUserVote(entityId);
-      setUserVote(currentVote);
-      
-      // Obtenir les compteurs de votes
-      const voteCounts = await getVotesCount(entityId);
-      setVotes(voteCounts);
-      
-      setConnectionError(false);
-    } catch (error) {
-      console.error(`Erreur lors du chargement des votes pour ${entityType}:`, error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les votes. Veuillez réessayer plus tard.",
-        variant: "destructive"
-      });
-      setConnectionError(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [entityId, entityType, getUserVote, getVotesCount, toast]);
-  
+  // Load vote data initially
   useEffect(() => {
-    if (entityId && !isNaN(entityId)) {
-      loadVoteData();
+    if (entityId) {
+      setLoading(true);
+      loadVoteData().finally(() => setLoading(false));
     } else {
-      setLoading(false); // No loading if no entityId
+      setLoading(false);
     }
     
-    // Ajouter un écouteur d'événements pour détecter les changements de connectivité
-    const handleOnlineStatusChange = () => {
-      if (navigator.onLine) {
-        // Recharger les données lorsque la connexion est rétablie
-        setConnectionError(false);
-        if (entityId && !isNaN(entityId)) {
-          loadVoteData();
-        }
-      } else {
-        setConnectionError(true);
+    // Update connection status
+    setConnectionError(isOffline);
+    
+    const handleOnlineStatus = () => {
+      setConnectionError(!navigator.onLine);
+      if (navigator.onLine && entityId) {
+        loadVoteData();
       }
     };
     
-    window.addEventListener('online', handleOnlineStatusChange);
-    window.addEventListener('offline', handleOnlineStatusChange);
+    window.addEventListener('online', handleOnlineStatus);
+    window.addEventListener('offline', handleOnlineStatus);
     
     return () => {
-      window.removeEventListener('online', handleOnlineStatusChange);
-      window.removeEventListener('offline', handleOnlineStatusChange);
+      window.removeEventListener('online', handleOnlineStatus);
+      window.removeEventListener('offline', handleOnlineStatus);
     };
-  }, [entityId, loadVoteData]);
+  }, [entityId, loadVoteData, isOffline]);
   
-  // Gérer la soumission de vote
-  const handleVote = async (vote: VoteType): Promise<boolean> => {
-    // Validate entityId
-    if (!entityId || entityId === undefined || isNaN(entityId)) {
-      console.error(`Tentative de vote avec ID invalide: ${entityId}`);
-      toast({
-        title: "Erreur",
-        description: "Impossible de voter: ID de l'élément manquant ou invalide.",
-        variant: "destructive"
-      });
-      return false;
-    }
-    
-    // Vérifier si déjà en cours de soumission
+  // Handle vote submission
+  const handleVote = useCallback(async (vote: VoteType): Promise<boolean> => {
     if (isSubmitting || loading) return false;
     
-    // Vérifier la connexion
-    if (!navigator.onLine || connectionError || isOffline) {
+    if (!navigator.onLine || connectionError) {
       toast({
         title: "Problème de connexion",
-        description: "Impossible de se connecter au serveur. Vérifiez votre connexion internet.",
+        description: "Vérifiez votre connexion internet et réessayez.",
         variant: "destructive"
       });
       return false;
@@ -127,58 +74,24 @@ export const useEntityVote = ({
     setIsSubmitting(true);
     
     try {
-      // Mise à jour optimiste
-      const oldVote = userVote;
-      const newVotes = { ...votes };
-      
-      // Si l'utilisateur change son vote
-      if (oldVote) {
-        if (oldVote === 'up') newVotes.up = Math.max(0, newVotes.up - 1);
-        if (oldVote === 'down') newVotes.down = Math.max(0, newVotes.down - 1);
-      }
-      
-      // Ajouter le nouveau vote
-      if (vote === 'up') newVotes.up += 1;
-      if (vote === 'down') newVotes.down += 1;
-      
-      // Mettre à jour l'état local immédiatement (optimiste)
-      setUserVote(vote);
-      setVotes(newVotes);
-      
-      // Envoyer le vote au serveur
       const success = await submitVote(vote);
       
-      if (success) {
-        // Appeler le callback si fourni
-        if (onVoteSubmitted) {
-          onVoteSubmitted(vote);
-        }
-        return true;
-      } else {
-        // En cas d'échec, revenir à l'état précédent
-        setUserVote(oldVote);
-        setVotes(votes);
-        return false;
+      if (success && onVoteSubmitted) {
+        onVoteSubmitted(vote);
       }
+      
+      return success;
     } catch (error) {
       console.error("Erreur lors du vote:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'enregistrer votre vote. Veuillez réessayer plus tard.",
-        variant: "destructive"
-      });
       return false;
     } finally {
       setIsSubmitting(false);
     }
-  };
-  
-  // Calculer le score en utilisant la fonction utilitaire de useVote
-  const score = calculateScore(votes);
+  }, [isSubmitting, loading, connectionError, submitVote, onVoteSubmitted, toast]);
   
   return {
     userVote,
-    votes,
+    votes: votesCount,
     score,
     loading: loading || voteLoading,
     isSubmitting,

@@ -6,12 +6,13 @@ import VoteProgress from "./VoteProgress";
 import VoteButtons from "./VoteButtons";
 import { Box, Typography, Alert } from "@mui/material";
 import { WifiOff } from "lucide-react";
+import { VoteType } from "@/services/votes/types";
 
 interface EnsembleDetailProps {
   ensemble: any;
   votes: { up: number; down: number };
   ensembleId: number;
-  userVote: 'up' | 'down' | null;
+  userVote: VoteType;
   vetementsByType: Record<string, any[]>;
   onVote: (vote: 'up' | 'down') => void;
   isLoading?: boolean;

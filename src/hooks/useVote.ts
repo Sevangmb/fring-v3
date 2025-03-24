@@ -1,11 +1,12 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { VoteType, EntityType, VotesCount, calculateScore } from "@/services/votes/types";
+import { VoteType, EntityType, VotesCount } from "@/services/votes/types";
 import { 
   submitVote as submitVoteApi,
   getUserVote as getUserVoteApi,
-  getVotesCount as getVotesCountApi
+  getVotesCount as getVotesCountApi,
+  calculateScore
 } from "@/services/votes/voteService";
 
 interface UseVoteOptions {
@@ -29,7 +30,7 @@ export const useVote = (
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   // Monitor online status
-  useState(() => {
+  useEffect(() => {
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
     
@@ -40,7 +41,7 @@ export const useVote = (
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  });
+  }, []);
 
   /**
    * Get user's current vote
@@ -74,6 +75,13 @@ export const useVote = (
       console.error("Erreur lors du chargement des votes:", err);
     }
   }, [entityType, entityId]);
+
+  // Load data on mount and when entityId changes
+  useEffect(() => {
+    if (entityId) {
+      loadVoteData();
+    }
+  }, [entityId, loadVoteData]);
 
   /**
    * Submit a vote for an entity

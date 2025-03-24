@@ -1,20 +1,18 @@
 
-import { useDefiData } from "./useDefiData";
+import { useState, useCallback, useEffect } from "react";
 import { useCarouselNavigation } from "./useCarouselNavigation";
-import { useState } from "react";
+import { submitVote, getUserVote, getVotesCount } from "@/services/votes/voteService";
 import { useToast } from "@/hooks/use-toast";
+import { VoteType } from "@/services/votes/types";
 
 export const useVotingCarousel = (defiId: number) => {
-  // Get defi data and participations
-  const {
-    defi,
-    participations,
-    votingState,
-    loading,
-    connectionError,
-    setParticipations,
-    setVotingState
-  } = useDefiData(defiId);
+  const { toast } = useToast();
+  const [defi, setDefi] = useState<any>(null);
+  const [participations, setParticipations] = useState<any[]>([]);
+  const [votingState, setVotingState] = useState<Record<number, VoteType>>({});
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
 
   // Setup carousel navigation
   const {
@@ -23,19 +21,122 @@ export const useVotingCarousel = (defiId: number) => {
     navigateNext
   } = useCarouselNavigation(participations.length);
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
+  // Load defi data and participations
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Check connection
+      if (!navigator.onLine) {
+        setConnectionError(true);
+        setLoading(false);
+        return;
+      }
 
-  // Handle vote submission
-  const handleVote = async (ensembleId: number, vote: 'up' | 'down') => {
+      // Load defi data
+      const { supabase } = await import('@/lib/supabase');
+      
+      // Fetch defi details
+      const { data: defiData, error: defiError } = await supabase
+        .from('defis')
+        .select('*')
+        .eq('id', defiId)
+        .single();
+      
+      if (defiError) throw defiError;
+      setDefi(defiData);
+      
+      // Fetch participations with their ensembles
+      const { data: participationsData, error: participationsError } = await supabase
+        .from('defi_participations')
+        .select(`
+          id, 
+          defi_id, 
+          user_id, 
+          ensemble_id, 
+          commentaire, 
+          created_at,
+          ensemble:ensemble_id(
+            id, 
+            nom, 
+            description, 
+            occasion, 
+            saison, 
+            created_at, 
+            user_id,
+            vetements:tenues_vetements(
+              id,
+              vetement:vetement_id(*),
+              position_ordre
+            )
+          )
+        `)
+        .eq('defi_id', defiId);
+      
+      if (participationsError) throw participationsError;
+      
+      // Get votes for each participation
+      const enhancedParticipations = await Promise.all(participationsData.map(async (p) => {
+        const votes = await getVotesCount('defi', p.ensemble_id);
+        const score = votes.up - votes.down;
+        return { ...p, votes, score };
+      }));
+      
+      // Sort by score
+      const sortedParticipations = enhancedParticipations.sort((a, b) => b.score - a.score);
+      setParticipations(sortedParticipations);
+      
+      // Get user votes for each participation
+      const userVotes: Record<number, VoteType> = {};
+      for (const p of sortedParticipations) {
+        const userVote = await getUserVote('defi', p.ensemble_id);
+        userVotes[p.ensemble_id] = userVote;
+      }
+      setVotingState(userVotes);
+      
+      setConnectionError(false);
+    } catch (error) {
+      console.error("Error loading data:", error);
+      setConnectionError(true);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les participations du défi",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [defiId, toast]);
+  
+  // Load data on mount
+  useEffect(() => {
+    loadData();
+    
+    // Setup network status change listeners
+    const handleOnlineStatusChange = () => {
+      if (navigator.onLine) {
+        setConnectionError(false);
+        loadData();
+      } else {
+        setConnectionError(true);
+      }
+    };
+    
+    window.addEventListener('online', handleOnlineStatusChange);
+    window.addEventListener('offline', handleOnlineStatusChange);
+    
+    return () => {
+      window.removeEventListener('online', handleOnlineStatusChange);
+      window.removeEventListener('offline', handleOnlineStatusChange);
+    };
+  }, [defiId, loadData]);
+  
+  // Handle vote
+  const handleVote = useCallback(async (ensembleId: number, vote: VoteType) => {
     if (isSubmitting || connectionError) return;
     
     setIsSubmitting(true);
     
     try {
-      // Load vote service dynamically to avoid circular dependencies
-      const { submitVote } = await import("@/services/votes/voteService");
-      
       // Update state optimistically
       const oldVote = votingState[ensembleId];
       setVotingState(prev => ({
@@ -65,11 +166,11 @@ export const useVotingCarousel = (defiId: number) => {
             return { ...p, votes, score };
           }
           return p;
-        })
+        }).sort((a, b) => b.score - a.score) // Re-sort by score
       );
       
       // Submit vote to server
-      const success = await submitVote('defi', defiId, vote);
+      const success = await submitVote('defi', ensembleId, vote);
       
       if (success) {
         toast({
@@ -88,13 +189,12 @@ export const useVotingCarousel = (defiId: number) => {
         variant: "destructive"
       });
       
-      // Revert optimistic updates on error
-      // This would require reloading the entire defi data
-      // We could implement this if needed
+      // Reload data to reset state
+      loadData();
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [isSubmitting, connectionError, votingState, toast, loadData]);
 
   return {
     defi,

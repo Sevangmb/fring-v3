@@ -40,11 +40,6 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
   // Get the appropriate sizes based on the size prop
   const { button: buttonSize, icon: iconSize, buttonSize: buttonSizeValue } = sizeClasses[size];
   
-  const handleVote = (vote: 'up' | 'down') => {
-    if (disabled || isLoading) return;
-    onVote(vote);
-  };
-  
   // Affiche un message d'erreur en cas de problème de connexion
   if (connectionError) {
     return (
@@ -70,7 +65,7 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
       <Tooltip title={userVote === 'up' ? "Vous avez aimé" : "J'aime"}>
         <span> {/* Use span instead of the direct Button to avoid Tooltip warning */}
           <Button 
-            onClick={() => handleVote('up')}
+            onClick={() => onVote('up')}
             variant={userVote === 'up' ? 'default' : 'outline'} 
             size={buttonSizeValue}
             disabled={disabled || isLoading}
@@ -102,7 +97,7 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
       <Tooltip title={userVote === 'down' ? "Vous n'avez pas aimé" : "Je n'aime pas"}>
         <span>
           <Button 
-            onClick={() => handleVote('down')}
+            onClick={() => onVote('down')}
             variant={userVote === 'down' ? 'default' : 'outline'} 
             size={buttonSizeValue}
             disabled={disabled || isLoading}

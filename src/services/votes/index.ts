@@ -1,3 +1,3 @@
 
-export * from './voteService';
-export * from './types';
+export * from "./types";
+export * from "./voteService";
