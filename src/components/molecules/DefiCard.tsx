@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import ParticiperDefiDialog from "./ParticiperDefiDialog";
 import VoteDefiDialog from "./VoteDefiDialog";
 import VoterDialog from "./VoterDialog";
 import { Link } from "react-router-dom";
+import { supabase } from '@/lib/supabase';
 
 export type DefiType = "current" | "upcoming" | "past";
 
@@ -37,6 +38,39 @@ const DefiCard: React.FC<DefiCardProps> = ({
   const isPast = type === "past";
   const isUpcoming = type === "upcoming";
   const isCurrent = type === "current";
+  const [validEnsembleId, setValidEnsembleId] = useState<number | undefined>(ensembleId);
+  const [participation, setParticipation] = useState<any>(null);
+
+  // Récupérer la participation de l'utilisateur actuel s'il y en a une
+  useEffect(() => {
+    const fetchParticipation = async () => {
+      try {
+        // Vérifier si l'utilisateur actuel a participé à ce défi
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) return;
+        
+        const { data, error } = await supabase
+          .from('defi_participations')
+          .select('id, ensemble_id')
+          .eq('defi_id', id)
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        
+        if (error) throw error;
+        
+        if (data && data.ensemble_id) {
+          setParticipation(data);
+          setValidEnsembleId(data.ensemble_id);
+        }
+      } catch (err) {
+        console.error("Erreur lors de la vérification de la participation:", err);
+      }
+    };
+
+    if (isCurrent) {
+      fetchParticipation();
+    }
+  }, [id, isCurrent]);
 
   return (
     <Card className={`overflow-hidden hover:shadow-md transition-all duration-300 ${isPast ? "opacity-80" : ""}`}>
@@ -63,12 +97,6 @@ const DefiCard: React.FC<DefiCardProps> = ({
               {participantsCount} participants
             </Text>
             <div className="ml-auto flex gap-2">
-              {/* Utiliser VoteDefiDialog pour les défis passés */}
-              <VoteDefiDialog 
-                defiId={id} 
-                defiTitle={title} 
-                ensembleId={ensembleId}
-              />
               <Button variant="outline" size="sm" asChild>
                 <Link to={`/defis/${id}/resultats`}>Voir les résultats</Link>
               </Button>
@@ -85,17 +113,19 @@ const DefiCard: React.FC<DefiCardProps> = ({
               {participantsCount} participants
             </Text>
             <div className="flex gap-2">
-              {/* Pour les défis en cours, permettre de voter et de participer */}
-              <VoteDefiDialog 
-                defiId={id} 
-                defiTitle={title} 
-                ensembleId={ensembleId}
-              />
-              <ParticiperDefiDialog 
-                defiId={id} 
-                defiTitle={title} 
-                onParticipation={onParticipation}
-              />
+              {participation ? (
+                <VoteDefiDialog 
+                  defiId={id} 
+                  defiTitle={title} 
+                  ensembleId={participation.ensemble_id}
+                />
+              ) : (
+                <ParticiperDefiDialog 
+                  defiId={id} 
+                  defiTitle={title} 
+                  onParticipation={onParticipation}
+                />
+              )}
             </div>
           </div>
         )}

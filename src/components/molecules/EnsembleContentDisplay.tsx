@@ -3,7 +3,7 @@ import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Triangle } from "lucide-react";
+import { Triangle, AlertTriangle } from "lucide-react";
 
 interface EnsembleContentDisplayProps {
   ensemble: any;
@@ -35,7 +35,7 @@ const EnsembleContentDisplay: React.FC<EnsembleContentDisplayProps> = ({
   if (error) {
     return (
       <Alert variant="destructive" className="my-4">
-        <Triangle className="h-4 w-4" />
+        <AlertTriangle className="h-4 w-4" />
         <AlertTitle>Erreur</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
       </Alert>
@@ -47,6 +47,20 @@ const EnsembleContentDisplay: React.FC<EnsembleContentDisplayProps> = ({
     return (
       <Alert className="my-4">
         <AlertTitle>Aucun ensemble disponible</AlertTitle>
+        <AlertDescription>
+          L'ensemble n'a pas pu être chargé ou n'existe pas.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  // Vérifier si l'ensemble a des vêtements
+  const hasVetements = ensemble.vetements && ensemble.vetements.length > 0;
+  
+  if (!hasVetements) {
+    return (
+      <Alert className="my-4">
+        <AlertTitle>Aucun vêtement dans cet ensemble</AlertTitle>
         <AlertDescription>
           L'ensemble n'a pas pu être chargé ou n'existe pas.
         </AlertDescription>

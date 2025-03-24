@@ -9,7 +9,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, X, WifiOff } from "lucide-react";
+import { ThumbsUp, X, WifiOff, AlertTriangle } from "lucide-react";
 import VoteButtons from "@/components/defis/voting/VoteButtons";
 import EnsembleContentDisplay from "./EnsembleContentDisplay";
 import { Alert, Box, Typography } from "@mui/material";
@@ -58,13 +58,32 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
   };
   
   const loadEnsemble = async () => {
-    if (!ensembleId) return;
+    if (!ensembleId) {
+      setError("Aucun ensemble disponible pour ce participant");
+      setLoading(false);
+      return;
+    }
     
     setLoading(true);
     setError(null);
     
     try {
       const { supabase } = await import('@/lib/supabase');
+      
+      // D'abord, vérifions si cet ensembleId existe réellement
+      const { data: ensembleExists, error: checkError } = await supabase
+        .from('tenues')
+        .select('id')
+        .eq('id', ensembleId)
+        .maybeSingle();
+        
+      if (checkError) throw checkError;
+      
+      if (!ensembleExists) {
+        setError("L'ensemble n'a pas pu être chargé ou n'existe pas.");
+        setLoading(false);
+        return;
+      }
       
       const { data, error } = await supabase
         .from('tenues')
@@ -86,6 +105,12 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
         .maybeSingle();
       
       if (error) throw error;
+      
+      if (!data) {
+        setError("L'ensemble n'a pas pu être chargé ou n'existe pas.");
+        setLoading(false);
+        return;
+      }
       
       setEnsemble(data);
       
@@ -118,6 +143,8 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
   };
   
   const connectionError = isOffline;
+  
+  const hasEmptyEnsemble = ensemble && (!ensemble.vetements || ensemble.vetements.length === 0);
   
   return (
     <>
@@ -157,6 +184,28 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
             </Alert>
           )}
           
+          {(!ensemble && !loading && !error) && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <AlertTriangle size={16} />
+                <Typography variant="body2">
+                  Aucun ensemble disponible. L'ensemble n'a pas pu être chargé ou n'existe pas.
+                </Typography>
+              </Box>
+            </Alert>
+          )}
+          
+          {hasEmptyEnsemble && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <AlertTriangle size={16} />
+                <Typography variant="body2">
+                  L'ensemble n'a pas pu être chargé ou n'existe pas.
+                </Typography>
+              </Box>
+            </Alert>
+          )}
+          
           <EnsembleContentDisplay
             ensemble={ensemble}
             loading={loading}
@@ -164,15 +213,21 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
             vetementsByType={vetementsByType}
           />
           
-          <VoteButtons
-            userVote={userVote}
-            onVote={handleVote}
-            size="lg"
-            isLoading={isVoting}
-            disabled={loading || isVoting}
-            connectionError={connectionError}
-            className="pt-4"
-          />
+          {(ensemble && !hasEmptyEnsemble) ? (
+            <VoteButtons
+              userVote={userVote}
+              onVote={handleVote}
+              size="lg"
+              isLoading={isVoting}
+              disabled={loading || isVoting}
+              connectionError={connectionError}
+              className="pt-4"
+            />
+          ) : (
+            <div className="text-center p-4 text-muted-foreground">
+              L'ensemble n'a pas pu être chargé ou n'existe pas.
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>

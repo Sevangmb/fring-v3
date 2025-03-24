@@ -23,6 +23,22 @@ export const participerDefi = async (defiId: number, ensembleId: number): Promis
     if (!userId) {
       throw new Error('Vous devez être connecté pour participer à un défi');
     }
+    
+    // Vérifier si l'ensemble existe
+    const { data: ensemble, error: ensembleError } = await supabase
+      .from('tenues')
+      .select('id')
+      .eq('id', ensembleId)
+      .maybeSingle();
+      
+    if (ensembleError) {
+      console.error('Erreur lors de la vérification de l\'ensemble:', ensembleError);
+      return false;
+    }
+    
+    if (!ensemble) {
+      throw new Error('L\'ensemble sélectionné n\'existe pas');
+    }
 
     // Vérifier si l'utilisateur a déjà participé à ce défi
     const { data: existingParticipation, error: checkError } = await supabase
@@ -63,14 +79,22 @@ export const participerDefi = async (defiId: number, ensembleId: number): Promis
         return false;
       }
       
-      // Incrémenter directement le compteur de participants du défi
+      // Mettre à jour le compteur de participants directement
+      // Utiliser la valeur directe au lieu de la fonction RPC (pour éviter les problèmes)
       const { error: updateError } = await supabase
         .from('defis')
-        .update({ participants_count: supabase.rpc('increment', { 
-          row_id: defiId, 
-          table_name: 'defis' 
-        })})
-        .eq('id', defiId);
+        .select('participants_count')
+        .eq('id', defiId)
+        .single()
+        .then(({ data, error }) => {
+          if (error) throw error;
+          const currentCount = data?.participants_count || 0;
+          
+          return supabase
+            .from('defis')
+            .update({ participants_count: currentCount + 1 })
+            .eq('id', defiId);
+        });
       
       if (updateError) {
         console.error('Erreur lors de l\'incrémentation du compteur:', updateError);
