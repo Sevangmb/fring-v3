@@ -74,21 +74,22 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
         <span> {/* Use span to avoid Tooltip warning */}
           <Button 
             onClick={() => onVote('up')}
-            variant={userVote === 'up' ? 'contained' : 'outlined'} 
+            variant="outlined" 
             size={buttonSize as any}
             disabled={disabled || isLoading}
-            color={userVote === 'up' ? 'success' : 'primary'}
             sx={{ 
               display: 'flex', 
               alignItems: 'center', 
               gap: 1,
               padding: padding,
-              minWidth: '120px',
+              minWidth: '140px',
               opacity: (disabled || isLoading) ? 0.5 : 1,
               cursor: (disabled || isLoading) ? 'not-allowed' : 'pointer',
-              backgroundColor: userVote === 'up' ? '#4caf50' : undefined,
+              border: '1px solid #4caf50',
+              color: '#4caf50',
               '&:hover': {
-                backgroundColor: userVote === 'up' ? '#388e3c' : undefined,
+                backgroundColor: 'rgba(76, 175, 80, 0.04)',
+                border: '1px solid #4caf50',
               }
             }}
           >
@@ -98,11 +99,11 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
               <ThumbsUp style={{ 
                 width: iconSize, 
                 height: iconSize,
-                color: userVote === 'up' ? 'white' : '#4caf50'
+                color: '#4caf50'
               }} />
             )}
             {showLabels && (
-              <span>J'AIME</span>
+              <span style={{ color: '#4caf50', fontWeight: 'bold' }}>J'AIME</span>
             )}
           </Button>
         </span>
@@ -112,21 +113,22 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
         <span>
           <Button 
             onClick={() => onVote('down')}
-            variant={userVote === 'down' ? 'contained' : 'outlined'} 
+            variant="outlined" 
             size={buttonSize as any}
             disabled={disabled || isLoading}
-            color={userVote === 'down' ? 'error' : 'primary'}
             sx={{ 
               display: 'flex', 
               alignItems: 'center', 
               gap: 1,
               padding: padding,
-              minWidth: '120px',
+              minWidth: '140px',
               opacity: (disabled || isLoading) ? 0.5 : 1,
               cursor: (disabled || isLoading) ? 'not-allowed' : 'pointer',
-              backgroundColor: userVote === 'down' ? '#f44336' : undefined,
+              border: '1px solid #f44336',
+              color: '#f44336',
               '&:hover': {
-                backgroundColor: userVote === 'down' ? '#d32f2f' : undefined,
+                backgroundColor: 'rgba(244, 67, 54, 0.04)',
+                border: '1px solid #f44336',
               }
             }}
           >
@@ -136,11 +138,11 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
               <ThumbsDown style={{ 
                 width: iconSize, 
                 height: iconSize,
-                color: userVote === 'down' ? 'white' : '#f44336'
+                color: '#f44336'
               }} />
             )}
             {showLabels && (
-              <span>JE N'AIME PAS</span>
+              <span style={{ color: '#f44336', fontWeight: 'bold' }}>JE N'AIME PAS</span>
             )}
           </Button>
         </span>

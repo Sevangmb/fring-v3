@@ -76,7 +76,8 @@ export const useVotingCarousel = (defiId: number) => {
       
       // Get votes for each participation
       const enhancedParticipations = await Promise.all(participationsData.map(async (p) => {
-        const votes = await getVotesCount('defi', p.ensemble_id);
+        // Modifier pour obtenir les votes de l'ensemble, pas du défi
+        const votes = await getVotesCount('ensemble', p.ensemble_id);
         const score = votes.up - votes.down;
         return { ...p, votes, score };
       }));
@@ -88,7 +89,8 @@ export const useVotingCarousel = (defiId: number) => {
       // Get user votes for each participation
       const userVotes: Record<number, VoteType> = {};
       for (const p of sortedParticipations) {
-        const userVote = await getUserVote('defi', p.ensemble_id);
+        // Modifier pour obtenir le vote de l'utilisateur pour l'ensemble, pas pour le défi
+        const userVote = await getUserVote('ensemble', p.ensemble_id);
         userVotes[p.ensemble_id] = userVote;
       }
       setVotingState(userVotes);
@@ -169,18 +171,14 @@ export const useVotingCarousel = (defiId: number) => {
         }).sort((a, b) => b.score - a.score) // Re-sort by score
       );
       
-      // Submit vote to server
-      const success = await submitVote('defi', ensembleId, vote);
+      // Submit vote to server - vote pour l'ensemble
+      await submitVote('ensemble', ensembleId, vote);
       
-      if (success) {
-        toast({
-          title: "Vote enregistré !",
-          description: `Vous avez ${vote === 'up' ? 'aimé' : 'disliké'} cet ensemble.`,
-          variant: vote === 'up' ? "default" : "destructive",
-        });
-      } else {
-        throw new Error("Échec du vote");
-      }
+      toast({
+        title: "Vote enregistré !",
+        description: `Vous avez ${vote === 'up' ? 'aimé' : 'disliké'} cet ensemble.`,
+        variant: vote === 'up' ? "default" : "destructive",
+      });
     } catch (error) {
       console.error("Error voting:", error);
       toast({

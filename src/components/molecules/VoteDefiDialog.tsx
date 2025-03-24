@@ -19,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 interface VoteDefiDialogProps {
   defiId: number;
   defiTitle?: string;
-  ensembleId?: number;
+  ensembleId: number;  // Rendre ensembleId obligatoire
 }
 
 const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
@@ -34,10 +34,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [vetementsByType, setVetementsByType] = useState<any>({});
   
-  // Use our hook with the proper entity type
-  const entityType = ensembleId ? 'ensemble' : 'defi';
-  const entityId = ensembleId || defiId;
-  
+  // Utilise toujours 'ensemble' comme type d'entité
   const {
     submitVote,
     userVote,
@@ -45,12 +42,10 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
     isLoading: isVoting,
     isOffline,
     loadVoteData
-  } = useVote(entityType, entityId, {
+  } = useVote('ensemble', ensembleId, {
     onVoteSuccess: () => {
-      if (!ensembleId) {
-        // Close dialog after voting directly on a defi
-        setOpen(false);
-      }
+      // Ferme la boîte de dialogue après le vote
+      setOpen(false);
     }
   });
   
@@ -59,10 +54,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
   const handleOpen = () => {
     setOpen(true);
     loadVoteData();
-    
-    if (ensembleId) {
-      loadEnsemble();
-    }
+    loadEnsemble();
   };
   
   const loadEnsemble = async () => {
@@ -143,12 +135,10 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              Voter pour {defiTitle || 'ce défi'}
+              Voter pour {ensemble?.nom || defiTitle || 'cet ensemble'}
             </DialogTitle>
             <DialogDescription className="text-center text-muted-foreground">
-              {!ensembleId 
-                ? "Donnez votre avis sur ce défi." 
-                : "Donnez votre avis sur cet ensemble."}
+              Donnez votre avis sur cet ensemble.
             </DialogDescription>
             <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
               <X className="h-4 w-4" />
@@ -167,22 +157,19 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
             </Alert>
           )}
           
-          {/* Display ensemble preview only if ensembleId is provided */}
-          {ensembleId && (
-            <EnsembleContentDisplay
-              ensemble={ensemble}
-              loading={loading}
-              error={error || ''}
-              vetementsByType={vetementsByType}
-            />
-          )}
+          <EnsembleContentDisplay
+            ensemble={ensemble}
+            loading={loading}
+            error={error || ''}
+            vetementsByType={vetementsByType}
+          />
           
           <VoteButtons
             userVote={userVote}
             onVote={handleVote}
             size="lg"
             isLoading={isVoting}
-            disabled={(ensembleId && loading) || isVoting}
+            disabled={loading || isVoting}
             connectionError={connectionError}
             className="pt-4"
           />
