@@ -52,13 +52,15 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
   const handleClose = () => setOpen(false);
   
   const handleOpen = () => {
+    console.log(`Ouverture de la boîte de dialogue de vote pour l'ensemble ${ensembleId}`);
     setOpen(true);
     loadVoteData();
     loadEnsemble();
   };
   
   const loadEnsemble = async () => {
-    if (!ensembleId) {
+    if (!ensembleId || isNaN(ensembleId) || ensembleId <= 0) {
+      console.error(`ID d'ensemble invalide: ${ensembleId}`);
       setError("Aucun ensemble disponible pour ce participant");
       setLoading(false);
       return;
@@ -70,6 +72,8 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
     try {
       const { supabase } = await import('@/lib/supabase');
       
+      console.log(`Chargement de l'ensemble ${ensembleId}`);
+      
       // D'abord, vérifions si cet ensembleId existe réellement
       const { data: ensembleExists, error: checkError } = await supabase
         .from('tenues')
@@ -77,9 +81,13 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
         .eq('id', ensembleId)
         .maybeSingle();
         
-      if (checkError) throw checkError;
+      if (checkError) {
+        console.error("Erreur lors de la vérification de l'ensemble:", checkError);
+        throw checkError;
+      }
       
       if (!ensembleExists) {
+        console.error(`L'ensemble ${ensembleId} n'existe pas`);
         setError("L'ensemble n'a pas pu être chargé ou n'existe pas.");
         setLoading(false);
         return;
@@ -104,32 +112,46 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
         .eq('id', ensembleId)
         .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Erreur lors du chargement de l'ensemble:", error);
+        throw error;
+      }
       
       if (!data) {
+        console.error(`Aucun ensemble trouvé avec l'ID ${ensembleId}`);
         setError("L'ensemble n'a pas pu être chargé ou n'existe pas.");
         setLoading(false);
         return;
       }
-      
+
+      console.log(`Ensemble chargé: ${JSON.stringify(data)}`);
       setEnsemble(data);
       
       // Organize vetements by type
       const byType: any = {};
-      if (data?.vetements) {
+      if (data?.vetements && Array.isArray(data.vetements)) {
+        console.log(`Nombre de vêtements: ${data.vetements.length}`);
         data.vetements.forEach((item: any) => {
-          const vetement = item.vetement;
-          if (vetement) {
-            const categorie = vetement.categorie_id;
+          if (item.vetement) {
+            const categorie = item.vetement.categorie_id;
             if (!byType[categorie]) {
               byType[categorie] = [];
             }
-            byType[categorie].push(vetement);
+            byType[categorie].push(item.vetement);
+          } else {
+            console.log("Item sans vêtement:", item);
           }
         });
+      } else {
+        console.log("Pas de vêtements ou format invalide:", data?.vetements);
+        // Si nous n'avons pas de vêtements mais que l'ensemble existe
+        if (data) {
+          setEnsemble(data);
+        }
       }
       
       setVetementsByType(byType);
+      setError(null);
     } catch (err) {
       console.error('Error loading ensemble:', err);
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
@@ -200,7 +222,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <AlertTriangle size={16} />
                 <Typography variant="body2">
-                  L'ensemble n'a pas pu être chargé ou n'existe pas.
+                  Cet ensemble ne contient aucun vêtement.
                 </Typography>
               </Box>
             </Alert>
@@ -213,7 +235,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
             vetementsByType={vetementsByType}
           />
           
-          {(ensemble && !hasEmptyEnsemble) ? (
+          {(ensemble) ? (
             <VoteButtons
               userVote={userVote}
               onVote={handleVote}

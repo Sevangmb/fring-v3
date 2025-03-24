@@ -57,22 +57,22 @@ const EnsembleContentDisplay: React.FC<EnsembleContentDisplayProps> = ({
   // Vérifier si l'ensemble a des vêtements
   const hasVetements = ensemble.vetements && ensemble.vetements.length > 0;
   
-  if (!hasVetements) {
-    return (
-      <Alert className="my-4">
-        <AlertTitle>Aucun vêtement dans cet ensemble</AlertTitle>
-        <AlertDescription>
-          L'ensemble n'a pas pu être chargé ou n'existe pas.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
   // Calcul du nombre total de vêtements
   const totalVetements = Object.values(vetementsByType).reduce(
     (total, items) => total + items.length,
     0
   );
+
+  if (!hasVetements && totalVetements === 0) {
+    return (
+      <Alert className="my-4">
+        <AlertTitle>Ensemble sans vêtements</AlertTitle>
+        <AlertDescription>
+          Cet ensemble ne contient aucun vêtement.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <div className="space-y-4 my-4">

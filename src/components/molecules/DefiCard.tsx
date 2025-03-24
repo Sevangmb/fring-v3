@@ -9,6 +9,7 @@ import VoteDefiDialog from "./VoteDefiDialog";
 import VoterDialog from "./VoterDialog";
 import { Link } from "react-router-dom";
 import { supabase } from '@/lib/supabase';
+import { useToast } from "@/hooks/use-toast";
 
 export type DefiType = "current" | "upcoming" | "past";
 
@@ -40,6 +41,8 @@ const DefiCard: React.FC<DefiCardProps> = ({
   const isCurrent = type === "current";
   const [validEnsembleId, setValidEnsembleId] = useState<number | undefined>(ensembleId);
   const [participation, setParticipation] = useState<any>(null);
+  const [participantEnsembleId, setParticipantEnsembleId] = useState<number | null>(null);
+  const { toast } = useToast();
 
   // Récupérer la participation de l'utilisateur actuel s'il y en a une
   useEffect(() => {
@@ -59,8 +62,12 @@ const DefiCard: React.FC<DefiCardProps> = ({
         if (error) throw error;
         
         if (data && data.ensemble_id) {
+          console.log(`Participation trouvée: ${JSON.stringify(data)}`);
           setParticipation(data);
+          setParticipantEnsembleId(data.ensemble_id);
           setValidEnsembleId(data.ensemble_id);
+        } else {
+          console.log(`Aucune participation trouvée pour le défi ${id}`);
         }
       } catch (err) {
         console.error("Erreur lors de la vérification de la participation:", err);
@@ -117,7 +124,7 @@ const DefiCard: React.FC<DefiCardProps> = ({
                 <VoteDefiDialog 
                   defiId={id} 
                   defiTitle={title} 
-                  ensembleId={participation.ensemble_id}
+                  ensembleId={participantEnsembleId || participation.ensemble_id}
                 />
               ) : (
                 <ParticiperDefiDialog 

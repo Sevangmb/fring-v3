@@ -27,7 +27,7 @@ export const participerDefi = async (defiId: number, ensembleId: number): Promis
     // Vérifier si l'ensemble existe
     const { data: ensemble, error: ensembleError } = await supabase
       .from('tenues')
-      .select('id')
+      .select('id, nom, user_id')
       .eq('id', ensembleId)
       .maybeSingle();
       
@@ -37,8 +37,17 @@ export const participerDefi = async (defiId: number, ensembleId: number): Promis
     }
     
     if (!ensemble) {
+      console.error(`L'ensemble avec ID ${ensembleId} n'existe pas`);
       throw new Error('L\'ensemble sélectionné n\'existe pas');
     }
+
+    // Vérifier si l'utilisateur est le propriétaire de l'ensemble
+    if (ensemble.user_id !== userId) {
+      console.error(`L'utilisateur ${userId} n'est pas le propriétaire de l'ensemble ${ensembleId}`);
+      throw new Error('Vous ne pouvez participer qu\'avec vos propres ensembles');
+    }
+
+    console.log(`Participation au défi ${defiId} avec l'ensemble ${ensembleId} (${ensemble.nom})`);
 
     // Vérifier si l'utilisateur a déjà participé à ce défi
     const { data: existingParticipation, error: checkError } = await supabase
@@ -80,26 +89,7 @@ export const participerDefi = async (defiId: number, ensembleId: number): Promis
       }
       
       // Mettre à jour le compteur de participants directement
-      // Utiliser la valeur directe au lieu de la fonction RPC (pour éviter les problèmes)
-      const { error: updateError } = await supabase
-        .from('defis')
-        .select('participants_count')
-        .eq('id', defiId)
-        .single()
-        .then(({ data, error }) => {
-          if (error) throw error;
-          const currentCount = data?.participants_count || 0;
-          
-          return supabase
-            .from('defis')
-            .update({ participants_count: currentCount + 1 })
-            .eq('id', defiId);
-        });
-      
-      if (updateError) {
-        console.error('Erreur lors de l\'incrémentation du compteur:', updateError);
-        // Ne pas bloquer le processus si cette étape échoue
-      }
+      await updateDefiParticipantsCount(defiId);
     }
     
     return true;
@@ -149,7 +139,15 @@ export const getDefiParticipations = async (defiId: number): Promise<DefiPartici
   try {
     const { data, error } = await supabase
       .from('defi_participations')
-      .select('*')
+      .select(`
+        id, 
+        defi_id, 
+        user_id, 
+        ensemble_id, 
+        commentaire, 
+        created_at,
+        ensemble:ensemble_id(*)
+      `)
       .eq('defi_id', defiId)
       .order('created_at', { ascending: false });
     
@@ -158,6 +156,7 @@ export const getDefiParticipations = async (defiId: number): Promise<DefiPartici
       return [];
     }
     
+    console.log(`${data?.length || 0} participations trouvées pour le défi ${defiId}`);
     return data || [];
   } catch (error) {
     console.error('Erreur lors de la récupération des participations:', error);
@@ -181,6 +180,8 @@ export const updateDefiParticipantsCount = async (defiId: number): Promise<boole
       return false;
     }
     
+    console.log(`Nombre de participants pour le défi ${defiId}: ${count || 0}`);
+    
     // Mettre à jour le compteur dans la table defis
     const { error: updateError } = await supabase
       .from('defis')
@@ -196,5 +197,29 @@ export const updateDefiParticipantsCount = async (defiId: number): Promise<boole
   } catch (error) {
     console.error('Erreur lors de la mise à jour du compteur:', error);
     return false;
+  }
+};
+
+/**
+ * Récupérer l'ensemble d'un participant à un défi
+ */
+export const getDefiParticipantEnsemble = async (defiId: number, userId: string): Promise<number | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('defi_participations')
+      .select('ensemble_id')
+      .eq('defi_id', defiId)
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Erreur lors de la récupération de l\'ensemble du participant:', error);
+      return null;
+    }
+    
+    return data?.ensemble_id || null;
+  } catch (error) {
+    console.error('Erreur lors de la récupération de l\'ensemble du participant:', error);
+    return null;
   }
 };

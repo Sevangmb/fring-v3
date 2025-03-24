@@ -1,16 +1,16 @@
 
 import React from "react";
-import { Box, Button, CircularProgress, Tooltip, Typography } from "@mui/material";
-import { ThumbsDown, ThumbsUp, WifiOff } from "lucide-react";
+import { Button } from "@mui/material";
+import { ThumbsUp, ThumbsDown, Loader2 } from "lucide-react";
 import { VoteType } from "@/services/votes/types";
 
-export interface VoteButtonsProps {
+interface VoteButtonsProps {
   userVote: VoteType;
-  onVote: (vote: 'up' | 'down') => void;
-  size?: 'sm' | 'md' | 'lg';
+  onVote: (vote: VoteType) => void;
+  size?: "sm" | "md" | "lg";
   showLabels?: boolean;
-  disabled?: boolean;
   isLoading?: boolean;
+  disabled?: boolean;
   connectionError?: boolean;
   className?: string;
 }
@@ -18,138 +18,80 @@ export interface VoteButtonsProps {
 const VoteButtons: React.FC<VoteButtonsProps> = ({
   userVote,
   onVote,
-  size = 'md',
-  showLabels = true,
-  disabled = false,
+  size = "md",
+  showLabels = false,
   isLoading = false,
+  disabled = false,
   connectionError = false,
-  className
+  className = ""
 }) => {
-  // Size mappings for Material UI
-  const sizeMap = {
-    sm: { button: 'small', iconSize: 16, padding: '4px 10px' },
-    md: { button: 'medium', iconSize: 20, padding: '6px 16px' },
-    lg: { button: 'large', iconSize: 24, padding: '8px 22px' }
+  // Tailles des boutons et icônes selon size
+  const getSizeProps = () => {
+    switch (size) {
+      case "sm":
+        return { iconSize: 14, buttonSize: "small", buttonPadding: "4px 8px" };
+      case "lg":
+        return { iconSize: 20, buttonSize: "large", buttonPadding: "10px 20px" };
+      case "md":
+      default:
+        return { iconSize: 16, buttonSize: "medium", buttonPadding: "8px 16px" };
+    }
   };
-  
-  const { button: buttonSize, iconSize, padding } = sizeMap[size];
-  
-  // Affiche un message d'erreur en cas de problème de connexion
-  if (connectionError) {
-    return (
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        gap: 1, 
-        pt: 2 
-      }}>
-        <WifiOff color="error" style={{ width: 32, height: 32 }} />
-        <Typography variant="body2" color="error">
-          Problème de connexion. Vérifiez votre connexion internet.
-        </Typography>
-        <Button 
-          onClick={() => window.location.reload()}
-          variant="outlined" 
-          color="error"
-          size="small"
-          sx={{ mt: 1 }}
-        >
-          Réessayer
-        </Button>
-      </Box>
-    );
-  }
-  
+
+  const { iconSize, buttonSize, buttonPadding } = getSizeProps();
+
   return (
-    <Box sx={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      gap: 2, 
-      pt: 2,
-      width: '100%'
-    }} className={className}>
-      <Tooltip title={userVote === 'up' ? "Vous avez aimé" : "J'aime"}>
-        <span> {/* Use span to avoid Tooltip warning */}
-          <Button 
-            onClick={() => onVote('up')}
-            variant={userVote === 'up' ? "contained" : "outlined"}
-            size={buttonSize as any}
-            disabled={disabled || isLoading}
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 1,
-              padding: padding,
-              minWidth: '140px',
-              opacity: (disabled || isLoading) ? 0.5 : 1,
-              cursor: (disabled || isLoading) ? 'not-allowed' : 'pointer',
-              backgroundColor: userVote === 'up' ? '#4caf50' : 'transparent',
-              border: '1px solid #4caf50',
-              color: userVote === 'up' ? 'white' : '#4caf50',
-              '&:hover': {
-                backgroundColor: userVote === 'up' ? '#43a047' : 'rgba(76, 175, 80, 0.04)',
-                border: '1px solid #4caf50',
-              }
-            }}
-          >
-            {isLoading ? (
-              <CircularProgress size={16} color="inherit" />
-            ) : (
-              <ThumbsUp style={{ 
-                width: iconSize, 
-                height: iconSize,
-                color: userVote === 'up' ? 'white' : '#4caf50'
-              }} />
-            )}
-            {showLabels && (
-              <span style={{ fontWeight: 'bold' }}>J'AIME</span>
-            )}
-          </Button>
-        </span>
-      </Tooltip>
-      
-      <Tooltip title={userVote === 'down' ? "Vous n'avez pas aimé" : "Je n'aime pas"}>
-        <span>
-          <Button 
-            onClick={() => onVote('down')}
-            variant={userVote === 'down' ? "contained" : "outlined"}
-            size={buttonSize as any}
-            disabled={disabled || isLoading}
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 1,
-              padding: padding,
-              minWidth: '140px',
-              opacity: (disabled || isLoading) ? 0.5 : 1,
-              cursor: (disabled || isLoading) ? 'not-allowed' : 'pointer',
-              backgroundColor: userVote === 'down' ? '#f44336' : 'transparent',
-              border: '1px solid #f44336',
-              color: userVote === 'down' ? 'white' : '#f44336',
-              '&:hover': {
-                backgroundColor: userVote === 'down' ? '#e53935' : 'rgba(244, 67, 54, 0.04)',
-                border: '1px solid #f44336',
-              }
-            }}
-          >
-            {isLoading ? (
-              <CircularProgress size={16} color="inherit" />
-            ) : (
-              <ThumbsDown style={{ 
-                width: iconSize, 
-                height: iconSize,
-                color: userVote === 'down' ? 'white' : '#f44336'
-              }} />
-            )}
-            {showLabels && (
-              <span style={{ fontWeight: 'bold' }}>JE N'AIME PAS</span>
-            )}
-          </Button>
-        </span>
-      </Tooltip>
-    </Box>
+    <div className={`flex gap-3 justify-center ${className}`}>
+      <Button
+        variant="contained"
+        color="success"
+        size={buttonSize as any}
+        disabled={isLoading || disabled || connectionError}
+        onClick={() => onVote("up")}
+        sx={{
+          backgroundColor: userVote === "up" ? "#22c55e" : "#4ade80", // green-600 : green-400
+          "&:hover": {
+            backgroundColor: "#16a34a" // green-600
+          },
+          padding: buttonPadding,
+          color: "white",
+          fontWeight: "bold",
+          boxShadow: userVote === "up" ? 3 : 1
+        }}
+      >
+        {isLoading ? (
+          <Loader2 size={iconSize} className="mr-1 animate-spin" />
+        ) : (
+          <ThumbsUp size={iconSize} className="mr-1" />
+        )}
+        {showLabels && "J'AIME"}
+      </Button>
+
+      <Button
+        variant="contained"
+        color="error"
+        size={buttonSize as any}
+        disabled={isLoading || disabled || connectionError}
+        onClick={() => onVote("down")}
+        sx={{
+          backgroundColor: userVote === "down" ? "#ef4444" : "#f87171", // red-600 : red-400
+          "&:hover": {
+            backgroundColor: "#dc2626" // red-700
+          },
+          padding: buttonPadding,
+          color: "white",
+          fontWeight: "bold",
+          boxShadow: userVote === "down" ? 3 : 1
+        }}
+      >
+        {isLoading ? (
+          <Loader2 size={iconSize} className="mr-1 animate-spin" />
+        ) : (
+          <ThumbsDown size={iconSize} className="mr-1" />
+        )}
+        {showLabels && "JE N'AIME PAS"}
+      </Button>
+    </div>
   );
 };
 
