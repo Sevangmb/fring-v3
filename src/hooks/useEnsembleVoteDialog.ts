@@ -1,59 +1,65 @@
 
-import { useState, useEffect } from "react";
-import { VetementType } from "@/services/meteo/tenue";
-import { fetchEnsembleById } from "@/services/ensemble/fetchEnsembleById";
+import { useState, useCallback } from "react";
+import { submitVote } from "@/services/defi/votes";
+import { fetchEnsembleById } from "@/services/ensemble";
 import { organizeVetementsByType } from "@/components/defis/voting/helpers/vetementOrganizer";
 import { useToast } from "@/hooks/use-toast";
-import { useEntityVote } from "@/hooks/useEntityVote";
-import { checkConnection } from "@/services/network/retryUtils";
+import { VoteType } from "@/services/votes/types";
+import { getUserVote } from "@/services/defi/votes";
 
 interface UseEnsembleVoteDialogProps {
   ensembleId: number;
-  onClose: () => void;
+  onClose?: () => void;
+  skip?: boolean; // Option pour ignorer le chargement de l'ensemble
 }
 
 export const useEnsembleVoteDialog = ({ 
-  ensembleId,
-  onClose
+  ensembleId, 
+  onClose,
+  skip = false
 }: UseEnsembleVoteDialogProps) => {
   const { toast } = useToast();
   const [ensemble, setEnsemble] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [vetementsByType, setVetementsByType] = useState<Record<string, any[]>>({
-    [VetementType.HAUT]: [],
-    [VetementType.BAS]: [],
-    [VetementType.CHAUSSURES]: [],
-    'autre': []
-  });
-
-  const { userVote, votes, handleVote, isSubmitting, connectionError } = useEntityVote({
-    entityType: "ensemble",
-    entityId: ensembleId,
-  });
-
-  const resetState = () => {
-    setError(null);
+  const [userVote, setUserVote] = useState<VoteType>(null);
+  const [vetementsByType, setVetementsByType] = useState<any>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
+  
+  const resetState = useCallback(() => {
     setEnsemble(null);
-    setVetementsByType({
-      [VetementType.HAUT]: [],
-      [VetementType.BAS]: [],
-      [VetementType.CHAUSSURES]: [],
-      'autre': []
-    });
-  };
-
-  const loadEnsemble = async () => {
-    if (!ensembleId) return;
+    setUserVote(null);
+    setVetementsByType({});
+    setLoading(true);
+    setError(null);
+  }, []);
+  
+  const loadEnsemble = useCallback(async () => {
+    // Si skip est true, ne pas charger l'ensemble
+    if (skip) {
+      setLoading(false);
+      return;
+    }
+    
+    if (!ensembleId || isNaN(ensembleId) || ensembleId <= 0) {
+      console.error(`ID d'ensemble invalide: ${ensembleId}`);
+      setError(new Error("ID d'ensemble invalide"));
+      setLoading(false);
+      return;
+    }
     
     setLoading(true);
     setError(null);
+    
     try {
-      const isConnected = await checkConnection();
-      if (!isConnected) {
+      // Vérifier la connexion internet
+      if (!navigator.onLine) {
+        setConnectionError(true);
         throw new Error("Pas de connexion internet");
       }
       
+      // Charger l'ensemble
       const ensembleData = await fetchEnsembleById(ensembleId);
       
       if (!ensembleData) {
@@ -62,79 +68,77 @@ export const useEnsembleVoteDialog = ({
       
       setEnsemble(ensembleData);
       
-      if (ensembleData && ensembleData.vetements) {
-        const organizedVetements = organizeVetementsByType(ensembleData);
-        setVetementsByType(organizedVetements);
-      } else {
-        setError("Aucun vêtement trouvé pour cet ensemble");
-      }
-    } catch (error) {
-      console.error("Erreur lors du chargement de l'ensemble:", error);
+      // Organiser les vêtements par type
+      const vetements = ensembleData.vetements || [];
+      const organizedVetements = organizeVetementsByType(vetements);
+      setVetementsByType(organizedVetements);
+      
+      // Charger le vote de l'utilisateur
+      const vote = await getUserVote(0, ensembleId); // 0 est un ID de défi fictif, à remplacer dans l'implémentation réelle
+      setUserVote(vote);
+      
+      setConnectionError(false);
+    } catch (err) {
+      console.error("Erreur lors du chargement de l'ensemble:", err);
+      setError(err instanceof Error ? err : new Error("Erreur lors du chargement de l'ensemble"));
+      
       if (!navigator.onLine) {
-        setError("Pas de connexion internet");
-      } else {
-        setError("Erreur lors du chargement de l'ensemble");
+        setConnectionError(true);
       }
     } finally {
       setLoading(false);
     }
-  };
-
-  const onVote = async (vote: 'up' | 'down') => {
-    if (!navigator.onLine || connectionError) {
-      toast({
-        title: "Erreur",
-        description: "Pas de connexion internet. Veuillez vérifier votre connexion et réessayer.",
-        variant: "destructive",
-      });
-      return false;
-    }
+  }, [ensembleId, skip]);
+  
+  const onVote = useCallback(async (vote: VoteType) => {
+    if (isSubmitting) return;
     
-    const success = await handleVote(vote);
+    setIsSubmitting(true);
     
-    if (success) {
-      toast({
-        title: "Vote enregistré",
-        description: vote === 'up' ? "Vous aimez cet ensemble" : "Vous n'aimez pas cet ensemble",
-        variant: vote === 'up' ? "default" : "destructive",
-      });
-      
-      setTimeout(() => {
-        onClose();
-      }, 500);
-    } else {
-      toast({
-        title: "Erreur",
-        description: "Impossible d'enregistrer votre vote",
-        variant: "destructive",
-      });
-    }
-    
-    return success;
-  };
-
-  useEffect(() => {
-    // Event handler for connection changes
-    const handleOnlineStatusChange = () => {
-      if (navigator.onLine && ensemble === null) {
-        loadEnsemble();
+    try {
+      // Vérifier la connexion internet
+      if (!navigator.onLine) {
+        setConnectionError(true);
+        throw new Error("Pas de connexion internet");
       }
-    };
-    
-    window.addEventListener('online', handleOnlineStatusChange);
-    
-    return () => {
-      window.removeEventListener('online', handleOnlineStatusChange);
-    };
-  }, [ensemble]);
-
+      
+      // Soumettre le vote (0 est un ID de défi fictif, à remplacer dans l'implémentation réelle)
+      const success = await submitVote(0, ensembleId, vote);
+      
+      if (success) {
+        setUserVote(vote);
+        
+        toast({
+          title: "Vote enregistré",
+          description: vote === 'up' ? "Vous avez aimé cet ensemble" : "Vous n'avez pas aimé cet ensemble",
+        });
+        
+        if (onClose) {
+          onClose();
+        }
+      } else {
+        throw new Error("Impossible d'enregistrer le vote");
+      }
+    } catch (err) {
+      console.error("Erreur lors du vote:", err);
+      const errorMessage = err instanceof Error ? err.message : "Erreur lors du vote";
+      
+      toast({
+        title: "Erreur",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [ensembleId, isSubmitting, onClose, toast]);
+  
   return {
     ensemble,
     loading,
     error,
     vetementsByType,
     userVote,
-    votes,
     isSubmitting,
     connectionError,
     resetState,

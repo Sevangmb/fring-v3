@@ -13,11 +13,12 @@ import VoteButtons from "@/components/defis/voting/VoteButtons";
 import EnsembleContentDisplay from "./EnsembleContentDisplay";
 import { useEnsembleVoteDialog } from "@/hooks/useEnsembleVoteDialog";
 import { Alert, Box, Typography } from "@mui/material";
+import { useEntityVote } from "@/hooks/useEntityVote";
 
 interface VoteDefiDialogProps {
   defiId: number;
   defiTitle?: string;
-  ensembleId: number;
+  ensembleId?: number;
 }
 
 const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
@@ -26,9 +27,21 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
   ensembleId
 }) => {
   const [open, setOpen] = useState(false);
-  
+  const { toast } = useToast();
   const handleClose = () => setOpen(false);
   
+  // Utiliser useEntityVote pour voter directement sur le défi si ensembleId n'est pas fourni
+  const {
+    userVote: defiVote,
+    handleVote: handleDefiVote,
+    isSubmitting: isDefiVoting,
+    connectionError: defiConnectionError
+  } = useEntityVote({
+    entityType: 'defi',
+    entityId: defiId
+  });
+  
+  // Utiliser useEnsembleVoteDialog seulement si ensembleId est fourni
   const {
     ensemble,
     loading,
@@ -41,13 +54,16 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
     loadEnsemble,
     onVote
   } = useEnsembleVoteDialog({ 
-    ensembleId, 
-    onClose: handleClose 
+    ensembleId: ensembleId || 0, 
+    onClose: handleClose,
+    skip: !ensembleId // Skip if ensembleId is not provided
   });
 
   const handleOpen = () => {
     setOpen(true);
-    resetState();
+    if (ensembleId) {
+      resetState();
+    }
   };
 
   useEffect(() => {
@@ -56,9 +72,27 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
     }
   }, [open, ensembleId, loadEnsemble]);
   
-  const handleVote = (ensembleId: number, vote: 'up' | 'down') => {
-    onVote(vote);
+  const handleVote = (voteValue: 'up' | 'down') => {
+    if (ensembleId) {
+      // Vote sur l'ensemble
+      onVote(voteValue);
+    } else {
+      // Vote directement sur le défi
+      handleDefiVote(voteValue).then(success => {
+        if (success) {
+          handleClose();
+        }
+      });
+    }
   };
+
+  // Déterminer si c'est un vote sur un défi direct ou sur un ensemble
+  const isDefiDirectVote = !ensembleId;
+  
+  // Variables d'état à utiliser dans le rendu
+  const activeVote = isDefiDirectVote ? defiVote : userVote;
+  const activeIsSubmitting = isDefiDirectVote ? isDefiVoting : isSubmitting;
+  const activeConnectionError = isDefiDirectVote ? defiConnectionError : connectionError;
 
   return (
     <>
@@ -83,11 +117,13 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
               </DialogClose>
             </DialogTitle>
             <p className="text-center text-muted-foreground">
-              Donnez votre avis sur ce défi.
+              {isDefiDirectVote 
+                ? "Donnez votre avis sur ce défi." 
+                : "Donnez votre avis sur cet ensemble."}
             </p>
           </DialogHeader>
           
-          {connectionError && (
+          {activeConnectionError && (
             <Alert severity="error" sx={{ mb: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <WifiOff size={16} />
@@ -98,21 +134,24 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
             </Alert>
           )}
           
-          <EnsembleContentDisplay
-            ensemble={ensemble}
-            loading={loading}
-            error={error}
-            vetementsByType={vetementsByType}
-          />
+          {/* Afficher l'aperçu de l'ensemble seulement si ensembleId est fourni */}
+          {!isDefiDirectVote && (
+            <EnsembleContentDisplay
+              ensemble={ensemble}
+              loading={loading}
+              error={error}
+              vetementsByType={vetementsByType}
+            />
+          )}
           
           <VoteButtons
-            ensembleId={ensembleId}
-            userVote={userVote}
+            ensembleId={ensembleId || defiId} // Utiliser defiId si ensembleId n'est pas fourni
+            userVote={activeVote}
             onVote={handleVote}
             size="lg"
-            isLoading={isSubmitting}
-            disabled={loading || isSubmitting}
-            connectionError={connectionError}
+            isLoading={activeIsSubmitting}
+            disabled={!isDefiDirectVote && loading || activeIsSubmitting}
+            connectionError={activeConnectionError}
             className="pt-4"
           />
         </DialogContent>

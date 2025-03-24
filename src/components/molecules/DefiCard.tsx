@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Award, Calendar, ChevronRight, Flag, Vote } from "lucide-react";
 import ParticiperDefiDialog from "./ParticiperDefiDialog";
 import VoteDefiDialog from "./VoteDefiDialog";
+import VoterDialog from "./VoterDialog";
 
 export type DefiType = "current" | "upcoming" | "past";
 
@@ -18,7 +19,7 @@ export interface DefiCardProps {
   icon?: React.ReactNode;
   participantsCount?: number;
   onParticipation?: () => void;
-  ensembleId?: number; // Added ensembleId prop
+  ensembleId?: number; // Ensemble ID optionnel si un ensemble est lié au défi
 }
 
 const DefiCard: React.FC<DefiCardProps> = ({
@@ -34,6 +35,7 @@ const DefiCard: React.FC<DefiCardProps> = ({
 }) => {
   const isPast = type === "past";
   const isUpcoming = type === "upcoming";
+  const isCurrent = type === "current";
 
   return (
     <Card className={`overflow-hidden hover:shadow-md transition-all duration-300 ${isPast ? "opacity-80" : ""}`}>
@@ -60,13 +62,14 @@ const DefiCard: React.FC<DefiCardProps> = ({
               {participantsCount} participants
             </Text>
             <div className="ml-auto flex gap-2">
+              {/* Utiliser VoteDefiDialog pour les défis passés */}
               <VoteDefiDialog 
                 defiId={id} 
                 defiTitle={title} 
-                ensembleId={ensembleId || id} // Use the ensembleId prop or fallback to defi id
+                ensembleId={ensembleId}
               />
-              <Button variant="outline" size="sm">
-                Voir les résultats
+              <Button variant="outline" size="sm" asChild>
+                <a href={`/defis/${id}/resultats`}>Voir les résultats</a>
               </Button>
             </div>
           </>
@@ -81,13 +84,12 @@ const DefiCard: React.FC<DefiCardProps> = ({
               {participantsCount} participants
             </Text>
             <div className="flex gap-2">
-              {participantsCount > 0 && (
-                <VoteDefiDialog 
-                  defiId={id} 
-                  defiTitle={title} 
-                  ensembleId={ensembleId || id} // Use the ensembleId prop or fallback to defi id
-                />
-              )}
+              {/* Pour les défis en cours, permettre de voter et de participer */}
+              <VoteDefiDialog 
+                defiId={id} 
+                defiTitle={title} 
+                ensembleId={ensembleId}
+              />
               <ParticiperDefiDialog 
                 defiId={id} 
                 defiTitle={title} 

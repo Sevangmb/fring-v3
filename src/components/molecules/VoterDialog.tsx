@@ -40,8 +40,15 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
   useEffect(() => {
     const fetchUserVote = async () => {
       try {
-        const vote = await getUserVote(elementType, elementId);
-        setUserVote(vote);
+        if (elementType === 'defi') {
+          // Pour un défi, utiliser l'API spécifique
+          const vote = await getUserVote(elementType, elementId);
+          setUserVote(vote);
+        } else {
+          // Pour les autres types d'entités
+          const vote = await getUserVote(elementType, elementId);
+          setUserVote(vote);
+        }
       } catch (error) {
         console.error("Erreur lors de la récupération du vote:", error);
       }
@@ -57,15 +64,15 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
     setSelectedVote(vote);
     
     try {
-      console.info("Attempting to vote:", { elementType, elementId, vote });
-      console.info("Soumission du vote: type=" + elementType + ", id=" + elementId + ", vote=" + vote);
+      console.info(`Soumission du vote: type=${elementType}, id=${elementId}, vote=${vote}`);
       
       let success = false;
       
       if (elementType === 'defi') {
-        // Pour un vote sur un défi, passer null comme ensemble_id
+        // Pour un vote direct sur un défi, ensemble_id est null
         success = await submitVote(elementId, null, vote);
       } else {
+        // Pour les autres types d'entités
         success = await submitEntityVote(elementType, elementId, vote);
       }
       
