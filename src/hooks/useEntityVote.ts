@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { VoteType, EntityType } from "@/services/votes/types";
 import { useVote } from "./useVote";
+import { calculateScore } from "@/services/votes/types";
 
 interface UseEntityVoteProps {
   entityType: EntityType;
@@ -20,11 +21,13 @@ export const useEntityVote = ({
     submitVote, 
     loadVoteData,
     userVote,
-    votesCount, // Using votesCount instead of votes to match what useVote returns
-    score,
+    votesCount,
     isLoading: voteLoading,
     isOffline
   } = useVote(entityType, entityId);
+  
+  // Calculate score from vote counts
+  const score = votesCount ? calculateScore(votesCount) : 0;
   
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,13 +77,13 @@ export const useEntityVote = ({
     setIsSubmitting(true);
     
     try {
-      const success = await submitVote(vote);
+      await submitVote(vote);
       
-      if (success && onVoteSubmitted) {
+      if (onVoteSubmitted) {
         onVoteSubmitted(vote);
       }
       
-      return success;
+      return true;
     } catch (error) {
       console.error("Erreur lors du vote:", error);
       return false;

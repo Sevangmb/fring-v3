@@ -7,9 +7,10 @@ import { fr } from "date-fns/locale";
 
 interface EnsembleDetailProps {
   ensemble: any;
+  votes?: { up: number; down: number };
 }
 
-const EnsembleDetail: React.FC<EnsembleDetailProps> = ({ ensemble }) => {
+const EnsembleDetail: React.FC<EnsembleDetailProps> = ({ ensemble, votes }) => {
   if (!ensemble) return null;
   
   const createdAt = ensemble.created_at ? new Date(ensemble.created_at) : new Date();

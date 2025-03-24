@@ -36,9 +36,9 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
     isOffline,
     loadVoteData
   } = useVote(elementType, elementId, {
-    onVoteSuccess: (vote) => {
-      if (onVoteSubmitted) {
-        onVoteSubmitted(vote);
+    onVoteSuccess: () => {
+      if (onVoteSubmitted && userVote) {
+        onVoteSubmitted(userVote);
       }
     }
   });
@@ -48,7 +48,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
     loadVoteData();
   };
   
-  const handleVote = async (vote: 'up' | 'down') => {
+  const handleVote = async (vote: VoteType) => {
     await submitVote(vote);
   };
   
