@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Text } from "@/components/atoms/Typography";
@@ -145,7 +146,7 @@ const DefiCard: React.FC<DefiCardProps> = ({
               setLeaderName(leader.tenue[0].nom);
             } 
             // Handle the case where tenue is returned as an object
-            else if (typeof leader.tenue === 'object' && leader.tenue !== null) {
+            else if (typeof leader.tenue === 'object' && leader.tenue !== null && 'nom' in leader.tenue) {
               setLeaderName(leader.tenue.nom);
             }
           }
