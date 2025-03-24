@@ -3,9 +3,11 @@ import React from "react";
 import { Text } from "@/components/atoms/Typography";
 import { Award, Vote, Shirt } from "lucide-react";
 import { DefiState } from "./types";
-import VoteDefiDialog from "../VoteDefiDialog";
 import ParticiperDefiDialog from "../ParticiperDefiDialog";
 import VoterDialog from "../VoterDialog";
+import { Button } from "@/components/ui/button";
+import VotingDialog from "@/components/defis/VotingDialog";
+import { useVotingDialog } from "@/hooks/useVotingDialog";
 
 interface CurrentDefiFooterProps {
   defiId: number;
@@ -25,6 +27,14 @@ const CurrentDefiFooter: React.FC<CurrentDefiFooterProps> = ({
   onParticipation
 }) => {
   const { participation, participantEnsembleId, ensembleName, userHasVoted } = state;
+  const { 
+    ensembles, 
+    loading, 
+    open, 
+    setOpen, 
+    openDialog, 
+    handleVoteSubmitted 
+  } = useVotingDialog(defiId);
   
   // Utiliser le nombre de participants de l'état s'il est disponible
   const displayParticipantsCount = state.participantsCount > 0 ? state.participantsCount : participantsCount;
@@ -52,10 +62,22 @@ const CurrentDefiFooter: React.FC<CurrentDefiFooterProps> = ({
                 <span>{ensembleName}</span>
               </div>
             )}
-            <VoteDefiDialog 
-              defiId={defiId} 
-              defiTitle={defiTitle} 
-              ensembleId={participantEnsembleId || participation.ensemble_id}
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={openDialog}
+              className="flex items-center gap-1 text-sm font-medium"
+              disabled={loading || ensembles.length === 0}
+            >
+              <Vote className="h-4 w-4" />
+              <span>Voter sur les ensembles</span>
+            </Button>
+            
+            <VotingDialog
+              open={open}
+              onOpenChange={setOpen}
+              ensembles={ensembles}
+              onVoteSubmitted={handleVoteSubmitted}
             />
           </>
         ) : (
