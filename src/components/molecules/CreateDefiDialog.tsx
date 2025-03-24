@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -26,10 +25,7 @@ const CreateDefiDialog: React.FC<CreateDefiDialogProps> = ({
   };
   return <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Plus className="h-4 w-4" />
-          Créer un défi
-        </Button>
+        
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

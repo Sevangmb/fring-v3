@@ -1,23 +1,11 @@
-
 import React, { useState } from "react";
-import { 
-  ThumbsUp, 
-  X 
-} from "lucide-react";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogClose,
-  DialogDescription
-} from "@/components/ui/dialog";
+import { ThumbsUp, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { VoteType, EntityType } from "@/services/votes/types";
 import VoteButtons from "@/components/defis/voting/VoteButtons";
 import { useVote } from "@/hooks/useVote";
 import { Typography, Box } from "@mui/material";
-
 interface VoterDialogProps {
   elementId: number;
   elementType: EntityType;
@@ -26,9 +14,8 @@ interface VoterDialogProps {
   description?: string;
   disabled?: boolean;
 }
-
-const VoterDialog: React.FC<VoterDialogProps> = ({ 
-  elementId, 
+const VoterDialog: React.FC<VoterDialogProps> = ({
+  elementId,
   elementType,
   onVoteSubmitted,
   title,
@@ -36,7 +23,6 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
   disabled = false
 }) => {
   const [open, setOpen] = useState(false);
-  
   const {
     submitVote,
     userVote,
@@ -50,36 +36,25 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
       }
     }
   });
-  
   const handleOpen = () => {
     setOpen(true);
     loadVoteData();
   };
-  
   const handleVote = async (vote: VoteType) => {
     await submitVote(vote);
     // Ferme la boîte de dialogue après le vote
     setOpen(false);
   };
-  
   const dialogTitle = title || `Voter pour cet ${elementType === 'ensemble' ? 'ensemble' : 'élément'}`;
   const dialogDescription = description || `Donnez votre avis sur ce${elementType === 'ensemble' ? 't ensemble' : ' défi'}.`;
-  
-  const buttonStyle = userVote 
-    ? { variant: "outline", className: "text-primary border-primary" }
-    : { variant: "outline" };
-  
-  return (
-    <>
-      <Button 
-        variant="outline" 
-        size="icon"
-        onClick={handleOpen}
-        disabled={isLoading || disabled}
-        className={userVote ? "text-primary border-primary" : ""}
-      >
-        <ThumbsUp className="h-4 w-4" />
-      </Button>
+  const buttonStyle = userVote ? {
+    variant: "outline",
+    className: "text-primary border-primary"
+  } : {
+    variant: "outline"
+  };
+  return <>
+      
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-[425px]">
@@ -94,20 +69,14 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
             </DialogClose>
           </DialogHeader>
           
-          <Box sx={{ padding: '16px 0', textAlign: 'center' }}>
-            <VoteButtons
-              userVote={userVote}
-              onVote={handleVote}
-              size="lg"
-              isLoading={isLoading}
-              connectionError={isOffline}
-              className="py-4"
-            />
+          <Box sx={{
+          padding: '16px 0',
+          textAlign: 'center'
+        }}>
+            <VoteButtons userVote={userVote} onVote={handleVote} size="lg" isLoading={isLoading} connectionError={isOffline} className="py-4" />
           </Box>
         </DialogContent>
       </Dialog>
-    </>
-  );
+    </>;
 };
-
 export default VoterDialog;
