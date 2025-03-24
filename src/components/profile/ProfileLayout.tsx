@@ -7,7 +7,11 @@ import { useNavigate } from "react-router-dom";
 import { useProfile } from "@/hooks/useProfile";
 import ProfileForm from "@/components/profile/ProfileForm";
 import ProfileDetails from "@/components/profile/ProfileDetails";
+import UserStats from "@/components/profile/UserStats";
+import NotificationSettings from "@/components/profile/NotificationSettings";
 import { useEffect } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { User, Bell, BarChart } from "lucide-react";
 
 const ProfileLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -18,8 +22,10 @@ const ProfileLayout: React.FC = () => {
     isLoading,
     uploadingAvatar,
     avatarPreview,
+    userStats,
     getUserInitials,
     formatJoinDate,
+    getLastActivityDate,
     toggleEdit,
     handleAvatarChange,
     onSubmit,
@@ -40,7 +46,7 @@ const ProfileLayout: React.FC = () => {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-20">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <Heading 
             variant="h3" 
             className="mb-8 font-montserrat flex items-center gap-2 animate-fade-in"
@@ -50,33 +56,66 @@ const ProfileLayout: React.FC = () => {
             </span>
           </Heading>
           
-          <Card 
-            className="p-8 shadow-lg border border-primary/10 transition-all duration-300 hover:shadow-xl rounded-xl bg-card/90"
-            padding="none"
-          >
-            {isEditing ? (
-              <ProfileForm
-                form={form}
-                onSubmit={onSubmit}
-                isLoading={isLoading}
-                isUploading={uploadingAvatar}
-                avatarPreview={avatarPreview}
-                userEmail={user.email || ""}
-                userInitials={getUserInitials()}
-                onToggleEdit={toggleEdit}
-                onAvatarChange={handleAvatarChange}
-              />
-            ) : (
-              <ProfileDetails
-                user={user}
-                getUserInitials={getUserInitials}
-                formatJoinDate={formatJoinDate}
-                avatarUrl={user.user_metadata?.avatar_url}
-                onLogout={handleLogout}
-                onToggleEdit={toggleEdit}
-              />
+          <div className="space-y-8">
+            <Card 
+              className="p-8 shadow-lg border border-primary/10 transition-all duration-300 hover:shadow-xl rounded-xl bg-card/90"
+              padding="none"
+            >
+              {isEditing ? (
+                <ProfileForm
+                  form={form}
+                  onSubmit={onSubmit}
+                  isLoading={isLoading}
+                  isUploading={uploadingAvatar}
+                  avatarPreview={avatarPreview}
+                  userEmail={user.email || ""}
+                  userInitials={getUserInitials()}
+                  onToggleEdit={toggleEdit}
+                  onAvatarChange={handleAvatarChange}
+                />
+              ) : (
+                <ProfileDetails
+                  user={user}
+                  getUserInitials={getUserInitials}
+                  formatJoinDate={formatJoinDate}
+                  avatarUrl={user.user_metadata?.avatar_url}
+                  onLogout={handleLogout}
+                  onToggleEdit={toggleEdit}
+                />
+              )}
+            </Card>
+            
+            {!isEditing && (
+              <Tabs defaultValue="stats" className="animate-fade-in">
+                <TabsList className="mb-6 bg-card/90 border border-primary/10">
+                  <TabsTrigger value="stats" className="font-montserrat flex items-center gap-2">
+                    <BarChart size={14} />
+                    Statistiques
+                  </TabsTrigger>
+                  <TabsTrigger value="notifications" className="font-montserrat flex items-center gap-2">
+                    <Bell size={14} />
+                    Notifications
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="stats" className="space-y-4">
+                  <UserStats 
+                    vetementCount={userStats.vetementCount}
+                    ensembleCount={userStats.ensembleCount}
+                    friendsCount={userStats.friendsCount}
+                    favorisCount={userStats.favorisCount}
+                    memberSince={formatJoinDate()}
+                    lastActive={getLastActivityDate()}
+                    isLoading={userStats.isLoading}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="notifications">
+                  <NotificationSettings />
+                </TabsContent>
+              </Tabs>
             )}
-          </Card>
+          </div>
         </div>
       </div>
     </Layout>

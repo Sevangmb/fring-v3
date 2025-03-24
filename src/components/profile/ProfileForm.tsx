@@ -3,7 +3,7 @@ import React from "react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import Button from "@/components/atoms/Button";
-import { Check, X, Loader2, Mail, User as UserIcon } from "lucide-react";
+import { Check, X, Loader2, Mail, User as UserIcon, MapPin } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import ProfileAvatar from "./ProfileAvatar";
 import { z } from "zod";
@@ -15,6 +15,7 @@ export const profileSchema = z.object({
   name: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères" }),
   email: z.string().email({ message: "Format d'email invalide" }).optional(),
   avatar_url: z.string().optional(),
+  location: z.string().optional(),
 });
 
 export type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -80,6 +81,30 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
                         </div>
                       </FormControl>
                       <FormMessage className="font-montserrat text-xs" />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-montserrat">Localisation</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input 
+                            placeholder="Votre ville" 
+                            {...field} 
+                            value={field.value || ''}
+                            className="font-montserrat pl-10 border-primary/20 focus:border-primary transition-colors"
+                          />
+                        </div>
+                      </FormControl>
+                      <Text className="text-xs text-muted-foreground font-montserrat mt-1">
+                        Ville ou région où vous résidez
+                      </Text>
                     </FormItem>
                   )}
                 />

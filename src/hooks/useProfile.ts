@@ -15,6 +15,13 @@ export const useProfile = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [userStats, setUserStats] = useState({
+    vetementCount: 0,
+    ensembleCount: 0,
+    friendsCount: 0,
+    favorisCount: 0,
+    isLoading: true
+  });
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -35,6 +42,61 @@ export const useProfile = () => {
       });
     }
   }, [user, form]);
+
+  // Charger les statistiques de l'utilisateur
+  useEffect(() => {
+    if (user) {
+      const fetchUserStats = async () => {
+        try {
+          // Récupérer le nombre de vêtements
+          const { count: vetementCount, error: vetementError } = await supabase
+            .from('vetements')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id);
+          
+          if (vetementError) throw vetementError;
+          
+          // Récupérer le nombre d'ensembles
+          const { count: ensembleCount, error: ensembleError } = await supabase
+            .from('tenues')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id);
+          
+          if (ensembleError) throw ensembleError;
+          
+          // Récupérer le nombre d'amis
+          const { count: friendsCount, error: friendsError } = await supabase
+            .from('amis')
+            .select('id', { count: 'exact', head: true })
+            .or(`user_id.eq.${user.id},ami_id.eq.${user.id}`)
+            .eq('status', 'accepted');
+          
+          if (friendsError) throw friendsError;
+          
+          // Récupérer le nombre de favoris
+          const { count: favorisCount, error: favorisError } = await supabase
+            .from('favoris')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id);
+          
+          if (favorisError) throw favorisError;
+          
+          setUserStats({
+            vetementCount: vetementCount || 0,
+            ensembleCount: ensembleCount || 0,
+            friendsCount: friendsCount || 0,
+            favorisCount: favorisCount || 0,
+            isLoading: false
+          });
+        } catch (error) {
+          console.error("Erreur lors du chargement des statistiques:", error);
+          setUserStats(prev => ({ ...prev, isLoading: false }));
+        }
+      };
+      
+      fetchUserStats();
+    }
+  }, [user]);
 
   const toggleEdit = () => {
     if (isEditing) {
@@ -178,6 +240,16 @@ export const useProfile = () => {
     return "Date inconnue";
   };
 
+  const getLastActivityDate = () => {
+    // Normalement, on récupérerait cette information depuis la base de données
+    // Pour l'instant, nous utilisons la date actuelle comme exemple
+    const now = new Date();
+    return now.toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long'
+    });
+  };
+
   const handleLogout = async () => {
     try {
       await signOut();
@@ -201,8 +273,10 @@ export const useProfile = () => {
     isLoading,
     uploadingAvatar,
     avatarPreview,
+    userStats,
     getUserInitials,
     formatJoinDate,
+    getLastActivityDate,
     toggleEdit,
     handleAvatarChange,
     onSubmit,
