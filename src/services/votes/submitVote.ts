@@ -2,92 +2,72 @@
 import { supabase } from "@/lib/supabase";
 import { VoteType, EntityType } from "./types";
 import { fetchWithRetry } from "@/services/network/retryUtils";
-
-interface VoteOptions {
-  tableName: string;
-  entityIdField: string;
-  entityId: number;
-  userIdField: string;
-  userId: string;
-  voteField: string;
-  vote: VoteType;
-  extraFields?: Record<string, any>;
-}
+import { isValidEntityId } from "./utils/voteUtils";
 
 /**
- * Fonction générique pour soumettre un vote dans une table
+ * Submit a vote for a specific entity
  */
 export const submitVote = async (
-  elementType: EntityType,
-  elementId: number,
+  entityType: EntityType,
+  entityId: number,
   vote: VoteType
 ): Promise<boolean> => {
   try {
-    // Récupérer la session utilisateur
+    // Get current session
     const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
-
-    if (!userId) {
-      throw new Error('Vous devez être connecté pour voter');
+    if (!session?.user?.id) {
+      throw new Error("Vous devez être connecté pour voter");
     }
 
-    // Configurer les options de vote selon le type d'élément
-    const voteOptions: VoteOptions = getVoteOptions(elementType, elementId, userId, vote);
-    console.info("Données de vote:", voteOptions);
+    // Get table and field names based on entity type
+    const { tableName, idField } = getEntityTableInfo(entityType);
 
-    // Vérifier si l'utilisateur a déjà voté
+    // Check if user already voted
+    const query = supabase
+      .from(tableName)
+      .select('id')
+      .eq(idField, entityId)
+      .eq('user_id', session.user.id);
+      
+    // Special handling for defi votes
+    if (entityType === 'defi') {
+      // For direct defi votes, we need to check where ensemble_id is null
+      query.is('ensemble_id', null);
+    }
+    
     const { data: existingVote, error: fetchError } = await fetchWithRetry(
-      async () => {
-        const query = supabase
-          .from(voteOptions.tableName)
-          .select('id')
-          .eq(voteOptions.entityIdField, voteOptions.entityId)
-          .eq(voteOptions.userIdField, voteOptions.userId);
-
-        // Ajouter des conditions supplémentaires si nécessaire
-        return await query.maybeSingle();
-      }
+      async () => await query.maybeSingle(),
+      3
     );
 
     if (fetchError) throw fetchError;
 
     if (existingVote) {
-      // Mettre à jour le vote existant
-      const { error: updateError } = await fetchWithRetry(
-        async () => {
-          const updateData = { [voteOptions.voteField]: voteOptions.vote };
-          return await supabase
-            .from(voteOptions.tableName)
-            .update(updateData)
-            .eq('id', existingVote.id);
-        }
-      );
-
-      if (updateError) throw updateError;
+      // User already voted, just return true without updating
+      console.log("L'utilisateur a déjà voté pour ce défi");
+      return true;
     } else {
-      // Créer un nouveau vote
-      const insertData = {
-        [voteOptions.entityIdField]: voteOptions.entityId,
-        [voteOptions.userIdField]: voteOptions.userId,
-        [voteOptions.voteField]: voteOptions.vote,
-        ...voteOptions.extraFields
+      // Insert new vote
+      const voteData: Record<string, any> = {
+        [idField]: entityId,
+        user_id: session.user.id,
+        vote
       };
-
+      
+      // Special handling for direct defi votes
+      if (entityType === 'defi') {
+        // For direct defi votes, we set ensemble_id to null explicitly
+        voteData.ensemble_id = null;
+      }
+      
       const { error: insertError } = await fetchWithRetry(
-        async () => {
-          return await supabase
-            .from(voteOptions.tableName)
-            .insert(insertData);
-        }
+        async () => await supabase.from(tableName).insert(voteData),
+        3
       );
 
-      if (insertError) {
-        console.error("Erreur lors de l'insertion du vote:", insertError);
-        throw insertError;
-      }
+      if (insertError) throw insertError;
+      return true;
     }
-
-    return true;
   } catch (error) {
     console.error("Erreur lors du vote:", error);
     throw error;
@@ -95,42 +75,17 @@ export const submitVote = async (
 };
 
 /**
- * Obtenir les options de vote en fonction du type d'élément
+ * Helper to get table info for each entity type
  */
-function getVoteOptions(
-  elementType: EntityType,
-  elementId: number,
-  userId: string,
-  vote: VoteType
-): VoteOptions {
-  // Configuration par défaut de base
-  let voteOptions: VoteOptions = {
-    tableName: '',
-    entityIdField: '',
-    entityId: elementId,
-    userIdField: 'user_id',
-    userId: userId,
-    voteField: 'vote',
-    vote: vote,
-    extraFields: {}
-  };
-
-  switch (elementType) {
+function getEntityTableInfo(entityType: EntityType): { tableName: string; idField: string } {
+  switch (entityType) {
     case 'vetement':
-      voteOptions.tableName = 'vetement_votes';
-      voteOptions.entityIdField = 'vetement_id';
-      break;
+      return { tableName: 'vetement_votes', idField: 'vetement_id' };
     case 'ensemble':
-      voteOptions.tableName = 'tenue_votes';
-      voteOptions.entityIdField = 'tenue_id';
-      break;
+      return { tableName: 'tenue_votes', idField: 'tenue_id' };
     case 'defi':
-      voteOptions.tableName = 'defi_votes';
-      voteOptions.entityIdField = 'defi_id';
-      break;
+      return { tableName: 'defi_votes', idField: 'defi_id' };
     default:
-      throw new Error(`Type d'élément non pris en charge: ${elementType}`);
+      throw new Error(`Type d'entité non supporté: ${entityType}`);
   }
-
-  return voteOptions;
 }

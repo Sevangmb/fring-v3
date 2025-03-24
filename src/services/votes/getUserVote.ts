@@ -1,64 +1,62 @@
 
 import { supabase } from "@/lib/supabase";
-import { VoteType, EntityType, VoteOptions } from "./types";
-import { isValidEntityId, isOnline } from "./utils/voteUtils";
+import { VoteType, EntityType } from "./types";
+import { fetchWithRetry } from "@/services/network/retryUtils";
+import { isValidEntityId } from "./utils/voteUtils";
 
 /**
- * Obtenir le vote de l'utilisateur pour une entité
+ * Récupérer le vote de l'utilisateur pour une entité
  */
 export const getUserVote = async (
   entityType: EntityType,
-  entityId: number | undefined,
-  options?: VoteOptions
+  entityId: number
 ): Promise<VoteType> => {
+  if (!isValidEntityId(entityId)) return null;
+  
   try {
-    // Verify that entityId is provided
-    if (!isValidEntityId(entityId)) {
-      console.warn("ID de l'entité manquant lors de la récupération du vote");
-      return null;
-    }
-    
-    if (!isOnline()) {
-      console.warn('Pas de connexion Internet, impossible de récupérer le vote');
-      return null;
-    }
-    
-    // Options par défaut
-    const {
-      tableName = `${entityType}_votes`,
-      userIdField = "user_id",
-      entityIdField = `${entityType}_id`,
-      voteField = "vote"
-    } = options || {};
-    
-    // Obtenir la session utilisateur actuelle
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError) {
-      console.error("Erreur de session:", sessionError);
-      return null;
-    }
-    
-    const userId = session?.user?.id;
-    
-    if (!userId) return null;
-    
-    // Obtenir le vote de l'utilisateur
-    const { data, error } = await supabase
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user?.id) return null;
+
+    const { tableName, idField } = getEntityTableInfo(entityType);
+
+    // Build query
+    const query = supabase
       .from(tableName)
-      .select(voteField)
-      .eq(entityIdField, entityId)
-      .eq(userIdField, userId)
-      .maybeSingle();
-    
-    if (error) {
-      console.error('Erreur lors de la récupération du vote:', error);
-      return null;
+      .select('vote')
+      .eq(idField, entityId)
+      .eq('user_id', session.user.id);
+      
+    // Special handling for defi votes
+    if (entityType === 'defi') {
+      // For direct defi votes, we need to check where ensemble_id is null
+      query.is('ensemble_id', null);
     }
     
-    return data ? data[voteField] : null;
-  } catch (err) {
-    console.error('Erreur lors de la récupération du vote:', err);
+    const { data, error } = await fetchWithRetry(
+      async () => await query.maybeSingle(),
+      3
+    );
+
+    if (error) throw error;
+    return data ? data.vote : null;
+  } catch (error) {
+    console.error("Erreur lors de la récupération du vote:", error);
     return null;
   }
 };
+
+/**
+ * Helper to get table info for each entity type
+ */
+function getEntityTableInfo(entityType: EntityType): { tableName: string; idField: string } {
+  switch (entityType) {
+    case 'vetement':
+      return { tableName: 'vetement_votes', idField: 'vetement_id' };
+    case 'ensemble':
+      return { tableName: 'tenue_votes', idField: 'tenue_id' };
+    case 'defi':
+      return { tableName: 'defi_votes', idField: 'defi_id' };
+    default:
+      throw new Error(`Type d'entité non supporté: ${entityType}`);
+  }
+}

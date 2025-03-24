@@ -24,6 +24,7 @@ interface VoterDialogProps {
   onVoteSubmitted?: (vote: VoteType) => void;
   title?: string;
   description?: string;
+  disabled?: boolean;
 }
 
 const VoterDialog: React.FC<VoterDialogProps> = ({ 
@@ -31,7 +32,8 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
   elementType,
   onVoteSubmitted,
   title,
-  description
+  description,
+  disabled = false
 }) => {
   const [open, setOpen] = useState(false);
   
@@ -63,13 +65,18 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
   const dialogTitle = title || `Voter pour cet ${elementType === 'ensemble' ? 'ensemble' : 'élément'}`;
   const dialogDescription = description || `Donnez votre avis sur ce${elementType === 'ensemble' ? 't ensemble' : ' défi'}.`;
   
+  const buttonStyle = userVote 
+    ? { variant: "outline", className: "text-primary border-primary" }
+    : { variant: "outline" };
+  
   return (
     <>
       <Button 
         variant="outline" 
         size="icon"
         onClick={handleOpen}
-        disabled={isLoading}
+        disabled={isLoading || disabled}
+        className={userVote ? "text-primary border-primary" : ""}
       >
         <ThumbsUp className="h-4 w-4" />
       </Button>

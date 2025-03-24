@@ -31,19 +31,28 @@ export const getVotesCount = async (
       voteField = "vote"
     } = options || {};
     
-    // Obtenir les votes avec retry
-    const response = await fetchWithRetry(async () => {
-      const { data, error } = await supabase
-        .from(tableName)
-        .select(`${voteField}`)
-        .eq(entityIdField, entityId);
+    // Build query
+    const query = supabase
+      .from(tableName)
+      .select(`${voteField}`)
+      .eq(entityIdField, entityId);
       
-      if (error) throw error;
-      return data || [];
-    }, 2);
+    // Special handling for defi votes
+    if (entityType === 'defi') {
+      // For direct defi votes, we count where ensemble_id is null
+      query.is('ensemble_id', null);
+    }
+    
+    // Obtenir les votes avec retry
+    const { data, error } = await fetchWithRetry(
+      async () => await query,
+      2
+    );
+    
+    if (error) throw error;
     
     // Compter les votes
-    const votes = response || [];
+    const votes = data || [];
     const upVotes = votes.filter(item => item[voteField] === 'up').length;
     const downVotes = votes.filter(item => item[voteField] === 'down').length;
     
