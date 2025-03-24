@@ -4,7 +4,6 @@ import { Text } from "@/components/atoms/Typography";
 import { Award, Vote, Shirt } from "lucide-react";
 import { DefiState } from "./types";
 import ParticiperDefiDialog from "../ParticiperDefiDialog";
-import VoterDialog from "../VoterDialog";
 import { Button } from "@/components/ui/button";
 import VotingDialog from "@/components/defis/VotingDialog";
 import { useVotingDialog } from "@/hooks/useVotingDialog";
@@ -36,11 +35,13 @@ const CurrentDefiFooter: React.FC<CurrentDefiFooterProps> = ({
     open, 
     setOpen, 
     openDialog, 
-    handleVoteSubmitted 
+    handleVoteSubmitted,
+    winner
   } = useVotingDialog(defiId);
   
   // Utiliser le nombre de participants de l'état s'il est disponible
   const displayParticipantsCount = state.participantsCount > 0 ? state.participantsCount : participantsCount;
+  const allVoted = totalCount > 0 && votedCount === totalCount;
   
   return (
     <div className="flex w-full justify-between items-center">
@@ -53,6 +54,12 @@ const CurrentDefiFooter: React.FC<CurrentDefiFooterProps> = ({
           <Text className="text-sm text-muted-foreground">
             <Vote className="h-4 w-4 inline mr-1" />
             {state.votesCount} vote{state.votesCount > 1 ? 's' : ''}
+          </Text>
+        )}
+        {winner && (
+          <Text className="text-sm font-medium text-primary">
+            <Award className="h-4 w-4 inline mr-1 text-yellow-500" />
+            Gagnant: {winner.ensembleName}
           </Text>
         )}
       </div>
@@ -74,8 +81,8 @@ const CurrentDefiFooter: React.FC<CurrentDefiFooterProps> = ({
             >
               <Vote className="h-4 w-4" />
               <span>
-                {votedCount === totalCount ? 
-                  "Déjà voté sur tous les ensembles" : 
+                {allVoted ? 
+                  "Tous les votes effectués" : 
                   `Voter (${votedCount}/${totalCount})`
                 }
               </span>
@@ -88,6 +95,7 @@ const CurrentDefiFooter: React.FC<CurrentDefiFooterProps> = ({
               onVoteSubmitted={handleVoteSubmitted}
               votedCount={votedCount}
               totalCount={totalCount}
+              defiId={defiId}
             />
           </>
         ) : (
@@ -97,14 +105,6 @@ const CurrentDefiFooter: React.FC<CurrentDefiFooterProps> = ({
             onParticipation={onParticipation}
           />
         )}
-        <div className="ml-2">
-          <VoterDialog 
-            elementId={defiId} 
-            elementType="defi"
-            onVoteSubmitted={() => {}}
-            disabled={userHasVoted}
-          />
-        </div>
       </div>
     </div>
   );

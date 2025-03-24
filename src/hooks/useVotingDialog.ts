@@ -3,14 +3,17 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { VoteType } from "@/services/votes/types";
 import { useToast } from "@/hooks/use-toast";
+import { getWinningEnsemble } from "@/services/votes/getWinningEnsemble";
 
 export function useVotingDialog(defiId?: number) {
+  const [allEnsembles, setAllEnsembles] = useState<any[]>([]);
   const [ensembles, setEnsembles] = useState<any[]>([]);
   const [votedEnsembles, setVotedEnsembles] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
+  const [winner, setWinner] = useState<any>(null);
 
   // Charger les ensembles pour un défi spécifique et les votes de l'utilisateur
   const loadEnsembles = useCallback(async () => {
@@ -52,7 +55,7 @@ export function useVotingDialog(defiId?: number) {
         ...p.tenue,
       })).filter(e => e !== null);
 
-      setEnsembles(formattedEnsembles);
+      setAllEnsembles(formattedEnsembles);
       
       // Récupérer les votes de l'utilisateur pour ce défi
       const { data: userVotes, error: votesError } = await supabase
@@ -66,6 +69,10 @@ export function useVotingDialog(defiId?: number) {
       // Extraire les IDs des ensembles déjà votés
       const votedIds = userVotes.map(vote => vote.ensemble_id);
       setVotedEnsembles(votedIds);
+      
+      // Filtrer les ensembles non votés
+      const unvotedEnsembles = formattedEnsembles.filter(e => !votedIds.includes(e.id));
+      setEnsembles(unvotedEnsembles);
       
     } catch (err) {
       console.error("Erreur lors du chargement des ensembles:", err);
@@ -88,6 +95,22 @@ export function useVotingDialog(defiId?: number) {
     }
   }, [defiId, loadEnsembles]);
 
+  // Vérifier s'il y a un gagnant lorsque tous les ensembles ont été votés
+  useEffect(() => {
+    const checkWinner = async () => {
+      if (allEnsembles.length > 0 && votedEnsembles.length === allEnsembles.length && defiId) {
+        try {
+          const winningResult = await getWinningEnsemble(defiId);
+          setWinner(winningResult);
+        } catch (error) {
+          console.error("Erreur lors de la récupération du gagnant:", error);
+        }
+      }
+    };
+    
+    checkWinner();
+  }, [allEnsembles, votedEnsembles, defiId]);
+
   // Gérer le vote
   const handleVoteSubmitted = useCallback(async (ensembleId: number, vote: VoteType) => {
     console.log(`Vote ${vote} soumis pour l'ensemble ${ensembleId}`);
@@ -95,11 +118,16 @@ export function useVotingDialog(defiId?: number) {
       // Ajouter l'ID de l'ensemble aux ensembles votés
       setVotedEnsembles(prev => [...prev, ensembleId]);
       
+      // Mettre à jour la liste des ensembles non votés
+      setEnsembles(prev => prev.filter(e => e.id !== ensembleId));
+      
       // Mettre à jour le nombre de votes pour le défi
-      await supabase
-        .from('defis')
-        .update({ votes_count: supabase.rpc('increment', { row_id: defiId, table_name: 'defis' }) })
-        .eq('id', defiId);
+      if (defiId) {
+        await supabase
+          .from('defis')
+          .update({ votes_count: supabase.rpc('increment', { row_id: defiId, table_name: 'defis' }) })
+          .eq('id', defiId);
+      }
         
     } catch (error) {
       console.error("Erreur lors de la mise à jour des votes:", error);
@@ -108,10 +136,8 @@ export function useVotingDialog(defiId?: number) {
 
   // Ouvrir le dialogue
   const openDialog = useCallback(() => {
-    // Filtrer les ensembles non votés
-    const unvotedEnsembles = ensembles.filter(e => !votedEnsembles.includes(e.id));
-    
-    if (unvotedEnsembles.length === 0) {
+    // Vérifier s'il reste des ensembles à voter
+    if (ensembles.length === 0) {
       toast({
         title: "Aucun ensemble",
         description: "Vous avez déjà voté pour tous les ensembles disponibles.",
@@ -120,22 +146,20 @@ export function useVotingDialog(defiId?: number) {
       return;
     }
     setOpen(true);
-  }, [ensembles, votedEnsembles, toast]);
-
-  // Liste des ensembles non votés
-  const unvotedEnsembles = ensembles.filter(e => !votedEnsembles.includes(e.id));
+  }, [ensembles.length, toast]);
 
   return {
-    ensembles: unvotedEnsembles, // Retourner seulement les ensembles non votés
-    allEnsembles: ensembles,     // Tous les ensembles (pour information)
+    ensembles,            // Ensembles non votés
+    allEnsembles,         // Tous les ensembles
     votedCount: votedEnsembles.length,
-    totalCount: ensembles.length,
+    totalCount: allEnsembles.length,
     loading,
     error,
     open,
     setOpen,
     openDialog,
     handleVoteSubmitted,
-    refresh: loadEnsembles
+    refresh: loadEnsembles,
+    winner
   };
 }
