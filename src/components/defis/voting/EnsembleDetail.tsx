@@ -13,7 +13,7 @@ interface EnsembleDetailProps {
   ensembleId: number;
   userVote: 'up' | 'down' | null;
   vetementsByType: Record<string, any[]>;
-  onVote: (ensembleId: number, vote: 'up' | 'down') => void;
+  onVote: (vote: 'up' | 'down') => void;
   isLoading?: boolean;
   connectionError?: boolean;
 }
@@ -77,11 +77,9 @@ const EnsembleDetail: React.FC<EnsembleDetailProps> = ({
       
       <CardFooter>
         <VoteButtons
-          ensembleId={ensembleId}
           userVote={userVote}
           onVote={onVote}
           size="md"
-          variant="default"
           showLabels={true}
           isLoading={isLoading}
           disabled={isLoading}

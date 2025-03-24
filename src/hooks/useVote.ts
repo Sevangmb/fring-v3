@@ -1,12 +1,11 @@
 
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { VoteType, EntityType, VotesCount } from "@/services/votes/types";
+import { VoteType, EntityType, VotesCount, calculateScore } from "@/services/votes/types";
 import { 
   submitVote as submitVoteApi,
   getUserVote as getUserVoteApi,
-  getVotesCount as getVotesCountApi,
-  calculateScore
+  getVotesCount as getVotesCountApi
 } from "@/services/votes/voteService";
 
 interface UseVoteOptions {
@@ -15,7 +14,7 @@ interface UseVoteOptions {
 }
 
 /**
- * Hook for managing votes on different entity types
+ * Simple hook for managing votes on different entity types
  */
 export const useVote = (
   entityType: EntityType,

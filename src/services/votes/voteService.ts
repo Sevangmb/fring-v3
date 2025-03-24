@@ -1,6 +1,6 @@
 
 import { supabase } from "@/lib/supabase";
-import { VoteType, EntityType, VotesCount } from "./types";
+import { VoteType, EntityType, VotesCount, calculateScore } from "./types";
 
 /**
  * Submit a vote for a specific entity
@@ -115,13 +115,6 @@ export const getVotesCount = async (
 };
 
 /**
- * Calculate score from votes (upvotes - downvotes)
- */
-export const calculateScore = (votes: VotesCount): number => {
-  return votes.up - votes.down;
-};
-
-/**
  * Helper to get table info for each entity type
  */
 function getEntityTableInfo(entityType: EntityType): { tableName: string; idField: string } {
@@ -136,3 +129,5 @@ function getEntityTableInfo(entityType: EntityType): { tableName: string; idFiel
       throw new Error(`Type d'entité non supporté: ${entityType}`);
   }
 }
+
+export { calculateScore };
