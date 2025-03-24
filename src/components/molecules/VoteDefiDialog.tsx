@@ -94,6 +94,11 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
   const activeIsSubmitting = isDefiDirectVote ? isDefiVoting : isSubmitting;
   const activeConnectionError = isDefiDirectVote ? defiConnectionError : connectionError;
 
+  // Adapter la fonction handleVote pour correspondre à la signature attendue par VoteButtons
+  const adaptedHandleVote = (ensembleId: number, vote: 'up' | 'down') => {
+    handleVote(vote);
+  };
+
   return (
     <>
       <Button 
@@ -147,7 +152,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
           <VoteButtons
             ensembleId={ensembleId || defiId} // Utiliser defiId si ensembleId n'est pas fourni
             userVote={activeVote}
-            onVote={handleVote}
+            onVote={adaptedHandleVote}
             size="lg"
             isLoading={activeIsSubmitting}
             disabled={!isDefiDirectVote && loading || activeIsSubmitting}
