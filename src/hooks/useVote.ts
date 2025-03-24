@@ -1,195 +1,128 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { submitVote, getUserVote, getVotesCount } from "@/services/votes/voteService";
 import { useToast } from "@/hooks/use-toast";
-import { VoteType, EntityType, VotesCount } from "@/services/votes/types";
-import { 
-  submitVote as submitVoteApi,
-  getUserVote as getUserVoteApi,
-  getVotesCount as getVotesCountApi,
-  calculateScore
-} from "@/services/votes/voteService";
-import { isValidEntityId } from "@/services/votes/utils/voteUtils";
+import { VoteType, EntityType } from "@/services/votes/types";
 
 interface UseVoteOptions {
-  onVoteSuccess?: (vote: VoteType) => void;
-  onVoteError?: (error: Error) => void;
+  onVoteSuccess?: () => void;
+  onVoteError?: (error: any) => void;
 }
 
-/**
- * Simple hook for managing votes on different entity types
- */
 export const useVote = (
   entityType: EntityType,
-  entityId?: number,
+  entityId: number,
   options?: UseVoteOptions
 ) => {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
   const [userVote, setUserVote] = useState<VoteType>(null);
-  const [votesCount, setVotesCount] = useState<VotesCount>({ up: 0, down: 0 });
-  const [error, setError] = useState<Error | null>(null);
+  const [votesCount, setVotesCount] = useState({ up: 0, down: 0 });
+  const [isLoading, setIsLoading] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
-  // Monitor online status
+  // Vérifier l'état de la connexion
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
-    
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
 
-  /**
-   * Get user's current vote
-   */
-  const getUserVote = useCallback(async (id: number): Promise<VoteType> => {
-    return await getUserVoteApi(entityType, id);
-  }, [entityType]);
-
-  /**
-   * Get all votes for an entity
-   */
-  const getVotesCount = useCallback(async (id: number): Promise<VotesCount> => {
-    return await getVotesCountApi(entityType, id);
-  }, [entityType]);
-
-  /**
-   * Load current vote data
-   */
+  // Charger les données de vote
   const loadVoteData = useCallback(async () => {
-    if (!isValidEntityId(entityId)) return;
-    
+    if (!entityId || isOffline) return;
+
     try {
-      // Get user's current vote
-      const vote = await getUserVoteApi(entityType, entityId!);
+      const [vote, counts] = await Promise.all([
+        getUserVote(entityType, entityId),
+        getVotesCount(entityType, entityId)
+      ]);
+
       setUserVote(vote);
-      
-      // Get all votes
-      const votes = await getVotesCountApi(entityType, entityId!);
-      setVotesCount(votes);
-    } catch (err) {
-      console.error("Erreur lors du chargement des votes:", err);
+      setVotesCount(counts);
+    } catch (error) {
+      console.error("Erreur lors du chargement des votes:", error);
     }
-  }, [entityType, entityId]);
+  }, [entityType, entityId, isOffline]);
 
-  // Load data on mount and when entityId changes
+  // Charger les données au montage du composant
   useEffect(() => {
-    if (isValidEntityId(entityId)) {
-      loadVoteData();
-    }
-  }, [entityId, loadVoteData]);
+    loadVoteData();
+  }, [loadVoteData]);
 
-  /**
-   * Submit a vote for an entity
-   */
-  const submitVote = useCallback(async (vote: VoteType): Promise<boolean> => {
-    if (!isValidEntityId(entityId)) {
-      toast({
-        title: "Erreur",
-        description: "ID de l'élément manquant.",
-        variant: "destructive",
-      });
-      return false;
-    }
-    
+  // Soumettre un vote
+  const submitUserVote = async (vote: VoteType) => {
     if (isOffline) {
       toast({
-        title: "Pas de connexion",
-        description: "Vérifiez votre connexion internet et réessayez.",
-        variant: "destructive",
+        title: "Vous êtes hors ligne",
+        description: "Impossible de voter sans connexion internet",
+        variant: "destructive"
       });
-      return false;
+      return;
     }
-    
+
     setIsLoading(true);
-    setError(null);
-    
+
     try {
-      // Save vote optimistically
+      await submitVote(entityType, entityId, vote);
+      
+      // Mettre à jour l'état local
       setUserVote(vote);
       
-      // Update local vote count optimistically
-      const newVotesCount = { ...votesCount };
+      // Mettre à jour le compteur de votes
+      const newCounts = { ...votesCount };
       
-      // If changing existing vote
-      if (userVote) {
-        if (userVote === 'up') newVotesCount.up = Math.max(0, newVotesCount.up - 1);
-        if (userVote === 'down') newVotesCount.down = Math.max(0, newVotesCount.down - 1);
+      // Si l'utilisateur avait déjà voté, décrémenter l'ancien vote
+      if (userVote === 'up') newCounts.up--;
+      if (userVote === 'down') newCounts.down--;
+      
+      // Incrémenter le nouveau vote
+      if (vote === 'up') newCounts.up++;
+      if (vote === 'down') newCounts.down++;
+      
+      setVotesCount(newCounts);
+
+      // Notifier le succès
+      toast({
+        title: "Vote enregistré",
+        description: vote === 'up' ? "Vous avez aimé" : "Vous n'avez pas aimé",
+        variant: vote === 'up' ? "default" : "destructive"
+      });
+
+      // Callback success optionnel
+      if (options?.onVoteSuccess) {
+        options.onVoteSuccess();
       }
-      
-      // Add new vote
-      if (vote === 'up') newVotesCount.up++;
-      if (vote === 'down') newVotesCount.down++;
-      
-      setVotesCount(newVotesCount);
-      
-      // Send to API
-      const success = await submitVoteApi(entityType, entityId!, vote);
-      
-      if (success) {
-        toast({
-          title: "Vote enregistré !",
-          description: `Vous avez ${vote === 'up' ? 'aimé' : 'disliké'} cet élément.`,
-          variant: vote === 'up' ? "default" : "destructive",
-        });
-        
-        // Call success callback if provided
-        if (options?.onVoteSuccess) {
-          options.onVoteSuccess(vote);
-        }
-      } else {
-        throw new Error('Erreur lors du vote');
-      }
-      
-      return success;
-    } catch (err: any) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors du vote';
-      const errorObj = err instanceof Error ? err : new Error(errorMessage);
-      
-      setError(errorObj);
-      
-      // Revert optimistic updates on error
-      loadVoteData();
+    } catch (error) {
+      console.error("Erreur lors du vote:", error);
       
       toast({
         title: "Erreur",
-        description: errorMessage,
+        description: "Impossible d'enregistrer votre vote",
         variant: "destructive"
       });
       
-      // Call error callback if provided
+      // Callback error optionnel
       if (options?.onVoteError) {
-        options.onVoteError(errorObj);
+        options.onVoteError(error);
       }
-      
-      return false;
     } finally {
       setIsLoading(false);
     }
-  }, [entityType, entityId, userVote, votesCount, isOffline, toast, loadVoteData, options]);
-
-  // Calculate score
-  const score = calculateScore(votesCount);
+  };
 
   return {
-    submitVote,
-    getUserVote,
-    getVotesCount,
-    calculateScore,
     userVote,
     votesCount,
-    score,
     isLoading,
     isOffline,
-    error,
+    submitVote: submitUserVote,
     loadVoteData
   };
 };
-
-export { calculateScore };
-export type { VoteType, EntityType, VotesCount };

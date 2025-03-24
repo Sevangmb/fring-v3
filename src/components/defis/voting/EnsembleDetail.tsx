@@ -1,98 +1,59 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import EnsembleImages from "@/components/ensembles/EnsembleImages";
-import VoteProgress from "./VoteProgress";
-import VoteButtons from "./VoteButtons";
-import { Box, Typography, Alert } from "@mui/material";
-import { WifiOff } from "lucide-react";
-import { VoteType } from "@/services/votes/types";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { formatDistance } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface EnsembleDetailProps {
   ensemble: any;
-  votes: { up: number; down: number };
-  ensembleId: number;
-  userVote: VoteType;
-  vetementsByType: Record<string, any[]>;
-  onVote: (vote: 'up' | 'down') => void;
-  isLoading?: boolean;
-  connectionError?: boolean;
 }
 
-const EnsembleDetail: React.FC<EnsembleDetailProps> = ({
-  ensemble,
-  votes,
-  ensembleId,
-  userVote,
-  vetementsByType,
-  onVote,
-  isLoading = false,
-  connectionError = false
-}) => {
-  // Helper function to handle the vote
-  const handleVote = (vote: 'up' | 'down') => {
-    onVote(vote);
-  };
-
+const EnsembleDetail: React.FC<EnsembleDetailProps> = ({ ensemble }) => {
+  if (!ensemble) return null;
+  
+  const createdAt = ensemble.created_at ? new Date(ensemble.created_at) : new Date();
+  const timeAgo = formatDistance(createdAt, new Date(), { addSuffix: true, locale: fr });
+  
+  // Organise les vêtements par catégorie pour l'affichage
+  const vetements = ensemble.vetements || [];
+  
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="pb-2">
-        <CardTitle>{ensemble?.nom || "Ensemble sans nom"}</CardTitle>
-      </CardHeader>
+    <div className="space-y-4">
+      {ensemble.description && (
+        <p className="text-sm text-muted-foreground">{ensemble.description}</p>
+      )}
       
-      <CardContent>
-        {connectionError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <WifiOff size={16} />
-              <Typography variant="body2">
-                Problème de connexion. Vérifiez votre connexion internet.
-              </Typography>
-            </Box>
-          </Alert>
-        )}
-        
-        {ensemble && (
-          <>
-            <Box sx={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              alignItems: 'center',
-              mb: 2
-            }}>
-              <EnsembleImages 
-                vetementsByType={vetementsByType} 
-                className="w-full max-w-md mx-auto"
-              />
-            </Box>
-            
-            {ensemble.description && (
-              <Typography 
-                variant="body2" 
-                color="text.secondary" 
-                className="mt-4"
-              >
-                {ensemble.description}
-              </Typography>
-            )}
-            
-            <VoteProgress upVotes={votes.up} downVotes={votes.down} />
-          </>
-        )}
-      </CardContent>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {vetements.map((item: any) => (
+          <Card key={item.id} className="overflow-hidden">
+            <CardContent className="p-2">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-12 w-12 rounded-md">
+                  <AvatarImage 
+                    src={item.vetement?.image_url} 
+                    alt={item.vetement?.nom || "Vêtement"} 
+                  />
+                  <AvatarFallback className="rounded-md">
+                    {item.vetement?.nom?.charAt(0) || "V"}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h4 className="text-sm font-medium">{item.vetement?.nom}</h4>
+                  <p className="text-xs text-muted-foreground">
+                    {item.vetement?.marque}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
       
-      <CardFooter>
-        <VoteButtons
-          userVote={userVote}
-          onVote={handleVote}
-          size="md"
-          showLabels={true}
-          isLoading={isLoading}
-          disabled={isLoading}
-          connectionError={connectionError}
-        />
-      </CardFooter>
-    </Card>
+      <div className="text-xs text-muted-foreground text-right">
+        Publié {timeAgo}
+      </div>
+    </div>
   );
 };
 
