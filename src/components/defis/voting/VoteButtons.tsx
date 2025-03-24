@@ -39,6 +39,9 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
   };
 
   const { iconSize, buttonSize, buttonPadding } = getSizeProps();
+  
+  console.log("Current userVote:", userVote);
+  console.log("Button state - isLoading:", isLoading, "disabled:", disabled);
 
   return (
     <div className={`flex gap-3 justify-center ${className}`}>
@@ -47,7 +50,10 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
         color="success"
         size={buttonSize as any}
         disabled={isLoading || disabled || connectionError}
-        onClick={() => onVote("up")}
+        onClick={() => {
+          console.log("Thumbs up clicked");
+          onVote("up");
+        }}
         sx={{
           backgroundColor: userVote === "up" ? "#22c55e" : "#4ade80", // green-600 : green-400
           "&:hover": {
@@ -72,7 +78,10 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
         color="error"
         size={buttonSize as any}
         disabled={isLoading || disabled || connectionError}
-        onClick={() => onVote("down")}
+        onClick={() => {
+          console.log("Thumbs down clicked");
+          onVote("down");
+        }}
         sx={{
           backgroundColor: userVote === "down" ? "#ef4444" : "#f87171", // red-600 : red-400
           "&:hover": {

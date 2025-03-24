@@ -31,6 +31,23 @@ export const ensureEnsembleVotesTable = async (): Promise<boolean> => {
         return false;
       }
       
+      // Créer une politique RLS pour cette table
+      const { error: policyError } = await supabase.rpc('exec_sql', {
+        query: `
+          ALTER TABLE public.ensemble_votes ENABLE ROW LEVEL SECURITY;
+          
+          CREATE POLICY "Enable all for authenticated users"
+            ON public.ensemble_votes
+            USING (auth.role() = 'authenticated')
+            WITH CHECK (auth.role() = 'authenticated');
+        `
+      });
+      
+      if (policyError) {
+        console.error("Erreur lors de la création de la politique RLS:", policyError);
+        return false;
+      }
+      
       return true;
     }
     

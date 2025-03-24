@@ -33,6 +33,19 @@ import './App.css';
 const queryClient = new QueryClient();
 
 function App() {
+  // Initialize vote tables on app start
+  useEffect(() => {
+    const initTables = async () => {
+      try {
+        await initializeVoteTables();
+      } catch (error) {
+        console.error("Failed to initialize vote tables:", error);
+      }
+    };
+    
+    initTables();
+  }, []);
+  
   return (
     <div className="App">
       <BrowserRouter>

@@ -12,6 +12,11 @@ export const submitVote = async (
   entityId: number,
   vote: VoteType
 ): Promise<boolean> => {
+  if (!isValidEntityId(entityId)) {
+    console.error(`ID d'entité invalide: ${entityId}`);
+    return false;
+  }
+
   try {
     // Get current session
     const { data: { session } } = await supabase.auth.getSession();
@@ -25,7 +30,7 @@ export const submitVote = async (
     // Check if user already voted
     const query = supabase
       .from(tableName)
-      .select('id')
+      .select('id, vote')
       .eq(idField, entityId)
       .eq('user_id', session.user.id);
       
@@ -43,9 +48,17 @@ export const submitVote = async (
     if (fetchError) throw fetchError;
 
     if (existingVote) {
-      // User already voted, just return true without updating
-      console.log("L'utilisateur a déjà voté pour ce défi");
-      return true;
+      // Update existing vote
+      const { error: updateError } = await fetchWithRetry(
+        async () => await supabase
+          .from(tableName)
+          .update({ vote })
+          .eq('id', existingVote.id),
+        3
+      );
+
+      if (updateError) throw updateError;
+      console.log(`Vote mis à jour: ${vote} pour ${entityType} ${entityId}`);
     } else {
       // Insert new vote
       const voteData: Record<string, any> = {
@@ -66,8 +79,10 @@ export const submitVote = async (
       );
 
       if (insertError) throw insertError;
-      return true;
+      console.log(`Nouveau vote: ${vote} pour ${entityType} ${entityId}`);
     }
+
+    return true;
   } catch (error) {
     console.error("Erreur lors du vote:", error);
     throw error;
@@ -82,7 +97,7 @@ function getEntityTableInfo(entityType: EntityType): { tableName: string; idFiel
     case 'vetement':
       return { tableName: 'vetement_votes', idField: 'vetement_id' };
     case 'ensemble':
-      return { tableName: 'tenue_votes', idField: 'tenue_id' };
+      return { tableName: 'ensemble_votes', idField: 'ensemble_id' };
     case 'defi':
       return { tableName: 'defi_votes', idField: 'defi_id' };
     default:

@@ -1,7 +1,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { 
-  submitVote, 
+  submitVote as apiSubmitVote, 
   getUserVote, 
   getVotesCount 
 } from '@/services/votes/voteService';
@@ -41,6 +41,9 @@ export const useVote = (
         getVotesCount(entityType, entityId)
       ]);
       
+      console.log(`Vote actuel pour ${entityType} ${entityId}:`, vote);
+      console.log(`Compteurs de votes pour ${entityType} ${entityId}:`, counts);
+      
       setUserVote(vote);
       setVotesCount(counts);
       setIsOffline(false);
@@ -55,7 +58,9 @@ export const useVote = (
   const submitVoteHandler = useCallback(async (vote: VoteType) => {
     if (!entityId || isLoading) return;
     
+    console.log(`Soumission du vote ${vote} pour ${entityType} ${entityId}`);
     setIsLoading(true);
+    
     try {
       // Vérifier si le navigateur est en ligne
       if (!navigator.onLine) {
@@ -88,10 +93,10 @@ export const useVote = (
       });
       
       // Effectuer le vote
-      await submitVote(entityType, entityId, vote);
+      await apiSubmitVote(entityType, entityId, vote);
       
-      // Si tout s'est bien passé, définir le vote de l'utilisateur
-      setUserVote(vote);
+      // Si tout s'est bien passé, mettre à jour l'état
+      console.log(`Vote ${vote} soumis avec succès pour ${entityType} ${entityId}`);
       
       // Rafraîchir le compteur
       const counts = await getVotesCount(entityType, entityId);
@@ -101,6 +106,13 @@ export const useVote = (
       if (options?.onVoteSuccess) {
         options.onVoteSuccess(vote);
       }
+      
+      // Notification de succès
+      toast({
+        title: "Vote enregistré",
+        description: vote === 'up' ? 'Vous avez aimé cet ensemble' : 'Vous n\'avez pas aimé cet ensemble',
+        variant: "default"
+      });
       
       setIsOffline(false);
     } catch (error) {

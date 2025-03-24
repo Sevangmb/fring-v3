@@ -1,55 +1,66 @@
 
 /**
- * Utilitaire pour réessayer les requêtes API échouées avec backoff exponentiel
+ * Retry a function with exponential backoff
+ * @param fn Function to retry
+ * @param maxRetries Maximum number of retries
+ * @param delay Initial delay in ms
+ * @returns Result of the function
  */
-export const fetchWithRetry = async (
-  fetchFn: () => Promise<any>,
-  maxRetries: number = 3,
-  delay: number = 1000
-): Promise<any> => {
-  let lastError;
-  
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
+export const fetchWithRetry = async <T>(
+  fn: () => Promise<T>, 
+  maxRetries = 3, 
+  delay = 1000
+): Promise<T> => {
+  let retries = 0;
+  let lastError: any;
+
+  while (retries < maxRetries) {
     try {
-      // Vérifier d'abord la connectivité Internet
-      if (!navigator.onLine) {
-        throw new Error('Pas de connexion Internet');
-      }
-      
-      return await fetchFn();
+      return await fn();
     } catch (error) {
-      console.log(`Tentative ${attempt + 1}/${maxRetries} échouée:`, error);
       lastError = error;
+      retries++;
       
-      if (attempt < maxRetries - 1) {
-        // Attendre avant de réessayer avec un backoff exponentiel
-        await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, attempt)));
+      if (retries >= maxRetries) {
+        break;
       }
+      
+      console.log(`Retry ${retries}/${maxRetries} after ${delay}ms...`);
+      
+      // Wait before next retry
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
+      // Exponential backoff
+      delay *= 2;
     }
   }
-  
+
   throw lastError;
 };
 
 /**
- * Fonction utilitaire pour vérifier si l'application est connectée à Internet
- * et peut atteindre le backend Supabase
+ * Check if the application has internet connection
+ * @returns Promise<boolean> True if connected, false otherwise
  */
 export const checkConnection = async (): Promise<boolean> => {
+  // If navigator.onLine is false, we're definitely offline
   if (!navigator.onLine) {
     return false;
   }
   
+  // Try to fetch a resource to confirm connectivity
   try {
-    // Vérifier si nous pouvons nous connecter à notre backend
-    const response = await fetch('/api/health-check', { 
+    await fetch('/api/health-check', { 
       method: 'HEAD',
-      // Utiliser un court timeout pour déterminer rapidement la connectivité
-      signal: AbortSignal.timeout(2000)
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
     });
-    return response.ok;
+    return true;
   } catch (error) {
-    console.error("Erreur lors de la vérification de la connexion:", error);
-    return navigator.onLine; // Fallback sur l'état de connexion du navigateur
+    console.error('Connection check failed:', error);
+    return false;
   }
 };

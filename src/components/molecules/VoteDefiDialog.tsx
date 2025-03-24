@@ -34,7 +34,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [vetementsByType, setVetementsByType] = useState<any>({});
   
-  // Utilise toujours 'ensemble' comme type d'entité
+  // Use 'ensemble' as entity type, not 'defi'
   const {
     submitVote,
     userVote,
@@ -43,8 +43,9 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
     isOffline,
     loadVoteData
   } = useVote('ensemble', ensembleId, {
-    onVoteSuccess: () => {
-      // Ferme la boîte de dialogue après le vote
+    onVoteSuccess: (vote) => {
+      console.log(`Vote ${vote} soumis avec succès pour l'ensemble ${ensembleId}`);
+      // Close dialog after successful vote
       setOpen(false);
     }
   });
@@ -161,7 +162,17 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
   };
   
   const handleVote = async (vote: 'up' | 'down') => {
-    await submitVote(vote);
+    console.log(`Tentative de vote ${vote} pour l'ensemble ${ensembleId}`);
+    try {
+      await submitVote(vote);
+    } catch (error) {
+      console.error("Erreur lors du vote:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'enregistrer votre vote",
+        variant: "destructive"
+      });
+    }
   };
   
   const connectionError = isOffline;
