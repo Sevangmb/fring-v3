@@ -10,11 +10,12 @@ import {
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ThumbsUp, ThumbsDown, X } from "lucide-react";
+import { ThumbsUp, ThumbsDown, X, Award } from "lucide-react";
 import { submitVote } from "@/services/votes/submitVote";
 import { VoteType, EntityType } from "@/services/votes/types";
 import { useToast } from "@/hooks/use-toast";
 import { Text } from "@/components/atoms/Typography";
+import { Progress } from "@/components/ui/progress";
 
 interface VetementItemProps {
   name: string;
@@ -37,13 +38,17 @@ interface VotingDialogProps {
   onOpenChange: (open: boolean) => void;
   ensembles: any[];
   onVoteSubmitted?: (ensembleId: number, vote: VoteType) => void;
+  votedCount?: number;
+  totalCount?: number;
 }
 
 const VotingDialog: React.FC<VotingDialogProps> = ({
   open,
   onOpenChange,
   ensembles,
-  onVoteSubmitted
+  onVoteSubmitted,
+  votedCount = 0,
+  totalCount = 0
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { toast } = useToast();
@@ -61,6 +66,8 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
   if (!currentEnsemble) {
     return null;
   }
+
+  const progressPercentage = totalCount > 0 ? (votedCount / totalCount) * 100 : 0;
   
   const handleVote = async (vote: VoteType) => {
     if (isSubmitting) return;
@@ -128,6 +135,15 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
             {currentEnsemble.description}
           </Text>
         </div>
+
+        {/* Progress bar for voting progress */}
+        <div className="mt-2 mb-2">
+          <div className="flex justify-between text-xs text-muted-foreground mb-1">
+            <span>{votedCount} votés</span>
+            <span>{totalCount} total</span>
+          </div>
+          <Progress value={progressPercentage} className="h-2" />
+        </div>
         
         <ScrollArea className="mt-4 max-h-60 rounded-md">
           {vetements.length > 0 ? (
@@ -165,7 +181,7 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
         </div>
         
         <div className="mt-2 text-center text-sm text-muted-foreground">
-          {currentIndex + 1} sur {ensembles.length} ensembles
+          {currentIndex + 1} sur {ensembles.length} ensembles non votés
         </div>
       </DialogContent>
     </Dialog>

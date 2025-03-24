@@ -29,6 +29,9 @@ const CurrentDefiFooter: React.FC<CurrentDefiFooterProps> = ({
   const { participation, participantEnsembleId, ensembleName, userHasVoted } = state;
   const { 
     ensembles, 
+    allEnsembles,
+    votedCount,
+    totalCount,
     loading, 
     open, 
     setOpen, 
@@ -70,7 +73,12 @@ const CurrentDefiFooter: React.FC<CurrentDefiFooterProps> = ({
               disabled={loading || ensembles.length === 0}
             >
               <Vote className="h-4 w-4" />
-              <span>Voter sur les ensembles</span>
+              <span>
+                {votedCount === totalCount ? 
+                  "Déjà voté sur tous les ensembles" : 
+                  `Voter (${votedCount}/${totalCount})`
+                }
+              </span>
             </Button>
             
             <VotingDialog
@@ -78,6 +86,8 @@ const CurrentDefiFooter: React.FC<CurrentDefiFooterProps> = ({
               onOpenChange={setOpen}
               ensembles={ensembles}
               onVoteSubmitted={handleVoteSubmitted}
+              votedCount={votedCount}
+              totalCount={totalCount}
             />
           </>
         ) : (
