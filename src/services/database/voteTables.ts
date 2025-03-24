@@ -43,16 +43,16 @@ export const ensureEnsembleVotesTable = async (): Promise<boolean> => {
 };
 
 /**
- * Mettre à jour la structure de la table defi_votes pour permettre les votes directs sur les défis
+ * Check and update defi_votes table to allow null ensemble_id
  */
 export const updateDefiVotesTable = async (): Promise<boolean> => {
   try {
-    // Vérifier si la table existe
+    // First, check if the table exists
     const { error: checkError } = await supabase.from('defi_votes').select('id').limit(1);
     
     if (checkError && checkError.code === '42P01') {
-      // Si la table n'existe pas, la créer avec ensemble_id optionnel
-      console.log("Création de la table defi_votes");
+      // Create the table with nullable ensemble_id if it doesn't exist
+      console.log("Creating defi_votes table with nullable ensemble_id");
       
       const { error: createError } = await supabase.rpc('create_table', { 
         table_name: 'defi_votes',
@@ -68,97 +68,91 @@ export const updateDefiVotesTable = async (): Promise<boolean> => {
       });
       
       if (createError) {
-        console.error("Erreur lors de la création de la table defi_votes:", createError);
+        console.error("Error creating defi_votes table:", createError);
         return false;
       }
       
       return true;
     } else {
-      // Si la table existe, vérifions si ensemble_id permet des valeurs NULL
-      // Essayons d'insérer une ligne avec ensemble_id NULL pour voir
-      const testUserId = "00000000-0000-0000-0000-000000000000"; // UUID fictif pour le test
+      // If the table exists, check if ensemble_id is nullable
+      // Try to insert a test record with null ensemble_id
+      const testUserId = "00000000-0000-0000-0000-000000000000"; // Test UUID
       
-      // Première tentative d'insertion avec ensemble_id NULL
       const { error: insertError } = await supabase.from('defi_votes').insert({
-        defi_id: -1, // ID fictif pour le test
+        defi_id: -1, // Test ID
+        ensemble_id: null,
         user_id: testUserId,
-        vote: 'up',
-        ensemble_id: null
-      }).select();
+        vote: 'up'
+      });
       
-      // Si l'erreur est liée à la contrainte NOT NULL, il faut modifier la table
+      // If we get a not-null constraint violation, we need to modify the table
       if (insertError && insertError.message.includes('violates not-null constraint')) {
-        console.log("Modification de la colonne ensemble_id pour permettre les valeurs NULL");
+        console.log("Updating defi_votes table to allow null ensemble_id");
         
-        try {
-          // Supprimer les contraintes existantes, car on ne peut pas les modifier directement
-          await supabase.rpc('exec_sql', {
-            query: `
-              ALTER TABLE defi_votes
-              DROP CONSTRAINT IF EXISTS defi_votes_ensemble_id_fkey;
-            `
-          });
-          
-          // Modifier la colonne pour permettre les valeurs NULL
-          await supabase.rpc('exec_sql', {
-            query: `
-              ALTER TABLE defi_votes
-              ALTER COLUMN ensemble_id DROP NOT NULL;
-            `
-          });
-          
-          // Recréer la contrainte de clé étrangère
-          await supabase.rpc('exec_sql', {
-            query: `
-              ALTER TABLE defi_votes
-              ADD CONSTRAINT defi_votes_ensemble_id_fkey
-              FOREIGN KEY (ensemble_id) REFERENCES tenues(id) ON DELETE CASCADE;
-            `
-          });
-          
-          // Mettre à jour la contrainte d'unicité
-          await supabase.rpc('exec_sql', {
-            query: `
-              ALTER TABLE defi_votes
-              DROP CONSTRAINT IF EXISTS defi_votes_defi_id_ensemble_id_user_id_key;
-              
-              ALTER TABLE defi_votes
-              ADD CONSTRAINT defi_votes_defi_id_ensemble_id_user_id_key 
-              UNIQUE (defi_id, ensemble_id, user_id);
-            `
-          });
-          
-          return true;
-        } catch (error) {
-          console.error("Erreur lors de la modification de la table defi_votes:", error);
+        // Execute a raw SQL command to alter the table
+        const { error: alterError } = await supabase.rpc('exec_sql', {
+          query: `
+            -- First drop any foreign key constraint
+            ALTER TABLE defi_votes DROP CONSTRAINT IF EXISTS defi_votes_ensemble_id_fkey;
+            
+            -- Then modify the column to allow nulls
+            ALTER TABLE defi_votes ALTER COLUMN ensemble_id DROP NOT NULL;
+            
+            -- Add the foreign key constraint back
+            ALTER TABLE defi_votes 
+            ADD CONSTRAINT defi_votes_ensemble_id_fkey 
+            FOREIGN KEY (ensemble_id) 
+            REFERENCES tenues(id) ON DELETE CASCADE;
+            
+            -- Update unique constraint
+            ALTER TABLE defi_votes DROP CONSTRAINT IF EXISTS defi_votes_defi_id_ensemble_id_user_id_key;
+            ALTER TABLE defi_votes ADD CONSTRAINT defi_votes_defi_id_ensemble_id_user_id_key 
+            UNIQUE (defi_id, ensemble_id, user_id);
+          `
+        });
+        
+        if (alterError) {
+          console.error("Error updating defi_votes table:", alterError);
           return false;
         }
-      }
-      
-      // Si l'erreur est autre, nettoyons la ligne de test
-      if (insertError && insertError.code !== '23505') { // Ignorer l'erreur d'unicité
-        console.error("Erreur de test de la table defi_votes:", insertError);
+        
+        console.log("Successfully updated defi_votes table");
+        return true;
+      } else if (insertError && insertError.code !== '23505') {
+        // If we get an error other than duplicate key, something is wrong
+        console.error("Error testing defi_votes table:", insertError);
+        return false;
       } else {
-        // Nettoyer la ligne de test si elle a été insérée
+        // Clean up test record if it was inserted
         await supabase.from('defi_votes').delete().eq('defi_id', -1);
+        console.log("defi_votes table already allows null ensemble_id");
+        return true;
       }
-      
-      return true;
     }
   } catch (error) {
-    console.error("Erreur lors de la vérification/modification de la table defi_votes:", error);
+    console.error("Error checking/updating defi_votes table:", error);
     return false;
   }
 };
 
+/**
+ * Initialize all vote tables
+ */
 export const initializeVoteTables = async (): Promise<boolean> => {
   try {
-    const ensembleTableResult = await fetchWithRetry(() => ensureEnsembleVotesTable(), 3);
-    const defiTableResult = await fetchWithRetry(() => updateDefiVotesTable(), 3);
+    console.log("Initializing vote tables...");
+    const ensembleResult = await fetchWithRetry(() => ensureEnsembleVotesTable(), 3);
+    const defiResult = await fetchWithRetry(() => updateDefiVotesTable(), 3);
     
-    return ensembleTableResult && defiTableResult;
+    if (ensembleResult && defiResult) {
+      console.log("Vote tables initialization successful");
+      return true;
+    } else {
+      console.error("Vote tables initialization failed");
+      return false;
+    }
   } catch (error) {
-    console.error("Erreur lors de l'initialisation des tables de vote:", error);
+    console.error("Error initializing vote tables:", error);
     return false;
   }
 };

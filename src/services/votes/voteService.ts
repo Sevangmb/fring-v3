@@ -1,6 +1,7 @@
 
 import { supabase } from "@/lib/supabase";
 import { VoteType, EntityType, VotesCount } from "./types";
+import { isValidEntityId } from "./utils/voteUtils";
 
 /**
  * Submit a vote for a specific entity
@@ -40,13 +41,21 @@ export const submitVote = async (
       if (updateError) throw updateError;
     } else {
       // Insert new vote
+      const voteData: Record<string, any> = {
+        [idField]: entityId,
+        user_id: session.user.id,
+        vote
+      };
+      
+      // Special handling for direct defi votes
+      if (entityType === 'defi') {
+        // For direct defi votes, we set ensemble_id to null explicitly
+        voteData.ensemble_id = null;
+      }
+      
       const { error: insertError } = await supabase
         .from(tableName)
-        .insert({
-          [idField]: entityId,
-          user_id: session.user.id,
-          vote
-        });
+        .insert(voteData);
 
       if (insertError) throw insertError;
     }
@@ -54,7 +63,7 @@ export const submitVote = async (
     return true;
   } catch (error) {
     console.error("Erreur lors du vote:", error);
-    return false;
+    throw error;
   }
 };
 
@@ -65,18 +74,28 @@ export const getUserVote = async (
   entityType: EntityType,
   entityId: number
 ): Promise<VoteType> => {
+  if (!isValidEntityId(entityId)) return null;
+  
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user?.id) return null;
 
     const { tableName, idField } = getEntityTableInfo(entityType);
 
-    const { data, error } = await supabase
+    // Build query
+    const query = supabase
       .from(tableName)
       .select('vote')
       .eq(idField, entityId)
-      .eq('user_id', session.user.id)
-      .maybeSingle();
+      .eq('user_id', session.user.id);
+      
+    // Special handling for defi votes
+    if (entityType === 'defi') {
+      // For direct defi votes, we need to check where ensemble_id is null
+      query.is('ensemble_id', null);
+    }
+    
+    const { data, error } = await query.maybeSingle();
 
     if (error) throw error;
     return data ? data.vote : null;
@@ -93,13 +112,24 @@ export const getVotesCount = async (
   entityType: EntityType,
   entityId: number
 ): Promise<VotesCount> => {
+  if (!isValidEntityId(entityId)) return { up: 0, down: 0 };
+  
   try {
     const { tableName, idField } = getEntityTableInfo(entityType);
 
-    const { data, error } = await supabase
+    // Build query
+    const query = supabase
       .from(tableName)
       .select('vote')
       .eq(idField, entityId);
+      
+    // Special handling for defi votes
+    if (entityType === 'defi') {
+      // For direct defi votes, we need to count where ensemble_id is null
+      query.is('ensemble_id', null);
+    }
+    
+    const { data, error } = await query;
 
     if (error) throw error;
 

@@ -8,6 +8,7 @@ import {
   getVotesCount as getVotesCountApi,
   calculateScore
 } from "@/services/votes/voteService";
+import { isValidEntityId } from "@/services/votes/utils/voteUtils";
 
 interface UseVoteOptions {
   onVoteSuccess?: (vote: VoteType) => void;
@@ -61,15 +62,15 @@ export const useVote = (
    * Load current vote data
    */
   const loadVoteData = useCallback(async () => {
-    if (!entityId) return;
+    if (!isValidEntityId(entityId)) return;
     
     try {
       // Get user's current vote
-      const vote = await getUserVoteApi(entityType, entityId);
+      const vote = await getUserVoteApi(entityType, entityId!);
       setUserVote(vote);
       
       // Get all votes
-      const votes = await getVotesCountApi(entityType, entityId);
+      const votes = await getVotesCountApi(entityType, entityId!);
       setVotesCount(votes);
     } catch (err) {
       console.error("Erreur lors du chargement des votes:", err);
@@ -78,7 +79,7 @@ export const useVote = (
 
   // Load data on mount and when entityId changes
   useEffect(() => {
-    if (entityId) {
+    if (isValidEntityId(entityId)) {
       loadVoteData();
     }
   }, [entityId, loadVoteData]);
@@ -87,7 +88,7 @@ export const useVote = (
    * Submit a vote for an entity
    */
   const submitVote = useCallback(async (vote: VoteType): Promise<boolean> => {
-    if (!entityId) {
+    if (!isValidEntityId(entityId)) {
       toast({
         title: "Erreur",
         description: "ID de l'élément manquant.",
@@ -128,7 +129,7 @@ export const useVote = (
       setVotesCount(newVotesCount);
       
       // Send to API
-      const success = await submitVoteApi(entityType, entityId, vote);
+      const success = await submitVoteApi(entityType, entityId!, vote);
       
       if (success) {
         toast({

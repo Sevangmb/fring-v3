@@ -12,3 +12,10 @@ export const isValidEntityId = (id: number | undefined): boolean => {
 export const isOnline = (): boolean => {
   return navigator.onLine;
 };
+
+/**
+ * Vérifie si la valeur de vote est valide
+ */
+export const isValidVote = (vote: any): boolean => {
+  return vote === 'up' || vote === 'down' || vote === null;
+};

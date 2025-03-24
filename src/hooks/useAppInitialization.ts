@@ -9,7 +9,7 @@ export const useAppInitialization = () => {
   const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
-    const initialize = async () => {
+    const initializeApp = async () => {
       try {
         setInitializing(true);
         console.log('Initialisation de l\'application...');
@@ -30,10 +30,8 @@ export const useAppInitialization = () => {
         // Initialiser les catégories
         await initializeCategories();
         
-        // Initialiser les tables de vote
-        await initializeVoteTables().catch(err => {
-          console.error("Erreur lors de l'initialisation des tables de vote:", err);
-        });
+        // Initialize vote tables
+        await initializeVoteTables();
         
         setInitialized(true);
         console.log('Initialisation terminée avec succès');
@@ -45,7 +43,7 @@ export const useAppInitialization = () => {
       }
     };
     
-    initialize();
+    initializeApp();
   }, []);
   
   return { initialized, initializing, error };
