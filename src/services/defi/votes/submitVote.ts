@@ -62,6 +62,7 @@ export const submitVote = async (defiId: number, ensembleId: number | null, vote
       );
       
       if (updateError) throw updateError;
+      console.log(`Vote mis à jour: ${vote} pour défi ${defiId}${ensembleId ? `, ensemble ${ensembleId}` : ''}`);
     } else {
       // Créer un nouveau vote
       const { error: insertError } = await fetchWithRetry(
@@ -73,6 +74,7 @@ export const submitVote = async (defiId: number, ensembleId: number | null, vote
       );
       
       if (insertError) throw insertError;
+      console.log(`Nouveau vote: ${vote} pour défi ${defiId}${ensembleId ? `, ensemble ${ensembleId}` : ''}`);
     }
     
     return true;

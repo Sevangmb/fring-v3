@@ -11,6 +11,7 @@ export const useDefiCard = (id: number, ensembleId?: number) => {
   const [participantEnsembleId, setParticipantEnsembleId] = useState<number | null>(null);
   const [ensembleName, setEnsembleName] = useState<string | null>(null);
   const [votesCount, setVotesCount] = useState<number>(0);
+  const [participantsCount, setParticipantsCount] = useState<number>(0);
   const [leaderName, setLeaderName] = useState<string | null>(null);
   const [userHasVoted, setUserHasVoted] = useState<boolean>(false);
   const { toast } = useToast();
@@ -80,6 +81,14 @@ export const useDefiCard = (id: number, ensembleId?: number) => {
       
       setVotesCount(votesData?.length || 0);
       
+      // Récupérer le nombre total de participants pour ce défi
+      const { data: participationsData } = await supabase
+        .from('defi_participations')
+        .select('id')
+        .eq('defi_id', id);
+        
+      setParticipantsCount(participationsData?.length || 0);
+      
       // Récupérer le participant en tête (avec le plus de participations)
       const { data: participations } = await supabase
         .from('defi_participations')
@@ -129,7 +138,8 @@ export const useDefiCard = (id: number, ensembleId?: number) => {
       votesCount,
       leaderName,
       userHasVoted,
-      validEnsembleId
+      validEnsembleId,
+      participantsCount
     } as DefiState,
     fetchUserParticipation,
     fetchVotesAndLeader,

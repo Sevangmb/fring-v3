@@ -22,4 +22,6 @@ export interface DefiState {
   votesCount: number;
   leaderName: string | null;
   userHasVoted: boolean;
+  validEnsembleId: number | undefined;
+  participantsCount: number;
 }

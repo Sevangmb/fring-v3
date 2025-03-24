@@ -88,7 +88,7 @@ export const participerDefi = async (defiId: number, ensembleId: number): Promis
         return false;
       }
       
-      // Mettre à jour le compteur de participants directement
+      // Mettre à jour le compteur de participants
       await updateDefiParticipantsCount(defiId);
     }
     
@@ -172,7 +172,7 @@ export const updateDefiParticipantsCount = async (defiId: number): Promise<boole
     // Compter le nombre de participants uniques
     const { count, error: countError } = await supabase
       .from('defi_participations')
-      .select('user_id', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('defi_id', defiId);
     
     if (countError) {

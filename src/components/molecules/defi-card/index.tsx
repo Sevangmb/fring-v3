@@ -43,6 +43,16 @@ const DefiCard: React.FC<DefiCardProps> = ({
     fetchVotesAndLeader();
   }, [id]);
 
+  // Refetch votes and leader after participation
+  const handleParticipation = () => {
+    if (onParticipation) {
+      onParticipation();
+    }
+    // Réactualiser les données après participation
+    fetchUserParticipation();
+    fetchVotesAndLeader();
+  };
+
   return (
     <Card className={`overflow-hidden hover:shadow-md transition-all duration-300 ${isPast ? "opacity-80" : ""}`}>
       <DefiCardHeader 
@@ -61,7 +71,7 @@ const DefiCard: React.FC<DefiCardProps> = ({
       <CardFooter className="border-t p-3 bg-muted/20">
         {isPast ? (
           <PastDefiFooter 
-            participantsCount={participantsCount}
+            participantsCount={state.participantsCount > 0 ? state.participantsCount : participantsCount}
             votesCount={state.votesCount}
             defiId={id}
           />
@@ -74,7 +84,7 @@ const DefiCard: React.FC<DefiCardProps> = ({
             participantsCount={participantsCount}
             votesCount={state.votesCount}
             state={state}
-            onParticipation={onParticipation}
+            onParticipation={handleParticipation}
           />
         )}
       </CardFooter>

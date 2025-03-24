@@ -25,18 +25,21 @@ const CurrentDefiFooter: React.FC<CurrentDefiFooterProps> = ({
   onParticipation
 }) => {
   const { participation, participantEnsembleId, ensembleName, userHasVoted } = state;
-
+  
+  // Utiliser le nombre de participants de l'état s'il est disponible
+  const displayParticipantsCount = state.participantsCount > 0 ? state.participantsCount : participantsCount;
+  
   return (
     <div className="flex w-full justify-between items-center">
       <div className="flex items-center gap-4">
         <Text className="text-sm text-muted-foreground">
           <Award className="h-4 w-4 inline mr-1" />
-          {participantsCount} participants
+          {displayParticipantsCount} participant{displayParticipantsCount > 1 ? 's' : ''}
         </Text>
-        {votesCount > 0 && (
+        {state.votesCount > 0 && (
           <Text className="text-sm text-muted-foreground">
             <Vote className="h-4 w-4 inline mr-1" />
-            {votesCount} votes
+            {state.votesCount} vote{state.votesCount > 1 ? 's' : ''}
           </Text>
         )}
       </div>

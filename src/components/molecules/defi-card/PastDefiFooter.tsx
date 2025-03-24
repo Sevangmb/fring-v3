@@ -1,41 +1,44 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Text } from "@/components/atoms/Typography";
 import { Award, Vote } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useVote } from "@/hooks/useVote";
 
 interface PastDefiFooterProps {
+  defiId: number;
   participantsCount: number;
   votesCount: number;
-  defiId: number;
 }
 
-const PastDefiFooter: React.FC<PastDefiFooterProps> = ({
-  participantsCount,
-  votesCount,
-  defiId
+const PastDefiFooter: React.FC<PastDefiFooterProps> = ({ 
+  defiId, 
+  participantsCount, 
+  votesCount 
 }) => {
   return (
-    <>
-      <div className="flex items-center gap-2">
+    <div className="flex w-full justify-between items-center">
+      <div className="flex items-center gap-4">
         <Text className="text-sm text-muted-foreground">
           <Award className="h-4 w-4 inline mr-1" />
-          {participantsCount} participants
+          {participantsCount} participant{participantsCount > 1 ? 's' : ''}
         </Text>
         {votesCount > 0 && (
-          <Text className="text-sm text-muted-foreground ml-2">
+          <Text className="text-sm text-muted-foreground">
             <Vote className="h-4 w-4 inline mr-1" />
-            {votesCount} votes
+            {votesCount} vote{votesCount > 1 ? 's' : ''}
           </Text>
         )}
       </div>
-      <div className="ml-auto flex gap-2">
-        <Button variant="outline" size="sm" asChild>
-          <Link to={`/defis/${defiId}/resultats`}>Voir les résultats</Link>
-        </Button>
-      </div>
-    </>
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="text-sm opacity-70"
+        disabled
+      >
+        Défi terminé
+      </Button>
+    </div>
   );
 };
 
