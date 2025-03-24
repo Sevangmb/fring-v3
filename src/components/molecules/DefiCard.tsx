@@ -3,13 +3,14 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
-import { Award, Calendar, ChevronRight, Flag, Vote } from "lucide-react";
+import { Award, Calendar, ChevronRight, Flag, Vote, Shirt } from "lucide-react";
 import ParticiperDefiDialog from "./ParticiperDefiDialog";
 import VoteDefiDialog from "./VoteDefiDialog";
 import VoterDialog from "./VoterDialog";
 import { Link } from "react-router-dom";
 import { supabase } from '@/lib/supabase';
 import { useToast } from "@/hooks/use-toast";
+import { fetchEnsembleById } from "@/services/ensemble";
 
 export type DefiType = "current" | "upcoming" | "past";
 
@@ -42,6 +43,7 @@ const DefiCard: React.FC<DefiCardProps> = ({
   const [validEnsembleId, setValidEnsembleId] = useState<number | undefined>(ensembleId);
   const [participation, setParticipation] = useState<any>(null);
   const [participantEnsembleId, setParticipantEnsembleId] = useState<number | null>(null);
+  const [ensembleName, setEnsembleName] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Récupérer la participation de l'utilisateur actuel s'il y en a une
@@ -66,6 +68,16 @@ const DefiCard: React.FC<DefiCardProps> = ({
           setParticipation(data);
           setParticipantEnsembleId(data.ensemble_id);
           setValidEnsembleId(data.ensemble_id);
+          
+          // Récupérer les détails de l'ensemble pour afficher son nom
+          try {
+            const ensemble = await fetchEnsembleById(data.ensemble_id);
+            if (ensemble) {
+              setEnsembleName(ensemble.nom);
+            }
+          } catch (ensembleError) {
+            console.error("Erreur lors de la récupération des détails de l'ensemble:", ensembleError);
+          }
         } else {
           console.log(`Aucune participation trouvée pour le défi ${id}`);
         }
@@ -121,11 +133,19 @@ const DefiCard: React.FC<DefiCardProps> = ({
             </Text>
             <div className="flex gap-2">
               {participation ? (
-                <VoteDefiDialog 
-                  defiId={id} 
-                  defiTitle={title} 
-                  ensembleId={participantEnsembleId || participation.ensemble_id}
-                />
+                <>
+                  {ensembleName && (
+                    <div className="flex items-center gap-1 text-sm text-primary">
+                      <Shirt className="h-4 w-4" />
+                      <span>{ensembleName}</span>
+                    </div>
+                  )}
+                  <VoteDefiDialog 
+                    defiId={id} 
+                    defiTitle={title} 
+                    ensembleId={participantEnsembleId || participation.ensemble_id}
+                  />
+                </>
               ) : (
                 <ParticiperDefiDialog 
                   defiId={id} 
