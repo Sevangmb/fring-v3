@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { checkSupabaseConnection, initializeDatabaseTables } from '@/lib/supabase';
 import { initializeCategories } from '@/services/categorieService';
+import { initializeVoteTables } from "@/services/database/voteTables";
 
 export const useAppInitialization = () => {
   const [initialized, setInitialized] = useState<boolean>(false);
@@ -29,7 +30,10 @@ export const useAppInitialization = () => {
         // Initialiser les catégories
         await initializeCategories();
         
-        // Autres initialisations si nécessaire
+        // Initialiser les tables de vote
+        await initializeVoteTables().catch(err => {
+          console.error("Erreur lors de l'initialisation des tables de vote:", err);
+        });
         
         setInitialized(true);
         console.log('Initialisation terminée avec succès');
