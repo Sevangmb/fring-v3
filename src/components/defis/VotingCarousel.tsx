@@ -6,7 +6,7 @@ import { Text } from "@/components/atoms/Typography";
 import { useVotingCarousel } from "./voting/hooks/useVotingCarousel";
 import { organizeVetementsByType } from "./voting/helpers/vetementOrganizer";
 import VotingControls from "./voting/VotingControls";
-import EnsembleDetail from "./voting/EnsembleDetail";
+import VoteCarousel from "./voting/VoteCarousel";
 import RankingList from "./voting/RankingList";
 import LoadingState from "./voting/LoadingState";
 import EmptyState from "./voting/EmptyState";
@@ -85,17 +85,25 @@ const VotingCarousel: React.FC<VotingCarouselProps> = ({ defiId }) => {
         disabled={connectionError}
       />
       
-      <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
-        <EnsembleDetail
-          ensemble={currentEnsemble}
-          votes={currentVotes}
-          ensembleId={currentEnsembleId}
-          userVote={userVote}
-          vetementsByType={vetementsByType}
-          onVote={(vote) => handleVote(currentEnsembleId, vote)}
-          isLoading={isSubmitting}
-          connectionError={connectionError}
-        />
+      <Paper 
+        variant="outlined" 
+        sx={{ 
+          p: 3, 
+          borderRadius: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '500px'  // Ajout d'une hauteur minimale
+        }}
+      >
+        <Box sx={{ flexGrow: 1, width: '100%', mb: 3 }}>
+          <VoteCarousel
+            ensembles={[currentEnsemble]} 
+            userVotes={{ [currentEnsembleId]: userVote }}
+            isLoading={isSubmitting}
+            onVote={(ensembleId, vote) => handleVote(ensembleId, vote)}
+            isOffline={connectionError}
+          />
+        </Box>
       </Paper>
       
       <RankingList participations={participations} />

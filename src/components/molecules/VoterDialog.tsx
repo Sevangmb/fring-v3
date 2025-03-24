@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { VoteType, EntityType } from "@/services/votes/types";
 import VoteButtons from "@/components/defis/voting/VoteButtons";
 import { useVote } from "@/hooks/useVote";
+import { Typography, Box } from "@mui/material";
 
 interface VoterDialogProps {
   elementId: number;
@@ -73,14 +74,20 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
             </DialogClose>
           </DialogHeader>
           
-          <VoteButtons
-            userVote={userVote}
-            onVote={handleVote}
-            size="lg"
-            isLoading={isLoading}
-            connectionError={isOffline}
-            className="py-4"
-          />
+          <Box sx={{ padding: '16px 0', textAlign: 'center' }}>
+            <Typography variant="h6" color="primary" sx={{ mb: 2 }}>
+              Votez pour cet élément
+            </Typography>
+            
+            <VoteButtons
+              userVote={userVote}
+              onVote={handleVote}
+              size="lg"
+              isLoading={isLoading}
+              connectionError={isOffline}
+              className="py-4"
+            />
+          </Box>
         </DialogContent>
       </Dialog>
     </>

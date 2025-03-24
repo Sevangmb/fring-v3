@@ -67,7 +67,8 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
       display: 'flex', 
       justifyContent: 'center', 
       gap: 2, 
-      pt: 2
+      pt: 2,
+      width: '100%'
     }}>
       <Tooltip title={userVote === 'up' ? "Vous avez aimé" : "J'aime"}>
         <span> {/* Use span to avoid Tooltip warning */}
@@ -82,6 +83,7 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
               alignItems: 'center', 
               gap: 1,
               padding: padding,
+              minWidth: '120px',
               opacity: (disabled || isLoading) ? 0.5 : 1,
               cursor: (disabled || isLoading) ? 'not-allowed' : 'pointer',
               backgroundColor: userVote === 'up' ? '#4caf50' : undefined,
@@ -100,7 +102,7 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
               }} />
             )}
             {showLabels && (
-              <span>J'aime</span>
+              <span>J'AIME</span>
             )}
           </Button>
         </span>
@@ -119,6 +121,7 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
               alignItems: 'center', 
               gap: 1,
               padding: padding,
+              minWidth: '120px',
               opacity: (disabled || isLoading) ? 0.5 : 1,
               cursor: (disabled || isLoading) ? 'not-allowed' : 'pointer',
               backgroundColor: userVote === 'down' ? '#f44336' : undefined,
@@ -137,7 +140,7 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
               }} />
             )}
             {showLabels && (
-              <span>Je n'aime pas</span>
+              <span>JE N'AIME PAS</span>
             )}
           </Button>
         </span>
