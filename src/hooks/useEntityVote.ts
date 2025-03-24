@@ -20,7 +20,7 @@ export const useEntityVote = ({
     submitVote, 
     loadVoteData,
     userVote,
-    votesCount, // This was previously 'votes' but it should be 'votesCount' to match what useVote returns
+    votesCount, // Utiliser votesCount au lieu de votes pour correspondre à ce que useVote retourne
     score,
     isLoading: voteLoading,
     isOffline
@@ -91,7 +91,7 @@ export const useEntityVote = ({
   
   return {
     userVote,
-    votes: votesCount, // Return votesCount as votes to maintain backward compatibility
+    votes: votesCount, // Renvoyer votesCount en tant que votes pour maintenir la compatibilité ascendante
     score,
     loading: loading || voteLoading,
     isSubmitting,

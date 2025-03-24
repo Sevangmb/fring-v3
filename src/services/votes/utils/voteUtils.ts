@@ -1,22 +1,13 @@
 
-import { VotesCount } from "../types";
-
 /**
- * Calculer le score (votes positifs - votes négatifs)
+ * Vérifie si un ID d'entité est valide (existe et est un nombre positif)
  */
-export const calculateScore = (votes: VotesCount): number => {
-  return votes.up - votes.down;
+export const isValidEntityId = (id: number | undefined): boolean => {
+  return id !== undefined && id !== null && !isNaN(id) && id > 0;
 };
 
 /**
- * Vérifier si l'ID d'entité est valide
- */
-export const isValidEntityId = (entityId: number | undefined): boolean => {
-  return entityId !== undefined && entityId !== null && !isNaN(entityId);
-};
-
-/**
- * Vérifier si l'utilisateur est connecté à Internet
+ * Vérifie la connexion Internet
  */
 export const isOnline = (): boolean => {
   return navigator.onLine;
