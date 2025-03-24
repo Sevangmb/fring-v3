@@ -44,10 +44,6 @@ const VotingCarousel: React.FC<VotingCarouselProps> = ({ defiId }) => {
   const userVote = votingState[currentEnsembleId];
   const vetementsByType = organizeVetementsByType(currentEnsemble);
 
-  const handleVoteForCurrentEnsemble = (vote: 'up' | 'down') => {
-    handleVote(currentEnsembleId, vote);
-  };
-
   return (
     <div className="space-y-6">
       {connectionError && (
@@ -91,7 +87,7 @@ const VotingCarousel: React.FC<VotingCarouselProps> = ({ defiId }) => {
         ensembleId={currentEnsembleId}
         userVote={userVote}
         vetementsByType={vetementsByType}
-        onVote={handleVoteForCurrentEnsemble}
+        onVote={(vote) => handleVote(currentEnsembleId, vote)}
         isLoading={isSubmitting}
         connectionError={connectionError}
       />

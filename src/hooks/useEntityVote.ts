@@ -146,7 +146,7 @@ export const useEntityVote = ({
       setVotes(newVotes);
       
       // Envoyer le vote au serveur
-      const success = await submitVote(entityId, vote);
+      const success = await submitVote(vote);
       
       if (success) {
         // Appeler le callback si fourni

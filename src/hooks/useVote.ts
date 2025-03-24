@@ -43,6 +43,20 @@ export const useVote = (
   });
 
   /**
+   * Get user's current vote
+   */
+  const getUserVote = useCallback(async (id: number): Promise<VoteType> => {
+    return await getUserVoteApi(entityType, id);
+  }, [entityType]);
+
+  /**
+   * Get all votes for an entity
+   */
+  const getVotesCount = useCallback(async (id: number): Promise<VotesCount> => {
+    return await getVotesCountApi(entityType, id);
+  }, [entityType]);
+
+  /**
    * Load current vote data
    */
   const loadVoteData = useCallback(async () => {
@@ -155,6 +169,9 @@ export const useVote = (
 
   return {
     submitVote,
+    getUserVote,
+    getVotesCount,
+    calculateScore,
     userVote,
     votesCount,
     score,

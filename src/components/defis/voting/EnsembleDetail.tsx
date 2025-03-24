@@ -28,6 +28,11 @@ const EnsembleDetail: React.FC<EnsembleDetailProps> = ({
   isLoading = false,
   connectionError = false
 }) => {
+  // Helper function to handle the vote
+  const handleVote = (vote: 'up' | 'down') => {
+    onVote(vote);
+  };
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-2">
@@ -78,7 +83,7 @@ const EnsembleDetail: React.FC<EnsembleDetailProps> = ({
       <CardFooter>
         <VoteButtons
           userVote={userVote}
-          onVote={onVote}
+          onVote={handleVote}
           size="md"
           showLabels={true}
           isLoading={isLoading}
