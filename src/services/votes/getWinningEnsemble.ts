@@ -83,17 +83,21 @@ export const getWinningEnsemble = async (defiId: number): Promise<EnsembleVoteRe
       if (ensembleData) {
         winningEnsemble.ensembleName = ensembleData.nom;
         
-        // Fix: Access email property correctly - profiles could be an array or an object
-        if (ensembleData.profiles) {
-          // Check if profiles is an array
-          if (Array.isArray(ensembleData.profiles)) {
-            // Access the first element's email if it exists
-            winningEnsemble.userName = ensembleData.profiles.length > 0 && ensembleData.profiles[0]?.email 
-              ? ensembleData.profiles[0].email 
+        // Fix: Handle profiles data correctly - it could be null, an array, or an object
+        const profiles = ensembleData.profiles;
+        
+        if (profiles) {
+          // Type guard to determine if profiles is an array
+          if (Array.isArray(profiles)) {
+            // If it's an array, check if it has elements before accessing email
+            winningEnsemble.userName = profiles.length > 0 && profiles[0]?.email 
+              ? profiles[0].email 
               : 'Utilisateur inconnu';
+          } else if (typeof profiles === 'object') {
+            // If it's an object, directly access the email property
+            winningEnsemble.userName = (profiles as any).email || 'Utilisateur inconnu';
           } else {
-            // If profiles is an object, access email directly
-            winningEnsemble.userName = ensembleData.profiles.email || 'Utilisateur inconnu';
+            winningEnsemble.userName = 'Utilisateur inconnu';
           }
         } else {
           winningEnsemble.userName = 'Utilisateur inconnu';
