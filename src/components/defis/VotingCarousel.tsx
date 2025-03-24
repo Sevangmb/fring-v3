@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Alert, Box, Button, CircularProgress, Grid, Paper, Typography } from "@mui/material";
-import { Award, WifiOff } from "lucide-react";
+import { Award, Check, WifiOff } from "lucide-react";
 import { Text } from "@/components/atoms/Typography";
 import { useVotingCarousel } from "./voting/hooks/useVotingCarousel";
 import { organizeVetementsByType } from "./voting/helpers/vetementOrganizer";
@@ -19,6 +19,7 @@ const VotingCarousel: React.FC<VotingCarouselProps> = ({ defiId }) => {
   const {
     defi,
     participations,
+    allParticipations,
     currentIndex,
     loading,
     votingState,
@@ -26,15 +27,66 @@ const VotingCarousel: React.FC<VotingCarouselProps> = ({ defiId }) => {
     connectionError,
     handleVote,
     navigatePrevious,
-    navigateNext
+    navigateNext,
+    hasMoreToVote
   } = useVotingCarousel(defiId);
 
   if (loading) {
     return <LoadingState />;
   }
 
-  if (participations.length === 0) {
+  if (allParticipations.length === 0) {
     return <EmptyState />;
+  }
+
+  // If there are no more ensembles to vote on, show a completion message
+  if (!hasMoreToVote) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {defi && (
+          <Box sx={{ mb: 2, textAlign: 'center' }}>
+            <Typography variant="h4" component="h2" sx={{ fontWeight: 'bold' }}>
+              {defi.titre}
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              {defi.description}
+            </Typography>
+          </Box>
+        )}
+        
+        <Paper 
+          variant="outlined" 
+          sx={{ 
+            p: 4, 
+            borderRadius: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '300px',
+            textAlign: 'center',
+            mb: 3
+          }}
+        >
+          <Check size={64} color="#22c55e" style={{ marginBottom: '16px' }} />
+          <Typography variant="h5" gutterBottom>
+            Merci pour vos votes !
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            Vous avez voté pour tous les ensembles disponibles.
+          </Typography>
+          <Button 
+            variant="contained" 
+            color="primary"
+            onClick={() => window.location.reload()}
+          >
+            Rafraîchir
+          </Button>
+        </Paper>
+        
+        <RankingList participations={allParticipations} />
+      </Box>
+    );
   }
 
   const currentEnsemble = participations[currentIndex]?.ensemble;
@@ -106,7 +158,7 @@ const VotingCarousel: React.FC<VotingCarouselProps> = ({ defiId }) => {
         </Box>
       </Paper>
       
-      <RankingList participations={participations} />
+      <RankingList participations={allParticipations} />
     </Box>
   );
 };

@@ -8,18 +8,33 @@ import { VoteType } from "@/services/votes/types";
 export const useVotingCarousel = (defiId: number) => {
   const { toast } = useToast();
   const [defi, setDefi] = useState<any>(null);
-  const [participations, setParticipations] = useState<any[]>([]);
+  const [allParticipations, setAllParticipations] = useState<any[]>([]);
+  const [filteredParticipations, setFilteredParticipations] = useState<any[]>([]);
   const [votingState, setVotingState] = useState<Record<number, VoteType>>({});
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
+  const [loadComplete, setLoadComplete] = useState(false);
 
-  // Setup carousel navigation
+  // Setup carousel navigation for filtered participations
   const {
     currentIndex,
+    setMaxItems,
     navigatePrevious,
     navigateNext
-  } = useCarouselNavigation(participations.length);
+  } = useCarouselNavigation(0); // Initialize with 0, will update when we have data
+
+  // Filter participations to only show unvoted ones
+  const filterUnvotedParticipations = useCallback(() => {
+    if (!allParticipations.length) return [];
+    
+    const unvotedParticipations = allParticipations.filter(
+      p => !votingState[p.ensemble_id]
+    );
+    
+    console.log(`Filtered to ${unvotedParticipations.length} unvoted participations out of ${allParticipations.length} total`);
+    return unvotedParticipations;
+  }, [allParticipations, votingState]);
 
   // Load defi data and participations
   const loadData = useCallback(async () => {
@@ -84,7 +99,7 @@ export const useVotingCarousel = (defiId: number) => {
       
       // Sort by score
       const sortedParticipations = enhancedParticipations.sort((a, b) => b.score - a.score);
-      setParticipations(sortedParticipations);
+      setAllParticipations(sortedParticipations);
       
       // Get user votes for each participation
       const userVotes: Record<number, VoteType> = {};
@@ -96,6 +111,7 @@ export const useVotingCarousel = (defiId: number) => {
       setVotingState(userVotes);
       
       setConnectionError(false);
+      setLoadComplete(true);
     } catch (error) {
       console.error("Error loading data:", error);
       setConnectionError(true);
@@ -108,6 +124,15 @@ export const useVotingCarousel = (defiId: number) => {
       setLoading(false);
     }
   }, [defiId, toast]);
+  
+  // Update filtered participations when all participations or voting state changes
+  useEffect(() => {
+    if (loadComplete) {
+      const unvotedParticipations = filterUnvotedParticipations();
+      setFilteredParticipations(unvotedParticipations);
+      setMaxItems(unvotedParticipations.length);
+    }
+  }, [allParticipations, votingState, loadComplete, filterUnvotedParticipations, setMaxItems]);
   
   // Load data on mount
   useEffect(() => {
@@ -147,7 +172,7 @@ export const useVotingCarousel = (defiId: number) => {
       }));
       
       // Update participations with new vote counts
-      setParticipations(prev => 
+      setAllParticipations(prev => 
         prev.map(p => {
           if (p.ensemble_id === ensembleId) {
             const votes = { ...p.votes };
@@ -179,6 +204,19 @@ export const useVotingCarousel = (defiId: number) => {
         description: `Vous avez ${vote === 'up' ? 'aimé' : 'disliké'} cet ensemble.`,
         variant: vote === 'up' ? "default" : "destructive",
       });
+      
+      // After voting, check if we need to navigate to the next item
+      if (currentIndex >= filteredParticipations.length - 1) {
+        // We've reached the end of the list
+        if (filteredParticipations.length === 1) {
+          // This was the last unvoted item
+          toast({
+            title: "Terminé !",
+            description: "Vous avez voté pour tous les ensembles.",
+            variant: "default",
+          });
+        }
+      }
     } catch (error) {
       console.error("Error voting:", error);
       toast({
@@ -192,11 +230,12 @@ export const useVotingCarousel = (defiId: number) => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [isSubmitting, connectionError, votingState, toast, loadData]);
+  }, [isSubmitting, connectionError, votingState, toast, loadData, filteredParticipations.length, currentIndex]);
 
   return {
     defi,
-    participations,
+    participations: filteredParticipations, // Now returning filtered participations
+    allParticipations,  // Keep this for the ranking list
     currentIndex,
     loading,
     votingState,
@@ -204,6 +243,7 @@ export const useVotingCarousel = (defiId: number) => {
     connectionError,
     handleVote,
     navigatePrevious,
-    navigateNext
+    navigateNext,
+    hasMoreToVote: filteredParticipations.length > 0
   };
 };

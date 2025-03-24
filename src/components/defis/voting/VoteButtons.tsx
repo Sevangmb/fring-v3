@@ -1,7 +1,7 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@mui/material";
-import { ThumbsUp, ThumbsDown, Loader2 } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Loader2, Check } from "lucide-react";
 import { VoteType } from "@/services/votes/types";
 
 interface VoteButtonsProps {
@@ -25,6 +25,8 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
   connectionError = false,
   className = ""
 }) => {
+  const [justVoted, setJustVoted] = useState<VoteType>(null);
+
   // Tailles des boutons et icônes selon size
   const getSizeProps = () => {
     switch (size) {
@@ -42,6 +44,17 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
   
   console.log("Current userVote:", userVote);
   console.log("Button state - isLoading:", isLoading, "disabled:", disabled);
+  
+  const handleVote = (vote: VoteType) => {
+    console.log(`${vote} vote clicked`);
+    setJustVoted(vote);
+    onVote(vote);
+    
+    // Reset the visual feedback after a delay
+    setTimeout(() => {
+      setJustVoted(null);
+    }, 1000);
+  };
 
   return (
     <div className={`flex gap-3 justify-center ${className}`}>
@@ -49,11 +62,8 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
         variant="contained"
         color="success"
         size={buttonSize as any}
-        disabled={isLoading || disabled || connectionError}
-        onClick={() => {
-          console.log("Thumbs up clicked");
-          onVote("up");
-        }}
+        disabled={isLoading || disabled || connectionError || justVoted === "up"}
+        onClick={() => handleVote("up")}
         sx={{
           backgroundColor: userVote === "up" ? "#22c55e" : "#4ade80", // green-600 : green-400
           "&:hover": {
@@ -65,8 +75,10 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
           boxShadow: userVote === "up" ? 3 : 1
         }}
       >
-        {isLoading ? (
+        {isLoading && justVoted === "up" ? (
           <Loader2 size={iconSize} className="mr-1 animate-spin" />
+        ) : justVoted === "up" ? (
+          <Check size={iconSize} className="mr-1" />
         ) : (
           <ThumbsUp size={iconSize} className="mr-1" />
         )}
@@ -77,11 +89,8 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
         variant="contained"
         color="error"
         size={buttonSize as any}
-        disabled={isLoading || disabled || connectionError}
-        onClick={() => {
-          console.log("Thumbs down clicked");
-          onVote("down");
-        }}
+        disabled={isLoading || disabled || connectionError || justVoted === "down"}
+        onClick={() => handleVote("down")}
         sx={{
           backgroundColor: userVote === "down" ? "#ef4444" : "#f87171", // red-600 : red-400
           "&:hover": {
@@ -93,8 +102,10 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
           boxShadow: userVote === "down" ? 3 : 1
         }}
       >
-        {isLoading ? (
+        {isLoading && justVoted === "down" ? (
           <Loader2 size={iconSize} className="mr-1 animate-spin" />
+        ) : justVoted === "down" ? (
+          <Check size={iconSize} className="mr-1" />
         ) : (
           <ThumbsDown size={iconSize} className="mr-1" />
         )}
