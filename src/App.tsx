@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -7,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 
 // Import pages
 import Index from './pages/Index';
-import AboutPage from './pages/AboutPage';
+import FringPage from './pages/FringPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import MesAmis from './pages/MesAmis';
@@ -23,13 +22,13 @@ import EnsemblesAmisPage from './pages/EnsemblesAmisPage';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
+import ResultatsDefi from './pages/defis/ResultatsDefi';
 
 // Import components
 import ProtectedRoute from './components/atoms/ProtectedRoute';
 
 // Import styles
 import './App.css';
-import ResultatsDefi from './pages/defis/ResultatsDefi';
 
 const queryClient = new QueryClient();
 
@@ -42,7 +41,8 @@ function App() {
             <AuthProvider>
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/about" element={<AboutPage />} />
+                <Route path="/fring" element={<FringPage />} />
+                <Route path="/about" element={<FringPage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 
@@ -124,7 +124,6 @@ function App() {
                   </ProtectedRoute>
                 } />
                 
-                {/* Nouvelle route pour les résultats de défis */}
                 <Route path="/defis/:id/resultats" element={
                   <ProtectedRoute>
                     <ResultatsDefi />
