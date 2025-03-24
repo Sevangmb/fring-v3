@@ -94,6 +94,13 @@ const VotingCarousel: React.FC<VotingCarouselProps> = ({ defiId }) => {
   const currentScore = participations[currentIndex]?.score || 0;
   const currentEnsembleId = participations[currentIndex]?.ensemble_id;
   const userVote = votingState[currentEnsembleId];
+  
+  // Préparez un objet de comptage de votes pour tous les ensembles
+  const votesCountMap: Record<number, { up: number; down: number }> = {};
+  allParticipations.forEach(p => {
+    votesCountMap[p.ensemble_id] = p.votes || { up: 0, down: 0 };
+  });
+
   const vetementsByType = organizeVetementsByType(currentEnsemble);
 
   return (
@@ -144,16 +151,18 @@ const VotingCarousel: React.FC<VotingCarouselProps> = ({ defiId }) => {
           borderRadius: 2,
           display: 'flex',
           flexDirection: 'column',
-          minHeight: '500px'  // Ajout d'une hauteur minimale
+          minHeight: '500px'
         }}
       >
         <Box sx={{ flexGrow: 1, width: '100%', mb: 3 }}>
           <VoteCarousel
             ensembles={[currentEnsemble]} 
             userVotes={{ [currentEnsembleId]: userVote }}
+            votesCount={votesCountMap}
             isLoading={isSubmitting}
             onVote={(ensembleId, vote) => handleVote(ensembleId, vote)}
             isOffline={connectionError}
+            showScores={true}
           />
         </Box>
       </Paper>

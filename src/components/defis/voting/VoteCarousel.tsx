@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Box, Card, CardContent, CardHeader, Typography, Button, CircularProgress } from "@mui/material";
+import { Box, Card, CardContent, CardHeader, Typography, CircularProgress, Avatar } from "@mui/material";
 import Carousel from "react-material-ui-carousel";
 import { VoteType } from "@/services/votes/types";
 import EnsembleDetail from "./EnsembleDetail";
@@ -9,17 +9,21 @@ import VoteButtons from "./VoteButtons";
 interface VoteCarouselProps {
   ensembles: any[];
   userVotes: Record<number, VoteType>;
+  votesCount?: Record<number, { up: number; down: number }>;
   isLoading: boolean;
   onVote: (ensembleId: number, vote: VoteType) => void;
   isOffline?: boolean;
+  showScores?: boolean;
 }
 
 const VoteCarousel: React.FC<VoteCarouselProps> = ({
   ensembles,
   userVotes,
+  votesCount = {},
   isLoading,
   onVote,
-  isOffline = false
+  isOffline = false,
+  showScores = false
 }) => {
   if (isLoading) {
     return (
@@ -71,6 +75,12 @@ const VoteCarousel: React.FC<VoteCarouselProps> = ({
               <CardHeader 
                 title={ensemble.nom || "Ensemble sans nom"}
                 titleTypographyProps={{ variant: 'h6' }}
+                avatar={ensemble.user_email ? (
+                  <Avatar sx={{ bgcolor: '#9b87f5' }}>
+                    {ensemble.user_email.substring(0, 1).toUpperCase()}
+                  </Avatar>
+                ) : null}
+                subheader={ensemble.user_email || ""}
                 sx={{ borderBottom: '1px solid #eeeeee' }}
               />
               <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -86,6 +96,8 @@ const VoteCarousel: React.FC<VoteCarouselProps> = ({
                   isLoading={isLoading}
                   disabled={isOffline}
                   connectionError={isOffline}
+                  showScore={showScores}
+                  votesCount={votesCount[ensemble.id] || { up: 0, down: 0 }}
                 />
               </CardContent>
             </Card>
