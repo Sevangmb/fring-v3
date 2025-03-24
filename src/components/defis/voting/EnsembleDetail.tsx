@@ -4,13 +4,30 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistance } from "date-fns";
 import { fr } from "date-fns/locale";
+import { VoteType } from "@/services/votes/types";
+import VoteButtons from "./VoteButtons";
 
 interface EnsembleDetailProps {
   ensemble: any;
   votes?: { up: number; down: number };
+  ensembleId?: number;
+  userVote?: VoteType;
+  vetementsByType?: Record<string, any[]>;
+  onVote?: (vote: VoteType) => void;
+  isLoading?: boolean;
+  connectionError?: boolean;
 }
 
-const EnsembleDetail: React.FC<EnsembleDetailProps> = ({ ensemble, votes }) => {
+const EnsembleDetail: React.FC<EnsembleDetailProps> = ({ 
+  ensemble, 
+  votes,
+  ensembleId,
+  userVote,
+  vetementsByType,
+  onVote,
+  isLoading,
+  connectionError
+}) => {
   if (!ensemble) return null;
   
   const createdAt = ensemble.created_at ? new Date(ensemble.created_at) : new Date();
@@ -50,6 +67,19 @@ const EnsembleDetail: React.FC<EnsembleDetailProps> = ({ ensemble, votes }) => {
           </Card>
         ))}
       </div>
+      
+      {onVote && (
+        <div className="mt-4 flex justify-center">
+          <VoteButtons
+            userVote={userVote}
+            onVote={onVote}
+            isLoading={isLoading}
+            disabled={connectionError}
+            connectionError={connectionError}
+            size="md"
+          />
+        </div>
+      )}
       
       <div className="text-xs text-muted-foreground text-right">
         Publié {timeAgo}
