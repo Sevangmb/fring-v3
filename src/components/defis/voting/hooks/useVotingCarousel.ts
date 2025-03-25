@@ -92,7 +92,7 @@ export const useVotingCarousel = (defiId: number) => {
       // Get votes for each participation
       const enhancedParticipations = await Promise.all(participationsData.map(async (p) => {
         // Modifier pour obtenir les votes de l'ensemble, pas du défi
-        const votes = await getVotesCount('ensemble', p.ensemble_id);
+        const votes = await getVotesCount('tenue', p.ensemble_id);
         const score = votes.up - votes.down;
         return { ...p, votes, score };
       }));
@@ -105,7 +105,7 @@ export const useVotingCarousel = (defiId: number) => {
       const userVotes: Record<number, VoteType> = {};
       for (const p of sortedParticipations) {
         // Modifier pour obtenir le vote de l'utilisateur pour l'ensemble, pas pour le défi
-        const userVote = await getUserVote('ensemble', p.ensemble_id);
+        const userVote = await getUserVote('tenue', p.ensemble_id);
         userVotes[p.ensemble_id] = userVote;
       }
       setVotingState(userVotes);
@@ -197,7 +197,7 @@ export const useVotingCarousel = (defiId: number) => {
       );
       
       // Submit vote to server - vote pour l'ensemble
-      await submitVote('ensemble', ensembleId, vote);
+      await submitVote('tenue', ensembleId, vote);
       
       toast({
         title: "Vote enregistré !",

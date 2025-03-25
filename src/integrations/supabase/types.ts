@@ -180,6 +180,38 @@ export type Database = {
         }
         Relationships: []
       }
+      ensemble_votes: {
+        Row: {
+          created_at: string | null
+          ensemble_id: number
+          id: number
+          user_id: string
+          vote: string
+        }
+        Insert: {
+          created_at?: string | null
+          ensemble_id: number
+          id?: number
+          user_id: string
+          vote: string
+        }
+        Update: {
+          created_at?: string | null
+          ensemble_id?: number
+          id?: number
+          user_id?: string
+          vote?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ensemble_votes_ensemble_id_fkey1"
+            columns: ["ensemble_id"]
+            isOneToOne: false
+            referencedRelation: "tenues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favoris: {
         Row: {
           created_at: string

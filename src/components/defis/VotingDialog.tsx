@@ -83,7 +83,7 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
     
     try {
       // Pour un vote pouce+, on compte le vote, pour pouce- on n'ajoute pas de point
-      await submitVote('ensemble', currentEnsemble.id, vote);
+      await submitVote('tenue', currentEnsemble.id, vote);
       
       // Mettre à jour les résultats de vote
       setVotingResults(prev => {

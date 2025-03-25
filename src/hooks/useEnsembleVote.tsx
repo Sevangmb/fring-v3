@@ -1,174 +1,176 @@
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useVote } from "@/hooks/useVote";
+import { VoteType } from "@/services/votes/types";
+import { getUserVote } from "@/services/votes/getUserVote";
+import { submitVote } from "@/services/votes/submitVote";
+import { getVotesCount } from "@/services/votes/getVotesCount";
+import { fetchEnsembleById } from "@/services/ensemble";
+import { organizeVetementsByType } from "@/components/defis/voting/helpers/vetementOrganizer";
 
 interface UseEnsembleVoteProps {
   ensembleId: number;
-  onVoteSuccess?: () => void;
+  defiId?: number;
+  onVoteSuccess?: (vote: VoteType) => void;
 }
 
-export function useEnsembleVote({ ensembleId, onVoteSuccess }: UseEnsembleVoteProps) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [ensemble, setEnsemble] = useState<any>(null);
-  const [vetementsByType, setVetementsByType] = useState<any>({});
-  const [hasVoted, setHasVoted] = useState(false);
+export const useEnsembleVote = ({ 
+  ensembleId,
+  defiId = 0,
+  onVoteSuccess
+}: UseEnsembleVoteProps) => {
   const { toast } = useToast();
   
-  // Utilisation du hook useVote spécifiquement pour l'ensemble
-  const {
-    submitVote,
-    userVote,
-    votesCount,
-    isLoading: isVoting,
-    isOffline,
-    loadVoteData
-  } = useVote('tenue', ensembleId, {
-    onVoteSuccess: (vote) => {
-      console.log(`Vote ${vote} soumis avec succès pour l'ensemble ${ensembleId}`);
-      // Ne pas fermer le dialogue, mais passer à l'état "voté"
-      setHasVoted(true);
-      toast({
-        title: "Vote enregistré!",
-        description: `Votre ${vote === 'up' ? 'vote positif' : 'vote négatif'} a été enregistré.`,
-        variant: vote === 'up' ? "default" : "destructive",
-      });
-      
-      if (onVoteSuccess) {
-        onVoteSuccess();
-      }
-    }
-  });
+  // État local
+  const [ensemble, setEnsemble] = useState<any>(null);
+  const [vetementsByType, setVetementsByType] = useState<Record<string, any[]>>({});
+  const [userVote, setUserVote] = useState<VoteType>(null);
+  const [votesCount, setVotesCount] = useState<{ up: number; down: number }>({ up: 0, down: 0 });
+  const [loading, setLoading] = useState(true);
+  const [isVoting, setIsVoting] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [error, setError] = useState<string | null>(null);
+  const [hasVoted, setHasVoted] = useState(false);
   
-  // Chargement des données de l'ensemble
+  // Vérifier l'état de la connexion
+  useEffect(() => {
+    const handleOnlineStatus = () => {
+      setIsOffline(!navigator.onLine);
+    };
+    
+    window.addEventListener('online', handleOnlineStatus);
+    window.addEventListener('offline', handleOnlineStatus);
+    
+    return () => {
+      window.removeEventListener('online', handleOnlineStatus);
+      window.removeEventListener('offline', handleOnlineStatus);
+    };
+  }, []);
+  
+  // Charger les données de l'ensemble
   const loadEnsemble = useCallback(async () => {
-    if (!ensembleId || isNaN(ensembleId) || ensembleId <= 0) {
-      console.error(`ID d'ensemble invalide: ${ensembleId}`);
-      setError("Aucun ensemble disponible pour ce participant");
-      setLoading(false);
-      return;
-    }
+    if (!ensembleId) return;
     
     setLoading(true);
     setError(null);
     
     try {
-      const { supabase } = await import('@/lib/supabase');
+      const ensembleData = await fetchEnsembleById(ensembleId);
       
-      console.log(`Chargement de l'ensemble ${ensembleId}`);
-      
-      // D'abord, vérifions si cet ensembleId existe réellement
-      const { data: ensembleExists, error: checkError } = await supabase
-        .from('tenues')
-        .select('id')
-        .eq('id', ensembleId)
-        .maybeSingle();
-        
-      if (checkError) {
-        console.error("Erreur lors de la vérification de l'ensemble:", checkError);
-        throw checkError;
-      }
-      
-      if (!ensembleExists) {
-        console.error(`L'ensemble ${ensembleId} n'existe pas`);
-        setError("L'ensemble n'a pas pu être chargé ou n'existe pas.");
-        setLoading(false);
+      if (!ensembleData) {
+        setError("Impossible de charger l'ensemble");
         return;
       }
       
-      const { data, error } = await supabase
-        .from('tenues')
-        .select(`
-          id, 
-          nom, 
-          description, 
-          occasion, 
-          saison, 
-          created_at, 
-          user_id,
-          vetements:tenues_vetements(
-            id,
-            vetement:vetement_id(*),
-            position_ordre
-          )
-        `)
-        .eq('id', ensembleId)
-        .maybeSingle();
+      setEnsemble(ensembleData);
       
-      if (error) {
-        console.error("Erreur lors du chargement de l'ensemble:", error);
-        throw error;
-      }
-      
-      if (!data) {
-        console.error(`Aucun ensemble trouvé avec l'ID ${ensembleId}`);
-        setError("L'ensemble n'a pas pu être chargé ou n'existe pas.");
-        setLoading(false);
-        return;
-      }
-
-      console.log(`Ensemble chargé: ${JSON.stringify(data)}`);
-      setEnsemble(data);
-      
-      // Organize vetements by type
-      const byType: any = {};
-      if (data?.vetements && Array.isArray(data.vetements)) {
-        console.log(`Nombre de vêtements: ${data.vetements.length}`);
-        data.vetements.forEach((item: any) => {
-          if (item.vetement) {
-            const categorie = item.vetement.categorie_id;
-            if (!byType[categorie]) {
-              byType[categorie] = [];
-            }
-            byType[categorie].push(item.vetement);
-          } else {
-            console.log("Item sans vêtement:", item);
-          }
-        });
-      } else {
-        console.log("Pas de vêtements ou format invalide:", data?.vetements);
-      }
-      
-      setVetementsByType(byType);
-      setError(null);
+      // Organiser les vêtements par type
+      const vetements = ensembleData?.vetements || [];
+      const organizedVetements = organizeVetementsByType(vetements);
+      setVetementsByType(organizedVetements);
     } catch (err) {
-      console.error('Error loading ensemble:', err);
-      setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
+      console.error("Erreur lors du chargement de l'ensemble:", err);
+      setError("Erreur lors du chargement de l'ensemble");
     } finally {
       setLoading(false);
     }
   }, [ensembleId]);
   
-  // Fonction pour soumettre un vote
-  const handleVote = async (vote: 'up' | 'down') => {
-    console.log(`Tentative de vote ${vote} pour l'ensemble ${ensembleId}`);
+  // Charger les votes
+  const loadVoteData = useCallback(async () => {
+    if (!ensembleId || isOffline) return;
+    
     try {
-      await submitVote(vote);
-      // Le vote est traité dans le callback onVoteSuccess du hook useVote
-    } catch (error) {
-      console.error("Erreur lors du vote:", error);
+      // Récupérer le vote de l'utilisateur
+      const vote = await getUserVote('tenue', ensembleId);
+      setUserVote(vote);
+      
+      // Récupérer le décompte des votes
+      const votes = await getVotesCount('tenue', ensembleId);
+      setVotesCount(votes);
+    } catch (err) {
+      console.error("Erreur lors du chargement des votes:", err);
+    }
+  }, [ensembleId, isOffline]);
+  
+  // Charger les données initiales
+  useEffect(() => {
+    loadEnsemble();
+    loadVoteData();
+  }, [loadEnsemble, loadVoteData]);
+  
+  // Gérer le vote
+  const handleVote = useCallback(async (vote: VoteType) => {
+    if (isVoting || isOffline) return;
+    
+    setIsVoting(true);
+    
+    try {
+      // Soumettre le vote
+      if (defiId) {
+        // Si c'est un vote dans le cadre d'un défi
+        await submitVote('tenue', ensembleId, vote);
+      } else {
+        // Vote pour un ensemble hors défi
+        await submitVote('tenue', ensembleId, vote);
+      }
+      
+      // Mettre à jour l'état local
+      setUserVote(vote);
+      setHasVoted(true);
+      
+      // Mettre à jour le comptage des votes
+      setVotesCount(prev => {
+        const newCounts = { ...prev };
+        
+        // Si l'utilisateur change son vote
+        if (userVote) {
+          if (userVote === 'up') newCounts.up = Math.max(0, newCounts.up - 1);
+          if (userVote === 'down') newCounts.down = Math.max(0, newCounts.down - 1);
+        }
+        
+        // Ajouter le nouveau vote
+        if (vote === 'up') newCounts.up += 1;
+        if (vote === 'down') newCounts.down += 1;
+        
+        return newCounts;
+      });
+      
+      // Appeler le callback de succès si défini
+      if (onVoteSuccess) {
+        onVoteSuccess(vote);
+      }
+      
+      toast({
+        title: "Vote enregistré !",
+        description: `Vous avez ${vote === 'up' ? 'aimé' : 'disliké'} cet ensemble.`,
+        variant: vote === 'up' ? "default" : "destructive",
+      });
+    } catch (err) {
+      console.error("Erreur lors du vote:", err);
       toast({
         title: "Erreur",
-        description: "Impossible d'enregistrer votre vote",
-        variant: "destructive"
+        description: "Impossible d'enregistrer votre vote. Veuillez réessayer.",
+        variant: "destructive",
       });
+    } finally {
+      setIsVoting(false);
     }
-  };
+  }, [isVoting, isOffline, defiId, ensembleId, userVote, onVoteSuccess, toast]);
   
   return {
     ensemble,
-    loading,
-    error,
     vetementsByType,
+    userVote,
+    votesCount,
+    loading,
+    isVoting,
+    isOffline,
+    error,
     hasVoted,
     setHasVoted,
     handleVote,
-    userVote,
-    votesCount,
-    isVoting,
-    isOffline,
     loadVoteData,
     loadEnsemble
   };
-}
+};
