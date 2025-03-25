@@ -39,6 +39,7 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [allVoted, setAllVoted] = useState(false);
   const [votingResults, setVotingResults] = useState<{[key: number]: {id: number, name: string, upVotes: number, totalVotes: number}}>({});
+  const [isVoting, setIsVoting] = useState(false);
   
   // Reset index when dialog opens
   useEffect(() => {
@@ -47,6 +48,7 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
       setShowWinner(false);
       setAllVoted(false);
       setVotingResults({});
+      setIsVoting(false);
     }
   }, [open]);
   
@@ -77,6 +79,8 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
     if (isSubmitting) return;
     
     setIsSubmitting(true);
+    setIsVoting(true);
+    
     try {
       // Pour un vote pouce+, on compte le vote, pour pouce- on n'ajoute pas de point
       await submitVote('ensemble', currentEnsemble.id, vote);
@@ -116,13 +120,18 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
         onVoteSubmitted(currentEnsemble.id, vote);
       }
       
-      // Passer à l'ensemble suivant, sans fermer la fenêtre
-      if (currentIndex < ensembles.length - 1) {
-        setCurrentIndex(prevIndex => prevIndex + 1);
-      } else {
-        // Tous les ensembles ont été votés
-        setAllVoted(true);
-      }
+      // Atteindre une courte pause pour afficher le feedback
+      setTimeout(() => {
+        // Passer à l'ensemble suivant, sans fermer la fenêtre
+        if (currentIndex < ensembles.length - 1) {
+          setCurrentIndex(prevIndex => prevIndex + 1);
+          setIsVoting(false);
+        } else {
+          // Tous les ensembles ont été votés
+          setAllVoted(true);
+          setIsVoting(false);
+        }
+      }, 1000);
     } catch (error) {
       console.error("Erreur lors du vote:", error);
       toast({
@@ -130,13 +139,23 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
         description: "Impossible d'enregistrer votre vote. Veuillez réessayer.",
         variant: "destructive",
       });
+      setIsVoting(false);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog 
+      open={open} 
+      onOpenChange={(newState) => {
+        // Empêcher la fermeture automatique pendant le vote
+        if (isVoting && newState === false) {
+          return; // Ne rien faire si l'utilisateur essaie de fermer pendant un vote
+        }
+        onOpenChange(newState);
+      }}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
           <X className="h-4 w-4" />
