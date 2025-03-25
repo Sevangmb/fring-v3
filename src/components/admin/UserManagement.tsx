@@ -36,6 +36,7 @@ const UserManagement = () => {
     setError(null);
     
     try {
+      // Passer une chaîne vide pour obtenir tous les utilisateurs
       const fetchedUsers = await searchUsersByEmail('');
       setUsers(fetchedUsers);
       

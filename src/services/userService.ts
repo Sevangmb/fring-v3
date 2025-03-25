@@ -21,7 +21,7 @@ export interface User {
  */
 export const searchUsersByEmail = async (email: string): Promise<User[]> => {
   try {
-    // Utilisez la fonction RPC search_admin_users qui a été corrigée pour éviter l'ambiguïté de colonne
+    // Utiliser la fonction RPC search_admin_users qui a été corrigée pour éviter l'ambiguïté de colonne
     const { data, error } = await supabase.rpc('search_admin_users', {
       search_term: email
     });
