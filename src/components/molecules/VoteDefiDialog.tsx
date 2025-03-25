@@ -27,6 +27,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
   defiTitle,
   ensembleId
 }) => {
+  // État local du dialogue
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const [ensemble, setEnsemble] = useState<any>(null);
@@ -35,7 +36,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
   const [vetementsByType, setVetementsByType] = useState<any>({});
   const [hasVoted, setHasVoted] = useState(false);
   
-  // Use 'ensemble' as entity type, not 'defi'
+  // Utilisation du hook useVote spécifiquement pour l'ensemble
   const {
     submitVote,
     userVote,
@@ -46,7 +47,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
   } = useVote('ensemble', ensembleId, {
     onVoteSuccess: (vote) => {
       console.log(`Vote ${vote} soumis avec succès pour l'ensemble ${ensembleId}`);
-      // Ne pas fermer le dialogue après un vote réussi
+      // Ne pas fermer le dialogue, mais passer à l'état "voté"
       setHasVoted(true);
       toast({
         title: "Vote enregistré!",
@@ -56,8 +57,10 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
     }
   });
   
+  // Gestion de la fermeture manuelle
   const handleClose = () => setOpen(false);
   
+  // Gestion de l'ouverture
   const handleOpen = () => {
     console.log(`Ouverture de la boîte de dialogue de vote pour l'ensemble ${ensembleId}`);
     setOpen(true);
@@ -66,6 +69,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
     loadEnsemble();
   };
   
+  // Chargement des données de l'ensemble
   const loadEnsemble = async () => {
     if (!ensembleId || isNaN(ensembleId) || ensembleId <= 0) {
       console.error(`ID d'ensemble invalide: ${ensembleId}`);
@@ -168,11 +172,13 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
     }
   };
   
+  // Fonction pour soumettre un vote
   const handleVote = async (vote: 'up' | 'down') => {
     console.log(`Tentative de vote ${vote} pour l'ensemble ${ensembleId}`);
     try {
       await submitVote(vote);
-      // Le dialogue reste ouvert après le vote
+      // Le vote est traité dans le callback onVoteSuccess du hook useVote
+      // Ne rien faire ici pour éviter de fermer la fenêtre
     } catch (error) {
       console.error("Erreur lors du vote:", error);
       toast({
@@ -184,8 +190,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
   };
   
   const handleContinue = () => {
-    // Implémenter ici la logique pour passer à l'ensemble suivant
-    // Pour l'instant on ferme juste le dialogue
+    // Fermeture manuelle par l'utilisateur uniquement après avoir voté
     setOpen(false);
   };
   
@@ -205,7 +210,18 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
         <span>Voter</span>
       </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog 
+        open={open} 
+        onOpenChange={(newState) => {
+          // Empêcher la fermeture automatique lors du vote
+          // On permet la fermeture manuelle uniquement par bouton/X
+          if (newState === false && !hasVoted) {
+            setOpen(false); // Fermeture manuelle autorisée
+          } else {
+            setOpen(newState);
+          }
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
