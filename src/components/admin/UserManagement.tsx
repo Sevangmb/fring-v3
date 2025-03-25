@@ -152,6 +152,12 @@ const UserManagement = () => {
             title: "Succès",
             description: `Les droits d'administrateur ont été retirés à ${user.email}`,
           });
+        } else if (result.error) {
+          toast({
+            title: "Erreur",
+            description: result.error.message,
+            variant: "destructive",
+          });
         }
       } else {
         result = await makeUserAdmin(user.id);
@@ -160,15 +166,21 @@ const UserManagement = () => {
             title: "Succès",
             description: `${user.email} est maintenant administrateur`,
           });
+        } else if (result.error) {
+          toast({
+            title: "Erreur",
+            description: result.error.message,
+            variant: "destructive",
+          });
         }
       }
       
       // Rafraîchir la liste pour refléter les changements
       fetchAllUsers();
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Erreur",
-        description: "Impossible de modifier le rôle de l'utilisateur",
+        description: error.message || "Impossible de modifier le rôle de l'utilisateur",
         variant: "destructive",
       });
     } finally {

@@ -21,7 +21,7 @@ export interface User {
  */
 export const searchUsersByEmail = async (email: string): Promise<User[]> => {
   try {
-    // Use a secure RPC function to search for users
+    // Utilisez la fonction RPC search_admin_users qui a été corrigée pour éviter l'ambiguïté de colonne
     const { data, error } = await supabase.rpc('search_admin_users', {
       search_term: email
     });
@@ -31,7 +31,14 @@ export const searchUsersByEmail = async (email: string): Promise<User[]> => {
       throw new Error(error.message);
     }
 
-    return data || [];
+    // Transformer les données pour correspondre au type User
+    const users = data || [];
+    return users.map(user => ({
+      id: user.id,
+      email: user.email,
+      created_at: user.created_at,
+      user_metadata: user.user_metadata
+    }));
   } catch (error) {
     console.error("Error in searchUsersByEmail:", error);
     throw error;
@@ -102,18 +109,28 @@ export const updateUserMetadata = async (
  */
 export const getUserById = async (userId: string): Promise<any> => {
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    // D'abord essayer de récupérer l'utilisateur depuis la table auth.users via une fonction RPC
+    const { data: userData, error: userError } = await supabase.rpc('get_user_by_id', {
+      user_id: userId
+    });
+    
+    if (userError) {
+      // Si la fonction RPC n'existe pas, essayer de récupérer depuis les profils
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-    if (error) {
-      console.error("Erreur lors de la récupération de l'utilisateur:", error);
-      throw error;
+      if (profileError) {
+        console.error("Erreur lors de la récupération de l'utilisateur:", profileError);
+        throw profileError;
+      }
+
+      return profileData;
     }
 
-    return data;
+    return userData;
   } catch (error) {
     console.error("Erreur lors de la récupération de l'utilisateur:", error);
     return null;
@@ -129,11 +146,28 @@ export const makeUserAdmin = async (
   userId: string
 ): Promise<{ success: boolean; error: Error | null }> => {
   try {
-    // Implementation pour ajouter un utilisateur à la liste des administrateurs
-    // Cela pourrait être implémenté en ajoutant l'email de l'utilisateur à une table d'administrateurs
-    // ou en définissant un champ is_admin dans la table profiles
+    // Vérifier d'abord si l'utilisateur existe
+    const userExists = await getUserById(userId);
+    if (!userExists) {
+      return {
+        success: false,
+        error: new Error("Utilisateur non trouvé")
+      };
+    }
     
-    // Pour l'instant, c'est juste un placeholder
+    // Appeler la fonction RPC pour promouvoir l'utilisateur
+    const { error } = await supabase.rpc('add_admin_user', {
+      target_user_id: userId
+    });
+    
+    if (error) {
+      console.error("Erreur lors de la promotion de l'utilisateur:", error);
+      return {
+        success: false,
+        error: new Error(error.message)
+      };
+    }
+    
     console.log("Promotion d'utilisateur en admin:", userId);
     
     return {
@@ -141,6 +175,7 @@ export const makeUserAdmin = async (
       error: null,
     };
   } catch (error) {
+    console.error("Erreur lors de la promotion de l'utilisateur:", error);
     return {
       success: false,
       error: error instanceof Error ? error : new Error("Unknown error"),
@@ -157,10 +192,28 @@ export const removeUserAdmin = async (
   userId: string
 ): Promise<{ success: boolean; error: Error | null }> => {
   try {
-    // Implementation pour retirer un utilisateur de la liste des administrateurs
-    // Similaire à makeUserAdmin, mais avec l'opération inverse
+    // Vérifier d'abord si l'utilisateur existe
+    const userExists = await getUserById(userId);
+    if (!userExists) {
+      return {
+        success: false,
+        error: new Error("Utilisateur non trouvé")
+      };
+    }
     
-    // Pour l'instant, c'est juste un placeholder
+    // Appeler la fonction RPC pour rétrograder l'utilisateur
+    const { error } = await supabase.rpc('remove_admin_user', {
+      target_user_id: userId
+    });
+    
+    if (error) {
+      console.error("Erreur lors de la rétrogradation de l'utilisateur:", error);
+      return {
+        success: false,
+        error: new Error(error.message)
+      };
+    }
+    
     console.log("Révocation des droits d'admin:", userId);
     
     return {
@@ -168,6 +221,7 @@ export const removeUserAdmin = async (
       error: null,
     };
   } catch (error) {
+    console.error("Erreur lors de la rétrogradation de l'utilisateur:", error);
     return {
       success: false,
       error: error instanceof Error ? error : new Error("Unknown error"),
