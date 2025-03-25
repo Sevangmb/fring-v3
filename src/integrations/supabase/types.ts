@@ -573,6 +573,17 @@ export type Database = {
         }
         Returns: number
       }
+      search_admin_users: {
+        Args: {
+          search_term: string
+        }
+        Returns: {
+          id: string
+          email: string
+          created_at: string
+          user_metadata: Json
+        }[]
+      }
       search_users_by_email: {
         Args: {
           search_term: string

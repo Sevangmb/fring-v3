@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 
 /**
@@ -21,8 +22,8 @@ export interface User {
 export const searchUsersByEmail = async (email: string): Promise<User[]> => {
   try {
     // Use a secure RPC function to search for users
-    const { data, error } = await supabase.rpc('search_users_by_email', {
-      search_email: email
+    const { data, error } = await supabase.rpc('search_admin_users', {
+      search_term: email
     });
 
     if (error) {
