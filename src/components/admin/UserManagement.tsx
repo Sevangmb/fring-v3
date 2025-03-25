@@ -12,13 +12,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { searchUsersByEmail, makeUserAdmin, removeUserAdmin } from '@/services/userService';
-import { Loader2, Search, UserPlus, Trash2, Edit, AlertCircle, CheckCircle, XCircle, Shield } from 'lucide-react';
+import { Loader2, Search, UserPlus, Trash2, Edit, AlertCircle, Shield } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 const UserManagement = () => {
   const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -56,7 +56,7 @@ const UserManagement = () => {
     }
   };
 
-  const fetchUsers = async () => {
+  const handleSearch = async () => {
     if (searchQuery.length < 2 && searchQuery.length > 0) {
       setError("Veuillez entrer au moins 2 caractères pour la recherche");
       return;
@@ -87,7 +87,7 @@ const UserManagement = () => {
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      fetchUsers();
+      handleSearch();
     }
   };
 
@@ -192,7 +192,7 @@ const UserManagement = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Gestion des utilisateurs</h2>
+        <h2 className="text-xl font-semibold">Liste des utilisateurs</h2>
         <Button size="sm" className="flex items-center gap-2">
           <UserPlus className="h-4 w-4" />
           <span>Nouvel utilisateur</span>
@@ -210,7 +210,7 @@ const UserManagement = () => {
         <Button 
           type="button" 
           size="icon" 
-          onClick={fetchUsers}
+          onClick={handleSearch}
           disabled={loading}
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
