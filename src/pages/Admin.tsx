@@ -9,8 +9,10 @@ const Admin = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
-  // Vérifier si l'utilisateur est un administrateur
-  const isAdmin = user?.email === 'admin@fring.app'; // Simplifié pour l'exemple
+  // Modification: Accepter votre compte actuel comme administrateur
+  // Cette liste pourrait être déplacée dans une configuration ou en base de données
+  const adminEmails = ['admin@fring.app', 'sevans@hotmail.fr', 'pedro@hotmail.fr'];
+  const isAdmin = user?.email && adminEmails.includes(user.email);
 
   if (loading) {
     return (

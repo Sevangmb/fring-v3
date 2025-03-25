@@ -19,8 +19,9 @@ interface NavLinksProps {
 }
 
 const NavLinks: React.FC<NavLinksProps> = ({ unreadCount = 0, user }) => {
-  // Vérifier si l'utilisateur est un administrateur (simplifié pour l'exemple)
-  const isAdmin = user?.email === 'admin@fring.app';
+  // Modification: même liste d'administrateurs que dans Admin.tsx
+  const adminEmails = ['admin@fring.app', 'sevans@hotmail.fr', 'pedro@hotmail.fr'];
+  const isAdmin = user?.email && adminEmails.includes(user.email);
 
   return (
     <>
