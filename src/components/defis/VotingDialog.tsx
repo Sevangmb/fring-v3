@@ -40,6 +40,7 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
   const [allVoted, setAllVoted] = useState(false);
   const [votingResults, setVotingResults] = useState<{[key: number]: {id: number, name: string, upVotes: number, totalVotes: number}}>({});
   const [isVoting, setIsVoting] = useState(false);
+  const [transitionDelay, setTransitionDelay] = useState(false);
   
   // Reset index when dialog opens
   useEffect(() => {
@@ -49,6 +50,7 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
       setAllVoted(false);
       setVotingResults({});
       setIsVoting(false);
+      setTransitionDelay(false);
     }
   }, [open]);
   
@@ -120,7 +122,8 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
         onVoteSubmitted(currentEnsemble.id, vote);
       }
       
-      // Atteindre une courte pause pour afficher le feedback
+      // Mettre en place le délai avant de passer à l'ensemble suivant
+      setTransitionDelay(true);
       setTimeout(() => {
         // Passer à l'ensemble suivant, sans fermer la fenêtre
         if (currentIndex < ensembles.length - 1) {
@@ -131,7 +134,8 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
           setAllVoted(true);
           setIsVoting(false);
         }
-      }, 1000);
+        setTransitionDelay(false);
+      }, 1500); // Augmentation du délai à 1.5 secondes pour donner plus de temps
     } catch (error) {
       console.error("Erreur lors du vote:", error);
       toast({
@@ -140,6 +144,7 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
         variant: "destructive",
       });
       setIsVoting(false);
+      setTransitionDelay(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -149,9 +154,9 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
     <Dialog 
       open={open} 
       onOpenChange={(newState) => {
-        // Empêcher la fermeture automatique pendant le vote
-        if (isVoting && newState === false) {
-          return; // Ne rien faire si l'utilisateur essaie de fermer pendant un vote
+        // Empêcher la fermeture automatique pendant le vote ou la transition
+        if ((isVoting || transitionDelay) && newState === false) {
+          return; // Ne rien faire si l'utilisateur essaie de fermer pendant un vote ou une transition
         }
         onOpenChange(newState);
       }}
