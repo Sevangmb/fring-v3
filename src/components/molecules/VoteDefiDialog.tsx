@@ -9,17 +9,15 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, X, WifiOff, AlertTriangle, ChevronRight } from "lucide-react";
-import VoteButtons from "@/components/defis/voting/VoteButtons";
-import EnsembleContentDisplay from "./EnsembleContentDisplay";
-import { Alert, Box, Typography } from "@mui/material";
-import { useVote } from "@/hooks/useVote";
-import { useToast } from "@/hooks/use-toast";
+import { ThumbsUp, X } from "lucide-react";
+import { useEnsembleVote } from "@/hooks/useEnsembleVote";
+import VoteDialogContent from "./vote-dialog/VoteDialogContent";
+import VoteSuccessView from "./vote-dialog/VoteSuccessView";
 
 interface VoteDefiDialogProps {
   defiId: number;
   defiTitle?: string;
-  ensembleId: number;  // Rendre ensembleId obligatoire
+  ensembleId: number;
 }
 
 const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
@@ -29,32 +27,24 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
 }) => {
   // État local du dialogue
   const [open, setOpen] = useState(false);
-  const { toast } = useToast();
-  const [ensemble, setEnsemble] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [vetementsByType, setVetementsByType] = useState<any>({});
-  const [hasVoted, setHasVoted] = useState(false);
   
-  // Utilisation du hook useVote spécifiquement pour l'ensemble
+  // Utilisation du hook personalisé pour la logique de vote
   const {
-    submitVote,
+    ensemble,
+    loading,
+    error,
+    vetementsByType,
+    hasVoted,
+    setHasVoted,
+    handleVote,
     userVote,
-    votesCount,
-    isLoading: isVoting,
+    isVoting,
     isOffline,
-    loadVoteData
-  } = useVote('ensemble', ensembleId, {
-    onVoteSuccess: (vote) => {
-      console.log(`Vote ${vote} soumis avec succès pour l'ensemble ${ensembleId}`);
-      // Ne pas fermer le dialogue, mais passer à l'état "voté"
-      setHasVoted(true);
-      toast({
-        title: "Vote enregistré!",
-        description: `Votre ${vote === 'up' ? 'vote positif' : 'vote négatif'} a été enregistré.`,
-        variant: vote === 'up' ? "default" : "destructive",
-      });
-    }
+    loadVoteData,
+    loadEnsemble
+  } = useEnsembleVote({ 
+    ensembleId,
+    onVoteSuccess: () => setHasVoted(true)
   });
   
   // Gestion de la fermeture manuelle
@@ -69,134 +59,10 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
     loadEnsemble();
   };
   
-  // Chargement des données de l'ensemble
-  const loadEnsemble = async () => {
-    if (!ensembleId || isNaN(ensembleId) || ensembleId <= 0) {
-      console.error(`ID d'ensemble invalide: ${ensembleId}`);
-      setError("Aucun ensemble disponible pour ce participant");
-      setLoading(false);
-      return;
-    }
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const { supabase } = await import('@/lib/supabase');
-      
-      console.log(`Chargement de l'ensemble ${ensembleId}`);
-      
-      // D'abord, vérifions si cet ensembleId existe réellement
-      const { data: ensembleExists, error: checkError } = await supabase
-        .from('tenues')
-        .select('id')
-        .eq('id', ensembleId)
-        .maybeSingle();
-        
-      if (checkError) {
-        console.error("Erreur lors de la vérification de l'ensemble:", checkError);
-        throw checkError;
-      }
-      
-      if (!ensembleExists) {
-        console.error(`L'ensemble ${ensembleId} n'existe pas`);
-        setError("L'ensemble n'a pas pu être chargé ou n'existe pas.");
-        setLoading(false);
-        return;
-      }
-      
-      const { data, error } = await supabase
-        .from('tenues')
-        .select(`
-          id, 
-          nom, 
-          description, 
-          occasion, 
-          saison, 
-          created_at, 
-          user_id,
-          vetements:tenues_vetements(
-            id,
-            vetement:vetement_id(*),
-            position_ordre
-          )
-        `)
-        .eq('id', ensembleId)
-        .maybeSingle();
-      
-      if (error) {
-        console.error("Erreur lors du chargement de l'ensemble:", error);
-        throw error;
-      }
-      
-      if (!data) {
-        console.error(`Aucun ensemble trouvé avec l'ID ${ensembleId}`);
-        setError("L'ensemble n'a pas pu être chargé ou n'existe pas.");
-        setLoading(false);
-        return;
-      }
-
-      console.log(`Ensemble chargé: ${JSON.stringify(data)}`);
-      setEnsemble(data);
-      
-      // Organize vetements by type
-      const byType: any = {};
-      if (data?.vetements && Array.isArray(data.vetements)) {
-        console.log(`Nombre de vêtements: ${data.vetements.length}`);
-        data.vetements.forEach((item: any) => {
-          if (item.vetement) {
-            const categorie = item.vetement.categorie_id;
-            if (!byType[categorie]) {
-              byType[categorie] = [];
-            }
-            byType[categorie].push(item.vetement);
-          } else {
-            console.log("Item sans vêtement:", item);
-          }
-        });
-      } else {
-        console.log("Pas de vêtements ou format invalide:", data?.vetements);
-        // Si nous n'avons pas de vêtements mais que l'ensemble existe
-        if (data) {
-          setEnsemble(data);
-        }
-      }
-      
-      setVetementsByType(byType);
-      setError(null);
-    } catch (err) {
-      console.error('Error loading ensemble:', err);
-      setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Fonction pour soumettre un vote
-  const handleVote = async (vote: 'up' | 'down') => {
-    console.log(`Tentative de vote ${vote} pour l'ensemble ${ensembleId}`);
-    try {
-      await submitVote(vote);
-      // Le vote est traité dans le callback onVoteSuccess du hook useVote
-      // Ne rien faire ici pour éviter de fermer la fenêtre
-    } catch (error) {
-      console.error("Erreur lors du vote:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'enregistrer votre vote",
-        variant: "destructive"
-      });
-    }
-  };
-  
+  // Gestion de la continuation après vote
   const handleContinue = () => {
-    // Fermeture manuelle par l'utilisateur uniquement après avoir voté
     setOpen(false);
   };
-  
-  const connectionError = isOffline;
-  
-  const hasEmptyEnsemble = ensemble && (!ensemble.vetements || ensemble.vetements.length === 0);
   
   return (
     <>
@@ -236,76 +102,21 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
             </DialogClose>
           </DialogHeader>
           
-          {connectionError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <WifiOff size={16} />
-                <Typography variant="body2">
-                  Problème de connexion. Vérifiez votre connexion internet.
-                </Typography>
-              </Box>
-            </Alert>
-          )}
-          
-          {(!ensemble && !loading && !error) && (
-            <Alert severity="warning" sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <AlertTriangle size={16} />
-                <Typography variant="body2">
-                  Aucun ensemble disponible. L'ensemble n'a pas pu être chargé ou n'existe pas.
-                </Typography>
-              </Box>
-            </Alert>
-          )}
-          
-          {hasEmptyEnsemble && (
-            <Alert severity="warning" sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <AlertTriangle size={16} />
-                <Typography variant="body2">
-                  Cet ensemble ne contient aucun vêtement.
-                </Typography>
-              </Box>
-            </Alert>
-          )}
-          
-          <EnsembleContentDisplay
-            ensemble={ensemble}
-            loading={loading}
-            error={error || ''}
-            vetementsByType={vetementsByType}
-          />
-          
+          {/* Affichage conditionnel : contenu normal ou confirmation de vote */}
           {hasVoted ? (
-            <div className="pt-4 flex flex-col items-center gap-3">
-              <div className="text-center bg-green-50 p-3 rounded-md border border-green-100 text-green-600">
-                <p className="font-medium">Vote enregistré avec succès !</p>
-                <p className="text-sm text-green-500">Merci pour votre participation.</p>
-              </div>
-              <Button 
-                className="w-full flex items-center justify-center gap-1"
-                onClick={handleContinue}
-              >
-                <span>Continuer</span>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+            <VoteSuccessView onContinue={handleContinue} />
           ) : (
-            (ensemble) ? (
-              <VoteButtons
-                userVote={userVote}
-                onVote={handleVote}
-                size="lg"
-                isLoading={isVoting}
-                disabled={loading || isVoting}
-                connectionError={connectionError}
-                className="pt-4"
-              />
-            ) : (
-              <div className="text-center p-4 text-muted-foreground">
-                L'ensemble n'a pas pu être chargé ou n'existe pas.
-              </div>
-            )
+            <VoteDialogContent 
+              ensemble={ensemble}
+              loading={loading}
+              error={error}
+              vetementsByType={vetementsByType}
+              hasVoted={hasVoted}
+              userVote={userVote}
+              isVoting={isVoting}
+              isOffline={isOffline}
+              onVote={handleVote}
+            />
           )}
         </DialogContent>
       </Dialog>
