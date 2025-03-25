@@ -2,7 +2,7 @@
 import React from "react";
 import { Alert, Box, Typography } from "@mui/material";
 import { WifiOff, AlertTriangle } from "lucide-react";
-import VoteButtons from "@/components/voting/VoteButtons";
+import VoteButtons from "@/components/defis/voting/VoteButtons";
 import EnsembleContentDisplay from "../EnsembleContentDisplay";
 
 interface VoteDialogContentProps {

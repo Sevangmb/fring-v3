@@ -10,11 +10,11 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, AlertCircle } from "lucide-react";
-import { searchUsersByEmail } from "@/services/user";
+import { searchUsersByEmail } from "@/services/userService";
 import { envoyerDemandeAmi } from "@/services/amis";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { User } from "@/services/user/types";
+import { User } from "@/services/userService";
 import UserSearchForm from "@/components/atoms/UserSearchForm";
 import UserSearchResults from "@/components/molecules/UserSearchResults";
 import UserSuggestions from "@/components/molecules/UserSuggestions";

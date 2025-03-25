@@ -1,34 +1,44 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Box, Typography } from "@mui/material";
+import React, { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Newspaper, Trophy } from "lucide-react";
+import PageHeader from "../organisms/PageHeader";
+import DefisSection from "../organisms/DefisSection";
+import NewsContent from "../organisms/NewsContent";
 
 const FringPageContent: React.FC = () => {
+  const [activeTab, setActiveTab] = useState("defis");
+  
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Bienvenue sur Fring</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="body1">
-              Fring est une application de gestion de garde-robe qui vous permet de:
-            </Typography>
-            <ul className="list-disc pl-6 mt-2 space-y-1">
-              <li>Organiser vos vêtements et ensembles</li>
-              <li>Créer des tenues pour différentes occasions</li>
-              <li>Partager vos styles avec vos amis</li>
-              <li>Voter pour les tenues des autres utilisateurs</li>
-            </ul>
-          </Box>
+    <>
+      <PageHeader 
+        title="Fring" 
+        description="Découvrez nos défis et les dernières nouvelles" 
+      />
+      
+      <div className="container mx-auto px-4 py-12">
+        <Tabs defaultValue="defis" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
+            <TabsTrigger value="defis" className="flex items-center gap-2">
+              <Trophy className="h-4 w-4" />
+              <span>Défis</span>
+            </TabsTrigger>
+            <TabsTrigger value="nouvelles" className="flex items-center gap-2">
+              <Newspaper className="h-4 w-4" />
+              <span>Nouvelles</span>
+            </TabsTrigger>
+          </TabsList>
           
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            Explorez l'application en utilisant le menu de navigation pour découvrir toutes les fonctionnalités.
-          </Typography>
-        </CardContent>
-      </Card>
-    </div>
+          <TabsContent value="defis" className="space-y-6 animate-fade-in">
+            <DefisSection />
+          </TabsContent>
+          
+          <TabsContent value="nouvelles" className="space-y-6 animate-fade-in">
+            <NewsContent />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </>
   );
 };
 

@@ -68,7 +68,7 @@ export const useEntityVote = ({
     if (!navigator.onLine || connectionError) {
       toast({
         title: "Problème de connexion",
-        description: "Vous êtes hors ligne. Veuillez vérifier votre connexion internet.",
+        description: "Vérifiez votre connexion internet et réessayez.",
         variant: "destructive"
       });
       return false;
@@ -94,7 +94,7 @@ export const useEntityVote = ({
   
   return {
     userVote,
-    votes: votesCount,
+    votes: votesCount, // Returning votesCount as votes to maintain backward compatibility
     score,
     loading: loading || voteLoading,
     isSubmitting,

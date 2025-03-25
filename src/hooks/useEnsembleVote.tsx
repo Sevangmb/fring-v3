@@ -6,7 +6,7 @@ import { getUserVote } from "@/services/votes/getUserVote";
 import { submitVote } from "@/services/votes/submitVote";
 import { getVotesCount } from "@/services/votes/getVotesCount";
 import { fetchEnsembleById } from "@/services/ensemble";
-import { organizeVetementsByType } from "@/components/voting/helpers/vetementOrganizer";
+import { organizeVetementsByType } from "@/components/defis/voting/helpers/vetementOrganizer";
 
 interface UseEnsembleVoteProps {
   ensembleId: number;

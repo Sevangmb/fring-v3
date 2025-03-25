@@ -1,6 +1,7 @@
+
 import { supabase } from '@/lib/supabase';
 import { Ami } from './types';
-import { searchUsersByEmail } from '@/services/user';
+import { searchUsersByEmail } from '@/services/userService';
 
 // Function to enrich friend data with user emails
 export const enrichirAmisAvecEmails = async (amis: Ami[]): Promise<Ami[]> => {

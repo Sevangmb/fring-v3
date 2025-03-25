@@ -3,4 +3,5 @@
 export * from './getUserVote';
 export * from './submitVote';
 export * from './getVotesCount';
+export * from './getWinningEnsemble';
 export * from './types';

@@ -24,8 +24,8 @@ import EnsemblesAmisPage from './pages/EnsemblesAmisPage';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
+import ResultatsDefi from './pages/defis/ResultatsDefi';
 import ListeVetements from './pages/vetements/ListeVetements';
-import Admin from './pages/Admin';
 
 // Import components
 import ProtectedRoute from './components/atoms/ProtectedRoute';
@@ -80,6 +80,7 @@ function App() {
                   </ProtectedRoute>
                 } />
                 
+                {/* Add the missing route for /mes-vetements */}
                 <Route path="/mes-vetements" element={
                   <ProtectedRoute>
                     <MesVetements />
@@ -146,9 +147,9 @@ function App() {
                   </ProtectedRoute>
                 } />
                 
-                <Route path="/admin" element={
+                <Route path="/defis/:id/resultats" element={
                   <ProtectedRoute>
-                    <Admin />
+                    <ResultatsDefi />
                   </ProtectedRoute>
                 } />
                 

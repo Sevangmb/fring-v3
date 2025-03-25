@@ -33,6 +33,12 @@ export const submitVote = async (
       .select('id, vote')
       .eq(idField, entityId)
       .eq('user_id', session.user.id);
+      
+    // Special handling for defi votes
+    if (entityType === 'defi') {
+      // For direct defi votes, we need to check where ensemble_id is null
+      query.is('ensemble_id', null);
+    }
     
     const { data: existingVote, error: fetchError } = await fetchWithRetry(
       async () => await query.maybeSingle(),
@@ -60,6 +66,12 @@ export const submitVote = async (
         user_id: session.user.id,
         vote
       };
+      
+      // Special handling for direct defi votes
+      if (entityType === 'defi') {
+        // For direct defi votes, we set ensemble_id to null explicitly
+        voteData.ensemble_id = null;
+      }
       
       const { error: insertError } = await fetchWithRetry(
         async () => await supabase.from(tableName).insert(voteData),

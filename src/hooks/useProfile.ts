@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -5,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/lib/supabase";
 import { ProfileFormValues, profileSchema } from "@/components/profile/ProfileForm";
-import { uploadAvatar } from "@/services/user";
+import { uploadAvatar } from "@/services/userService";
 
 export const useProfile = () => {
   const { user, signOut } = useAuth();
@@ -31,6 +32,7 @@ export const useProfile = () => {
     },
   });
 
+  // Mettre à jour le formulaire quand l'utilisateur change
   useEffect(() => {
     if (user) {
       form.reset({
@@ -41,10 +43,12 @@ export const useProfile = () => {
     }
   }, [user, form]);
 
+  // Charger les statistiques de l'utilisateur
   useEffect(() => {
     if (user) {
       const fetchUserStats = async () => {
         try {
+          // Récupérer le nombre de vêtements
           const { count: vetementCount, error: vetementError } = await supabase
             .from('vetements')
             .select('id', { count: 'exact', head: true })
@@ -52,6 +56,7 @@ export const useProfile = () => {
           
           if (vetementError) throw vetementError;
           
+          // Récupérer le nombre d'ensembles
           const { count: ensembleCount, error: ensembleError } = await supabase
             .from('tenues')
             .select('id', { count: 'exact', head: true })
@@ -59,6 +64,7 @@ export const useProfile = () => {
           
           if (ensembleError) throw ensembleError;
           
+          // Récupérer le nombre d'amis
           const { count: friendsCount, error: friendsError } = await supabase
             .from('amis')
             .select('id', { count: 'exact', head: true })
@@ -67,6 +73,7 @@ export const useProfile = () => {
           
           if (friendsError) throw friendsError;
           
+          // Récupérer le nombre de favoris
           const { count: favorisCount, error: favorisError } = await supabase
             .from('favoris')
             .select('id', { count: 'exact', head: true })
@@ -93,6 +100,7 @@ export const useProfile = () => {
 
   const toggleEdit = () => {
     if (isEditing) {
+      // Réinitialiser le formulaire en cas d'annulation
       form.reset({
         name: user?.user_metadata?.name || "",
         email: user?.email || "",
@@ -164,6 +172,7 @@ export const useProfile = () => {
   const onSubmit = async (data: ProfileFormValues) => {
     setIsLoading(true);
     try {
+      // Update user name
       const updates = {
         data: {
           name: data.name,
@@ -178,6 +187,7 @@ export const useProfile = () => {
         throw error;
       }
 
+      // Handle avatar upload
       try {
         await processAvatarUpload();
         
@@ -231,6 +241,8 @@ export const useProfile = () => {
   };
 
   const getLastActivityDate = () => {
+    // Normalement, on récupérerait cette information depuis la base de données
+    // Pour l'instant, nous utilisons la date actuelle comme exemple
     const now = new Date();
     return now.toLocaleDateString('fr-FR', {
       day: 'numeric',

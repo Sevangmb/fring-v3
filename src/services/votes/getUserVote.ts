@@ -26,6 +26,12 @@ export const getUserVote = async (
       .eq(idField, entityId)
       .eq('user_id', session.user.id);
       
+    // Special handling for defi votes
+    if (entityType === 'defi') {
+      // For direct defi votes, we need to check where ensemble_id is null
+      query.is('ensemble_id', null);
+    }
+    
     const { data, error } = await fetchWithRetry(
       async () => await query.maybeSingle(),
       3
