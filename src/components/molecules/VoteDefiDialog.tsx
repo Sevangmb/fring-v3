@@ -9,7 +9,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, X, WifiOff, AlertTriangle } from "lucide-react";
+import { ThumbsUp, X, WifiOff, AlertTriangle, ChevronRight } from "lucide-react";
 import VoteButtons from "@/components/defis/voting/VoteButtons";
 import EnsembleContentDisplay from "./EnsembleContentDisplay";
 import { Alert, Box, Typography } from "@mui/material";
@@ -33,6 +33,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [vetementsByType, setVetementsByType] = useState<any>({});
+  const [hasVoted, setHasVoted] = useState(false);
   
   // Use 'ensemble' as entity type, not 'defi'
   const {
@@ -45,8 +46,13 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
   } = useVote('ensemble', ensembleId, {
     onVoteSuccess: (vote) => {
       console.log(`Vote ${vote} soumis avec succès pour l'ensemble ${ensembleId}`);
-      // Close dialog after successful vote
-      setOpen(false);
+      // Ne pas fermer le dialogue après un vote réussi
+      setHasVoted(true);
+      toast({
+        title: "Vote enregistré!",
+        description: `Votre ${vote === 'up' ? 'vote positif' : 'vote négatif'} a été enregistré.`,
+        variant: vote === 'up' ? "default" : "destructive",
+      });
     }
   });
   
@@ -55,6 +61,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
   const handleOpen = () => {
     console.log(`Ouverture de la boîte de dialogue de vote pour l'ensemble ${ensembleId}`);
     setOpen(true);
+    setHasVoted(false);
     loadVoteData();
     loadEnsemble();
   };
@@ -165,6 +172,7 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
     console.log(`Tentative de vote ${vote} pour l'ensemble ${ensembleId}`);
     try {
       await submitVote(vote);
+      // Le dialogue reste ouvert après le vote
     } catch (error) {
       console.error("Erreur lors du vote:", error);
       toast({
@@ -173,6 +181,12 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
         variant: "destructive"
       });
     }
+  };
+  
+  const handleContinue = () => {
+    // Implémenter ici la logique pour passer à l'ensemble suivant
+    // Pour l'instant on ferme juste le dialogue
+    setOpen(false);
   };
   
   const connectionError = isOffline;
@@ -246,20 +260,36 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
             vetementsByType={vetementsByType}
           />
           
-          {(ensemble) ? (
-            <VoteButtons
-              userVote={userVote}
-              onVote={handleVote}
-              size="lg"
-              isLoading={isVoting}
-              disabled={loading || isVoting}
-              connectionError={connectionError}
-              className="pt-4"
-            />
-          ) : (
-            <div className="text-center p-4 text-muted-foreground">
-              L'ensemble n'a pas pu être chargé ou n'existe pas.
+          {hasVoted ? (
+            <div className="pt-4 flex flex-col items-center gap-3">
+              <div className="text-center bg-green-50 p-3 rounded-md border border-green-100 text-green-600">
+                <p className="font-medium">Vote enregistré avec succès !</p>
+                <p className="text-sm text-green-500">Merci pour votre participation.</p>
+              </div>
+              <Button 
+                className="w-full flex items-center justify-center gap-1"
+                onClick={handleContinue}
+              >
+                <span>Continuer</span>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
+          ) : (
+            (ensemble) ? (
+              <VoteButtons
+                userVote={userVote}
+                onVote={handleVote}
+                size="lg"
+                isLoading={isVoting}
+                disabled={loading || isVoting}
+                connectionError={connectionError}
+                className="pt-4"
+              />
+            ) : (
+              <div className="text-center p-4 text-muted-foreground">
+                L'ensemble n'a pas pu être chargé ou n'existe pas.
+              </div>
+            )
           )}
         </DialogContent>
       </Dialog>
