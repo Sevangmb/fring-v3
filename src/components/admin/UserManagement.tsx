@@ -1,193 +1,33 @@
 
-import React, { useState, useEffect } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { searchUsersByEmail, makeUserAdmin, removeUserAdmin } from '@/services/userService';
-import { Loader2, Search, UserPlus, Trash2, Edit, AlertCircle, Shield } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { AlertCircle, UserPlus } from 'lucide-react';
+import AdminUserSearch from '@/components/molecules/AdminUserSearch';
+import AdminUsersTable from '@/components/organisms/AdminUsersTable';
+import EditUserDialog from '@/components/molecules/EditUserDialog';
+import DeleteUserDialog from '@/components/molecules/DeleteUserDialog';
+import { useUserManagement } from '@/hooks/useUserManagement';
 
 const UserManagement = () => {
-  const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const { toast } = useToast();
-
-  // Charger tous les utilisateurs au chargement de la page
-  useEffect(() => {
-    fetchAllUsers();
-  }, []);
-
-  const fetchAllUsers = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Passer une chaîne vide pour obtenir tous les utilisateurs
-      const fetchedUsers = await searchUsersByEmail('');
-      setUsers(fetchedUsers);
-      
-      if (fetchedUsers.length === 0) {
-        setError("Aucun utilisateur trouvé dans le système");
-      }
-    } catch (error: any) {
-      console.error('Erreur lors de la récupération des utilisateurs:', error);
-      setError(error.message || "Impossible de récupérer les utilisateurs");
-      toast({
-        title: "Erreur",
-        description: "Impossible de récupérer les utilisateurs",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = async () => {
-    if (searchQuery.length < 2 && searchQuery.length > 0) {
-      setError("Veuillez entrer au moins 2 caractères pour la recherche");
-      return;
-    }
-    
-    setError(null);
-    setLoading(true);
-    
-    try {
-      const fetchedUsers = await searchUsersByEmail(searchQuery);
-      setUsers(fetchedUsers);
-      
-      if (fetchedUsers.length === 0) {
-        setError(`Aucun utilisateur trouvé avec le terme "${searchQuery}"`);
-      }
-    } catch (error: any) {
-      console.error('Erreur lors de la recherche des utilisateurs:', error);
-      setError(error.message || "Impossible de récupérer les utilisateurs");
-      toast({
-        title: "Erreur",
-        description: "Impossible de récupérer les utilisateurs",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
-
-  const handleEdit = (user: any) => {
-    setSelectedUser(user);
-    setIsEditDialogOpen(true);
-  };
-
-  const handleDelete = (user: any) => {
-    setSelectedUser(user);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const confirmEdit = async () => {
-    try {
-      // Ici, on pourrait implémenter la mise à jour réelle des données utilisateur
-      toast({
-        title: "Succès",
-        description: `Les modifications pour ${selectedUser.email} ont été enregistrées`,
-      });
-      setIsEditDialogOpen(false);
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de modifier l'utilisateur",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const confirmDelete = async () => {
-    try {
-      // Ici, on pourrait implémenter la suppression réelle de l'utilisateur
-      toast({
-        title: "Succès",
-        description: `L'utilisateur ${selectedUser.email} a été supprimé`,
-      });
-      setIsDeleteDialogOpen(false);
-      
-      // Rafraîchir la liste après suppression
-      const updatedUsers = users.filter(user => user.id !== selectedUser.id);
-      setUsers(updatedUsers);
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de supprimer l'utilisateur",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const toggleAdminStatus = async (user: any) => {
-    try {
-      setLoading(true);
-      
-      let result;
-      const isAdmin = user.email && ['admin@fring.app', 'sevans@hotmail.fr', 'pedro@hotmail.fr'].includes(user.email);
-      
-      if (isAdmin) {
-        result = await removeUserAdmin(user.id);
-        if (result.success) {
-          toast({
-            title: "Succès",
-            description: `Les droits d'administrateur ont été retirés à ${user.email}`,
-          });
-        } else if (result.error) {
-          toast({
-            title: "Erreur",
-            description: result.error.message,
-            variant: "destructive",
-          });
-        }
-      } else {
-        result = await makeUserAdmin(user.id);
-        if (result.success) {
-          toast({
-            title: "Succès",
-            description: `${user.email} est maintenant administrateur`,
-          });
-        } else if (result.error) {
-          toast({
-            title: "Erreur",
-            description: result.error.message,
-            variant: "destructive",
-          });
-        }
-      }
-      
-      // Rafraîchir la liste pour refléter les changements
-      fetchAllUsers();
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message || "Impossible de modifier le rôle de l'utilisateur",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    users,
+    loading,
+    searchQuery,
+    setSearchQuery,
+    error,
+    isEditDialogOpen,
+    setIsEditDialogOpen,
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
+    selectedUser,
+    handleSearch,
+    handleEdit,
+    handleDelete,
+    confirmEdit,
+    confirmDelete,
+    toggleAdminStatus
+  } = useUserManagement();
 
   return (
     <div className="space-y-6">
@@ -199,23 +39,12 @@ const UserManagement = () => {
         </Button>
       </div>
 
-      <div className="flex w-full max-w-sm items-center space-x-2 mb-4">
-        <Input
-          placeholder="Rechercher par email..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyPress={handleKeyPress}
-          className="w-full"
-        />
-        <Button 
-          type="button" 
-          size="icon" 
-          onClick={handleSearch}
-          disabled={loading}
-        >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-        </Button>
-      </div>
+      <AdminUserSearch
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        handleSearch={handleSearch}
+        loading={loading}
+      />
 
       {error && (
         <Alert variant="destructive" className="mb-4">
@@ -224,115 +53,28 @@ const UserManagement = () => {
         </Alert>
       )}
 
-      <div className="border rounded-md">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Date d'inscription</TableHead>
-              <TableHead>Rôle</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.length > 0 ? (
-              users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-mono text-xs">{user.id.substring(0, 8)}...</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    {user.email && ['admin@fring.app', 'sevans@hotmail.fr', 'pedro@hotmail.fr'].includes(user.email) 
-                      ? <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary"><Shield className="h-3 w-3 mr-1" />Admin</span>
-                      : <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">Utilisateur</span>
-                    }
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => toggleAdminStatus(user)}
-                        title={user.email && ['admin@fring.app', 'sevans@hotmail.fr', 'pedro@hotmail.fr'].includes(user.email) ? "Révoquer les droits d'administrateur" : "Promouvoir administrateur"}
-                      >
-                        <Shield className={`h-4 w-4 ${user.email && ['admin@fring.app', 'sevans@hotmail.fr', 'pedro@hotmail.fr'].includes(user.email) ? 'text-primary' : 'text-muted-foreground'}`} />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleEdit(user)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleDelete(user)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center h-24">
-                  {loading ? (
-                    <div className="flex justify-center">
-                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : (
-                    error ? null : "Aucun utilisateur trouvé"
-                  )}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <AdminUsersTable
+        users={users}
+        loading={loading}
+        error={error}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onToggleAdmin={toggleAdminStatus}
+      />
       
-      {/* Dialogue de modification */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Modifier l'utilisateur</DialogTitle>
-            <DialogDescription>
-              Modifier les informations de {selectedUser?.email}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground mb-4">
-              Cette fonctionnalité sera bientôt disponible.
-            </p>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Annuler</Button>
-            <Button onClick={confirmEdit}>Enregistrer</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditUserDialog
+        isOpen={isEditDialogOpen}
+        setIsOpen={setIsEditDialogOpen}
+        selectedUser={selectedUser}
+        onConfirm={confirmEdit}
+      />
       
-      {/* Dialogue de suppression */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Supprimer l'utilisateur</DialogTitle>
-            <DialogDescription>
-              Êtes-vous sûr de vouloir supprimer l'utilisateur {selectedUser?.email} ?
-              Cette action est irréversible.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Annuler</Button>
-            <Button variant="destructive" onClick={confirmDelete}>Supprimer</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteUserDialog
+        isOpen={isDeleteDialogOpen}
+        setIsOpen={setIsDeleteDialogOpen}
+        selectedUser={selectedUser}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 };
