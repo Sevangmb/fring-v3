@@ -25,6 +25,7 @@ import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
 import ListeVetements from './pages/vetements/ListeVetements';
+import Admin from './pages/Admin';
 
 // Import components
 import ProtectedRoute from './components/atoms/ProtectedRoute';
@@ -79,7 +80,6 @@ function App() {
                   </ProtectedRoute>
                 } />
                 
-                {/* Add the missing route for /mes-vetements */}
                 <Route path="/mes-vetements" element={
                   <ProtectedRoute>
                     <MesVetements />
@@ -143,6 +143,12 @@ function App() {
                 <Route path="/dashboard" element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/admin" element={
+                  <ProtectedRoute>
+                    <Admin />
                   </ProtectedRoute>
                 } />
                 
