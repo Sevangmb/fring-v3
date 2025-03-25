@@ -24,36 +24,22 @@ const NavLinks: React.FC<NavLinksProps> = ({ unreadCount = 0, user }) => {
 
   return (
     <>
-      <NavItem to="/" icon={<Home size={18} />}>
-        Accueil
-      </NavItem>
+      <NavItem href="/" label="Accueil" icon={<Home size={18} />} />
 
       {user && (
         <>
-          <NavItem to="/mes-amis" icon={<Users size={18} />}>
-            Amis
-          </NavItem>
+          <NavItem href="/mes-amis" label="Amis" icon={<Users size={18} />} />
           
-          <NavItem to="/messages" icon={<MessageSquare size={18} />} notificationCount={unreadCount}>
-            Messages
-          </NavItem>
+          <NavItem href="/messages" label="Messages" icon={<MessageSquare size={18} />} badge={unreadCount} />
           
-          <NavItem to="/mes-vetements" icon={<ShoppingBag size={18} />}>
-            Vêtements
-          </NavItem>
+          <NavItem href="/mes-vetements" label="Vêtements" icon={<ShoppingBag size={18} />} />
           
-          <NavItem to="/ensembles/ajouter" icon={<ShoppingCart size={18} />}>
-            Ensembles
-          </NavItem>
+          <NavItem href="/ensembles/ajouter" label="Ensembles" icon={<ShoppingCart size={18} />} />
           
-          <NavItem to="/mes-favoris" icon={<Star size={18} />}>
-            Favoris
-          </NavItem>
+          <NavItem href="/mes-favoris" label="Favoris" icon={<Star size={18} />} />
           
           {isAdmin && (
-            <NavItem to="/admin" icon={<Shield size={18} />} className="text-primary">
-              Admin
-            </NavItem>
+            <NavItem href="/admin" label="Admin" icon={<Shield size={18} />} className="text-primary" />
           )}
         </>
       )}
