@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Text } from "@/components/atoms/Typography";
-import { Award, Vote, Shirt } from "lucide-react";
+import { Award, Vote, Shirt, Trophy } from "lucide-react";
 import { DefiState } from "./types";
 import ParticiperDefiDialog from "../ParticiperDefiDialog";
 import { Button } from "@/components/ui/button";
@@ -47,8 +47,8 @@ const CurrentDefiFooter: React.FC<CurrentDefiFooterProps> = ({
     <div className="flex w-full justify-between items-center">
       <div className="flex items-center gap-4">
         <Text className="text-sm text-muted-foreground">
-          <Award className="h-4 w-4 inline mr-1" />
-          {displayParticipantsCount} participant{displayParticipantsCount > 1 ? 's' : ''}
+          <Trophy className="h-4 w-4 inline mr-1" />
+          {displayParticipantsCount} participant{displayParticipantsCount > 1 ? 's' : ''} au concours
         </Text>
         {state.votesCount > 0 && (
           <Text className="text-sm text-muted-foreground">
@@ -59,7 +59,7 @@ const CurrentDefiFooter: React.FC<CurrentDefiFooterProps> = ({
         {winner && (
           <Text className="text-sm font-medium text-primary">
             <Award className="h-4 w-4 inline mr-1 text-yellow-500" />
-            Gagnant: {winner.ensembleName}
+            Vainqueur: {winner.ensembleName}
           </Text>
         )}
       </div>
@@ -69,7 +69,7 @@ const CurrentDefiFooter: React.FC<CurrentDefiFooterProps> = ({
             {ensembleName && (
               <div className="flex items-center gap-1 text-sm text-primary">
                 <Shirt className="h-4 w-4" />
-                <span>{ensembleName}</span>
+                <span>Votre participation: {ensembleName}</span>
               </div>
             )}
             <Button 
@@ -82,7 +82,7 @@ const CurrentDefiFooter: React.FC<CurrentDefiFooterProps> = ({
               <Vote className="h-4 w-4" />
               <span>
                 {allVoted ? 
-                  "Tous les votes effectués" : 
+                  "Voir les résultats" : 
                   `Voter (${votedCount}/${totalCount})`
                 }
               </span>

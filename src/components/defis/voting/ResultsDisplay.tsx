@@ -32,10 +32,10 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ winner, votingResults, 
     <>
       <DialogHeader>
         <DialogTitle className="text-center text-primary">
-          Votes terminés
+          Résultats du concours
         </DialogTitle>
         <DialogDescription className="text-center">
-          Résultats du vote pour ce défi.
+          Découvrez le gagnant du défi selon les votes des participants.
         </DialogDescription>
       </DialogHeader>
       
@@ -53,14 +53,14 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ winner, votingResults, 
                   {winner.upVotes}
                 </span>
                 <span className="text-muted-foreground font-medium">
-                  sur {winner.upVotes + winner.downVotes} votes
+                  sur {winner.upVotes + winner.downVotes} votes au total
                 </span>
               </div>
             </div>
             
             {localWinner && (
               <div className="mt-4">
-                <h4 className="font-medium text-sm text-muted-foreground">Votes pour cette session:</h4>
+                <h4 className="font-medium text-sm text-muted-foreground">Résultats de vos votes:</h4>
                 <div className="mt-2">
                   {Object.values(votingResults).map(result => (
                     <div key={result.id} className="flex justify-between items-center py-1">
@@ -72,7 +72,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ winner, votingResults, 
                           <ThumbsUp className="h-3 w-3 mr-1" /> {result.upVotes}
                         </span>
                         <span className="text-muted-foreground text-sm">
-                          /{result.totalVotes} votes
+                          /{result.totalVotes} votes au total
                         </span>
                       </span>
                     </div>
@@ -83,7 +83,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ winner, votingResults, 
           </div>
         ) : (
           <div className="text-center py-6 text-muted-foreground">
-            Aucun résultat disponible pour le moment.
+            Les votes sont encore en cours. Revenez plus tard pour voir les résultats du concours.
           </div>
         )}
         

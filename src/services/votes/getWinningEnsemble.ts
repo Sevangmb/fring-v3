@@ -52,7 +52,8 @@ export const getWinningEnsemble = async (defiId: number): Promise<EnsembleVoteRe
     
     // Calculer le score pour chaque ensemble et trouver le gagnant
     const results: EnsembleVoteResults[] = Object.entries(voteCounts).map(([ensembleId, votes]) => {
-      const score = votes.up - votes.down;
+      // Le score est simplement le nombre de votes positifs (plus il est élevé, mieux c'est)
+      const score = votes.up;
       return {
         ensembleId: parseInt(ensembleId),
         upVotes: votes.up,
@@ -83,18 +84,16 @@ export const getWinningEnsemble = async (defiId: number): Promise<EnsembleVoteRe
       if (ensembleData) {
         winningEnsemble.ensembleName = ensembleData.nom;
         
-        // Fix: Handle profiles data correctly - it could be null, an array, or an object
+        // Handle profiles data correctly
         const profiles = ensembleData.profiles;
         
         if (profiles) {
           // Type guard to determine if profiles is an array
           if (Array.isArray(profiles)) {
-            // If it's an array, check if it has elements before accessing email
             winningEnsemble.userName = profiles.length > 0 && profiles[0]?.email 
               ? profiles[0].email 
               : 'Utilisateur inconnu';
           } else if (typeof profiles === 'object') {
-            // If it's an object, directly access the email property
             winningEnsemble.userName = (profiles as any).email || 'Utilisateur inconnu';
           } else {
             winningEnsemble.userName = 'Utilisateur inconnu';

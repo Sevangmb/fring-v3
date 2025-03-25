@@ -81,12 +81,12 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
       // Pour un vote pouce+, on compte le vote, pour pouce- on n'ajoute pas de point
       await submitVote('ensemble', currentEnsemble.id, vote);
       
-      // Mettre à jour les résultats de vote (seulement pour les votes positifs)
-      if (vote === 'up') {
-        setVotingResults(prev => {
-          const ensembleName = currentEnsemble.nom || "Ensemble sans nom";
-          const currentVotes = prev[currentEnsemble.id] || { id: currentEnsemble.id, name: ensembleName, upVotes: 0, totalVotes: 0 };
-          
+      // Mettre à jour les résultats de vote
+      setVotingResults(prev => {
+        const ensembleName = currentEnsemble.nom || "Ensemble sans nom";
+        const currentVotes = prev[currentEnsemble.id] || { id: currentEnsemble.id, name: ensembleName, upVotes: 0, totalVotes: 0 };
+        
+        if (vote === 'up') {
           return {
             ...prev,
             [currentEnsemble.id]: {
@@ -95,13 +95,7 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
               totalVotes: currentVotes.totalVotes + 1
             }
           };
-        });
-      } else {
-        // Pour les votes négatifs, on augmente juste le compteur total
-        setVotingResults(prev => {
-          const ensembleName = currentEnsemble.nom || "Ensemble sans nom";
-          const currentVotes = prev[currentEnsemble.id] || { id: currentEnsemble.id, name: ensembleName, upVotes: 0, totalVotes: 0 };
-          
+        } else {
           return {
             ...prev,
             [currentEnsemble.id]: {
@@ -109,8 +103,8 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
               totalVotes: currentVotes.totalVotes + 1
             }
           };
-        });
-      }
+        }
+      });
       
       toast({
         title: "Vote enregistré !",

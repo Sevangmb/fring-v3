@@ -32,7 +32,7 @@ const VotingForm: React.FC<VotingFormProps> = ({
           Voter pour {currentEnsemble.nom}
         </DialogTitle>
         <DialogDescription className="text-center">
-          Donnez votre avis sur cet ensemble.
+          Donnez votre avis sur cet ensemble pour le concours.
         </DialogDescription>
       </DialogHeader>
       
@@ -46,8 +46,8 @@ const VotingForm: React.FC<VotingFormProps> = ({
       {/* Progress bar for voting progress */}
       <div className="mt-2 mb-2">
         <div className="flex justify-between text-xs text-muted-foreground mb-1">
-          <span>{currentIndex + 1} sur {totalEnsembles}</span>
-          <span>{Math.round((currentIndex + 1) / totalEnsembles * 100)}%</span>
+          <span>Ensemble {currentIndex + 1} sur {totalEnsembles}</span>
+          <span>{Math.round((currentIndex + 1) / totalEnsembles * 100)}% complété</span>
         </div>
         <Progress value={(currentIndex + 1) / totalEnsembles * 100} className="h-2" />
       </div>
@@ -81,7 +81,7 @@ const VotingForm: React.FC<VotingFormProps> = ({
       </div>
       
       <div className="mt-2 text-center text-sm text-muted-foreground">
-        {currentIndex + 1} sur {totalEnsembles} ensembles
+        Ensemble {currentIndex + 1} sur {totalEnsembles} - Votre vote compte pour le classement final!
       </div>
     </>
   );
