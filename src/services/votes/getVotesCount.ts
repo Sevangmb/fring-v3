@@ -33,12 +33,6 @@ export const getVotesCount = async (
       .from(tableName)
       .select(`${voteField}`)
       .eq(idField, entityId);
-      
-    // Special handling for defi votes
-    if (entityType === 'defi') {
-      // For direct defi votes, we count where ensemble_id is null
-      query.is('ensemble_id', null);
-    }
     
     // Obtenir les votes avec retry
     const { data, error } = await fetchWithRetry(
