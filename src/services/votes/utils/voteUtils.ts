@@ -22,6 +22,8 @@ export const getEntityTableInfo = (entityType: string): { tableName: string; idF
       return { tableName: 'vetement_votes', idField: 'vetement_id' };
     case 'tenue':
       return { tableName: 'tenue_votes', idField: 'tenue_id' };
+    case 'defi':
+      return { tableName: 'defi_votes', idField: 'defi_id' };
     default:
       throw new Error(`Type d'entité non supporté: ${entityType}`);
   }

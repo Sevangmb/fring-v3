@@ -24,7 +24,6 @@ import EnsemblesAmisPage from './pages/EnsemblesAmisPage';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
-import ResultatsDefi from './pages/defis/ResultatsDefi';
 import ListeVetements from './pages/vetements/ListeVetements';
 
 // Import components
@@ -144,12 +143,6 @@ function App() {
                 <Route path="/dashboard" element={
                   <ProtectedRoute>
                     <Dashboard />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/defis/:id/resultats" element={
-                  <ProtectedRoute>
-                    <ResultatsDefi />
                   </ProtectedRoute>
                 } />
                 

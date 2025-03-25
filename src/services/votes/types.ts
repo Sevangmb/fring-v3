@@ -1,7 +1,7 @@
 
 export type VoteType = 'up' | 'down' | null;
 
-export type EntityType = 'vetement' | 'tenue';
+export type EntityType = 'vetement' | 'tenue' | 'defi';
 
 export interface VotesCount {
   up: number;
