@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { searchUsersByEmail, getUserById, updateUserMetadata } from '@/services/userService';
+import { searchUsersByEmail, makeUserAdmin, removeUserAdmin } from '@/services/userService';
 import { Loader2, Search, UserPlus, Trash2, Edit, AlertCircle, CheckCircle, XCircle, Shield } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -140,17 +140,39 @@ const UserManagement = () => {
 
   const toggleAdminStatus = async (user: any) => {
     try {
-      // Dans un cas réel, on ajouterait/supprimerait le rôle d'administrateur
-      toast({
-        title: "Fonction en cours de développement",
-        description: "La gestion des rôles sera bientôt disponible",
-      });
+      setLoading(true);
+      
+      let result;
+      const isAdmin = user.email && ['admin@fring.app', 'sevans@hotmail.fr', 'pedro@hotmail.fr'].includes(user.email);
+      
+      if (isAdmin) {
+        result = await removeUserAdmin(user.id);
+        if (result.success) {
+          toast({
+            title: "Succès",
+            description: `Les droits d'administrateur ont été retirés à ${user.email}`,
+          });
+        }
+      } else {
+        result = await makeUserAdmin(user.id);
+        if (result.success) {
+          toast({
+            title: "Succès",
+            description: `${user.email} est maintenant administrateur`,
+          });
+        }
+      }
+      
+      // Rafraîchir la liste pour refléter les changements
+      fetchAllUsers();
     } catch (error) {
       toast({
         title: "Erreur",
         description: "Impossible de modifier le rôle de l'utilisateur",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 

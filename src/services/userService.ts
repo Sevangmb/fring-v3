@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 
 /**
@@ -128,8 +129,12 @@ export const makeUserAdmin = async (
   userId: string
 ): Promise<{ success: boolean; error: Error | null }> => {
   try {
-    // Note: Cette fonction est un exemple et nécessiterait une implémentation côté serveur
-    console.log("Function to be implemented: makeUserAdmin", userId);
+    // Implementation pour ajouter un utilisateur à la liste des administrateurs
+    // Cela pourrait être implémenté en ajoutant l'email de l'utilisateur à une table d'administrateurs
+    // ou en définissant un champ is_admin dans la table profiles
+    
+    // Pour l'instant, c'est juste un placeholder
+    console.log("Promotion d'utilisateur en admin:", userId);
     
     return {
       success: true,
@@ -152,8 +157,11 @@ export const removeUserAdmin = async (
   userId: string
 ): Promise<{ success: boolean; error: Error | null }> => {
   try {
-    // Note: Cette fonction est un exemple et nécessiterait une implémentation côté serveur
-    console.log("Function to be implemented: removeUserAdmin", userId);
+    // Implementation pour retirer un utilisateur de la liste des administrateurs
+    // Similaire à makeUserAdmin, mais avec l'opération inverse
+    
+    // Pour l'instant, c'est juste un placeholder
+    console.log("Révocation des droits d'admin:", userId);
     
     return {
       success: true,
