@@ -4,9 +4,9 @@ import { ThumbsUp, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { VoteType, EntityType } from "@/services/votes/types";
-import VoteButtons from "@/components/defis/voting/VoteButtons";
 import { useVote } from "@/hooks/useVote";
 import { Typography, Box } from "@mui/material";
+import VoteButtons from "@/components/voting/VoteButtons";
 
 interface VoterDialogProps {
   elementId: number;
@@ -57,7 +57,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
   };
 
   const dialogTitle = title || `Voter pour cet ${elementType === 'tenue' ? 'ensemble' : 'élément'}`;
-  const dialogDescription = description || `Donnez votre avis sur ce${elementType === 'tenue' ? 't ensemble' : ' défi'}.`;
+  const dialogDescription = description || `Donnez votre avis sur cet élément.`;
 
   return (
     <>
