@@ -1,7 +1,11 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { searchUsersByEmail, makeUserAdmin, removeUserAdmin } from '@/services/userService';
+import { 
+  searchUsersByEmail, 
+  makeUserAdmin, 
+  removeUserAdmin 
+} from '@/services/user';
 
 export const useUserManagement = () => {
   const [users, setUsers] = useState<any[]>([]);
