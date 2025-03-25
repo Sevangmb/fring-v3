@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Users } from "lucide-react";
-import { User } from "@/services/userService";
+import { User } from "@/services/user/types";
 import UserItem from "@/components/atoms/UserItem";
 
 interface UserSuggestionsProps {

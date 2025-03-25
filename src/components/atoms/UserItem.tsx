@@ -3,7 +3,7 @@ import React from "react";
 import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { User } from "@/services/userService";
+import { User } from "@/services/user/types";
 
 interface UserItemProps {
   user: User;
