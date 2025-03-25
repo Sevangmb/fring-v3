@@ -106,7 +106,7 @@ export type Database = {
         Row: {
           created_at: string
           defi_id: number
-          ensemble_id: number
+          ensemble_id: number | null
           id: number
           user_id: string
           vote: string
@@ -114,7 +114,7 @@ export type Database = {
         Insert: {
           created_at?: string
           defi_id: number
-          ensemble_id: number
+          ensemble_id?: number | null
           id?: number
           user_id: string
           vote: string
@@ -122,7 +122,7 @@ export type Database = {
         Update: {
           created_at?: string
           defi_id?: number
-          ensemble_id?: number
+          ensemble_id?: number | null
           id?: number
           user_id?: string
           vote?: string
@@ -179,38 +179,6 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
-      }
-      ensemble_votes: {
-        Row: {
-          created_at: string | null
-          ensemble_id: number
-          id: number
-          user_id: string
-          vote: string
-        }
-        Insert: {
-          created_at?: string | null
-          ensemble_id: number
-          id?: number
-          user_id: string
-          vote: string
-        }
-        Update: {
-          created_at?: string | null
-          ensemble_id?: number
-          id?: number
-          user_id?: string
-          vote?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ensemble_votes_ensemble_id_fkey"
-            columns: ["ensemble_id"]
-            isOneToOne: false
-            referencedRelation: "tenues"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       favoris: {
         Row: {
@@ -305,6 +273,38 @@ export type Database = {
         }
         Relationships: []
       }
+      tenue_votes: {
+        Row: {
+          created_at: string | null
+          id: number
+          tenue_id: number
+          user_id: string
+          vote: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          tenue_id: number
+          user_id: string
+          vote: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          tenue_id?: number
+          user_id?: string
+          vote?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ensemble_votes_ensemble_id_fkey"
+            columns: ["tenue_id"]
+            isOneToOne: false
+            referencedRelation: "tenues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenues: {
         Row: {
           created_at: string
@@ -370,6 +370,38 @@ export type Database = {
           },
           {
             foreignKeyName: "tenues_vetements_vetement_id_fkey"
+            columns: ["vetement_id"]
+            isOneToOne: false
+            referencedRelation: "vetements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vetement_votes: {
+        Row: {
+          created_at: string | null
+          id: number
+          user_id: string
+          vetement_id: number
+          vote: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          user_id: string
+          vetement_id: number
+          vote: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          user_id?: string
+          vetement_id?: number
+          vote?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vetement_votes_vetement_id_fkey"
             columns: ["vetement_id"]
             isOneToOne: false
             referencedRelation: "vetements"

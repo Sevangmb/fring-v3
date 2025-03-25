@@ -24,7 +24,7 @@ export function useEnsembleVote({ ensembleId, onVoteSuccess }: UseEnsembleVotePr
     isLoading: isVoting,
     isOffline,
     loadVoteData
-  } = useVote('ensemble', ensembleId, {
+  } = useVote('tenue', ensembleId, {
     onVoteSuccess: (vote) => {
       console.log(`Vote ${vote} soumis avec succès pour l'ensemble ${ensembleId}`);
       // Ne pas fermer le dialogue, mais passer à l'état "voté"

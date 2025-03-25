@@ -1,8 +1,8 @@
 
 import { supabase } from "@/lib/supabase";
 import { EntityType, VoteOptions, VotesCount } from "./types";
-import { fetchWithRetry } from "../network/retryUtils";
-import { isValidEntityId, isOnline } from "./utils/voteUtils";
+import { fetchWithRetry } from "@/services/network/retryUtils";
+import { isValidEntityId, isOnline, getEntityTableInfo } from "./utils/voteUtils";
 
 /**
  * Obtenir tous les votes pour une entité
@@ -24,18 +24,15 @@ export const getVotesCount = async (
       return { up: 0, down: 0 };
     }
     
-    // Options par défaut
-    const {
-      tableName = `${entityType}_votes`,
-      entityIdField = `${entityType}_id`,
-      voteField = "vote"
-    } = options || {};
+    // Get the appropriate table and field names
+    const { tableName, idField } = getEntityTableInfo(entityType);
+    const voteField = options?.voteField || "vote";
     
     // Build query
     const query = supabase
       .from(tableName)
       .select(`${voteField}`)
-      .eq(entityIdField, entityId);
+      .eq(idField, entityId);
       
     // Special handling for defi votes
     if (entityType === 'defi') {

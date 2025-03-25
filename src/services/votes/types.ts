@@ -1,14 +1,13 @@
 
 export type VoteType = 'up' | 'down' | null;
 
-export type EntityType = 'vetement' | 'ensemble' | 'defi';
+export type EntityType = 'vetement' | 'tenue' | 'defi';
 
 export interface VotesCount {
   up: number;
   down: number;
 }
 
-// Adding the missing VoteOptions interface
 export interface VoteOptions {
   tableName?: string;
   entityIdField?: string;

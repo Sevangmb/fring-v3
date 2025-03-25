@@ -2,7 +2,7 @@
 import { supabase } from "@/lib/supabase";
 import { VoteType, EntityType } from "./types";
 import { fetchWithRetry } from "@/services/network/retryUtils";
-import { isValidEntityId } from "./utils/voteUtils";
+import { isValidEntityId, getEntityTableInfo } from "./utils/voteUtils";
 
 /**
  * Récupérer le vote de l'utilisateur pour une entité
@@ -44,19 +44,3 @@ export const getUserVote = async (
     return null;
   }
 };
-
-/**
- * Helper to get table info for each entity type
- */
-function getEntityTableInfo(entityType: EntityType): { tableName: string; idField: string } {
-  switch (entityType) {
-    case 'vetement':
-      return { tableName: 'vetement_votes', idField: 'vetement_id' };
-    case 'ensemble':
-      return { tableName: 'tenue_votes', idField: 'tenue_id' };
-    case 'defi':
-      return { tableName: 'defi_votes', idField: 'defi_id' };
-    default:
-      throw new Error(`Type d'entité non supporté: ${entityType}`);
-  }
-}
