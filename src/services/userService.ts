@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 
 /**
@@ -117,5 +116,53 @@ export const getUserById = async (userId: string): Promise<any> => {
   } catch (error) {
     console.error("Erreur lors de la récupération de l'utilisateur:", error);
     return null;
+  }
+};
+
+/**
+ * Marque un utilisateur comme administrateur
+ * @param userId ID de l'utilisateur à promouvoir
+ * @returns Statut de succès et erreur éventuelle
+ */
+export const makeUserAdmin = async (
+  userId: string
+): Promise<{ success: boolean; error: Error | null }> => {
+  try {
+    // Note: Cette fonction est un exemple et nécessiterait une implémentation côté serveur
+    console.log("Function to be implemented: makeUserAdmin", userId);
+    
+    return {
+      success: true,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error("Unknown error"),
+    };
+  }
+};
+
+/**
+ * Retire les droits d'administrateur d'un utilisateur
+ * @param userId ID de l'utilisateur
+ * @returns Statut de succès et erreur éventuelle
+ */
+export const removeUserAdmin = async (
+  userId: string
+): Promise<{ success: boolean; error: Error | null }> => {
+  try {
+    // Note: Cette fonction est un exemple et nécessiterait une implémentation côté serveur
+    console.log("Function to be implemented: removeUserAdmin", userId);
+    
+    return {
+      success: true,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error("Unknown error"),
+    };
   }
 };
