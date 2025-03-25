@@ -1,5 +1,5 @@
 
-import { ReactNode } from "react";
+import { ReactElement } from "react";
 
 export type DefiType = "current" | "upcoming" | "past";
 
@@ -9,10 +9,10 @@ export interface DefiCardProps {
   description: string;
   dateRange: string;
   type: DefiType;
-  icon?: ReactNode;
+  icon?: ReactElement;
   participantsCount?: number;
   onParticipation?: () => void;
-  ensembleId?: number; // Ensemble ID optionnel si un ensemble est lié au défi
+  ensembleId?: number;
 }
 
 export interface DefiState {
@@ -20,8 +20,8 @@ export interface DefiState {
   participantEnsembleId: number | null;
   ensembleName: string | null;
   votesCount: number;
+  participantsCount: number;
   leaderName: string | null;
   userHasVoted: boolean;
-  validEnsembleId: number | undefined;
-  participantsCount: number;
+  validEnsembleId?: number;
 }
