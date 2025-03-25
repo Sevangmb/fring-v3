@@ -207,9 +207,8 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
                       <ThumbsUp className="h-4 w-4 mr-1" />
                       {winner.upVotes}
                     </span>
-                    <span className="flex items-center text-red-500">
-                      <ThumbsDown className="h-4 w-4 mr-1" />
-                      {winner.downVotes}
+                    <span className="text-muted-foreground font-medium">
+                      sur {winner.upVotes + winner.downVotes} votes
                     </span>
                   </div>
                 </div>
@@ -223,8 +222,13 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
                           <span className={result.id === localWinner.id ? "font-semibold text-primary" : ""}>
                             {result.name}
                           </span>
-                          <span className="flex items-center text-green-500">
-                            <ThumbsUp className="h-3 w-3 mr-1" /> {result.upVotes}
+                          <span className="flex items-center gap-2">
+                            <span className="text-green-500 flex items-center">
+                              <ThumbsUp className="h-3 w-3 mr-1" /> {result.upVotes}
+                            </span>
+                            <span className="text-muted-foreground text-sm">
+                              /{result.totalVotes} votes
+                            </span>
                           </span>
                         </div>
                       ))}
