@@ -56,10 +56,9 @@ const PastDefiFooter: React.FC<PastDefiFooterProps> = ({
         variant="outline" 
         size="sm" 
         className="text-sm"
-        as="a"
-        href={`/defis/resultats/${defiId}`}
+        asChild
       >
-        Voir les résultats
+        <a href={`/defis/resultats/${defiId}`}>Voir les résultats</a>
       </Button>
     </div>
   );
