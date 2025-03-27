@@ -1,18 +1,70 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import AdminModuleTemplate from '@/components/admin/AdminModuleTemplate';
-import { Text } from '@/components/atoms/Typography';
-import { Users } from 'lucide-react';
+import { isAdmin } from '@/utils/adminUtils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
+import UsersSearch from '@/components/admin/users/UsersSearch';
+import UsersList from '@/components/admin/users/UsersList';
+import { getAllUsers, searchUsersByEmail, AdminUserData } from '@/services/adminService';
+import { useToast } from '@/hooks/use-toast';
 
 const AdminUsersPage: React.FC = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   
   // Vérification des autorisations administratives
-  const isAdmin = user?.email && ['admin@fring.app', 'sevans@hotmail.fr', 'pedro@hotmail.fr'].includes(user.email);
+  const isAuthorized = isAdmin(user);
   
-  if (!user || !isAdmin) {
+  const [users, setUsers] = useState<AdminUserData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setIsLoading(true);
+        const usersData = await getAllUsers();
+        setUsers(usersData);
+      } catch (error) {
+        console.error('Erreur lors du chargement des utilisateurs', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger la liste des utilisateurs",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isAuthorized) {
+      fetchUsers();
+    }
+  }, [isAuthorized, toast]);
+
+  const handleSearch = async (searchTerm: string) => {
+    try {
+      setIsSearching(true);
+      const results = await searchUsersByEmail(searchTerm);
+      setUsers(results);
+    } catch (error) {
+      console.error('Erreur lors de la recherche d\'utilisateurs', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'effectuer la recherche",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (!isAuthorized) {
     return <Navigate to="/admin" replace />;
   }
 
@@ -21,14 +73,9 @@ const AdminUsersPage: React.FC = () => {
       title="Gestion des utilisateurs" 
       description="Gérez les comptes utilisateurs, les rôles et les permissions."
     >
-      <div className="flex flex-col items-center justify-center text-center py-12">
-        <div className="bg-primary/10 p-4 rounded-full mb-4">
-          <Users className="h-8 w-8 text-primary" />
-        </div>
-        <Text>
-          Fonctionnalité en cours de développement. Cette section permettra de gérer les utilisateurs, 
-          leurs rôles et permissions.
-        </Text>
+      <div className="space-y-6">
+        <UsersSearch onSearch={handleSearch} isSearching={isSearching} />
+        <UsersList users={users} isLoading={isLoading} />
       </div>
     </AdminModuleTemplate>
   );
