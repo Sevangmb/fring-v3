@@ -44,7 +44,7 @@ export const getDefiParticipationsWithVotes = async (defiId: number): Promise<Pa
               created_at, 
               user_id,
               vetements:tenues_vetements(
-                id,
+                tenues_vetements.id,
                 vetement:vetement_id(*),
                 position_ordre
               )

@@ -57,129 +57,6 @@ export type Database = {
         }
         Relationships: []
       }
-      defi_participations: {
-        Row: {
-          commentaire: string | null
-          created_at: string | null
-          defi_id: number
-          ensemble_id: number
-          id: number
-          note: number | null
-          user_id: string
-        }
-        Insert: {
-          commentaire?: string | null
-          created_at?: string | null
-          defi_id: number
-          ensemble_id: number
-          id?: number
-          note?: number | null
-          user_id: string
-        }
-        Update: {
-          commentaire?: string | null
-          created_at?: string | null
-          defi_id?: number
-          ensemble_id?: number
-          id?: number
-          note?: number | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "defi_participations_defi_id_fkey"
-            columns: ["defi_id"]
-            isOneToOne: false
-            referencedRelation: "defis"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "defi_participations_ensemble_id_fkey"
-            columns: ["ensemble_id"]
-            isOneToOne: false
-            referencedRelation: "tenues"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      defi_votes: {
-        Row: {
-          created_at: string
-          defi_id: number
-          ensemble_id: number | null
-          id: number
-          user_id: string
-          vote: string
-        }
-        Insert: {
-          created_at?: string
-          defi_id: number
-          ensemble_id?: number | null
-          id?: number
-          user_id: string
-          vote: string
-        }
-        Update: {
-          created_at?: string
-          defi_id?: number
-          ensemble_id?: number | null
-          id?: number
-          user_id?: string
-          vote?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "defi_votes_defi_id_fkey"
-            columns: ["defi_id"]
-            isOneToOne: false
-            referencedRelation: "defis"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "defi_votes_ensemble_id_fkey"
-            columns: ["ensemble_id"]
-            isOneToOne: false
-            referencedRelation: "tenues"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      defis: {
-        Row: {
-          created_at: string | null
-          date_debut: string
-          date_fin: string
-          description: string
-          id: number
-          participants_count: number | null
-          status: string
-          titre: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          date_debut: string
-          date_fin: string
-          description: string
-          id?: number
-          participants_count?: number | null
-          status?: string
-          titre: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          date_debut?: string
-          date_fin?: string
-          description?: string
-          id?: number
-          participants_count?: number | null
-          status?: string
-          titre?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       ensemble_votes: {
         Row: {
           created_at: string | null
@@ -695,6 +572,17 @@ export type Database = {
           table_name: string
         }
         Returns: number
+      }
+      search_admin_users: {
+        Args: {
+          search_term: string
+        }
+        Returns: {
+          id: string
+          email: string
+          created_at: string
+          user_metadata: Json
+        }[]
       }
       search_users_by_email: {
         Args: {
