@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AdminEnsemblesList from '@/components/admin/ensembles/AdminEnsemblesList';
 import AdminRecommandations from '@/components/admin/ensembles/AdminRecommandations';
 import AdminTenuesSuggestions from '@/components/admin/ensembles/AdminTenuesSuggestions';
+import AdminUsersList from '@/components/admin/ensembles/AdminUsersList';
 
 const AdminEnsemblesPage: React.FC = () => {
   const { user } = useAuth();
@@ -27,13 +28,14 @@ const AdminEnsemblesPage: React.FC = () => {
   return (
     <AdminModuleTemplate 
       title="Gestion des ensembles" 
-      description="Gérez les ensembles, les tenues suggérées et les recommandations."
+      description="Gérez les ensembles, les tenues suggérées, les recommandations et les utilisateurs."
     >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="ensembles">Ensembles</TabsTrigger>
           <TabsTrigger value="suggestions">Tenues suggérées</TabsTrigger>
           <TabsTrigger value="recommandations">Recommandations</TabsTrigger>
+          <TabsTrigger value="utilisateurs">Utilisateurs</TabsTrigger>
         </TabsList>
         
         <TabsContent value="ensembles">
@@ -46,6 +48,10 @@ const AdminEnsemblesPage: React.FC = () => {
         
         <TabsContent value="recommandations">
           <AdminRecommandations />
+        </TabsContent>
+        
+        <TabsContent value="utilisateurs">
+          <AdminUsersList />
         </TabsContent>
       </Tabs>
     </AdminModuleTemplate>
