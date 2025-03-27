@@ -1,35 +1,53 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import AdminModuleTemplate from '@/components/admin/AdminModuleTemplate';
-import { Text } from '@/components/atoms/Typography';
-import { ShoppingBag } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { isAdmin } from '@/utils/adminUtils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import AdminEnsemblesList from '@/components/admin/ensembles/AdminEnsemblesList';
+import AdminRecommandations from '@/components/admin/ensembles/AdminRecommandations';
+import AdminTenuesSuggestions from '@/components/admin/ensembles/AdminTenuesSuggestions';
 
 const AdminEnsemblesPage: React.FC = () => {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<string>('ensembles');
   
   // Vérification des autorisations administratives
-  const isAdmin = user?.email && ['admin@fring.app', 'sevans@hotmail.fr', 'pedro@hotmail.fr'].includes(user.email);
+  const authorized = isAdmin(user);
   
-  if (!user || !isAdmin) {
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (!authorized) {
     return <Navigate to="/admin" replace />;
   }
 
   return (
     <AdminModuleTemplate 
       title="Gestion des ensembles" 
-      description="Gérez les ensembles et les suggestions."
+      description="Gérez les ensembles, les tenues suggérées et les recommandations."
     >
-      <div className="flex flex-col items-center justify-center text-center py-12">
-        <div className="bg-primary/10 p-4 rounded-full mb-4">
-          <ShoppingBag className="h-8 w-8 text-primary" />
-        </div>
-        <Text>
-          Fonctionnalité en cours de développement. Cette section permettra de gérer les ensembles, 
-          les tenues suggérées et les recommandations.
-        </Text>
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="ensembles">Ensembles</TabsTrigger>
+          <TabsTrigger value="suggestions">Tenues suggérées</TabsTrigger>
+          <TabsTrigger value="recommandations">Recommandations</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="ensembles">
+          <AdminEnsemblesList />
+        </TabsContent>
+        
+        <TabsContent value="suggestions">
+          <AdminTenuesSuggestions />
+        </TabsContent>
+        
+        <TabsContent value="recommandations">
+          <AdminRecommandations />
+        </TabsContent>
+      </Tabs>
     </AdminModuleTemplate>
   );
 };
