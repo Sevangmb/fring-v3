@@ -23,13 +23,21 @@ import ModifierEnsemble from './pages/ensembles/ModifierEnsemble';
 import EnsemblesAmisPage from './pages/EnsemblesAmisPage';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
-import Admin from './pages/Admin'; // Ajout de l'import pour la page d'administration
+import Admin from './pages/Admin';
 import NotFound from './pages/NotFound';
 import ResultatsDefi from './pages/defis/ResultatsDefi';
 import ListeVetements from './pages/vetements/ListeVetements';
 
 // Import components
 import ProtectedRoute from './components/atoms/ProtectedRoute';
+
+// Import Admin pages
+import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminVetementsPage from './pages/admin/AdminVetementsPage';
+import AdminEnsemblesPage from './pages/admin/AdminEnsemblesPage';
+import AdminStatsPage from './pages/admin/AdminStatsPage';
+import AdminSettingsPage from './pages/admin/AdminSettingsPage';
+import AdminDatabasePage from './pages/admin/AdminDatabasePage';
 
 // Import styles
 import './App.css';
@@ -147,9 +155,46 @@ function App() {
                   </ProtectedRoute>
                 } />
                 
+                {/* Routes d'administration */}
                 <Route path="/admin" element={
                   <ProtectedRoute>
                     <Admin />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/admin/users" element={
+                  <ProtectedRoute>
+                    <AdminUsersPage />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/admin/vetements" element={
+                  <ProtectedRoute>
+                    <AdminVetementsPage />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/admin/ensembles" element={
+                  <ProtectedRoute>
+                    <AdminEnsemblesPage />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/admin/stats" element={
+                  <ProtectedRoute>
+                    <AdminStatsPage />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/admin/settings" element={
+                  <ProtectedRoute>
+                    <AdminSettingsPage />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/admin/database" element={
+                  <ProtectedRoute>
+                    <AdminDatabasePage />
                   </ProtectedRoute>
                 } />
                 

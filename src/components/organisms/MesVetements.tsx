@@ -20,9 +20,10 @@ const ClothingItem = ({
   icon,
   delay = 0
 }: ClothingItemProps) => {
-  return <Card className="h-full animate-slide-up" hoverable style={{
-    animationDelay: `${delay}ms`
-  }}>
+  return (
+    <Card className="h-full animate-slide-up" hoverable style={{
+      animationDelay: `${delay}ms`
+    }}>
       <CardHeader>
         <div className="h-12 w-12 rounded-md bg-primary/10 flex items-center justify-center text-primary mb-4">
           {icon}
@@ -30,7 +31,8 @@ const ClothingItem = ({
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-    </Card>;
+    </Card>
+  );
 };
 
 interface MesVetementsProps {
