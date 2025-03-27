@@ -2,15 +2,19 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
 import NavItem from "./NavItem";
-import { Heart } from "lucide-react";
+import { Heart, Shield } from "lucide-react";
+import { User } from "@supabase/supabase-js";
 
 interface NavLinksProps {
   unreadCount: number;
-  user: any;
+  user: User | null;
 }
 
 const NavLinks: React.FC<NavLinksProps> = ({ unreadCount, user }) => {
   const location = useLocation();
+  
+  // Vérifiez si l'utilisateur est un administrateur
+  const isAdmin = user?.email && ['admin@fring.app', 'sevans@hotmail.fr', 'pedro@hotmail.fr'].includes(user.email);
   
   const navLinks = [
     { href: "/", label: "Home" },
@@ -19,6 +23,15 @@ const NavLinks: React.FC<NavLinksProps> = ({ unreadCount, user }) => {
     { href: "/mes-amis", label: "Mes Amis" },
     { href: "/about", label: "Fring" },
   ];
+
+  // Ajouter le lien d'administration si l'utilisateur est admin
+  if (isAdmin) {
+    navLinks.push({ 
+      href: "/admin", 
+      label: "Admin", 
+      icon: <Shield className="h-4 w-4 mr-1" /> 
+    });
+  }
 
   return (
     <>

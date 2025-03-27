@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { User, LogOut, LayoutDashboard } from "lucide-react";
+import { User, LogOut, LayoutDashboard, Shield } from "lucide-react";
 import NavItem from "./NavItem";
 import Button from "../atoms/Button";
 import NavLinks from "./NavLinks";
@@ -25,10 +25,14 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
+  // Vérifiez si l'utilisateur est un administrateur
+  const isAdmin = user?.email && ['admin@fring.app', 'sevans@hotmail.fr', 'pedro@hotmail.fr'].includes(user.email);
+
   const handleLogin = () => navigate("/login");
   const handleSignUp = () => navigate("/register");
   const handleProfile = () => navigate("/profile");
   const handleDashboard = () => navigate("/dashboard");
+  const handleAdmin = () => navigate("/admin");
   const handleLogout = async () => {
     await signOut();
     navigate("/");
@@ -65,6 +69,16 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
                   <User size={18} />
                   Profil
                 </Button>
+                {isAdmin && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-center flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400" 
+                    onClick={handleAdmin}
+                  >
+                    <Shield size={18} className="text-amber-600 dark:text-amber-400" />
+                    Administration
+                  </Button>
+                )}
                 <Button 
                   variant="primary" 
                   className="w-full justify-center text-white bg-red-600 hover:bg-red-700" 

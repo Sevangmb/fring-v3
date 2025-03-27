@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, LogOut, User, LayoutDashboard, Star } from "lucide-react";
+import { ChevronDown, LogOut, User, LayoutDashboard, Star, Shield } from "lucide-react";
 
 interface AuthButtonsProps {
   user: any;
@@ -20,12 +20,16 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({ user }) => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
 
+  // Vérifiez si l'utilisateur est un administrateur
+  const isAdmin = user?.email && ['admin@fring.app', 'sevans@hotmail.fr', 'pedro@hotmail.fr'].includes(user.email);
+
   const handleLogin = () => navigate("/login");
   const handleSignUp = () => navigate("/register");
   const handleProfile = () => navigate("/profile");
   const handleDashboard = () => navigate("/dashboard");
+  const handleAdmin = () => navigate("/admin");
   
-  // Modification: Naviguer directement vers /mes-favoris au lieu de /mes-vetements avec activeTab
+  // Naviguer directement vers /mes-favoris au lieu de /mes-vetements avec activeTab
   const handleFavorites = () => {
     console.log("Navigation vers favoris");
     navigate("/mes-favoris");
@@ -80,6 +84,12 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({ user }) => {
             <Star className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
             Mes Favoris
           </DropdownMenuItem>
+          {isAdmin && (
+            <DropdownMenuItem onClick={handleAdmin} className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400">
+              <Shield className="mr-2 h-4 w-4 text-amber-600 dark:text-amber-400" />
+              Administration
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             Déconnexion
