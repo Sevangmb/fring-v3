@@ -9,7 +9,7 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistance } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -51,6 +51,9 @@ const UsersList: React.FC<UsersListProps> = ({ users, isLoading }) => {
               <TableCell className="font-medium">
                 <div className="flex items-center gap-2">
                   <Avatar className="h-8 w-8">
+                    {user.user_metadata?.avatar_url && (
+                      <AvatarImage src={user.user_metadata.avatar_url} alt={user.email} />
+                    )}
                     <AvatarFallback>
                       {user.email.substring(0, 2).toUpperCase()}
                     </AvatarFallback>

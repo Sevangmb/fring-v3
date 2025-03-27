@@ -46,8 +46,14 @@ const AdminUsersPage: React.FC = () => {
   const handleSearch = async (searchTerm: string) => {
     try {
       setIsSearching(true);
-      const results = await searchUsersByEmail(searchTerm);
-      setUsers(results);
+      // Si le terme de recherche est vide, récupérer tous les utilisateurs
+      if (!searchTerm.trim()) {
+        const allUsers = await getAllUsers();
+        setUsers(allUsers);
+      } else {
+        const results = await searchUsersByEmail(searchTerm);
+        setUsers(results);
+      }
     } catch (error) {
       console.error('Erreur lors de la recherche d\'utilisateurs', error);
       toast({

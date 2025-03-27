@@ -17,6 +17,11 @@ const UsersSearch: React.FC<UsersSearchProps> = ({ onSearch, isSearching }) => {
     onSearch(searchTerm);
   };
 
+  const handleClear = () => {
+    setSearchTerm('');
+    onSearch('');
+  };
+
   return (
     <form onSubmit={handleSubmit} className="flex gap-2 mb-4">
       <Input
@@ -25,10 +30,20 @@ const UsersSearch: React.FC<UsersSearchProps> = ({ onSearch, isSearching }) => {
         onChange={(e) => setSearchTerm(e.target.value)}
         className="flex-1"
       />
-      <Button type="submit" disabled={isSearching || !searchTerm.trim()}>
+      <Button type="submit" disabled={isSearching}>
         <Search className="h-4 w-4 mr-2" />
         Rechercher
       </Button>
+      {searchTerm && (
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={handleClear}
+          disabled={isSearching}
+        >
+          Effacer
+        </Button>
+      )}
     </form>
   );
 };
