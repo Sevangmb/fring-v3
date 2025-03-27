@@ -1,3 +1,4 @@
+
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Heading, Text } from "../atoms/Typography";
@@ -5,12 +6,14 @@ import Card, { CardHeader, CardTitle, CardDescription } from "../molecules/Card"
 import { Shirt, ShoppingBag, ShoppingCart, Zap, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+
 interface ClothingItemProps {
   title: string;
   description: string;
   icon: React.ReactNode;
   delay?: number;
 }
+
 const ClothingItem = ({
   title,
   description,
@@ -29,10 +32,12 @@ const ClothingItem = ({
       </CardHeader>
     </Card>;
 };
+
 interface MesVetementsProps {
   className?: string;
   isAuthenticated: boolean;
 }
+
 const MesVetements = ({
   className,
   isAuthenticated
@@ -54,8 +59,46 @@ const MesVetements = ({
     title: "Nouveautés",
     description: "Découvrez nos dernières collections et restez à la pointe de la mode."
   }];
-  return <section className={cn("py-16 md:py-24", className)}>
-      
-    </section>;
+
+  return (
+    <section className={cn("py-16 md:py-24", className)}>
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <Heading variant="h2" className="mb-4">Explorez Votre Garde-Robe</Heading>
+          <Text variant="lead" className="mx-auto max-w-3xl">
+            Parcourez votre collection de vêtements et créez des ensembles stylés pour toutes les occasions.
+          </Text>
+        </div>
+
+        {isAuthenticated ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {clothingItems.map((item, index) => (
+              <Link to="/mes-vetements" key={index} className="block h-full">
+                <ClothingItem 
+                  title={item.title}
+                  description={item.description}
+                  icon={item.icon}
+                  delay={index * 100}
+                />
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center">
+            <Text className="mb-6">
+              Connectez-vous pour gérer votre garde-robe et créer des ensembles stylés.
+            </Text>
+            <Button asChild>
+              <Link to="/login" className="inline-flex items-center">
+                <LogIn className="mr-2 h-4 w-4" />
+                Se connecter
+              </Link>
+            </Button>
+          </div>
+        )}
+      </div>
+    </section>
+  );
 };
+
 export default MesVetements;

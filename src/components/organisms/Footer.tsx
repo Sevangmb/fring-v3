@@ -1,11 +1,14 @@
+
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { Text } from "../atoms/Typography";
 import { Github, Twitter, Linkedin } from "lucide-react";
+
 interface FooterProps {
   className?: string;
 }
+
 const Footer = ({
   className
 }: FooterProps) => {
@@ -72,6 +75,68 @@ const Footer = ({
     href: "https://linkedin.com",
     label: "LinkedIn"
   }];
-  return;
+
+  return (
+    <footer className={cn("bg-background border-t py-12", className)}>
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+          <div className="col-span-2">
+            <Link to="/" className="inline-block mb-4">
+              <span className="text-xl font-bold">Fring.app</span>
+            </Link>
+            <Text variant="small" className="text-muted-foreground max-w-xs">
+              Gérez votre garde-robe, créez des tenues stylées et partagez avec vos amis.
+            </Text>
+
+            <div className="flex mt-6 space-x-4">
+              {socialLinks.map((link, i) => (
+                <a 
+                  key={i}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-9 w-9 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent transition-colors"
+                  aria-label={link.label}
+                >
+                  {link.icon}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {footerLinks.map((group, i) => (
+            <div key={i}>
+              <Text className="font-medium mb-4">{group.title}</Text>
+              <ul className="space-y-3">
+                {group.links.map((link, j) => (
+                  <li key={j}>
+                    <Link 
+                      to={link.href} 
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="border-t mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
+          <Text variant="small" className="text-muted-foreground">
+            &copy; {year} Fring.app. Tous droits réservés.
+          </Text>
+          
+          <div className="mt-4 md:mt-0">
+            <Link to="/admin" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Administration
+            </Link>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
 };
+
 export default Footer;

@@ -23,6 +23,7 @@ import ModifierEnsemble from './pages/ensembles/ModifierEnsemble';
 import EnsemblesAmisPage from './pages/EnsemblesAmisPage';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
+import Admin from './pages/Admin'; // Ajout de l'import pour la page d'administration
 import NotFound from './pages/NotFound';
 import ResultatsDefi from './pages/defis/ResultatsDefi';
 import ListeVetements from './pages/vetements/ListeVetements';
@@ -80,7 +81,6 @@ function App() {
                   </ProtectedRoute>
                 } />
                 
-                {/* Add the missing route for /mes-vetements */}
                 <Route path="/mes-vetements" element={
                   <ProtectedRoute>
                     <MesVetements />
@@ -144,6 +144,12 @@ function App() {
                 <Route path="/dashboard" element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/admin" element={
+                  <ProtectedRoute>
+                    <Admin />
                   </ProtectedRoute>
                 } />
                 
