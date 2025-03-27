@@ -1,35 +1,69 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import AdminModuleTemplate from '@/components/admin/AdminModuleTemplate';
-import { Text } from '@/components/atoms/Typography';
-import { Database } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { isAdmin } from '@/utils/adminUtils';
+import { DatabaseStats, getDatabaseStats } from '@/services/database/statsService';
+import DatabaseStatsView from '@/components/admin/database/DatabaseStats';
+import { useToast } from '@/hooks/use-toast';
 
 const AdminDatabasePage: React.FC = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [stats, setStats] = useState<DatabaseStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Vérification des autorisations administratives
-  const isAdmin = user?.email && ['admin@fring.app', 'sevans@hotmail.fr', 'pedro@hotmail.fr'].includes(user.email);
+  const isAuthorized = isAdmin(user);
   
-  if (!user || !isAdmin) {
+  useEffect(() => {
+    const fetchDatabaseStats = async () => {
+      try {
+        setIsLoading(true);
+        const dbStats = await getDatabaseStats();
+        setStats(dbStats);
+      } catch (error) {
+        console.error('Erreur lors du chargement des statistiques de la base de données', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les statistiques de la base de données",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isAuthorized) {
+      fetchDatabaseStats();
+    }
+  }, [isAuthorized, toast]);
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (!isAuthorized) {
     return <Navigate to="/admin" replace />;
   }
 
   return (
     <AdminModuleTemplate 
       title="Base de données" 
-      description="Gérez la base de données et les tables."
+      description="Consultez les statistiques et informations sur la base de données."
     >
-      <div className="flex flex-col items-center justify-center text-center py-12">
-        <div className="bg-primary/10 p-4 rounded-full mb-4">
-          <Database className="h-8 w-8 text-primary" />
+      {stats ? (
+        <DatabaseStatsView stats={stats} isLoading={isLoading} />
+      ) : isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <p>Chargement des statistiques...</p>
         </div>
-        <Text>
-          Fonctionnalité en cours de développement. Cette section donnera accès à la gestion de la base de données, 
-          permettant de visualiser et de manipuler les tables, les relations et les données.
-        </Text>
-      </div>
+      ) : (
+        <div className="flex items-center justify-center py-12">
+          <p>Impossible de charger les statistiques</p>
+        </div>
+      )}
     </AdminModuleTemplate>
   );
 };
