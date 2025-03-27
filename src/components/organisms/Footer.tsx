@@ -1,11 +1,14 @@
+
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { Text } from "../atoms/Typography";
 import { Github, Twitter, Linkedin } from "lucide-react";
+
 interface FooterProps {
   className?: string;
 }
+
 const Footer = ({
   className
 }: FooterProps) => {
@@ -72,6 +75,53 @@ const Footer = ({
     href: "https://linkedin.com",
     label: "LinkedIn"
   }];
-  return;
+
+  return (
+    <footer className={cn("bg-gray-50 dark:bg-gray-900/50 py-12", className)}>
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+          {footerLinks.map((section, i) => (
+            <div key={i}>
+              <h3 className="font-medium text-sm mb-4">{section.title}</h3>
+              <ul className="space-y-2">
+                {section.links.map((link, j) => (
+                  <li key={j}>
+                    <Link
+                      to={link.href}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        
+        <div className="border-t border-gray-200 dark:border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+          <Text className="text-sm text-muted-foreground mb-4 md:mb-0">
+            &copy; {year} Fring App. Tous droits réservés.
+          </Text>
+          
+          <div className="flex space-x-4">
+            {socialLinks.map((link, i) => (
+              <a
+                key={i}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={link.label}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {link.icon}
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
 };
+
 export default Footer;
