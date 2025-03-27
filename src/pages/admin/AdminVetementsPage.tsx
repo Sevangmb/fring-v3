@@ -1,35 +1,53 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import AdminModuleTemplate from '@/components/admin/AdminModuleTemplate';
-import { Text } from '@/components/atoms/Typography';
-import { Shirt } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { isAdmin } from '@/utils/adminUtils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import AdminVetementsCategories from '@/components/admin/vetements/AdminVetementsCategories';
+import AdminVetementsList from '@/components/admin/vetements/AdminVetementsList';
+import AdminMarques from '@/components/admin/vetements/AdminMarques';
 
 const AdminVetementsPage: React.FC = () => {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<string>('vetements');
   
   // Vérification des autorisations administratives
-  const isAdmin = user?.email && ['admin@fring.app', 'sevans@hotmail.fr', 'pedro@hotmail.fr'].includes(user.email);
+  const authorized = isAdmin(user);
   
-  if (!user || !isAdmin) {
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (!authorized) {
     return <Navigate to="/admin" replace />;
   }
 
   return (
     <AdminModuleTemplate 
       title="Gestion des vêtements" 
-      description="Gérez le catalogue de vêtements et les catégories."
+      description="Gérez le catalogue de vêtements, les catégories et les marques."
     >
-      <div className="flex flex-col items-center justify-center text-center py-12">
-        <div className="bg-primary/10 p-4 rounded-full mb-4">
-          <Shirt className="h-8 w-8 text-primary" />
-        </div>
-        <Text>
-          Fonctionnalité en cours de développement. Cette section permettra de gérer les vêtements, 
-          les catégories et d'autres attributs liés aux produits.
-        </Text>
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="vetements">Vêtements</TabsTrigger>
+          <TabsTrigger value="categories">Catégories</TabsTrigger>
+          <TabsTrigger value="marques">Marques</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="vetements">
+          <AdminVetementsList />
+        </TabsContent>
+        
+        <TabsContent value="categories">
+          <AdminVetementsCategories />
+        </TabsContent>
+        
+        <TabsContent value="marques">
+          <AdminMarques />
+        </TabsContent>
+      </Tabs>
     </AdminModuleTemplate>
   );
 };
