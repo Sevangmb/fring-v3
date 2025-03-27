@@ -2,7 +2,7 @@
 import React from 'react';
 import { DatabaseStats } from '@/services/database/statsService';
 import DatabaseStatsCard from './DatabaseStatsCard';
-import { Database, User, Shirt, Category } from 'lucide-react';
+import { Database, User, Shirt, Tag } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDistance } from 'date-fns';
@@ -39,7 +39,7 @@ const DatabaseStatsView: React.FC<DatabaseStatsViewProps> = ({ stats, isLoading 
         <DatabaseStatsCard 
           title="Catégories" 
           value={stats.totalCategories} 
-          icon={<Category className="h-4 w-4" />}
+          icon={<Tag className="h-4 w-4" />}
         />
       </div>
 
