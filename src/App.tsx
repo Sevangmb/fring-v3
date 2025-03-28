@@ -17,7 +17,7 @@ import MesVetements from './pages/MesVetements';
 import Messages from './pages/Messages';
 import AjouterVetement from './pages/vetements/AjouterVetement';
 import ModifierVetement from './pages/vetements/ModifierVetement';
-import VetementsAmisPage from './pages/VetementsAmisPage';
+import VetementsAmis from './pages/VetementsAmis';
 import AjouterEnsemble from './pages/ensembles/AjouterEnsemble';
 import ModifierEnsemble from './pages/ensembles/ModifierEnsemble';
 import EnsemblesAmisPage from './pages/EnsemblesAmisPage';
@@ -121,7 +121,14 @@ function App() {
                 
                 <Route path="/vetements/amis" element={
                   <ProtectedRoute>
-                    <VetementsAmisPage />
+                    <VetementsAmis />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Added direct route for vetements-amis */}
+                <Route path="/vetements-amis" element={
+                  <ProtectedRoute>
+                    <VetementsAmis />
                   </ProtectedRoute>
                 } />
                 
