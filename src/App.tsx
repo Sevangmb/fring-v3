@@ -150,6 +150,13 @@ function App() {
                   </ProtectedRoute>
                 } />
                 
+                {/* Added direct route for ensembles-amis */}
+                <Route path="/ensembles-amis" element={
+                  <ProtectedRoute>
+                    <EnsemblesAmisPage />
+                  </ProtectedRoute>
+                } />
+                
                 <Route path="/profile" element={
                   <ProtectedRoute>
                     <Profile />
