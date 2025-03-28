@@ -1,35 +1,53 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import AdminModuleTemplate from '@/components/admin/AdminModuleTemplate';
-import { Text } from '@/components/atoms/Typography';
-import { Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { isAdmin } from '@/utils/adminUtils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import AdminGeneralSettings from '@/components/admin/settings/AdminGeneralSettings';
+import AdminNotificationsSettings from '@/components/admin/settings/AdminNotificationsSettings';
+import AdminPermissionsSettings from '@/components/admin/settings/AdminPermissionsSettings';
 
 const AdminSettingsPage: React.FC = () => {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<string>('general');
   
   // Vérification des autorisations administratives
-  const isAdmin = user?.email && ['admin@fring.app', 'sevans@hotmail.fr', 'pedro@hotmail.fr'].includes(user.email);
+  const authorized = isAdmin(user);
   
-  if (!user || !isAdmin) {
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (!authorized) {
     return <Navigate to="/admin" replace />;
   }
 
   return (
     <AdminModuleTemplate 
       title="Configuration" 
-      description="Configurez les paramètres de l'application."
+      description="Configurez les paramètres de l'application Fring."
     >
-      <div className="flex flex-col items-center justify-center text-center py-12">
-        <div className="bg-primary/10 p-4 rounded-full mb-4">
-          <Settings className="h-8 w-8 text-primary" />
-        </div>
-        <Text>
-          Fonctionnalité en cours de développement. Cette section permettra de configurer les différents 
-          paramètres de l'application, comme les notifications, les autorisations et les préférences générales.
-        </Text>
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="general">Général</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="permissions">Autorisations</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="general">
+          <AdminGeneralSettings />
+        </TabsContent>
+        
+        <TabsContent value="notifications">
+          <AdminNotificationsSettings />
+        </TabsContent>
+        
+        <TabsContent value="permissions">
+          <AdminPermissionsSettings />
+        </TabsContent>
+      </Tabs>
     </AdminModuleTemplate>
   );
 };
