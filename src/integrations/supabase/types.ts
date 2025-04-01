@@ -582,6 +582,8 @@ export type Database = {
           email: string
           created_at: string
           user_metadata: Json
+          last_sign_in_at: string
+          app_metadata: Json
         }[]
       }
       search_users_by_email: {
