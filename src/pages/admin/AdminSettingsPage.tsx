@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AdminGeneralSettings from '@/components/admin/settings/AdminGeneralSettings';
 import AdminNotificationsSettings from '@/components/admin/settings/AdminNotificationsSettings';
 import AdminPermissionsSettings from '@/components/admin/settings/AdminPermissionsSettings';
+import AdminNewsSettings from '@/components/admin/settings/AdminNewsSettings';
 
 const AdminSettingsPage: React.FC = () => {
   const { user } = useAuth();
@@ -34,6 +35,7 @@ const AdminSettingsPage: React.FC = () => {
           <TabsTrigger value="general">Général</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="permissions">Autorisations</TabsTrigger>
+          <TabsTrigger value="actualites">Actualités</TabsTrigger>
         </TabsList>
         
         <TabsContent value="general">
@@ -46,6 +48,10 @@ const AdminSettingsPage: React.FC = () => {
         
         <TabsContent value="permissions">
           <AdminPermissionsSettings />
+        </TabsContent>
+        
+        <TabsContent value="actualites">
+          <AdminNewsSettings />
         </TabsContent>
       </Tabs>
     </AdminModuleTemplate>
