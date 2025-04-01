@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import AdminModuleTemplate from '@/components/admin/AdminModuleTemplate';
 import { isAdmin } from '@/utils/adminUtils';
@@ -28,6 +27,7 @@ const AdminUsersPage: React.FC = () => {
       try {
         setIsLoading(true);
         const usersData = await getAllUsers();
+        console.log("Utilisateurs récupérés:", usersData);
         setUsers(usersData);
       } catch (error) {
         console.error('Erreur lors du chargement des utilisateurs', error);

@@ -25,16 +25,29 @@ export interface AdminUserData {
  */
 export const getAllUsers = async (): Promise<AdminUserData[]> => {
   try {
-    const { data, error } = await supabase.rpc('search_admin_users', {
-      search_term: ''
-    });
+    // Utiliser une requête directe pour récupérer tous les utilisateurs
+    // Sans utiliser RPC qui semble ne pas fonctionner correctement
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('updated_at', { ascending: false });
 
     if (error) {
       console.error("Erreur lors de la récupération des utilisateurs:", error);
       throw error;
     }
 
-    return data || [];
+    // Pour chaque profil, nous récupérons les informations supplémentaires si nécessaire
+    // Par défaut, nous utilisons les données du profil
+    return data?.map(profile => ({
+      id: profile.id,
+      email: profile.email,
+      created_at: profile.updated_at, // Utiliser updated_at comme proxy pour created_at
+      user_metadata: {
+        full_name: 'Utilisateur ' + profile.email?.substring(0, 5),
+      },
+      app_metadata: {}
+    })) || [];
   } catch (error) {
     console.error("Erreur dans getAllUsers:", error);
     throw error;
@@ -48,16 +61,28 @@ export const getAllUsers = async (): Promise<AdminUserData[]> => {
  */
 export const searchUsersByEmail = async (searchTerm: string): Promise<AdminUserData[]> => {
   try {
-    const { data, error } = await supabase.rpc('search_admin_users', {
-      search_term: searchTerm
-    });
+    // Utiliser une requête directe pour chercher les utilisateurs par email
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .ilike('email', `%${searchTerm}%`)
+      .order('updated_at', { ascending: false });
 
     if (error) {
       console.error("Erreur lors de la recherche d'utilisateurs:", error);
       throw error;
     }
 
-    return data || [];
+    // Transformer les données du profil en AdminUserData
+    return data?.map(profile => ({
+      id: profile.id,
+      email: profile.email,
+      created_at: profile.updated_at, // Utiliser updated_at comme proxy pour created_at
+      user_metadata: {
+        full_name: 'Utilisateur ' + profile.email?.substring(0, 5),
+      },
+      app_metadata: {}
+    })) || [];
   } catch (error) {
     console.error("Erreur dans searchUsersByEmail:", error);
     throw error;
