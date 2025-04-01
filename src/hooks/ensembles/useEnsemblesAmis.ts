@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Ensemble } from "@/services/ensemble";
@@ -14,10 +15,40 @@ export const useEnsemblesAmis = (friendId?: string) => {
       setLoading(true);
       setError(null);
       
+      console.log("Chargement des ensembles pour l'ami:", friendId || "tous les amis");
       const data = await fetchEnsemblesAmis(friendId);
       
-      setEnsemblesAmis(data);
-      console.log("Ensembles des amis chargés:", data.length);
+      if (Array.isArray(data)) {
+        // Transformation des données pour assurer la compatibilité
+        const formattedEnsembles = data.map(ensemble => {
+          // Vérifier si les vêtements sont un tableau ou une chaîne à parser
+          let vetements = ensemble.vetements;
+          if (typeof vetements === 'string') {
+            try {
+              vetements = JSON.parse(vetements);
+            } catch (e) {
+              console.error("Erreur lors du parsing des vêtements:", e);
+              vetements = [];
+            }
+          }
+          
+          // Si vetements n'est toujours pas un tableau, le convertir en tableau vide
+          if (!Array.isArray(vetements)) {
+            vetements = [];
+          }
+          
+          return {
+            ...ensemble,
+            vetements
+          };
+        });
+        
+        setEnsemblesAmis(formattedEnsembles);
+        console.log("Ensembles des amis chargés:", formattedEnsembles.length);
+      } else {
+        console.error("Format de données inattendu:", data);
+        setError(new Error("Format de données inattendu"));
+      }
     } catch (error) {
       console.error("Erreur lors du chargement des ensembles des amis:", error);
       setError(error instanceof Error ? error : new Error("Erreur de chargement"));

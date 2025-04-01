@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAmis } from '@/hooks/useAmis';
 import { useEnsemblesAmis } from '@/hooks/ensembles/useEnsemblesAmis';
 import EnsembleCard from './EnsembleCard';
@@ -13,6 +13,23 @@ const EnsemblesAmisList: React.FC = () => {
   const { filteredAmis, loadingAmis } = useAmis();
   const [selectedFriend, setSelectedFriend] = useState<string>("all");
   const { ensemblesAmis, loading, error, refreshEnsemblesAmis } = useEnsemblesAmis(selectedFriend !== "all" ? selectedFriend : undefined);
+  
+  // Ajouter un état de débogage pour visualiser les erreurs éventuelles
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (error) {
+      console.error("Erreur de chargement des ensembles:", error);
+      setDebugInfo(error.message || "Erreur inconnue");
+    } else {
+      setDebugInfo(null);
+    }
+    
+    // Log des ensembles pour débogage
+    if (ensemblesAmis && ensemblesAmis.length > 0) {
+      console.log("Ensembles chargés:", ensemblesAmis.length);
+    }
+  }, [error, ensemblesAmis]);
   
   const handleFriendChange = (friendId: string) => {
     setSelectedFriend(friendId);
@@ -90,13 +107,19 @@ const EnsemblesAmisList: React.FC = () => {
           <CardContent className="pt-6">
             <Text className="text-center text-red-500">
               Une erreur est survenue lors du chargement des ensembles.
+              {debugInfo && (
+                <details className="mt-2 text-xs">
+                  <summary>Détails de l'erreur</summary>
+                  <pre className="bg-muted p-2 rounded mt-1">{debugInfo}</pre>
+                </details>
+              )}
             </Text>
           </CardContent>
         </Card>
       );
     }
 
-    if (!ensemblesAmis.length) {
+    if (!ensemblesAmis || ensemblesAmis.length === 0) {
       return (
         <Card>
           <CardContent className="pt-6 flex flex-col items-center justify-center py-10">

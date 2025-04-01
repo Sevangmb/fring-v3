@@ -38,7 +38,8 @@ export const fetchEnsembles = async (): Promise<Ensemble[]> => {
       occasion: ensemble.occasion,
       saison: ensemble.saison,
       created_at: ensemble.created_at,
-      vetements: ensemble.tenues_vetements
+      vetements: ensemble.tenues_vetements,
+      user_id: ensemble.user_id
     }));
   } catch (error) {
     console.error("Erreur lors de la récupération des ensembles:", error);
@@ -51,28 +52,55 @@ export const fetchEnsembles = async (): Promise<Ensemble[]> => {
  */
 export const fetchEnsemblesAmis = async (friendId?: string): Promise<Ensemble[]> => {
   try {
+    console.log("Appel à fetchEnsemblesAmis avec friendId:", friendId);
+    
+    let data;
+    let error;
+    
     if (friendId && friendId !== "all") {
-      // Utilise la fonction get_friend_ensembles pour un ami spécifique
-      const { data, error } = await supabase
+      console.log("Récupération des ensembles pour un ami spécifique:", friendId);
+      const response = await supabase
         .rpc('get_friend_ensembles', { friend_id_param: friendId });
-
-      if (error) {
-        console.error("Erreur lors de la récupération des ensembles de l'ami:", error);
-        throw error;
-      }
-
-      return data || [];
+      
+      data = response.data;
+      error = response.error;
     } else {
-      // Utilise la fonction get_friends_ensembles pour tous les amis
-      const { data, error } = await supabase.rpc('get_friends_ensembles');
-
-      if (error) {
-        console.error("Erreur lors de la récupération des ensembles des amis:", error);
-        throw error;
-      }
-
-      return data || [];
+      console.log("Récupération des ensembles pour tous les amis");
+      const response = await supabase.rpc('get_friends_ensembles');
+      
+      data = response.data;
+      error = response.error;
     }
+
+    if (error) {
+      console.error("Erreur lors de la récupération des ensembles des amis:", error);
+      throw error;
+    }
+
+    if (!data) {
+      console.log("Aucun ensemble trouvé pour cet ami / ces amis");
+      return [];
+    }
+
+    console.log("Données d'ensembles reçues:", data.length);
+    
+    // Vérifier si les données reçues sont dans le format attendu
+    const formattedData = data.map((ensemble: any) => {
+      // Normaliser la structure
+      return {
+        id: ensemble.id,
+        nom: ensemble.nom || "Ensemble sans nom",
+        description: ensemble.description || "",
+        occasion: ensemble.occasion || "",
+        saison: ensemble.saison || "",
+        created_at: ensemble.created_at,
+        user_id: ensemble.user_id,
+        vetements: ensemble.vetements || [],
+        email: ensemble.email
+      };
+    });
+
+    return formattedData;
   } catch (error) {
     console.error("Erreur lors de la récupération des ensembles des amis:", error);
     throw error;
