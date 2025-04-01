@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getAllVetements } from '@/services/database/statsService';
 
 const AdminVetementsList: React.FC = () => {
   const { toast } = useToast();
@@ -26,15 +27,15 @@ const AdminVetementsList: React.FC = () => {
   const fetchVetements = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('vetements')
-        .select('*, profiles(email)')
-        .ilike('nom', `%${searchTerm}%`)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      // Utiliser la nouvelle fonction getAllVetements pour récupérer tous les vêtements
+      const data = await getAllVetements();
       
-      setVetements(data || []);
+      // Filtrer les résultats si un terme de recherche est spécifié
+      const filteredData = searchTerm 
+        ? data.filter(v => v.nom.toLowerCase().includes(searchTerm.toLowerCase()))
+        : data;
+      
+      setVetements(filteredData || []);
     } catch (error) {
       console.error('Erreur lors de la récupération des vêtements:', error);
       toast({

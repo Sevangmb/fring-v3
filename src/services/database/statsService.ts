@@ -90,3 +90,25 @@ export const getTableDetails = async (tableName: string): Promise<any[]> => {
     throw error;
   }
 };
+
+/**
+ * Récupère tous les vêtements de tous les utilisateurs avec les informations sur les propriétaires
+ */
+export const getAllVetements = async (): Promise<any[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('vetements')
+      .select('*, profiles(email)')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Erreur lors de la récupération de tous les vêtements:", error);
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Erreur dans getAllVetements:", error);
+    throw error;
+  }
+};
