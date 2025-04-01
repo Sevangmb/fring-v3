@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, SlidersHorizontal, TagIcon, RefreshCw, User } from "lucide-react";
+import { Search, Filter, TagIcon, RefreshCw, User } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { useSearchFilter } from '@/contexts/SearchFilterContext';
 import { useCategories } from '@/hooks/useCategories';
