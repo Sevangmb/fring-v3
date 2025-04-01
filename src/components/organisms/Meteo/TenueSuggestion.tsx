@@ -12,6 +12,7 @@ import TenueDetails from './TenueSuggestion/TenueDetails';
 import { useToast } from '@/hooks/use-toast';
 import { createEnsemble, EnsembleCreateData } from '@/services/ensembleService';
 import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface TenueSuggestionProps {
   haut: Vetement | null;
@@ -30,6 +31,7 @@ const TenueSuggestion: React.FC<TenueSuggestionProps> = ({
   const { toast } = useToast();
   const navigate = useNavigate();
   const [saving, setSaving] = React.useState(false);
+  const isMobile = useIsMobile();
   
   const saveAsEnsemble = async () => {
     // Vérifier si tous les éléments nécessaires sont présents
@@ -95,8 +97,8 @@ const TenueSuggestion: React.FC<TenueSuggestionProps> = ({
           onClick={saveAsEnsemble}
           disabled={saving || !haut || !bas || !chaussures}
         >
-          <Save className="h-4 w-4 mr-2" />
-          {saving ? 'Sauvegarde...' : 'Sauvegarder comme ensemble'}
+          <Save className="h-4 w-4" />
+          {(!isMobile) && <span className="ml-2">{saving ? 'Sauvegarde...' : 'Sauvegarder comme ensemble'}</span>}
         </Button>
       </div>
       

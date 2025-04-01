@@ -8,9 +8,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/atoms/Typography";
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const MeteoSection: React.FC = () => {
   const { meteo, loading, error, tenueSuggestion, isGeneratingSuggestion, regenerateSuggestion } = useMeteo();
+  const isMobile = useIsMobile();
 
   if (loading) {
     return (
@@ -53,7 +55,7 @@ const MeteoSection: React.FC = () => {
             className="flex items-center gap-2"
           >
             <RefreshCw className={`h-4 w-4 ${isGeneratingSuggestion ? 'animate-spin' : ''}`} />
-            Nouvelle suggestion
+            {!isMobile && "Nouvelle suggestion"}
           </Button>
         )}
       </div>
