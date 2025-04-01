@@ -9,6 +9,7 @@ import Login from '../pages/Login';
 import Register from '../pages/Register';
 import NotFound from '../pages/NotFound';
 import Privacy from '../pages/Privacy';
+import Terms from '../pages/Terms';
 
 export const publicRoutes: RouteObject[] = [
   {
@@ -34,6 +35,10 @@ export const publicRoutes: RouteObject[] = [
   {
     path: "/privacy",
     element: <Privacy />
+  },
+  {
+    path: "/terms",
+    element: <Terms />
   },
   {
     path: "*",
