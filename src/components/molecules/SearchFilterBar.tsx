@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, SlidersHorizontal, TagIcon, RefreshCw } from "lucide-react";
+import { Search, Filter, SlidersHorizontal, TagIcon, RefreshCw, User } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { useSearchFilter } from '@/contexts/SearchFilterContext';
 import { useCategories } from '@/hooks/useCategories';
@@ -17,8 +17,12 @@ const SearchFilterBar: React.FC = () => {
     setCategorieFilter,
     marqueFilter,
     setMarqueFilter,
+    friendFilter,
+    setFriendFilter,
     resetFilters,
-    marques
+    marques,
+    showFriendFilter,
+    friends
   } = useSearchFilter();
   
   const {
@@ -32,9 +36,11 @@ const SearchFilterBar: React.FC = () => {
       searchTerm,
       categorieFilter,
       marqueFilter,
-      availableCategories: categories
+      friendFilter,
+      availableCategories: categories,
+      availableFriends: friends
     });
-  }, [searchTerm, categorieFilter, marqueFilter, categories]);
+  }, [searchTerm, categorieFilter, marqueFilter, friendFilter, categories, friends]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -94,6 +100,25 @@ const SearchFilterBar: React.FC = () => {
             ))}
           </SelectContent>
         </Select>
+        
+        {showFriendFilter && (
+          <Select value={friendFilter} onValueChange={setFriendFilter}>
+            <SelectTrigger className="w-[180px]">
+              <div className="flex items-center">
+                <User className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Tous les amis" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les amis</SelectItem>
+              {friends.map(friend => (
+                <SelectItem key={friend.id} value={friend.ami_id === friend.user_id ? friend.ami_id : friend.user_id}>
+                  {friend.email?.split('@')[0] || 'Ami'}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         
         <Button 
           variant="outline" 
