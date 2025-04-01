@@ -48,7 +48,7 @@ const UserVetementsDialog: React.FC<UserVetementsDialogProps> = ({ open, onOpenC
           if (error) throw error;
           
           // Transformer les données
-          const formattedVetements = data.map(item => ({
+          const formattedVetements = data.map((item: any) => ({
             id: item.id,
             nom: item.nom || 'Sans nom',
             categorie: item.categorie?.nom || 'Non catégorisé',
@@ -81,6 +81,11 @@ const UserVetementsDialog: React.FC<UserVetementsDialogProps> = ({ open, onOpenC
   }, [user, open, toast]);
 
   if (!user) return null;
+
+  // Fonction pour fermer proprement le dialogue
+  const handleClose = () => {
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -145,7 +150,7 @@ const UserVetementsDialog: React.FC<UserVetementsDialogProps> = ({ open, onOpenC
         )}
 
         <DialogFooter>
-          <Button onClick={() => onOpenChange(false)}>
+          <Button onClick={handleClose}>
             Fermer
           </Button>
         </DialogFooter>

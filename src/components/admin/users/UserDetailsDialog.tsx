@@ -66,7 +66,7 @@ const UserDetailsDialog: React.FC<UserDetailsDialogProps> = ({ open, onOpenChang
             .from('amis')
             .select('*')
             .or(`user_id.eq.${user.id},ami_id.eq.${user.id}`)
-            .eq('statut', 'acceptée');
+            .eq('status', 'acceptée');
           
           const { data: favoris, error: favorisError } = await supabase
             .from('favoris')
@@ -85,6 +85,9 @@ const UserDetailsDialog: React.FC<UserDetailsDialogProps> = ({ open, onOpenChang
             throw new Error("Erreur lors de la récupération des données");
           }
 
+          // Fixer l'erreur ici - Vérifier la présence de l'email avec user.app_metadata ou d'autres propriétés
+          const isEmailVerified = user.last_sign_in_at ? true : false; // Utiliser une autre propriété à la place de email_confirmed_at
+
           setDetails({
             stats: {
               vetements: vetements?.length || 0,
@@ -93,7 +96,7 @@ const UserDetailsDialog: React.FC<UserDetailsDialogProps> = ({ open, onOpenChang
               favoris: favoris?.length || 0,
             },
             derniere_connexion: auth_data?.last_sign_in_at ? new Date(auth_data.last_sign_in_at) : new Date(),
-            email_verifie: user.email_confirmed_at ? true : false,
+            email_verifie: isEmailVerified,
             localisation: auth_data?.location || "Inconnu",
             appareil: auth_data?.device || "Inconnu",
             preferences: {
