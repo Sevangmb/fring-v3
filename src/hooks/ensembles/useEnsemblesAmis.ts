@@ -39,7 +39,9 @@ export const useEnsemblesAmis = (friendId?: string) => {
           
           return {
             ...ensemble,
-            vetements
+            vetements,
+            // S'assurer que l'email est correctement passé
+            email: ensemble.email || undefined
           };
         });
         

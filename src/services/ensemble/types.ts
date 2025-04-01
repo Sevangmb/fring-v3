@@ -36,4 +36,6 @@ export interface Ensemble {
     vetement: Vetement;
     position_ordre: number;
   }[];
+  user_id?: string;
+  email?: string; // Ajout de la propriété email pour les ensembles des amis
 }
