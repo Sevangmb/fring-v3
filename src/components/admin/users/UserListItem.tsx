@@ -21,6 +21,8 @@ import {
   FileText,
   Shirt
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 interface UserListItemProps {
   user: AdminUserData;
@@ -32,6 +34,40 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, userStats, onDelete }
   const isAdmin = user.email.includes('admin@') || 
                   user.email.includes('sevans@') || 
                   user.email.includes('pedro@');
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleViewProfile = () => {
+    // Dans un cas réel, naviguer vers le profil de l'utilisateur
+    toast({
+      title: "Fonctionnalité à venir",
+      description: `Voir le profil de ${user.email}`,
+    });
+  };
+
+  const handleViewClothes = () => {
+    // Dans un cas réel, naviguer vers les vêtements de l'utilisateur
+    toast({
+      title: "Fonctionnalité à venir",
+      description: `Voir les vêtements de ${user.email}`,
+    });
+  };
+
+  const handleViewEnsembles = () => {
+    // Dans un cas réel, naviguer vers les ensembles de l'utilisateur
+    toast({
+      title: "Fonctionnalité à venir",
+      description: `Voir les ensembles de ${user.email}`,
+    });
+  };
+
+  const handleViewDetails = () => {
+    // Dans un cas réel, naviguer vers les détails de l'utilisateur
+    toast({
+      title: "Fonctionnalité à venir",
+      description: `Voir les détails de ${user.email}`,
+    });
+  };
 
   return (
     <TableRow>
@@ -88,30 +124,42 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, userStats, onDelete }
               <span className="sr-only">Options</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem className="flex items-center gap-2">
-              <User className="h-4 w-4" />
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem 
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={handleViewProfile}
+            >
+              <User className="h-4 w-4 text-blue-500" />
               <span>Voir le profil</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center gap-2">
-              <Shirt className="h-4 w-4" />
+            <DropdownMenuItem 
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={handleViewClothes}
+            >
+              <Shirt className="h-4 w-4 text-emerald-500" />
               <span>Vêtements</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center gap-2">
-              <ShoppingBag className="h-4 w-4" />
+            <DropdownMenuItem 
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={handleViewEnsembles}
+            >
+              <ShoppingBag className="h-4 w-4 text-purple-500" />
               <span>Ensembles</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
+            <DropdownMenuItem 
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={handleViewDetails}
+            >
+              <FileText className="h-4 w-4 text-cyan-500" />
               <span>Détails</span>
             </DropdownMenuItem>
             {/* Ne pas afficher l'option de suppression pour les admins */}
             {!isAdmin && (
               <DropdownMenuItem 
-                className="flex items-center gap-2 text-destructive focus:text-destructive"
+                className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer"
                 onClick={() => onDelete(user)}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4 text-red-500" />
                 <span>Supprimer</span>
               </DropdownMenuItem>
             )}

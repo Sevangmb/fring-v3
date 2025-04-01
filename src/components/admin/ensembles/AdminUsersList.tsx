@@ -68,6 +68,20 @@ const AdminUsersList: React.FC = () => {
     }
   };
 
+  const handleViewProfile = (user: AdminUserData) => {
+    toast({
+      title: "Fonctionnalité à venir",
+      description: `Voir le profil de ${user.email}`,
+    });
+  };
+
+  const handleRemoveUser = (user: AdminUserData) => {
+    toast({
+      title: "Fonctionnalité à venir",
+      description: `Supprimer ${user.email}`,
+    });
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -142,14 +156,16 @@ const AdminUsersList: React.FC = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => {}}
+                            onClick={() => handleViewProfile(user)}
+                            title="Voir le profil"
                           >
-                            <User className="h-4 w-4" />
+                            <User className="h-4 w-4 text-blue-500" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => {}}
+                            onClick={() => handleRemoveUser(user)}
+                            title="Supprimer l'utilisateur"
                           >
                             <UserX className="h-4 w-4 text-destructive" />
                           </Button>
