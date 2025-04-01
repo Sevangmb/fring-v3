@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { AdminUserData } from '@/services/adminService';
-import { Loader2, FileText, Calendar, MapPin, User, Mail, ShieldAlert, Check, X, Shirt, Heart, Monitor, BellRing } from 'lucide-react';
+import { Loader2, FileText, Calendar, MapPin, User, Mail, ShieldAlert, Check, X, Shirt, Heart, Monitor, BellRing, ShoppingBag } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
