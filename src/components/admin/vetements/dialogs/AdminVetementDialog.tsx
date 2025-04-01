@@ -106,6 +106,8 @@ const AdminVetementDialog: React.FC<AdminVetementDialogProps> = ({
         image_url: values.image_url || null,
         temperature: values.temperature || null,
         weatherType: values.weatherType || null,
+        // Si user_id est "none", le traiter comme null
+        user_id: values.user_id === "none" ? null : values.user_id
       };
 
       if (isEditMode) {
@@ -348,7 +350,7 @@ const AdminVetementDialog: React.FC<AdminVetementDialogProps> = ({
                   <FormLabel>Propriétaire</FormLabel>
                   <Select 
                     onValueChange={field.onChange}
-                    defaultValue={field.value || undefined}
+                    defaultValue={field.value || "none"}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -356,9 +358,9 @@ const AdminVetementDialog: React.FC<AdminVetementDialogProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Non assigné</SelectItem>
+                      <SelectItem value="none">Non assigné</SelectItem>
                       {loadingUsers ? (
-                        <SelectItem value="" disabled>
+                        <SelectItem value="loading" disabled>
                           Chargement des utilisateurs...
                         </SelectItem>
                       ) : (

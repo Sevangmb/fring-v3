@@ -180,7 +180,7 @@ const AdminEnsembleDialog: React.FC<AdminEnsembleDialogProps> = ({
                     <FormLabel>Saison</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
-                      value={field.value || ''}
+                      value={field.value || "none"}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -188,7 +188,7 @@ const AdminEnsembleDialog: React.FC<AdminEnsembleDialogProps> = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Aucune</SelectItem>
+                        <SelectItem value="none">Aucune</SelectItem>
                         {seasons.map(season => (
                           <SelectItem key={season} value={season}>
                             {season}
@@ -209,7 +209,7 @@ const AdminEnsembleDialog: React.FC<AdminEnsembleDialogProps> = ({
                     <FormLabel>Occasion</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
-                      value={field.value || ''}
+                      value={field.value || "none"}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -217,7 +217,7 @@ const AdminEnsembleDialog: React.FC<AdminEnsembleDialogProps> = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Aucune</SelectItem>
+                        <SelectItem value="none">Aucune</SelectItem>
                         {occasions.map(occasion => (
                           <SelectItem key={occasion} value={occasion}>
                             {occasion}
