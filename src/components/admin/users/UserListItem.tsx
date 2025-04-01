@@ -38,35 +38,47 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, userStats, onDelete }
   const { toast } = useToast();
 
   const handleViewProfile = () => {
-    // Dans un cas réel, naviguer vers le profil de l'utilisateur
     toast({
-      title: "Fonctionnalité à venir",
-      description: `Voir le profil de ${user.email}`,
+      title: "Navigation vers profil",
+      description: `Vue du profil de ${user.email}`,
     });
+    // Dans un cas réel, naviguer vers le profil
+    // navigate(`/admin/users/${user.id}/profile`);
   };
 
   const handleViewClothes = () => {
-    // Dans un cas réel, naviguer vers les vêtements de l'utilisateur
     toast({
-      title: "Fonctionnalité à venir",
-      description: `Voir les vêtements de ${user.email}`,
+      title: "Navigation vers vêtements",
+      description: `Vêtements de ${user.email}`,
     });
+    // Dans un cas réel
+    // navigate(`/admin/users/${user.id}/vetements`);
   };
 
   const handleViewEnsembles = () => {
-    // Dans un cas réel, naviguer vers les ensembles de l'utilisateur
     toast({
-      title: "Fonctionnalité à venir",
-      description: `Voir les ensembles de ${user.email}`,
+      title: "Navigation vers ensembles",
+      description: `Ensembles de ${user.email}`,
     });
+    // Dans un cas réel
+    // navigate(`/admin/users/${user.id}/ensembles`);
   };
 
   const handleViewDetails = () => {
-    // Dans un cas réel, naviguer vers les détails de l'utilisateur
     toast({
-      title: "Fonctionnalité à venir",
-      description: `Voir les détails de ${user.email}`,
+      title: "Navigation vers détails",
+      description: `Détails de ${user.email}`,
     });
+    // Dans un cas réel
+    // navigate(`/admin/users/${user.id}/details`);
+  };
+
+  const handleDeleteUser = () => {
+    toast({
+      title: "Suppression d'utilisateur",
+      description: `Demande de suppression de ${user.email}`,
+    });
+    onDelete(user);
   };
 
   return (
@@ -157,7 +169,7 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, userStats, onDelete }
             {!isAdmin && (
               <DropdownMenuItem 
                 className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer"
-                onClick={() => onDelete(user)}
+                onClick={handleDeleteUser}
               >
                 <Trash2 className="h-4 w-4 text-red-500" />
                 <span>Supprimer</span>

@@ -10,6 +10,7 @@ import {
 import { AdminUserData } from '@/services/adminService';
 import { User, Shirt, ShoppingBag, FileText, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface UserContextMenuProps {
   user: AdminUserData;
@@ -19,40 +20,53 @@ interface UserContextMenuProps {
 
 const UserContextMenu: React.FC<UserContextMenuProps> = ({ user, children, onDelete }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const isAdmin = user.email.includes('admin@') || 
                   user.email.includes('sevans@') || 
                   user.email.includes('pedro@');
 
   const handleViewProfile = () => {
     toast({
-      title: "Fonctionnalité à venir",
-      description: `Voir le profil de ${user.email}`,
+      title: "Navigation vers profil",
+      description: `Vue du profil de ${user.email}`,
     });
+    // Dans un cas réel, naviguer vers le profil
+    // navigate(`/admin/users/${user.id}/profile`);
   };
 
   const handleViewClothes = () => {
     toast({
-      title: "Fonctionnalité à venir",
-      description: `Voir les vêtements de ${user.email}`,
+      title: "Navigation vers vêtements",
+      description: `Vêtements de ${user.email}`,
     });
+    // Dans un cas réel
+    // navigate(`/admin/users/${user.id}/vetements`);
   };
 
   const handleViewEnsembles = () => {
     toast({
-      title: "Fonctionnalité à venir",
-      description: `Voir les ensembles de ${user.email}`,
+      title: "Navigation vers ensembles",
+      description: `Ensembles de ${user.email}`,
     });
+    // Dans un cas réel
+    // navigate(`/admin/users/${user.id}/ensembles`);
   };
 
   const handleViewDetails = () => {
     toast({
-      title: "Fonctionnalité à venir",
-      description: `Voir les détails de ${user.email}`,
+      title: "Navigation vers détails",
+      description: `Détails de ${user.email}`,
     });
+    // Dans un cas réel
+    // navigate(`/admin/users/${user.id}/details`);
   };
 
   const handleDelete = () => {
     if (onDelete) {
+      toast({
+        title: "Suppression d'utilisateur",
+        description: `Demande de suppression de ${user.email}`,
+      });
       onDelete(user);
     }
   };
@@ -61,22 +75,34 @@ const UserContextMenu: React.FC<UserContextMenuProps> = ({ user, children, onDel
     <ContextMenu>
       <ContextMenuTrigger>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-64">
-        <ContextMenuItem onClick={handleViewProfile} className="flex items-center gap-2 cursor-pointer">
+        <ContextMenuItem 
+          onClick={handleViewProfile} 
+          className="flex items-center gap-2 cursor-pointer"
+        >
           <User className="h-4 w-4 text-blue-500" />
           <span>Voir le profil</span>
         </ContextMenuItem>
         
-        <ContextMenuItem onClick={handleViewClothes} className="flex items-center gap-2 cursor-pointer">
+        <ContextMenuItem 
+          onClick={handleViewClothes} 
+          className="flex items-center gap-2 cursor-pointer"
+        >
           <Shirt className="h-4 w-4 text-emerald-500" />
           <span>Vêtements</span>
         </ContextMenuItem>
         
-        <ContextMenuItem onClick={handleViewEnsembles} className="flex items-center gap-2 cursor-pointer">
+        <ContextMenuItem 
+          onClick={handleViewEnsembles} 
+          className="flex items-center gap-2 cursor-pointer"
+        >
           <ShoppingBag className="h-4 w-4 text-purple-500" />
           <span>Ensembles</span>
         </ContextMenuItem>
         
-        <ContextMenuItem onClick={handleViewDetails} className="flex items-center gap-2 cursor-pointer">
+        <ContextMenuItem 
+          onClick={handleViewDetails} 
+          className="flex items-center gap-2 cursor-pointer"
+        >
           <FileText className="h-4 w-4 text-cyan-500" />
           <span>Détails</span>
         </ContextMenuItem>
