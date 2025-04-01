@@ -6,16 +6,26 @@ import EnsembleCard from './EnsembleCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import { Shirt } from 'lucide-react';
+import { Shirt, ChevronDown } from 'lucide-react';
 import { Text } from '@/components/atoms/Typography';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Drawer, DrawerContent, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
+import FloatingAddButton from '@/components/molecules/FloatingAddButton';
 
 const EnsemblesAmisList: React.FC = () => {
   const { filteredAmis, loadingAmis } = useAmis();
   const [selectedFriend, setSelectedFriend] = useState<string>("all");
   const { ensemblesAmis, loading, error, refreshEnsemblesAmis } = useEnsemblesAmis(selectedFriend !== "all" ? selectedFriend : undefined);
+  const isMobile = useIsMobile();
+  
+  // État pour savoir si le drawer des amis est ouvert (mobile uniquement)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   
   // Ajouter un état de débogage pour visualiser les erreurs éventuelles
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
+  
+  // État pour stocker le nom de l'ami sélectionné
+  const [selectedFriendName, setSelectedFriendName] = useState<string>("Tous les amis");
   
   useEffect(() => {
     if (error) {
@@ -33,6 +43,21 @@ const EnsemblesAmisList: React.FC = () => {
   
   const handleFriendChange = (friendId: string) => {
     setSelectedFriend(friendId);
+    
+    // Mettre à jour le nom de l'ami sélectionné
+    if (friendId === "all") {
+      setSelectedFriendName("Tous les amis");
+    } else {
+      const ami = filteredAmis.amisAcceptes.find(ami => 
+        (ami.ami_id === ami.user_id ? ami.ami_id : ami.user_id) === friendId
+      );
+      setSelectedFriendName(ami?.email?.split('@')[0] || "Ami");
+    }
+    
+    // Fermer le drawer après la sélection sur mobile
+    if (isMobile) {
+      setIsDrawerOpen(false);
+    }
   };
 
   if (loadingAmis) {
@@ -59,6 +84,52 @@ const EnsemblesAmisList: React.FC = () => {
     );
   }
 
+  // Version mobile avec un Drawer pour sélectionner les amis
+  if (isMobile) {
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-medium">{selectedFriendName}</h2>
+          
+          <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+            <DrawerTrigger asChild>
+              <button className="flex items-center gap-2 px-3 py-2 rounded-md border text-sm">
+                Sélectionner un ami
+                <ChevronDown size={16} />
+              </button>
+            </DrawerTrigger>
+            <DrawerContent className="p-4">
+              <div className="space-y-2 max-h-[70vh] overflow-y-auto">
+                <h3 className="font-medium mb-2">Choisir un ami</h3>
+                <button 
+                  onClick={() => handleFriendChange("all")}
+                  className={`w-full text-left px-3 py-2 rounded-md text-sm ${selectedFriend === "all" ? "bg-primary text-primary-foreground" : "bg-muted"}`}
+                >
+                  Tous les amis
+                </button>
+                
+                {filteredAmis.amisAcceptes.map((ami) => (
+                  <button 
+                    key={ami.id} 
+                    onClick={() => handleFriendChange(ami.ami_id === ami.user_id ? ami.ami_id : ami.user_id)}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm ${selectedFriend === (ami.ami_id === ami.user_id ? ami.ami_id : ami.user_id) ? "bg-primary text-primary-foreground" : "bg-muted"}`}
+                  >
+                    {ami.email?.split('@')[0] || 'Ami'}
+                  </button>
+                ))}
+              </div>
+              <DrawerClose className="sr-only">Fermer</DrawerClose>
+            </DrawerContent>
+          </Drawer>
+        </div>
+
+        {renderEnsemblesList()}
+        <FloatingAddButton visible={false} />
+      </div>
+    );
+  }
+
+  // Version desktop avec les onglets
   return (
     <div className="space-y-4">
       <Tabs defaultValue="all" onValueChange={handleFriendChange} className="w-full">
@@ -68,7 +139,7 @@ const EnsemblesAmisList: React.FC = () => {
           </TabsTrigger>
           {filteredAmis.amisAcceptes.map((ami) => (
             <TabsTrigger key={ami.id} value={ami.ami_id === ami.user_id ? ami.ami_id : ami.user_id} className="mb-1">
-              {ami.email || 'Ami'}
+              {ami.email?.split('@')[0] || 'Ami'}
             </TabsTrigger>
           ))}
         </TabsList>
