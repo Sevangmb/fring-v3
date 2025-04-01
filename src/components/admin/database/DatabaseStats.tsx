@@ -60,7 +60,7 @@ const DatabaseStatsView: React.FC<DatabaseStatsViewProps> = ({ stats, isLoading 
                 <TableRow key={index}>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
-                    {formatDistance(new Date(user.created_at), new Date(), {
+                    {formatDistance(new Date(user.updated_at), new Date(), {
                       addSuffix: true,
                       locale: fr
                     })}

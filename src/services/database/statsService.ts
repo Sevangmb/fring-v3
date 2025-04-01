@@ -12,7 +12,7 @@ export interface DatabaseStats {
   totalCategories: number;
   latestRegistrations: {
     email: string;
-    created_at: string;
+    updated_at: string; // Utilisation de updated_at au lieu de created_at
   }[];
 }
 
@@ -34,11 +34,11 @@ export const getDatabaseStats = async (): Promise<DatabaseStats> => {
       supabase.from('categories').select('*', { count: 'exact', head: true }),
     ]);
 
-    // Récupération des dernières inscriptions
+    // Récupération des dernières inscriptions (utilisation de updated_at au lieu de created_at)
     const { data: latestUsers, error: latestUsersError } = await supabase
       .from('profiles')
-      .select('email, created_at')
-      .order('created_at', { ascending: false })
+      .select('email, updated_at')
+      .order('updated_at', { ascending: false })
       .limit(5);
 
     if (usersError || vetementsError || ensemblesError || categoriesError || latestUsersError) {
