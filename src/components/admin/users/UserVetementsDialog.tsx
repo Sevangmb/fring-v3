@@ -33,6 +33,8 @@ const UserVetementsDialog: React.FC<UserVetementsDialogProps> = ({ open, onOpenC
       if (user && open) {
         setLoading(true);
         try {
+          console.log("Récupération des vêtements pour l'utilisateur:", user.id);
+          
           // Récupérer les vêtements réels depuis Supabase
           const { data, error } = await supabase
             .from('vetements')
@@ -45,16 +47,23 @@ const UserVetementsDialog: React.FC<UserVetementsDialogProps> = ({ open, onOpenC
             `)
             .eq('user_id', user.id);
           
-          if (error) throw error;
+          if (error) {
+            console.error("Erreur lors de la récupération des vêtements:", error);
+            throw error;
+          }
+          
+          console.log("Vêtements récupérés:", data);
           
           // Transformer les données
-          const formattedVetements = data.map((item: any) => ({
-            id: item.id,
-            nom: item.nom || 'Sans nom',
-            categorie: item.categorie?.nom || 'Non catégorisé',
-            couleur: item.couleur || 'Non spécifié',
-            date_ajout: new Date(item.created_at).toLocaleDateString('fr-FR')
-          }));
+          const formattedVetements = data && data.length > 0 
+            ? data.map((item: any) => ({
+                id: item.id,
+                nom: item.nom || 'Sans nom',
+                categorie: item.categorie?.nom || 'Non catégorisé',
+                couleur: item.couleur || 'Non spécifié',
+                date_ajout: new Date(item.created_at).toLocaleDateString('fr-FR')
+              }))
+            : [];
           
           setVetements(formattedVetements);
         } catch (error) {
