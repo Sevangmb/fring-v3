@@ -11,7 +11,7 @@ import {
   createEmptyDashboardStats,
   DashboardStats,
   VetementWithCategories
-} from "@/utils/statsUtils";
+} from "@/utils/stats";
 
 export const useDashboardStats = () => {
   const { user } = useAuth();
