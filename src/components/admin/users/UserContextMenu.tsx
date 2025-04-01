@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   ContextMenu,
   ContextMenuContent,
@@ -11,6 +11,7 @@ import { AdminUserData } from '@/services/adminService';
 import { User, Shirt, ShoppingBag, FileText, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import UserProfileDialog from './UserProfileDialog';
 
 interface UserContextMenuProps {
   user: AdminUserData;
@@ -24,14 +25,11 @@ const UserContextMenu: React.FC<UserContextMenuProps> = ({ user, children, onDel
   const isAdmin = user.email.includes('admin@') || 
                   user.email.includes('sevans@') || 
                   user.email.includes('pedro@');
+  
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
 
   const handleViewProfile = () => {
-    toast({
-      title: "Navigation vers profil",
-      description: `Vue du profil de ${user.email}`,
-    });
-    // Dans un cas réel, naviguer vers le profil
-    // navigate(`/admin/users/${user.id}/profile`);
+    setProfileDialogOpen(true);
   };
 
   const handleViewClothes = () => {
@@ -72,55 +70,63 @@ const UserContextMenu: React.FC<UserContextMenuProps> = ({ user, children, onDel
   };
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger>{children}</ContextMenuTrigger>
-      <ContextMenuContent className="w-64">
-        <ContextMenuItem 
-          onClick={handleViewProfile} 
-          className="flex items-center gap-2 cursor-pointer"
-        >
-          <User className="h-4 w-4 text-blue-500" />
-          <span>Voir le profil</span>
-        </ContextMenuItem>
-        
-        <ContextMenuItem 
-          onClick={handleViewClothes} 
-          className="flex items-center gap-2 cursor-pointer"
-        >
-          <Shirt className="h-4 w-4 text-emerald-500" />
-          <span>Vêtements</span>
-        </ContextMenuItem>
-        
-        <ContextMenuItem 
-          onClick={handleViewEnsembles} 
-          className="flex items-center gap-2 cursor-pointer"
-        >
-          <ShoppingBag className="h-4 w-4 text-purple-500" />
-          <span>Ensembles</span>
-        </ContextMenuItem>
-        
-        <ContextMenuItem 
-          onClick={handleViewDetails} 
-          className="flex items-center gap-2 cursor-pointer"
-        >
-          <FileText className="h-4 w-4 text-cyan-500" />
-          <span>Détails</span>
-        </ContextMenuItem>
-        
-        {!isAdmin && onDelete && (
-          <>
-            <ContextMenuSeparator />
-            <ContextMenuItem 
-              onClick={handleDelete} 
-              className="flex items-center gap-2 text-destructive cursor-pointer"
-            >
-              <Trash2 className="h-4 w-4 text-red-500" />
-              <span>Supprimer</span>
-            </ContextMenuItem>
-          </>
-        )}
-      </ContextMenuContent>
-    </ContextMenu>
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger>{children}</ContextMenuTrigger>
+        <ContextMenuContent className="w-64">
+          <ContextMenuItem 
+            onClick={handleViewProfile} 
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            <User className="h-4 w-4 text-blue-500" />
+            <span>Voir le profil</span>
+          </ContextMenuItem>
+          
+          <ContextMenuItem 
+            onClick={handleViewClothes} 
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            <Shirt className="h-4 w-4 text-emerald-500" />
+            <span>Vêtements</span>
+          </ContextMenuItem>
+          
+          <ContextMenuItem 
+            onClick={handleViewEnsembles} 
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            <ShoppingBag className="h-4 w-4 text-purple-500" />
+            <span>Ensembles</span>
+          </ContextMenuItem>
+          
+          <ContextMenuItem 
+            onClick={handleViewDetails} 
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            <FileText className="h-4 w-4 text-cyan-500" />
+            <span>Détails</span>
+          </ContextMenuItem>
+          
+          {!isAdmin && onDelete && (
+            <>
+              <ContextMenuSeparator />
+              <ContextMenuItem 
+                onClick={handleDelete} 
+                className="flex items-center gap-2 text-destructive cursor-pointer"
+              >
+                <Trash2 className="h-4 w-4 text-red-500" />
+                <span>Supprimer</span>
+              </ContextMenuItem>
+            </>
+          )}
+        </ContextMenuContent>
+      </ContextMenu>
+      
+      <UserProfileDialog 
+        open={profileDialogOpen} 
+        onOpenChange={setProfileDialogOpen} 
+        user={user} 
+      />
+    </>
   );
 };
 
