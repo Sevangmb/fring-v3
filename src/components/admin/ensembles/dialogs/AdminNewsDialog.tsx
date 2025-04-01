@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { News } from '@/hooks/admin/useNewsList';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { Calendar } from 'lucide-react';
 
 interface AdminNewsDialogProps {
   open: boolean;
@@ -31,12 +32,18 @@ const AdminNewsDialog: React.FC<AdminNewsDialogProps> = ({
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [content, setContent] = useState('');
+  const [formErrors, setFormErrors] = useState<{
+    title?: string;
+    date?: string;
+    content?: string;
+  }>({});
 
   useEffect(() => {
     if (news) {
       setTitle(news.title);
       setDate(news.date);
       setContent(news.content);
+      setFormErrors({});
     } else {
       setTitle('');
       // Définir la date d'aujourd'hui par défaut
@@ -44,23 +51,50 @@ const AdminNewsDialog: React.FC<AdminNewsDialogProps> = ({
       const formattedDate = `${today.getDate()} ${today.toLocaleString('fr-FR', { month: 'long' })} ${today.getFullYear()}`;
       setDate(formattedDate);
       setContent('');
+      setFormErrors({});
     }
   }, [news, open]);
 
+  const validateForm = () => {
+    const errors: {
+      title?: string;
+      date?: string;
+      content?: string;
+    } = {};
+    let isValid = true;
+
+    if (!title.trim()) {
+      errors.title = "Le titre est obligatoire";
+      isValid = false;
+    }
+
+    if (!date.trim()) {
+      errors.date = "La date est obligatoire";
+      isValid = false;
+    }
+
+    if (!content.trim()) {
+      errors.content = "Le contenu est obligatoire";
+      isValid = false;
+    } else if (content.length < 10) {
+      errors.content = "Le contenu doit contenir au moins 10 caractères";
+      isValid = false;
+    }
+
+    setFormErrors(errors);
+    return isValid;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setLoading(true);
 
     try {
-      if (!title || !date || !content) {
-        toast({
-          title: "Erreur",
-          description: "Tous les champs sont obligatoires",
-          variant: "destructive"
-        });
-        return;
-      }
-
       if (news) {
         // Mise à jour d'une actualité existante
         const { error } = await supabase
@@ -112,6 +146,19 @@ const AdminNewsDialog: React.FC<AdminNewsDialogProps> = ({
     }
   };
 
+  const handleDateFormat = () => {
+    try {
+      // Si la date est au format ISO, la convertir en format français
+      if (/^\d{4}-\d{2}-\d{2}/.test(date)) {
+        const dateObj = new Date(date);
+        const formattedDate = `${dateObj.getDate()} ${dateObj.toLocaleString('fr-FR', { month: 'long' })} ${dateObj.getFullYear()}`;
+        setDate(formattedDate);
+      }
+    } catch (error) {
+      console.error('Erreur de formatage de date:', error);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onOpenChange(false)}>
       <DialogContent className="sm:max-w-[600px]">
@@ -129,19 +176,32 @@ const AdminNewsDialog: React.FC<AdminNewsDialogProps> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Titre de l'actualité"
-              required
+              className={formErrors.title ? "border-red-500" : ""}
             />
+            {formErrors.title && (
+              <p className="text-sm text-red-500">{formErrors.title}</p>
+            )}
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="date">Date</Label>
+            <Label htmlFor="date" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Date
+            </Label>
             <Input
               id="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
+              onBlur={handleDateFormat}
               placeholder="ex: 15 juin 2023"
-              required
+              className={formErrors.date ? "border-red-500" : ""}
             />
+            {formErrors.date && (
+              <p className="text-sm text-red-500">{formErrors.date}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Format recommandé: 15 juin 2023
+            </p>
           </div>
 
           <div className="grid gap-2">
@@ -151,9 +211,19 @@ const AdminNewsDialog: React.FC<AdminNewsDialogProps> = ({
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Contenu de l'actualité"
-              className="min-h-[200px]"
-              required
+              className={`min-h-[200px] ${formErrors.content ? "border-red-500" : ""}`}
             />
+            {formErrors.content && (
+              <p className="text-sm text-red-500">{formErrors.content}</p>
+            )}
+            <div className="flex justify-between">
+              <p className="text-xs text-muted-foreground">
+                Minimum 10 caractères
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {content.length} caractères
+              </p>
+            </div>
           </div>
 
           <DialogFooter>
