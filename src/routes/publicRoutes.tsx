@@ -11,6 +11,7 @@ import NotFound from '../pages/NotFound';
 import Privacy from '../pages/Privacy';
 import Terms from '../pages/Terms';
 import Features from '../pages/Features';
+import Docs from '../pages/Docs';
 
 export const publicRoutes: RouteObject[] = [
   {
@@ -44,6 +45,10 @@ export const publicRoutes: RouteObject[] = [
   {
     path: "/features",
     element: <Features />
+  },
+  {
+    path: "/docs",
+    element: <Docs />
   },
   {
     path: "*",
