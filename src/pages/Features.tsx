@@ -3,7 +3,7 @@ import React from "react";
 import Layout from "@/components/templates/Layout";
 import PageHeader from "@/components/organisms/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clothing, Umbrella, Users, Zap, Eye, MessageSquare, Award, Search } from "lucide-react";
+import { Shirt, Umbrella, Users, Zap, Eye, MessageSquare, Award, Search } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { Heading, Text } from "@/components/atoms/Typography";
@@ -49,7 +49,7 @@ const Features: React.FC = () => {
     {
       title: "Gérez votre garde-robe",
       description: "Ajoutez, organisez et retrouvez facilement tous vos vêtements dans un seul endroit numérique.",
-      icon: <Clothing size={24} />,
+      icon: <Shirt size={24} />,
     },
     {
       title: "Suggestions météo",
