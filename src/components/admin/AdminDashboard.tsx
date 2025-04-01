@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Heading, Text } from '@/components/atoms/Typography';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Database, Users, Settings, Shirt, ShoppingBag, ChartBar } from 'lucide-react';
+import { Database, Users, Settings, Shirt, ShoppingBag, ChartBar, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AdminModuleProps {
@@ -71,6 +71,12 @@ const AdminDashboard: React.FC = () => {
       description: "Gérez la base de données et les tables.",
       icon: <Database className="h-8 w-8 text-primary" />,
       link: "/admin/database"
+    },
+    {
+      title: "Logs système",
+      description: "Consultez les logs et l'activité de l'application.",
+      icon: <FileText className="h-8 w-8 text-primary" />,
+      link: "/admin/logs"
     }
   ];
 

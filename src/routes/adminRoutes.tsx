@@ -11,6 +11,7 @@ import AdminEnsemblesPage from '../pages/admin/AdminEnsemblesPage';
 import AdminStatsPage from '../pages/admin/AdminStatsPage';
 import AdminSettingsPage from '../pages/admin/AdminSettingsPage';
 import AdminDatabasePage from '../pages/admin/AdminDatabasePage';
+import AdminLogsPage from '../pages/admin/AdminLogsPage';
 
 // Helper function to wrap components with ProtectedRoute
 const protect = (Component: React.ComponentType) => {
@@ -45,5 +46,9 @@ export const adminRoutes: RouteObject[] = [
   {
     path: "/admin/database",
     element: protect(AdminDatabasePage)
+  },
+  {
+    path: "/admin/logs",
+    element: protect(AdminLogsPage)
   }
 ];
