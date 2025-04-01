@@ -99,6 +99,28 @@
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+
+  /* Ajout de styles responsifs globaux */
+  h1 {
+    @apply text-2xl sm:text-3xl md:text-4xl font-bold;
+  }
+
+  h2 {
+    @apply text-xl sm:text-2xl md:text-3xl font-semibold;
+  }
+
+  h3 {
+    @apply text-lg sm:text-xl md:text-2xl font-medium;
+  }
+  
+  /* Ajout de classes pour les conteneurs responsifs */
+  .container-fluid {
+    @apply w-full px-4 sm:px-6 md:px-8;
+  }
+
+  .container-narrow {
+    @apply w-full max-w-3xl mx-auto px-4 sm:px-6;
+  }
 }
 
 /* Nouveaux styles basés sur le thème */
@@ -117,6 +139,21 @@
   
   .card-accent {
     @apply bg-gradient-to-br from-theme-teal-medium to-theme-teal-dark text-white border-none shadow-md;
+  }
+
+  /* Styles responsive pour les cartes */
+  .card-mobile {
+    @apply mx-4 sm:mx-0 rounded-lg overflow-hidden;
+  }
+
+  /* Styles pour les layouts mobiles */
+  .mobile-container {
+    @apply px-4 sm:px-6 md:px-8 w-full;
+  }
+
+  /* Styles pour les éléments de navigation mobile */
+  .mobile-nav-item {
+    @apply py-3 px-4 border-b border-border flex items-center space-x-3 text-base;
   }
 }
 
@@ -169,4 +206,42 @@
   opacity: 0;
   transform: translate3d(0, -16px, 0);
   transition: opacity 300ms, transform 300ms;
+}
+
+/* Responsive media queries styles */
+@media (max-width: 640px) {
+  .hide-on-mobile {
+    display: none;
+  }
+  
+  .mobile-full-width {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .mobile-padding {
+    padding: 1rem;
+  }
+}
+
+/* Animation pour le menu mobile */
+.mobile-menu-enter {
+  transform: translateX(100%);
+}
+
+.mobile-menu-enter-active {
+  transform: translateX(0);
+  transition: transform 300ms;
+}
+
+.mobile-menu-exit {
+  transform: translateX(0);
+}
+
+.mobile-menu-exit-active {
+  transform: translateX(100%);
+  transition: transform 300ms;
 }

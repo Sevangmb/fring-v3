@@ -22,7 +22,7 @@ const Layout = ({
       {header || <MainNavigation />}
       <main 
         className={cn(
-          "flex-grow", 
+          "flex-grow pt-20 sm:pt-24", // Ajout d'un padding-top pour éviter que le contenu ne soit caché par la navbar fixe
           className
         )}
       >

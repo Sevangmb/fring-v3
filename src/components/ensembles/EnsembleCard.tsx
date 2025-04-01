@@ -46,7 +46,7 @@ const EnsembleCard: React.FC<EnsembleCardProps> = ({ ensemble, onDelete }) => {
   const imageUrls = getVetementsImages();
   
   return (
-    <Card className="overflow-hidden h-full flex flex-col">
+    <Card className="overflow-hidden h-full flex flex-col hover:shadow-md transition-shadow">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg line-clamp-1">{ensemble.nom || 'Ensemble sans nom'}</CardTitle>

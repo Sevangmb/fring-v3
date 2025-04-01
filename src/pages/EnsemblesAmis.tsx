@@ -4,7 +4,6 @@ import Layout from "@/components/templates/Layout";
 import { Helmet } from "react-helmet";
 import { useAuth } from "@/contexts/AuthContext";
 import AmisPageHeader from "@/components/organisms/AmisPageHeader";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
 import EnsemblesAmisList from "@/components/ensembles/EnsemblesAmisList";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -21,10 +20,10 @@ const EnsemblesAmis = () => {
       <AmisPageHeader user={user} loading={loading} />
       
       {user && (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-6 sm:py-8">
           <Card>
-            <CardHeader>
-              <CardTitle>Ensembles de vos amis</CardTitle>
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="text-lg sm:text-xl">Ensembles de vos amis</CardTitle>
             </CardHeader>
             <CardContent>
               <EnsemblesAmisList />
