@@ -6,8 +6,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 import UsersSearch from '@/components/admin/users/UsersSearch';
 import UsersList from '@/components/admin/users/UsersList';
-import { getAllUsers, searchUsersByEmail, AdminUserData } from '@/services/adminService';
+import { getAllUsers, searchUsersByEmail, AdminUserData, deleteUser } from '@/services/adminService';
 import { useToast } from '@/hooks/use-toast';
+import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const AdminUsersPage: React.FC = () => {
   const { user } = useAuth();
@@ -19,6 +21,7 @@ const AdminUsersPage: React.FC = () => {
   const [users, setUsers] = useState<AdminUserData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>('tous');
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -66,6 +69,37 @@ const AdminUsersPage: React.FC = () => {
     }
   };
 
+  const handleDeleteUser = async (userId: string): Promise<void> => {
+    try {
+      const success = await deleteUser(userId);
+      if (success) {
+        // Filtrer l'utilisateur supprimé de la liste locale
+        setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+      } else {
+        throw new Error("Échec de la suppression");
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression de l\'utilisateur', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer l'utilisateur",
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
+  // Filtrer les utilisateurs en fonction de l'onglet actif
+  const filteredUsers = users.filter(user => {
+    const isAdminUser = user.email.includes('admin@') || 
+                        user.email.includes('sevans@') || 
+                        user.email.includes('pedro@');
+    
+    if (activeTab === 'admins') return isAdminUser;
+    if (activeTab === 'utilisateurs') return !isAdminUser;
+    return true; // Pour l'onglet 'tous'
+  });
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
@@ -79,10 +113,46 @@ const AdminUsersPage: React.FC = () => {
       title="Gestion des utilisateurs" 
       description="Gérez les comptes utilisateurs, les rôles et les permissions."
     >
-      <div className="space-y-6">
-        <UsersSearch onSearch={handleSearch} isSearching={isSearching} />
-        <UsersList users={users} isLoading={isLoading} />
-      </div>
+      <Card className="p-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <div className="flex justify-between items-center mb-4">
+            <TabsList>
+              <TabsTrigger value="tous">Tous les utilisateurs</TabsTrigger>
+              <TabsTrigger value="admins">Administrateurs</TabsTrigger>
+              <TabsTrigger value="utilisateurs">Utilisateurs</TabsTrigger>
+            </TabsList>
+          </div>
+          
+          <UsersSearch 
+            onSearch={handleSearch} 
+            isSearching={isSearching} 
+          />
+          
+          <TabsContent value="tous" className="mt-0">
+            <UsersList 
+              users={filteredUsers} 
+              isLoading={isLoading} 
+              onDeleteUser={handleDeleteUser} 
+            />
+          </TabsContent>
+          
+          <TabsContent value="admins" className="mt-0">
+            <UsersList 
+              users={filteredUsers} 
+              isLoading={isLoading} 
+              onDeleteUser={handleDeleteUser} 
+            />
+          </TabsContent>
+          
+          <TabsContent value="utilisateurs" className="mt-0">
+            <UsersList 
+              users={filteredUsers} 
+              isLoading={isLoading} 
+              onDeleteUser={handleDeleteUser} 
+            />
+          </TabsContent>
+        </Tabs>
+      </Card>
     </AdminModuleTemplate>
   );
 };
