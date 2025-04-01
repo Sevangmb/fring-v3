@@ -54,39 +54,47 @@ export const fetchEnsemblesAmis = async (friendId?: string): Promise<Ensemble[]>
   try {
     console.log("Appel à fetchEnsemblesAmis avec friendId:", friendId);
     
-    let data;
-    let error;
+    let response;
     
     if (friendId && friendId !== "all") {
       console.log("Récupération des ensembles pour un ami spécifique:", friendId);
-      const response = await supabase
+      response = await supabase
         .rpc('get_friend_ensembles', { friend_id_param: friendId });
-      
-      data = response.data;
-      error = response.error;
     } else {
       console.log("Récupération des ensembles pour tous les amis");
-      const response = await supabase.rpc('get_friends_ensembles');
-      
-      data = response.data;
-      error = response.error;
+      response = await supabase.rpc('get_friends_ensembles');
     }
 
-    if (error) {
-      console.error("Erreur lors de la récupération des ensembles des amis:", error);
-      throw error;
+    if (response.error) {
+      console.error("Erreur lors de la récupération des ensembles des amis:", response.error);
+      throw response.error;
     }
 
-    if (!data) {
-      console.log("Aucun ensemble trouvé pour cet ami / ces amis");
+    if (!response.data || !Array.isArray(response.data)) {
+      console.log("Aucun ensemble trouvé ou format de données inattendu");
       return [];
     }
 
-    console.log("Données d'ensembles reçues:", data.length);
+    console.log("Données d'ensembles reçues:", response.data.length);
     
-    // Vérifier si les données reçues sont dans le format attendu
-    const formattedData = data.map((ensemble: any) => {
-      // Normaliser la structure
+    // Normaliser la structure des données
+    const formattedData = response.data.map((ensemble: any) => {
+      // S'assurer que les vêtements sont un tableau et pas une chaîne JSON
+      let vetements = ensemble.vetements;
+      if (typeof vetements === 'string') {
+        try {
+          vetements = JSON.parse(vetements);
+        } catch (e) {
+          console.error("Erreur lors du parsing des vêtements:", e);
+          vetements = [];
+        }
+      }
+
+      // Si vetements n'est toujours pas un tableau, le convertir en tableau vide
+      if (!Array.isArray(vetements)) {
+        vetements = [];
+      }
+
       return {
         id: ensemble.id,
         nom: ensemble.nom || "Ensemble sans nom",
@@ -95,8 +103,8 @@ export const fetchEnsemblesAmis = async (friendId?: string): Promise<Ensemble[]>
         saison: ensemble.saison || "",
         created_at: ensemble.created_at,
         user_id: ensemble.user_id,
-        vetements: ensemble.vetements || [],
-        email: ensemble.email
+        vetements: vetements,
+        email: ensemble.email || ""
       };
     });
 
