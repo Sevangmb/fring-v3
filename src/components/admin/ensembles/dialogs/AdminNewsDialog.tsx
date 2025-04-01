@@ -1,78 +1,74 @@
 
-import React from 'react';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
-import { News } from '@/hooks/admin/useNewsList';
-
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import React, { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-
-const formSchema = z.object({
-  title: z.string().min(2, 'Le titre doit contenir au moins 2 caractères').max(100, 'Le titre ne doit pas dépasser 100 caractères'),
-  date: z.string().min(2, 'La date doit être valide'),
-  content: z.string().min(10, 'Le contenu doit contenir au moins 10 caractères')
-});
-
-type FormValues = z.infer<typeof formSchema>;
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { News } from '@/hooks/admin/useNewsList';
+import { supabase } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 
 interface AdminNewsDialogProps {
   open: boolean;
-  onOpenChange: (refresh: boolean) => void;
+  onOpenChange: (shouldRefresh: boolean) => void;
   news: News | null;
 }
 
-const AdminNewsDialog: React.FC<AdminNewsDialogProps> = ({ 
-  open, 
-  onOpenChange, 
-  news 
+const AdminNewsDialog: React.FC<AdminNewsDialogProps> = ({
+  open,
+  onOpenChange,
+  news
 }) => {
   const { toast } = useToast();
-  const isEditMode = !!news;
+  const [loading, setLoading] = useState(false);
+  const [title, setTitle] = useState('');
+  const [date, setDate] = useState('');
+  const [content, setContent] = useState('');
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: news?.title || '',
-      date: news?.date || format(new Date(), 'dd MMMM yyyy', { locale: fr }),
-      content: news?.content || ''
-    }
-  });
-
-  // Mettre à jour les valeurs du formulaire lorsque la news change
-  React.useEffect(() => {
+  useEffect(() => {
     if (news) {
-      form.reset({
-        title: news.title,
-        date: news.date,
-        content: news.content
-      });
+      setTitle(news.title);
+      setDate(news.date);
+      setContent(news.content);
     } else {
-      form.reset({
-        title: '',
-        date: format(new Date(), 'dd MMMM yyyy', { locale: fr }),
-        content: ''
-      });
+      setTitle('');
+      // Définir la date d'aujourd'hui par défaut
+      const today = new Date();
+      const formattedDate = `${today.getDate()} ${today.toLocaleString('fr-FR', { month: 'long' })} ${today.getFullYear()}`;
+      setDate(formattedDate);
+      setContent('');
     }
-  }, [news, form]);
+  }, [news, open]);
 
-  const onSubmit = async (values: FormValues) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
     try {
-      if (isEditMode) {
+      if (!title || !date || !content) {
+        toast({
+          title: "Erreur",
+          description: "Tous les champs sont obligatoires",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (news) {
         // Mise à jour d'une actualité existante
         const { error } = await supabase
           .from('news')
           .update({
-            title: values.title,
-            date: values.date,
-            content: values.content
+            title,
+            date,
+            content
           })
           .eq('id', news.id);
 
@@ -80,34 +76,39 @@ const AdminNewsDialog: React.FC<AdminNewsDialogProps> = ({
 
         toast({
           title: "Succès",
-          description: "Actualité mise à jour avec succès"
+          description: "Actualité mise à jour avec succès",
         });
       } else {
         // Création d'une nouvelle actualité
         const { error } = await supabase
           .from('news')
-          .insert({
-            title: values.title,
-            date: values.date,
-            content: values.content
-          });
+          .insert([
+            {
+              title,
+              date,
+              content
+            }
+          ]);
 
         if (error) throw error;
 
         toast({
           title: "Succès",
-          description: "Actualité ajoutée avec succès"
+          description: "Actualité ajoutée avec succès",
         });
       }
 
-      onOpenChange(true); // Fermer le dialogue et rafraîchir la liste
+      // Fermer le dialogue et rafraîchir les données
+      onOpenChange(true);
     } catch (error) {
-      console.error('Erreur lors de l\'enregistrement de l\'actualité:', error);
+      console.error('Erreur lors de la sauvegarde:', error);
       toast({
         title: "Erreur",
-        description: "Impossible d'enregistrer l'actualité",
+        description: "Impossible de sauvegarder l'actualité",
         variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -115,71 +116,60 @@ const AdminNewsDialog: React.FC<AdminNewsDialogProps> = ({
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onOpenChange(false)}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>{isEditMode ? 'Modifier l\'actualité' : 'Ajouter une actualité'}</DialogTitle>
+          <DialogTitle>
+            {news ? "Modifier l'actualité" : "Ajouter une actualité"}
+          </DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Titre</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Titre de l'actualité" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          <div className="grid gap-2">
+            <Label htmlFor="title">Titre</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Titre de l'actualité"
+              required
             />
+          </div>
 
-            <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Date d'affichage (ex: 15 juin 2023)" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+          <div className="grid gap-2">
+            <Label htmlFor="date">Date</Label>
+            <Input
+              id="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              placeholder="ex: 15 juin 2023"
+              required
             />
+          </div>
 
-            <FormField
-              control={form.control}
-              name="content"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contenu</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Contenu de l'actualité" 
-                      className="min-h-[120px]" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+          <div className="grid gap-2">
+            <Label htmlFor="content">Contenu</Label>
+            <Textarea
+              id="content"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Contenu de l'actualité"
+              className="min-h-[200px]"
+              required
             />
+          </div>
 
-            <div className="flex justify-end gap-2 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => onOpenChange(false)}
-              >
-                Annuler
-              </Button>
-              <Button type="submit">
-                {isEditMode ? 'Mettre à jour' : 'Ajouter'}
-              </Button>
-            </div>
-          </form>
-        </Form>
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="secondary" 
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+            >
+              Annuler
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "En cours..." : news ? "Mettre à jour" : "Ajouter"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
