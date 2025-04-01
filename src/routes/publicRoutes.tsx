@@ -12,6 +12,7 @@ import Privacy from '../pages/Privacy';
 import Terms from '../pages/Terms';
 import Features from '../pages/Features';
 import Docs from '../pages/Docs';
+import Messages from '../pages/Messages';
 
 export const publicRoutes: RouteObject[] = [
   {
@@ -49,6 +50,14 @@ export const publicRoutes: RouteObject[] = [
   {
     path: "/docs",
     element: <Docs />
+  },
+  {
+    path: "/messages",
+    element: <Messages />
+  },
+  {
+    path: "/messages/:friendId",
+    element: <Messages />
   },
   {
     path: "*",

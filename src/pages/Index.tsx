@@ -4,6 +4,7 @@ import Layout from "@/components/templates/Layout";
 import Hero from "@/components/organisms/Hero";
 import Footer from "@/components/organisms/Footer";
 import MeteoSection from "@/components/organisms/Meteo/MeteoSection";
+import MesVetements from "@/components/organisms/MesVetements";
 import { useAuth } from "@/contexts/AuthContext";
 
 const IndexPage = () => {
@@ -15,6 +16,7 @@ const IndexPage = () => {
       {user && (
         <div className="container mx-auto px-4">
           <MeteoSection />
+          <MesVetements isAuthenticated={!!user} />
         </div>
       )}
       <Footer />

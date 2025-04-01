@@ -445,6 +445,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_conversation_previews: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          sender_id: string
+          receiver_id: string
+          content: string
+          read: boolean
+          created_at: string
+        }[]
+      }
       get_friend_ensembles: {
         Args: {
           friend_id_param: string
