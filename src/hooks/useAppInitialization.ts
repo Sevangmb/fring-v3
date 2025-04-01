@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { setupAllLogInterceptors } from '@/services/logsService';
+import { setupAllLogInterceptors } from '@/services/logs';
 
 /**
  * Hook pour initialiser l'application et configurer les services nécessaires
