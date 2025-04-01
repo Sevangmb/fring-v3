@@ -7,6 +7,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { AdminUserData } from '@/services/adminService';
 import { Loader2, ShoppingBag, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/lib/supabase';
 
 interface UserEnsemblesDialogProps {
   open: boolean;
@@ -14,32 +15,59 @@ interface UserEnsemblesDialogProps {
   user: AdminUserData | null;
 }
 
-const mockEnsembles = [
-  { id: 1, nom: "Tenue casual", occasion: "Quotidien", nb_vetements: 4, date_creation: "2023-11-10" },
-  { id: 2, nom: "Tenue de sport", occasion: "Sport", nb_vetements: 3, date_creation: "2023-10-05" },
-  { id: 3, nom: "Soirée élégante", occasion: "Soirée", nb_vetements: 5, date_creation: "2023-09-15" },
-  { id: 4, nom: "Look professionnel", occasion: "Travail", nb_vetements: 4, date_creation: "2023-11-20" },
-];
+interface Ensemble {
+  id: number;
+  nom: string;
+  occasion: string;
+  nb_vetements: number;
+  date_creation: string;
+}
 
 const UserEnsemblesDialog: React.FC<UserEnsemblesDialogProps> = ({ open, onOpenChange, user }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [ensembles, setEnsembles] = useState<any[]>([]);
+  const [ensembles, setEnsembles] = useState<Ensemble[]>([]);
 
   useEffect(() => {
     const fetchEnsembles = async () => {
       if (user && open) {
         setLoading(true);
         try {
-          // Dans une application réelle, nous ferions un appel API ici
-          // const response = await getUserEnsembles(user.id);
-          // setEnsembles(response);
+          // Récupérer les ensembles réels depuis Supabase
+          const { data: tenues, error: tenuesError } = await supabase
+            .from('tenues')
+            .select(`
+              id,
+              nom,
+              occasion,
+              created_at
+            `)
+            .eq('user_id', user.id);
           
-          // Pour cette démo, utilisons des données fictives
-          setTimeout(() => {
-            setEnsembles(mockEnsembles);
-            setLoading(false);
-          }, 1000);
+          if (tenuesError) throw tenuesError;
+          
+          // Pour chaque tenue, compter le nombre de vêtements associés
+          const ensemblesData = await Promise.all(
+            tenues.map(async (tenue) => {
+              // Récupérer le nombre de vêtements dans cet ensemble
+              const { count, error: countError } = await supabase
+                .from('tenue_vetements')
+                .select('id', { count: 'exact', head: true })
+                .eq('tenue_id', tenue.id);
+              
+              if (countError) throw countError;
+              
+              return {
+                id: tenue.id,
+                nom: tenue.nom || 'Ensemble sans nom',
+                occasion: tenue.occasion || 'Non spécifié',
+                nb_vetements: count || 0,
+                date_creation: new Date(tenue.created_at).toLocaleDateString('fr-FR')
+              };
+            })
+          );
+          
+          setEnsembles(ensemblesData);
         } catch (error) {
           console.error("Erreur lors de la récupération des ensembles:", error);
           toast({
@@ -47,19 +75,29 @@ const UserEnsemblesDialog: React.FC<UserEnsemblesDialogProps> = ({ open, onOpenC
             description: "Impossible de charger les ensembles de l'utilisateur",
             variant: "destructive",
           });
+        } finally {
           setLoading(false);
         }
       }
     };
 
     fetchEnsembles();
+    
+    // Nettoyage lorsque le dialog est fermé
+    return () => {
+      if (!open) {
+        setEnsembles([]);
+      }
+    };
   }, [user, open, toast]);
 
   if (!user) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px]">
+      <DialogContent className="sm:max-w-[700px]" onInteractOutside={(e) => {
+        e.preventDefault(); // Empêcher la fermeture au clic extérieur
+      }}>
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
             <ShoppingBag className="h-5 w-5 text-purple-500" />

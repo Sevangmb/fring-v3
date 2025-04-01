@@ -7,6 +7,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { AdminUserData } from '@/services/adminService';
 import { Loader2, Shirt } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/lib/supabase';
 
 interface UserVetementsDialogProps {
   open: boolean;
@@ -14,33 +15,48 @@ interface UserVetementsDialogProps {
   user: AdminUserData | null;
 }
 
-const mockVetements = [
-  { id: 1, nom: "T-shirt noir", categorie: "Haut", couleur: "Noir", date_ajout: "2023-10-15" },
-  { id: 2, nom: "Jean slim", categorie: "Bas", couleur: "Bleu", date_ajout: "2023-09-22" },
-  { id: 3, nom: "Veste en cuir", categorie: "Veste", couleur: "Marron", date_ajout: "2023-11-05" },
-  { id: 4, nom: "Chemise blanche", categorie: "Haut", couleur: "Blanc", date_ajout: "2023-10-30" },
-  { id: 5, nom: "Chaussures de sport", categorie: "Chaussures", couleur: "Rouge", date_ajout: "2023-08-17" },
-];
+interface Vetement {
+  id: number;
+  nom: string;
+  categorie: string;
+  couleur: string;
+  date_ajout: string;
+}
 
 const UserVetementsDialog: React.FC<UserVetementsDialogProps> = ({ open, onOpenChange, user }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [vetements, setVetements] = useState<any[]>([]);
+  const [vetements, setVetements] = useState<Vetement[]>([]);
 
   useEffect(() => {
     const fetchVetements = async () => {
       if (user && open) {
         setLoading(true);
         try {
-          // Dans une application réelle, nous ferions un appel API ici
-          // const response = await getUserVetements(user.id);
-          // setVetements(response);
+          // Récupérer les vêtements réels depuis Supabase
+          const { data, error } = await supabase
+            .from('vetements')
+            .select(`
+              id,
+              nom,
+              categorie:categorie_id(nom),
+              couleur,
+              created_at
+            `)
+            .eq('user_id', user.id);
           
-          // Pour cette démo, utilisons des données fictives
-          setTimeout(() => {
-            setVetements(mockVetements);
-            setLoading(false);
-          }, 1000);
+          if (error) throw error;
+          
+          // Transformer les données
+          const formattedVetements = data.map(item => ({
+            id: item.id,
+            nom: item.nom || 'Sans nom',
+            categorie: item.categorie?.nom || 'Non catégorisé',
+            couleur: item.couleur || 'Non spécifié',
+            date_ajout: new Date(item.created_at).toLocaleDateString('fr-FR')
+          }));
+          
+          setVetements(formattedVetements);
         } catch (error) {
           console.error("Erreur lors de la récupération des vêtements:", error);
           toast({
@@ -48,19 +64,29 @@ const UserVetementsDialog: React.FC<UserVetementsDialogProps> = ({ open, onOpenC
             description: "Impossible de charger les vêtements de l'utilisateur",
             variant: "destructive",
           });
+        } finally {
           setLoading(false);
         }
       }
     };
 
     fetchVetements();
+    
+    // Nettoyage lorsque le dialog est fermé
+    return () => {
+      if (!open) {
+        setVetements([]);
+      }
+    };
   }, [user, open, toast]);
 
   if (!user) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px]">
+      <DialogContent className="sm:max-w-[700px]" onInteractOutside={(e) => {
+        e.preventDefault(); // Empêcher la fermeture au clic extérieur
+      }}>
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
             <Shirt className="h-5 w-5 text-emerald-500" />

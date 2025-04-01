@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { formatDistance } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { supabase } from '@/lib/supabase';
 
 interface UserDetailsDialogProps {
   open: boolean;
@@ -18,10 +19,28 @@ interface UserDetailsDialogProps {
   user: AdminUserData | null;
 }
 
+interface UserDetails {
+  stats: {
+    vetements: number;
+    ensembles: number;
+    amis: number;
+    favoris: number;
+  };
+  derniere_connexion: Date;
+  email_verifie: boolean;
+  localisation: string;
+  appareil: string;
+  preferences: {
+    notifications: boolean;
+    mode_sombre: boolean;
+    langue: string;
+  };
+}
+
 const UserDetailsDialog: React.FC<UserDetailsDialogProps> = ({ open, onOpenChange, user }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [details, setDetails] = useState<any>(null);
+  const [details, setDetails] = useState<UserDetails | null>(null);
 
   const isAdmin = user?.email.includes('admin@') || 
                  user?.email.includes('sevans@') || 
@@ -32,31 +51,59 @@ const UserDetailsDialog: React.FC<UserDetailsDialogProps> = ({ open, onOpenChang
       if (user && open) {
         setLoading(true);
         try {
-          // Dans une application réelle, nous ferions un appel API ici
-          // const response = await getUserDetailedInfo(user.id);
-          // setDetails(response);
+          // Récupérer les données réelles de Supabase
+          const { data: vetements, error: vetementsError } = await supabase
+            .from('vetements')
+            .select('*')
+            .eq('user_id', user.id);
           
-          // Pour cette démo, utilisons des données fictives
-          setTimeout(() => {
-            setDetails({
-              stats: {
-                vetements: Math.floor(Math.random() * 30) + 5,
-                ensembles: Math.floor(Math.random() * 15) + 2,
-                amis: Math.floor(Math.random() * 20) + 3,
-                favoris: Math.floor(Math.random() * 25) + 4,
-              },
-              derniere_connexion: new Date(Date.now() - Math.floor(Math.random() * 10) * 86400000),
-              email_verifie: Math.random() > 0.3,
-              localisation: "Paris, France",
-              appareil: "iPhone, Safari",
-              preferences: {
-                notifications: true,
-                mode_sombre: false,
-                langue: "Français"
-              }
-            });
-            setLoading(false);
-          }, 1000);
+          const { data: ensembles, error: ensemblesError } = await supabase
+            .from('tenues')
+            .select('*')
+            .eq('user_id', user.id);
+          
+          const { data: amis, error: amisError } = await supabase
+            .from('amis')
+            .select('*')
+            .or(`user_id.eq.${user.id},ami_id.eq.${user.id}`)
+            .eq('statut', 'acceptée');
+          
+          const { data: favoris, error: favorisError } = await supabase
+            .from('favoris')
+            .select('*')
+            .eq('user_id', user.id);
+          
+          // Récupérer la dernière connexion
+          const { data: auth_data, error: authError } = await supabase
+            .from('auth_data')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+          
+          if (vetementsError || ensemblesError || amisError || favorisError) {
+            console.error("Erreurs de récupération:", { vetementsError, ensemblesError, amisError, favorisError });
+            throw new Error("Erreur lors de la récupération des données");
+          }
+
+          setDetails({
+            stats: {
+              vetements: vetements?.length || 0,
+              ensembles: ensembles?.length || 0,
+              amis: amis?.length || 0,
+              favoris: favoris?.length || 0,
+            },
+            derniere_connexion: auth_data?.last_sign_in_at ? new Date(auth_data.last_sign_in_at) : new Date(),
+            email_verifie: user.email_confirmed_at ? true : false,
+            localisation: auth_data?.location || "Inconnu",
+            appareil: auth_data?.device || "Inconnu",
+            preferences: {
+              notifications: true,
+              mode_sombre: false,
+              langue: "Français"
+            }
+          });
+          
+          setLoading(false);
         } catch (error) {
           console.error("Erreur lors de la récupération des détails:", error);
           toast({
@@ -70,13 +117,27 @@ const UserDetailsDialog: React.FC<UserDetailsDialogProps> = ({ open, onOpenChang
     };
 
     fetchDetails();
+    
+    // Nettoyage lorsque le dialog est fermé ou démonte
+    return () => {
+      if (!open) {
+        setDetails(null);
+      }
+    };
   }, [user, open, toast]);
 
   if (!user) return null;
 
+  // Fermer proprement le dialogue
+  const handleClose = () => {
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px]">
+      <DialogContent className="sm:max-w-[700px]" onInteractOutside={(e) => {
+        e.preventDefault(); // Empêcher la fermeture au clic extérieur
+      }}>
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
             <FileText className="h-5 w-5 text-cyan-500" />
@@ -227,7 +288,7 @@ const UserDetailsDialog: React.FC<UserDetailsDialogProps> = ({ open, onOpenChang
         )}
 
         <DialogFooter>
-          <Button onClick={() => onOpenChange(false)}>
+          <Button onClick={handleClose}>
             Fermer
           </Button>
         </DialogFooter>
