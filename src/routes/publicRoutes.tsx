@@ -8,6 +8,7 @@ import FringPage from '../pages/FringPage';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import NotFound from '../pages/NotFound';
+import Privacy from '../pages/Privacy';
 
 export const publicRoutes: RouteObject[] = [
   {
@@ -29,6 +30,10 @@ export const publicRoutes: RouteObject[] = [
   {
     path: "/register",
     element: <Register />
+  },
+  {
+    path: "/privacy",
+    element: <Privacy />
   },
   {
     path: "*",
