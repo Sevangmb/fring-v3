@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMessages } from "@/hooks/useMessages";
 import NavLinks from "../molecules/NavLinks";
 import AuthButtons from "../molecules/AuthButtons";
-import MobileMenu from "../molecules/MobileMenu";
+import MobileMenu from "../mobile/MobileMenu";
 
 interface NavbarProps {
   className?: string;
@@ -81,15 +81,8 @@ const Navbar = ({ className }: NavbarProps) => {
         </button>
       </div>
 
-      {/* Mobile Menu */}
-      {isMobile && (
-        <MobileMenu
-          isMenuOpen={isMenuOpen}
-          isScrolled={isScrolled}
-          unreadCount={unreadCount}
-          toggleMenu={toggleMenu}
-        />
-      )}
+      {/* New Mobile Menu Component */}
+      <MobileMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
     </header>
   );
 };

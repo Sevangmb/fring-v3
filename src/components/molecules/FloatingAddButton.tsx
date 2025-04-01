@@ -30,13 +30,13 @@ const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({
   };
   
   return (
-    <div className="fixed bottom-6 right-6 z-40">
+    <div className="fixed bottom-8 right-6 z-40">
       <Button
         size="lg"
-        className="h-14 w-14 rounded-full shadow-lg"
+        className="h-16 w-16 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
         onClick={handleClick}
       >
-        <Plus size={24} />
+        <Plus size={28} />
       </Button>
     </div>
   );
