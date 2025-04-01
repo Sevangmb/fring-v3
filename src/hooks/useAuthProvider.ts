@@ -68,6 +68,8 @@ export const useAuthProvider = () => {
     loading,
     signIn,
     signUp,
-    signOut
+    signOut,
+    setUser // Exposer la fonction setUser pour permettre sa mise à jour
   };
 };
+

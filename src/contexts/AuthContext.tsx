@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { useAuthProvider } from '@/hooks/useAuthProvider';
 
@@ -10,6 +10,7 @@ interface AuthContextProps {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signOut: () => Promise<void>;
+  setUser: (user: User | null) => void;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -27,3 +28,4 @@ export const useAuth = () => {
   }
   return context;
 };
+
