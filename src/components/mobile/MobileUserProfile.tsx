@@ -1,6 +1,7 @@
 
 import React from "react";
-import { User } from "@/contexts/AuthContext";
+import { User } from "@supabase/supabase-js";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface MobileUserProfileProps {
   user: User | null;
