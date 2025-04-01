@@ -24,6 +24,9 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import UserProfileDialog from './UserProfileDialog';
+import UserVetementsDialog from './UserVetementsDialog';
+import UserEnsemblesDialog from './UserEnsemblesDialog';
+import UserDetailsDialog from './UserDetailsDialog';
 
 interface UserListItemProps {
   user: AdminUserData;
@@ -37,37 +40,26 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, userStats, onDelete }
                   user.email.includes('pedro@');
   const navigate = useNavigate();
   const { toast } = useToast();
+  
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [vetementsDialogOpen, setVetementsDialogOpen] = useState(false);
+  const [ensemblesDialogOpen, setEnsemblesDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
   const handleViewProfile = () => {
     setProfileDialogOpen(true);
   };
 
   const handleViewClothes = () => {
-    toast({
-      title: "Navigation vers vêtements",
-      description: `Vêtements de ${user.email}`,
-    });
-    // Dans un cas réel
-    // navigate(`/admin/users/${user.id}/vetements`);
+    setVetementsDialogOpen(true);
   };
 
   const handleViewEnsembles = () => {
-    toast({
-      title: "Navigation vers ensembles",
-      description: `Ensembles de ${user.email}`,
-    });
-    // Dans un cas réel
-    // navigate(`/admin/users/${user.id}/ensembles`);
+    setEnsemblesDialogOpen(true);
   };
 
   const handleViewDetails = () => {
-    toast({
-      title: "Navigation vers détails",
-      description: `Détails de ${user.email}`,
-    });
-    // Dans un cas réel
-    // navigate(`/admin/users/${user.id}/details`);
+    setDetailsDialogOpen(true);
   };
 
   const handleDeleteUser = () => {
@@ -181,6 +173,24 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, userStats, onDelete }
       <UserProfileDialog 
         open={profileDialogOpen}
         onOpenChange={setProfileDialogOpen}
+        user={user}
+      />
+
+      <UserVetementsDialog
+        open={vetementsDialogOpen}
+        onOpenChange={setVetementsDialogOpen}
+        user={user}
+      />
+
+      <UserEnsemblesDialog
+        open={ensemblesDialogOpen}
+        onOpenChange={setEnsemblesDialogOpen}
+        user={user}
+      />
+
+      <UserDetailsDialog
+        open={detailsDialogOpen}
+        onOpenChange={setDetailsDialogOpen}
         user={user}
       />
     </>
