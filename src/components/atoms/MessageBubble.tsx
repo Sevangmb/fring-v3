@@ -14,6 +14,26 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   const { user } = useAuth();
   const isCurrentUser = user?.id === message.sender_id;
   
+  // Obtenir le nom d'affichage à partir de l'email
+  const getSenderDisplayName = () => {
+    if (isCurrentUser) {
+      return "Vous";
+    }
+    
+    if (message.sender_email) {
+      // Si c'est un email, prendre la partie avant @
+      if (message.sender_email.includes('@')) {
+        return message.sender_email.split('@')[0];
+      }
+      return message.sender_email;
+    }
+    
+    return "Utilisateur";
+  };
+  
+  // Nom d'affichage convivial
+  const displayName = getSenderDisplayName();
+  
   return (
     <div 
       className={cn(
@@ -29,6 +49,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
             : "bg-muted rounded-bl-none"
         )}
       >
+        {!isCurrentUser && (
+          <p className="text-xs font-medium mb-1 text-muted-foreground">
+            {displayName}
+          </p>
+        )}
         <p className="text-sm">
           {message.content}
         </p>

@@ -55,14 +55,16 @@ const ConversationList: React.FC<ConversationListProps> = ({
         const isUnread = !conversation.read && conversation.receiver_id === user?.id;
         
         // Utiliser l'email au lieu de l'ID pour les liens et l'affichage
-        const email = conversation.sender_email || 'Utilisateur inconnu';
+        const email = conversation.sender_email || 'Utilisateur';
         // Utiliser l'email pour le lien, pas l'ID
         const linkTo = isEmail(email) ? `/messages/${email}` : `/messages/${otherUserId}`;
         
         // Calculer les initiales correctement
-        const initials = email && email.includes('@') 
-          ? email.split('@')[0].substring(0, 2).toUpperCase() 
-          : email.substring(0, 2).toUpperCase();
+        const displayName = email && email.includes('@') 
+          ? email.split('@')[0] 
+          : email;
+          
+        const initials = displayName.substring(0, 2).toUpperCase();
         
         return (
           <Link
@@ -81,7 +83,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-center">
                 <p className={cn("font-medium truncate", isUnread && "text-primary font-semibold")}>
-                  {email}
+                  {displayName}
                 </p>
                 <span className="text-xs text-muted-foreground whitespace-nowrap ml-1">
                   {formatDistanceToNow(new Date(conversation.created_at), { 

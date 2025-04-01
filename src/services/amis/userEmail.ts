@@ -44,12 +44,12 @@ export const getUserEmailById = async (userId: string): Promise<string | null> =
     
     console.error(`Toutes les tentatives ont échoué pour l'utilisateur ${userId}`);
     
-    // Retourner un format alternatif pour l'affichage si on n'a pas pu récupérer l'email
-    return `Utilisateur ${userId.substring(0, 8)}`;
+    // Retourner un format plus convivial
+    return `Utilisateur`;
     
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'email:', error);
-    return `Utilisateur ${userId.substring(0, 8)}`;
+    return `Utilisateur`;
   }
 };
 
@@ -127,7 +127,7 @@ export const resolveUserIdentifier = async (identifier: string): Promise<{id: st
   
   // On ne sait pas, tentative de récupération avec les deux méthodes
   const email = await getUserEmailById(identifier);
-  if (email && email !== `Utilisateur ${identifier.substring(0, 8)}`) {
+  if (email && email !== `Utilisateur`) {
     return { id: identifier, email };
   }
   

@@ -14,13 +14,28 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({
   friendEmail,
   friendId
 }) => {
-  // Extraire les initiales de l'email pour l'avatar
-  const initials = friendEmail && friendEmail.includes('@')
-    ? friendEmail.split('@')[0].substring(0, 2).toUpperCase()
-    : "UN";
+  // Obtenir un nom d'affichage convivial
+  const getDisplayName = () => {
+    if (!friendEmail) return "Chargement...";
+    
+    // Si c'est un email, prendre la partie avant @
+    if (friendEmail.includes('@')) {
+      return friendEmail.split('@')[0];
+    }
+    
+    return friendEmail;
+  };
+  
+  // Extraire les initiales pour l'avatar
+  const getInitials = () => {
+    const displayName = getDisplayName();
+    if (displayName === "Chargement...") return "...";
+    return displayName.substring(0, 2).toUpperCase();
+  };
   
   // Définir un nom d'affichage basé sur l'email ou un texte par défaut
-  const displayName = friendEmail || "Chargement...";
+  const displayName = getDisplayName();
+  const initials = getInitials();
 
   return (
     <div className="bg-card border-b p-2 flex items-center justify-between sticky top-0 z-10">
