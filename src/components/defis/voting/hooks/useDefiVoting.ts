@@ -1,57 +1,81 @@
 
-import { useState, useCallback } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from 'react';
+import { submitVote } from '@/services/defi/votes';
+import { getDefiParticipationsWithVotes } from '@/services/defi/votes/getDefiParticipationsWithVotes';
 import { VoteType } from '@/services/votes/types';
-import { submitVote } from '@/services/defi/votes/submitVote';
 
-export const useDefiVoting = (fetchVotes: () => Promise<void>) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentEnsembleIndex, setCurrentEnsembleIndex] = useState(0);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const { toast } = useToast();
+export const useDefiVoting = (defiId: string | number) => {
+  const [participations, setParticipations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [votingInProgress, setVotingInProgress] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  
+  // Convert string defiId to number
+  const numericDefiId = typeof defiId === 'string' ? parseInt(defiId, 10) : defiId;
 
-  const handleVote = useCallback(async (ensembleId: number, voteType: VoteType) => {
-    if (isSubmitting) return;
+  // Fetch participations with votes
+  useEffect(() => {
+    const fetchParticipations = async () => {
+      try {
+        setLoading(true);
+        const data = await getDefiParticipationsWithVotes(numericDefiId);
+        setParticipations(data);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to fetch participations'));
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchParticipations();
+  }, [numericDefiId]);
+
+  // Vote for an ensemble
+  const handleVote = async (ensembleId: number, voteType: VoteType) => {
     try {
-      setIsSubmitting(true);
-
-      // Submit vote to the API
-      await submitVote('defi', ensembleId, voteType);
-
-      // Update the votes data
-      await fetchVotes();
-
-      // Show success toast
-      toast({
-        title: "Vote enregistré",
-        description: "Votre vote a été pris en compte avec succès.",
-        variant: "default",
-      });
-
-      // Show success message and auto-advance
-      setShowSuccessMessage(true);
-      setTimeout(() => {
-        setShowSuccessMessage(false);
-        setCurrentEnsembleIndex(prev => prev + 1);
-      }, 1500);
-    } catch (error) {
-      console.error("Erreur lors du vote:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'enregistrer votre vote. Veuillez réessayer.",
-        variant: "destructive",
-      });
+      setVotingInProgress(true);
+      await submitVote(ensembleId, voteType);
+      
+      // Refresh participations after voting
+      const updatedParticipations = await getDefiParticipationsWithVotes(numericDefiId);
+      setParticipations(updatedParticipations);
+      
+      return true;
+    } catch (err) {
+      console.error('Failed to submit vote:', err);
+      return false;
     } finally {
-      setIsSubmitting(false);
+      setVotingInProgress(false);
     }
-  }, [isSubmitting, fetchVotes, toast]);
+  };
+
+  // Handle moving to the next ensemble
+  const handleNext = () => {
+    if (currentIndex < participations.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  // Handle moving to the previous ensemble
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
 
   return {
-    isSubmitting,
-    currentEnsembleIndex,
-    setCurrentEnsembleIndex,
-    showSuccessMessage,
-    handleVote
+    participations,
+    loading,
+    error,
+    votingInProgress,
+    currentIndex,
+    currentParticipation: participations[currentIndex],
+    handleVote,
+    handleNext,
+    handlePrevious,
+    isFirst: currentIndex === 0,
+    isLast: currentIndex === participations.length - 1,
+    totalCount: participations.length
   };
 };

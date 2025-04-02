@@ -3,65 +3,47 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 
 export interface TextProps {
+  variant?: 'small' | 'muted' | 'lead' | 'large' | 'subtle' | 'h1' | 'h2' | 'h3' | 'h4';
   children: React.ReactNode;
-  variant?: 'lead' | 'large' | 'small' | 'muted' | 'subtle';
-  weight?: 'normal' | 'medium' | 'semibold' | 'bold';
-  as?: 'p' | 'span' | 'div' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
   className?: string;
+  weight?: string;
   title?: string;
 }
 
-const Text: React.FC<TextProps> = ({
+const Text = ({
+  variant,
   children,
-  variant = 'muted',
-  as = 'p',
-  weight = 'normal',
-  className = '',
+  className,
+  weight,
   title,
   ...props
-}) => {
-  const Component = as;
-  
-  const getVariantClass = () => {
-    switch (variant) {
-      case 'lead':
-        return 'text-xl text-muted-foreground';
-      case 'large':
-        return 'text-lg font-semibold';
-      case 'small':
-        return 'text-sm font-medium';
-      case 'muted':
-        return 'text-sm text-muted-foreground';
-      case 'subtle':
-        return 'text-sm text-muted-foreground opacity-75';
-      default:
-        return 'text-base text-foreground';
-    }
+}: TextProps) => {
+  const styles = {
+    small: 'text-sm text-muted-foreground',
+    muted: 'text-muted-foreground',
+    lead: 'text-xl text-muted-foreground',
+    large: 'text-lg',
+    subtle: 'text-sm text-gray-500',
+    h1: 'scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl',
+    h2: 'scroll-m-20 text-3xl font-semibold tracking-tight',
+    h3: 'scroll-m-20 text-2xl font-semibold tracking-tight',
+    h4: 'scroll-m-20 text-xl font-semibold tracking-tight'
   };
-  
-  const getWeightClass = () => {
-    switch (weight) {
-      case 'normal':
-        return 'font-normal';
-      case 'medium':
-        return 'font-medium';
-      case 'semibold':
-        return 'font-semibold';
-      case 'bold':
-        return 'font-bold';
-      default:
-        return 'font-normal';
-    }
-  };
-  
+
+  const weightStyle = weight ? `font-${weight}` : '';
+
   return (
-    <Component
-      className={cn(getVariantClass(), getWeightClass(), className)}
+    <p 
+      className={cn(
+        variant && styles[variant],
+        weightStyle,
+        className
+      )}
       title={title}
       {...props}
     >
       {children}
-    </Component>
+    </p>
   );
 };
 

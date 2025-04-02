@@ -32,4 +32,5 @@ export function Heading({
   );
 }
 
+// Export Text component with expanded variant types
 export { Text };

@@ -47,6 +47,9 @@ export const getDefiParticipations = async (defiId: number): Promise<DefiPartici
     // Récupérer les détails des ensembles pour chaque participation
     const enrichedData = await Promise.all(
       data.map(async (participation) => {
+        // Get user email
+        const userEmail = participation.user ? participation.user.email : null;
+        
         // Récupérer les informations de l'ensemble
         const { data: ensembleData, error: ensembleError } = await supabase
           .from('tenues')
@@ -70,7 +73,7 @@ export const getDefiParticipations = async (defiId: number): Promise<DefiPartici
           console.error("Erreur lors de la récupération de l'ensemble:", ensembleError);
           return {
             ...participation,
-            user_email: participation.user && participation.user.length > 0 ? participation.user[0].email : null,
+            user_email: userEmail,
             tenue: {
               id: 0,
               nom: "Ensemble introuvable",
@@ -83,7 +86,7 @@ export const getDefiParticipations = async (defiId: number): Promise<DefiPartici
 
         return {
           ...participation,
-          user_email: participation.user && participation.user.email,
+          user_email: userEmail,
           tenue: ensembleData
         };
       })
@@ -135,7 +138,7 @@ export const participerDefi = async (defiId: number, ensembleId: number, comment
 /**
  * Vérifier si un utilisateur a déjà participé à un défi
  */
-export const hasUserParticipated = async (defiId: number): Promise<boolean> => {
+export const checkUserParticipation = async (defiId: number): Promise<boolean> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return false;

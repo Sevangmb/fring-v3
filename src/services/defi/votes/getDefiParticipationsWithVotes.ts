@@ -75,7 +75,7 @@ export const getDefiParticipationsWithVotes = async (defiId: number): Promise<Pa
           console.error("Erreur lors de la récupération de l'ensemble:", ensembleError);
           return {
             ...participation,
-            user_email: participation.user?.email,
+            user_email: participation.user ? participation.user.email : undefined,
             tenue: {
               id: 0,
               nom: "Ensemble introuvable",
@@ -97,7 +97,7 @@ export const getDefiParticipationsWithVotes = async (defiId: number): Promise<Pa
           console.error("Erreur lors de la récupération des votes:", votesError);
           return {
             ...participation,
-            user_email: participation.user?.email,
+            user_email: participation.user ? participation.user.email : undefined,
             tenue: ensemble,
             votes: []
           };
@@ -111,7 +111,7 @@ export const getDefiParticipationsWithVotes = async (defiId: number): Promise<Pa
 
         return {
           ...participation,
-          user_email: participation.user?.email,
+          user_email: participation.user ? participation.user.email : undefined,
           tenue: ensemble,
           votes: transformedVotes
         };

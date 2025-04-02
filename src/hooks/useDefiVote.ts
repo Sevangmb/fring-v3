@@ -1,198 +1,120 @@
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { VoteType } from "@/services/votes/types";
-import { 
-  getDefiParticipationsWithVotes 
-} from "@/services/defi/votes/getDefiParticipationsWithVotes";
-import { submitVote } from "@/services/defi/votes/submitVote";
-import { calculateScore } from "@/services/defi/votes/utils";
+import { useState, useCallback, useEffect } from 'react';
+import { submitVote } from '@/services/votes';
+import { getDefiParticipationsWithVotes, ParticipationWithVotes } from '@/services/defi/votes/getDefiParticipationsWithVotes';
+import { VoteType, VoteCount } from '@/services/votes/types';
+import { useToast } from './use-toast';
 
-// Interface pour les participations avec votes
-export interface ParticipationWithVotes {
-  id: number;
-  defi_id: number;
-  user_id: string;
-  ensemble_id: number;
-  created_at: string;
-  commentaire?: string;
-  tenue: {
-    id: number;
-    nom: string;
-    description?: string;
-    occasion?: string;
-    saison?: string;
-    created_at: string;
-    user_id: string;
-    vetements: {
-      id: number;
-      vetement: any;
-    }[];
-  };
-  user_email?: string;
-  votes?: {
-    vote_type: string;
-    is_user_vote: boolean;
-  }[];
-}
-
-interface VoteCount {
-  up: number;
-  down: number;
-}
-
-interface UseDefiVoteReturn {
-  participations: ParticipationWithVotes[];
-  voteCounts: Record<number, VoteCount>;
-  userVotes: Record<number, VoteType>;
-  isLoadingParticipations: boolean;
-  isVoting: boolean;
-  loadParticipations: () => Promise<void>;
-  handleVote: (participationId: number, vote: VoteType) => Promise<void>;
-  getScore: (upVotes: number, downVotes: number) => number;
-  rankings: { id: number; score: number; position: number }[];
-}
-
-export function useDefiVote(defiId: number): UseDefiVoteReturn {
-  const [participations, setParticipations] = useState<ParticipationWithVotes[]>([]);
-  const [voteCounts, setVoteCounts] = useState<Record<number, VoteCount>>({});
-  const [userVotes, setUserVotes] = useState<Record<number, VoteType>>({});
-  const [isLoadingParticipations, setIsLoadingParticipations] = useState(true);
-  const [isVoting, setIsVoting] = useState(false);
+export const useDefiVote = (defiId: string | number) => {
   const { toast } = useToast();
+  const [participations, setParticipations] = useState<ParticipationWithVotes[]>([]);
+  const [userVotes, setUserVotes] = useState<Record<number, VoteType>>({});
+  const [voteCounts, setVoteCounts] = useState<Record<number, VoteCount>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [votingInProgress, setVotingInProgress] = useState(false);
+  
+  // Convert string defiId to number if needed
+  const numericDefiId = typeof defiId === 'string' ? parseInt(defiId, 10) : defiId;
 
+  // Load participations and votes
   const loadParticipations = useCallback(async () => {
-    if (!defiId) return;
-
     try {
-      setIsLoadingParticipations(true);
-      const data = await getDefiParticipationsWithVotes(defiId);
+      setLoading(true);
+      setError(null);
       
+      const data = await getDefiParticipationsWithVotes(numericDefiId);
       setParticipations(data);
       
-      // Extract vote counts and user votes
-      const newVoteCounts: Record<number, VoteCount> = {};
-      const newUserVotes: Record<number, VoteType> = {};
+      // Process votes data
+      const votes: Record<number, VoteType> = {};
+      const counts: Record<number, VoteCount> = {};
       
       data.forEach(participation => {
-        const upVotes = participation.votes?.filter(v => v.vote_type === 'up').length || 0;
-        const downVotes = participation.votes?.filter(v => v.vote_type === 'down').length || 0;
+        const ensembleId = participation.ensemble_id;
         
-        newVoteCounts[participation.id] = {
-          up: upVotes,
-          down: downVotes
-        };
+        // Count votes by type
+        const upvotes = participation.votes?.filter(v => v.vote_type === 'upvote').length || 0;
+        const downvotes = participation.votes?.filter(v => v.vote_type === 'downvote').length || 0;
         
-        // Find user's vote if any
+        counts[ensembleId] = { upvotes, downvotes };
+        
+        // Check if user has voted
         const userVote = participation.votes?.find(v => v.is_user_vote);
         if (userVote) {
-          newUserVotes[participation.id] = userVote.vote_type as VoteType;
+          votes[ensembleId] = userVote.vote_type as VoteType;
         }
       });
       
-      setVoteCounts(newVoteCounts);
-      setUserVotes(newUserVotes);
-    } catch (error) {
-      console.error('Error loading defi participations:', error);
+      setUserVotes(votes);
+      setVoteCounts(counts);
+    } catch (err) {
+      console.error('Error loading participations:', err);
+      setError(err instanceof Error ? err : new Error('Failed to load participations'));
+      
       toast({
         title: 'Erreur',
-        description: 'Impossible de charger les participations du défi',
-        variant: 'destructive',
+        description: 'Impossible de charger les participations au défi',
+        variant: 'destructive'
       });
     } finally {
-      setIsLoadingParticipations(false);
+      setLoading(false);
     }
-  }, [defiId, toast]);
-
+  }, [numericDefiId, toast]);
+  
+  // Initial load
   useEffect(() => {
     loadParticipations();
   }, [loadParticipations]);
-
-  const handleVote = async (participationId: number, vote: VoteType) => {
+  
+  // Handle voting
+  const handleVote = useCallback(async (ensembleId: number, voteType: VoteType) => {
     try {
-      setIsVoting(true);
+      setVotingInProgress(true);
       
-      await submitVote('defi', participationId, vote);
+      // Check if user is changing their vote
+      const existingVote = userVotes[ensembleId];
+      if (existingVote === voteType) {
+        // User is clicking the same vote type again, we'll consider this a vote removal
+        await submitVote(ensembleId, null); // Pass null to remove vote
+      } else {
+        // Submit new vote
+        await submitVote(ensembleId, voteType);
+      }
       
-      // Update local state to reflect the new vote
-      setUserVotes(prev => ({
-        ...prev,
-        [participationId]: vote
-      }));
-      
-      // Update vote counts
-      setVoteCounts(prev => {
-        const newCounts = { ...prev };
-        const currentParticipationCounts = newCounts[participationId] || { up: 0, down: 0 };
-        const previousVote = userVotes[participationId];
-        
-        // Remove previous vote if it exists
-        if (previousVote) {
-          if (previousVote === 'up') {
-            currentParticipationCounts.up = Math.max(0, currentParticipationCounts.up - 1);
-          } else if (previousVote === 'down') {
-            currentParticipationCounts.down = Math.max(0, currentParticipationCounts.down - 1);
-          }
-        }
-        
-        // Add new vote
-        if (vote === 'up') {
-          currentParticipationCounts.up += 1;
-        } else if (vote === 'down') {
-          currentParticipationCounts.down += 1;
-        }
-        
-        newCounts[participationId] = currentParticipationCounts;
-        return newCounts;
-      });
+      // Refresh data
+      await loadParticipations();
       
       toast({
         title: 'Vote enregistré',
         description: 'Votre vote a été pris en compte',
-        variant: 'default',
+        variant: 'default'
       });
-    } catch (error) {
-      console.error('Error voting for participation:', error);
+      
+      return true;
+    } catch (err) {
+      console.error('Error submitting vote:', err);
+      
       toast({
         title: 'Erreur',
         description: 'Impossible d\'enregistrer votre vote',
-        variant: 'destructive',
+        variant: 'destructive'
       });
+      
+      return false;
     } finally {
-      setIsVoting(false);
+      setVotingInProgress(false);
     }
-  };
-
-  const getScore = useCallback((upVotes: number, downVotes: number) => {
-    return calculateScore(upVotes, downVotes);
-  }, []);
-
-  // Calculate rankings
-  const rankings = useMemo(() => {
-    const scores = Object.entries(voteCounts).map(([id, counts]) => ({
-      id: parseInt(id),
-      score: getScore(counts.up, counts.down)
-    }));
-    
-    // Sort by score (highest first)
-    const sortedScores = [...scores].sort((a, b) => b.score - a.score);
-    
-    // Add position
-    return sortedScores.map((item, index) => ({
-      ...item,
-      position: index + 1
-    }));
-  }, [voteCounts, getScore]);
-
+  }, [userVotes, loadParticipations, toast]);
+  
   return {
     participations,
-    voteCounts,
     userVotes,
-    isLoadingParticipations,
-    isVoting,
-    loadParticipations,
+    voteCounts,
+    loading,
+    error,
+    votingInProgress,
     handleVote,
-    getScore,
-    rankings
+    refreshData: loadParticipations
   };
-}
+};
