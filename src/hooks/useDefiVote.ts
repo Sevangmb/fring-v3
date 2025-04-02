@@ -109,7 +109,7 @@ export const useDefiVote = (defiId: number) => {
           prev.map(p => {
             if (p.ensemble_id === ensembleId) {
               const oldVote = votingState[ensembleId];
-              const votes = { ...p.votes };
+              const votes = { ...p.votes.votesCount };
               
               // If user is changing their vote
               if (oldVote) {
@@ -124,7 +124,14 @@ export const useDefiVote = (defiId: number) => {
               // Recalculate score
               const score = calculateScore(votes);
               
-              return { ...p, votes, score };
+              return { 
+                ...p, 
+                votes: {
+                  userVote: vote,
+                  votesCount: votes
+                }, 
+                score 
+              };
             }
             return p;
           }).sort((a, b) => b.score - a.score) // Re-sort by score

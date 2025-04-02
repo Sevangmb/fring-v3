@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { VoteType, EntityType } from "@/services/votes/types";
@@ -37,9 +38,12 @@ export function useVote(
     if (!entityId || isOffline) return;
 
     try {
+      // Assurer la compatibilité: convertir 'tenue' en 'ensemble' si nécessaire
+      const apiEntityType = entityType === 'tenue' ? 'ensemble' : entityType;
+      
       const [voteData, countsData] = await Promise.all([
-        getUserVote(entityType, entityId),
-        getVotesCount(entityType, entityId)
+        getUserVote(apiEntityType, entityId),
+        getVotesCount(apiEntityType, entityId)
       ]);
 
       setUserVote(voteData);
@@ -65,7 +69,10 @@ export function useVote(
 
     setIsLoading(true);
     try {
-      await submitVote(entityType, entityId, vote);
+      // Assurer la compatibilité: convertir 'tenue' en 'ensemble' si nécessaire
+      const apiEntityType = entityType === 'tenue' ? 'ensemble' : entityType;
+      
+      await submitVote(apiEntityType, entityId, vote);
       
       setUserVote(vote);
       
