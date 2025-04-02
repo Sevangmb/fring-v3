@@ -1,13 +1,40 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { VoteType } from "@/services/votes/types";
 import { 
-  getDefiParticipationsWithVotes, 
-  ParticipationWithVotes 
+  getDefiParticipationsWithVotes 
 } from "@/services/defi/votes/getDefiParticipationsWithVotes";
 import { submitVote } from "@/services/defi/votes/submitVote";
 import { calculateScore } from "@/services/defi/votes/utils";
+
+// Interface pour les participations avec votes
+export interface ParticipationWithVotes {
+  id: number;
+  defi_id: number;
+  user_id: string;
+  ensemble_id: number;
+  created_at: string;
+  commentaire?: string;
+  tenue: {
+    id: number;
+    nom: string;
+    description?: string;
+    occasion?: string;
+    saison?: string;
+    created_at: string;
+    user_id: string;
+    vetements: {
+      id: number;
+      vetement: any;
+    }[];
+  };
+  user_email?: string;
+  votes?: {
+    vote_type: string;
+    is_user_vote: boolean;
+  }[];
+}
 
 interface VoteCount {
   up: number;
@@ -48,9 +75,12 @@ export function useDefiVote(defiId: number): UseDefiVoteReturn {
       const newUserVotes: Record<number, VoteType> = {};
       
       data.forEach(participation => {
+        const upVotes = participation.votes?.filter(v => v.vote_type === 'up').length || 0;
+        const downVotes = participation.votes?.filter(v => v.vote_type === 'down').length || 0;
+        
         newVoteCounts[participation.id] = {
-          up: participation.votes?.filter(v => v.vote_type === 'up').length || 0,
-          down: participation.votes?.filter(v => v.vote_type === 'down').length || 0
+          up: upVotes,
+          down: downVotes
         };
         
         // Find user's vote if any
@@ -166,6 +196,3 @@ export function useDefiVote(defiId: number): UseDefiVoteReturn {
     rankings
   };
 }
-
-// Add missing import
-import { useMemo } from 'react';

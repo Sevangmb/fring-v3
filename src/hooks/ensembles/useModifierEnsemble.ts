@@ -150,7 +150,7 @@ export const useModifierEnsemble = (ensembleId: number) => {
     try {
       setSaving(true);
       
-      await updateEnsemble({
+      const updateData = {
         id: ensembleId,
         nom: formData.nom,
         description: formData.description,
@@ -170,7 +170,9 @@ export const useModifierEnsemble = (ensembleId: number) => {
             type: VetementType.CHAUSSURES
           }
         ]
-      });
+      };
+      
+      await updateEnsemble(updateData);
       
       toast({
         title: "Succès",

@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
+import Text from './Typography/Text';
 
 interface HeadingProps {
   as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
@@ -31,24 +32,4 @@ export function Heading({
   );
 }
 
-interface TextProps {
-  variant?: 'lead' | 'large' | 'small' | 'muted';
-  children: React.ReactNode;
-  className?: string;
-}
-
-export function Text({ variant, children, className }: TextProps) {
-  const styles = {
-    lead: 'text-xl text-muted-foreground',
-    large: 'text-lg font-semibold',
-    small: 'text-sm font-medium leading-none',
-    muted: 'text-sm text-muted-foreground',
-    default: 'leading-7',
-  };
-
-  return (
-    <p className={cn(styles[variant || 'default'], className)}>
-      {children}
-    </p>
-  );
-}
+export { Text };

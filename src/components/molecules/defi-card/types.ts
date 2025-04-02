@@ -12,3 +12,14 @@ export interface DefiCardProps {
   onParticipation?: () => void;
   ensembleId?: number;
 }
+
+export interface DefiState {
+  participation: any;
+  participantEnsembleId: number | null;
+  ensembleName: string | null;
+  votesCount: number;
+  leaderName: string | null;
+  userHasVoted: boolean;
+  validEnsembleId: number | undefined;
+  participantsCount: number;
+}

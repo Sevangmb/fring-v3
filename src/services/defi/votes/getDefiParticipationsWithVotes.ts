@@ -1,105 +1,126 @@
 
 import { supabase } from '@/lib/supabase';
-import { fetchWithRetry } from '@/services/network/retryUtils';
-import { getUserVote } from './getUserVote';
-import { getVotesCount } from '@/services/votes/getVotesCount';
-import { VoteType } from './types';
 
-/**
- * Récupère les participations à un défi avec les votes
- */
-export const getDefiParticipationsWithVotes = async (defiId: number) => {
+export interface ParticipationWithVotes {
+  id: number;
+  defi_id: number;
+  user_id: string;
+  ensemble_id: number;
+  created_at: string;
+  commentaire?: string;
+  tenue: {
+    id: number;
+    nom: string;
+    description?: string;
+    occasion?: string;
+    saison?: string;
+    created_at: string;
+    user_id: string;
+    vetements: {
+      id: number;
+      vetement: any;
+    }[];
+  };
+  user_email?: string;
+  votes?: {
+    vote_type: string;
+    is_user_vote: boolean;
+  }[];
+}
+
+export const getDefiParticipationsWithVotes = async (defiId: number): Promise<ParticipationWithVotes[]> => {
   try {
-    // Récupérer toutes les participations pour ce défi
-    const { data: participations, error: participationsError } = await fetchWithRetry(
-      async () => {
-        return await supabase
-          .from('defi_participations')
-          .select(`
-            id, 
-            defi_id,
-            user_id,
-            ensemble_id,
-            created_at,
-            tenue:ensemble_id(
-              id,
-              nom,
-              description,
-              occasion,
-              saison,
-              created_at,
-              user_id,
-              vetements:tenues_vetements(
-                id,
-                vetement:vetement_id(*)
-              )
-            )
-          `)
-          .eq('defi_id', defiId)
-          .order('created_at', { ascending: false });
-      }
-    );
-    
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+
+    // Récupérer toutes les participations à ce défi
+    const { data: participations, error: participationsError } = await supabase
+      .from('defi_participations')
+      .select(`
+        id, 
+        defi_id, 
+        user_id, 
+        ensemble_id, 
+        commentaire, 
+        created_at,
+        user:user_id(email)
+      `)
+      .eq('defi_id', defiId);
+
     if (participationsError) throw participationsError;
     
-    if (!participations || participations.length === 0) {
-      return [];
-    }
-    
-    // Récupérer les informations des utilisateurs
-    const userIds = participations.map(p => p.user_id);
-    const { data: usersData, error: usersError } = await fetchWithRetry(
-      async () => {
-        return await supabase
-          .from('profiles')
-          .select('id, email')
-          .in('id', userIds);
-      }
-    );
-    
-    if (usersError) throw usersError;
-    
-    // Créer un mapping des utilisateurs
-    const userMap = new Map();
-    usersData?.forEach(user => {
-      userMap.set(user.id, user);
-    });
-    
-    // Pour chaque participation, récupérer les votes de l'utilisateur actuel
-    // et le compte total des votes
-    const participationsWithVotes = await Promise.all(participations.map(async (participation) => {
-      const ensembleId = participation.ensemble_id;
-      const userData = userMap.get(participation.user_id);
-      
-      // Votes pour cet ensemble dans ce défi
-      const userVote = await getUserVote(defiId, ensembleId);
-      const votesCount = await getVotesCount('defi', defiId, ensembleId);
-      
-      // Vérifier si tenue est un tableau ou un objet avant d'accéder à vetements
-      const tenue = Array.isArray(participation.tenue)
-        ? participation.tenue[0]
-        : participation.tenue;
-      
-      // S'assurer que vetements existe
-      const vetements = tenue?.vetements || [];
-      
-      return {
-        ...participation,
-        tenue: {
-          ...tenue,
-          vetements: vetements
-        },
-        user_email: userData?.email || 'Utilisateur inconnu',
-        votes: {
-          userVote,
-          votesCount
+    // Pour chaque participation, récupérer les détails de l'ensemble et les votes
+    const participationsWithVotes = await Promise.all(
+      participations.map(async (participation) => {
+        // Récupérer les détails de l'ensemble
+        const { data: ensemble, error: ensembleError } = await supabase
+          .from('tenues')
+          .select(`
+            id, 
+            nom, 
+            description, 
+            occasion, 
+            saison, 
+            created_at, 
+            user_id,
+            vetements:tenues_vetements(
+              id,
+              vetement:vetement_id(*)
+            )
+          `)
+          .eq('id', participation.ensemble_id)
+          .single();
+
+        if (ensembleError) {
+          console.error("Erreur lors de la récupération de l'ensemble:", ensembleError);
+          return {
+            ...participation,
+            user_email: participation.user?.email,
+            tenue: {
+              id: 0,
+              nom: "Ensemble introuvable",
+              created_at: "",
+              user_id: "",
+              vetements: []
+            },
+            votes: []
+          };
         }
-      };
-    }));
-    
-    return participationsWithVotes;
+
+        // Récupérer les votes pour cet ensemble
+        const { data: votes, error: votesError } = await supabase
+          .from('ensemble_votes')
+          .select('id, vote, user_id')
+          .eq('ensemble_id', participation.ensemble_id);
+
+        if (votesError) {
+          console.error("Erreur lors de la récupération des votes:", votesError);
+          return {
+            ...participation,
+            user_email: participation.user?.email,
+            tenue: ensemble,
+            votes: []
+          };
+        }
+
+        // Transformer les votes pour inclure si l'utilisateur courant a voté
+        const transformedVotes = votes.map(vote => ({
+          vote_type: vote.vote,
+          is_user_vote: userId ? vote.user_id === userId : false
+        }));
+
+        return {
+          ...participation,
+          user_email: participation.user?.email,
+          tenue: ensemble,
+          votes: transformedVotes
+        };
+      })
+    );
+
+    return participationsWithVotes as ParticipationWithVotes[];
   } catch (error) {
-    console.error('Erreur lors de la récupération des participations avec votes:', error);
-    return [];
+    console.error("Erreur lors de la récupération des participations avec votes:", error);
+    throw error;
   }
 };
