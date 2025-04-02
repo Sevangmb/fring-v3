@@ -1,14 +1,16 @@
 
 import { supabase } from '@/lib/supabase';
+import { Ensemble } from '../ensemble/types';
 
 export interface DefiParticipation {
   id: number;
   defi_id: number;
   user_id: string;
   ensemble_id: number;
-  created_at: string;
   commentaire?: string;
-  tenue?: {
+  created_at: string;
+  user_email?: string;
+  tenue: {
     id: number;
     nom: string;
     description?: string;
@@ -21,16 +23,16 @@ export interface DefiParticipation {
       vetement: any;
     }[];
   };
-  user_email?: string;
 }
 
 /**
- * Récupère toutes les participations pour un défi donné
+ * Récupérer toutes les participations à un défi
  */
 export const getDefiParticipations = async (defiId: number): Promise<DefiParticipation[]> => {
   try {
-    const { data, error } = await supabase
-      .from('defi_participations')
+    // Récupérer les participations avec les informations utilisateur
+    const { data: participationsWithUser, error: participationsWithUserError } = await supabase
+      .from('defis_participations')
       .select(`
         id,
         defi_id,
@@ -38,64 +40,62 @@ export const getDefiParticipations = async (defiId: number): Promise<DefiPartici
         ensemble_id,
         commentaire,
         created_at,
-        tenue:ensemble_id(
-          id,
-          nom,
-          description,
-          occasion,
-          saison,
-          created_at,
-          user_id,
-          vetements:tenues_vetements(
-            id,
-            vetement:vetement_id(*)
-          )
+        user:user_id (
+          email
         )
       `)
       .eq('defi_id', defiId)
       .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    
-    // Récupérer les emails des utilisateurs pour chaque participation
-    if (data && data.length > 0) {
-      const participationsWithEmail = await Promise.all(
-        data.map(async (participation) => {
-          const { data: userData, error: userError } = await supabase
-            .from('profiles')
-            .select('email')
-            .eq('id', participation.user_id)
-            .maybeSingle();
-          
-          if (userError) console.error("Erreur lors de la récupération de l'email:", userError);
-          
-          // Convertir tenue de tableau à objet si nécessaire
-          const tenue = Array.isArray(participation.tenue) && participation.tenue.length > 0
-            ? participation.tenue[0]
-            : participation.tenue;
-            
+
+    if (participationsWithUserError) {
+      console.error("Erreur lors de la récupération des participations:", participationsWithUserError);
+      throw participationsWithUserError;
+    }
+
+    // Enrichir les données avec l'email de l'utilisateur
+    const participationsWithEmail = participationsWithUser.map(participation => ({
+      ...participation,
+      user_email: participation.user?.email
+    }));
+
+    // Récupérer les informations des ensembles pour chaque participation
+    const enrichedParticipations = await Promise.all(
+      participationsWithEmail.map(async (participation) => {
+        try {
+          const { data: tenues, error: tenuesError } = await supabase
+            .from('tenues')
+            .select(`
+              id,
+              nom,
+              description,
+              occasion,
+              saison,
+              created_at,
+              user_id,
+              vetements:tenues_vetements(
+                id,
+                vetement:vetement_id(*)
+              )
+            `)
+            .eq('id', participation.ensemble_id);
+
+          if (tenuesError) {
+            console.error("Erreur lors de la récupération des tenues:", tenuesError);
+            return participation;
+          }
+
           return {
             ...participation,
-            tenue,
-            user_email: userData?.email || undefined
-          } as DefiParticipation;
-        })
-      );
-      
-      return participationsWithEmail;
-    }
-    
-    return (data || []).map(p => {
-      // Convertir tenue de tableau à objet si nécessaire
-      const tenue = Array.isArray(p.tenue) && p.tenue.length > 0
-        ? p.tenue[0]
-        : p.tenue;
-        
-      return {
-        ...p,
-        tenue
-      } as DefiParticipation;
-    });
+            tenue: tenues[0] || null
+          };
+        } catch (error) {
+          console.error("Erreur lors de l'enrichissement des participations:", error);
+          return participation;
+        }
+      })
+    );
+
+    return enrichedParticipations;
   } catch (error) {
     console.error("Erreur lors de la récupération des participations:", error);
     return [];
@@ -103,85 +103,108 @@ export const getDefiParticipations = async (defiId: number): Promise<DefiPartici
 };
 
 /**
- * Permet à un utilisateur de participer à un défi avec un ensemble
+ * Participer à un défi avec un ensemble existant
  */
 export const participerDefi = async (
-  defiId: number,
-  ensembleId: number,
+  defiId: number, 
+  ensembleId: number, 
   commentaire?: string
 ): Promise<boolean> => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) throw new Error("Utilisateur non authentifié");
-    
-    // Vérifier si l'utilisateur a déjà participé
-    const existingData = await checkUserParticipation(defiId);
-    
-    if (existingData.participe) {
-      // Mettre à jour une participation existante
-      const { error } = await supabase
-        .from('defi_participations')
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+
+    if (!userId) {
+      throw new Error("Utilisateur non connecté");
+    }
+
+    // Vérifier si l'utilisateur a déjà participé à ce défi
+    const { data: existingParticipation, error: checkError } = await supabase
+      .from('defis_participations')
+      .select('id')
+      .eq('defi_id', defiId)
+      .eq('user_id', userId);
+
+    if (checkError) {
+      console.error("Erreur lors de la vérification de participation:", checkError);
+      throw checkError;
+    }
+
+    if (existingParticipation && existingParticipation.length > 0) {
+      // Mettre à jour la participation existante
+      const { error: updateError } = await supabase
+        .from('defis_participations')
         .update({
           ensemble_id: ensembleId,
-          commentaire: commentaire
+          commentaire: commentaire || null
         })
-        .eq('defi_id', defiId)
-        .eq('user_id', session.user.id);
-      
-      if (error) throw error;
+        .eq('id', existingParticipation[0].id);
+
+      if (updateError) {
+        console.error("Erreur lors de la mise à jour de la participation:", updateError);
+        throw updateError;
+      }
     } else {
       // Créer une nouvelle participation
-      const { error } = await supabase
-        .from('defi_participations')
+      const { error: insertError } = await supabase
+        .from('defis_participations')
         .insert({
           defi_id: defiId,
-          user_id: session.user.id,
+          user_id: userId,
           ensemble_id: ensembleId,
-          commentaire: commentaire
+          commentaire: commentaire || null
         });
-      
-      if (error) throw error;
-      
-      // Mettre à jour le compteur de participants du défi
-      await supabase
-        .from('defis')
-        .update({ participants_count: supabase.rpc('increment', { row_id: defiId, table_name: 'defis', column_name: 'participants_count' }) })
-        .eq('id', defiId);
+
+      if (insertError) {
+        console.error("Erreur lors de la création de la participation:", insertError);
+        throw insertError;
+      }
     }
-    
+
     return true;
   } catch (error) {
-    console.error("Erreur lors de la création de la participation:", error);
+    console.error("Erreur lors de la participation au défi:", error);
     return false;
   }
 };
 
 /**
- * Vérifie si un utilisateur a déjà participé à un défi
+ * Vérifier si un utilisateur participe à un défi
  */
 export const checkUserParticipation = async (defiId: number): Promise<{
   participe: boolean;
   ensembleId?: number;
 }> => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return { participe: false };
-    
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+
+    if (!userId) {
+      return { participe: false };
+    }
+
     const { data, error } = await supabase
-      .from('defi_participations')
+      .from('defis_participations')
       .select('ensemble_id')
       .eq('defi_id', defiId)
-      .eq('user_id', session.user.id)
-      .maybeSingle();
-    
-    if (error) throw error;
-    
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // L'utilisateur ne participe pas à ce défi
+        return { participe: false };
+      }
+      console.error("Erreur lors de la vérification de participation:", error);
+      throw error;
+    }
+
     return {
-      participe: !!data,
-      ensembleId: data?.ensemble_id
+      participe: true,
+      ensembleId: data.ensemble_id
     };
   } catch (error) {
-    console.error("Erreur lors de la vérification de la participation:", error);
+    console.error("Erreur lors de la vérification de participation:", error);
     return { participe: false };
   }
 };
