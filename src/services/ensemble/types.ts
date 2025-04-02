@@ -40,3 +40,7 @@ export interface EnsembleUpdateParams {
     type: VetementType;
   }[];
 }
+
+// Alias types for backward compatibility
+export type EnsembleCreateData = EnsembleCreateParams;
+export type EnsembleUpdateData = EnsembleUpdateParams;

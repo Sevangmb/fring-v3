@@ -1,6 +1,12 @@
 
 // Export ensemble types
-export type { Ensemble, EnsembleCreateParams, EnsembleUpdateParams } from './types';
+export type { 
+  Ensemble, 
+  EnsembleCreateParams, 
+  EnsembleUpdateParams,
+  EnsembleCreateData,
+  EnsembleUpdateData 
+} from './types';
 
 // Export ensemble services
 export { 
@@ -34,5 +40,5 @@ export const deleteEnsemble = async (ensembleId: number): Promise<boolean> => {
   }
 };
 
-// Re-export fetchEnsembles as fetchUserEnsembles for backward compatibility
+// Re-export fetchUserEnsembles for backward compatibility
 export { fetchEnsembles as fetchUserEnsembles };

@@ -1,9 +1,20 @@
 
 import { supabase } from '@/lib/supabase';
 import { Ensemble, EnsembleCreateParams, EnsembleUpdateParams } from './types';
+import { Vetement } from '@/services/vetement/types';
 
-export const fetchEnsembles = async (userId: string): Promise<Ensemble[]> => {
+export const fetchEnsembles = async (userId?: string): Promise<Ensemble[]> => {
   try {
+    // If userId not provided, get it from the current session
+    if (!userId) {
+      const { data } = await supabase.auth.getUser();
+      userId = data.user?.id;
+      
+      if (!userId) {
+        return [];
+      }
+    }
+    
     const { data, error } = await supabase
       .from('tenues')
       .select(`
@@ -54,7 +65,7 @@ export const fetchEnsembles = async (userId: string): Promise<Ensemble[]> => {
       created_at: item.created_at,
       vetements: item.tenues_vetements.map(tv => ({
         id: tv.vetement_id,
-        vetement: tv.vetement,
+        vetement: tv.vetement as Vetement,
         position_ordre: tv.position_ordre,
       })),
     }));
@@ -115,7 +126,7 @@ export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | 
       created_at: data.created_at,
       vetements: data.tenues_vetements.map(tv => ({
         id: tv.vetement_id,
-        vetement: tv.vetement,
+        vetement: tv.vetement as Vetement,
         position_ordre: tv.position_ordre,
       })),
     };
@@ -125,8 +136,18 @@ export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | 
   }
 };
 
-export const createEnsemble = async (ensembleData: EnsembleCreateParams, userId: string): Promise<Ensemble | null> => {
+export const createEnsemble = async (ensembleData: EnsembleCreateParams, userId?: string): Promise<Ensemble | null> => {
   try {
+    // If userId not provided, get it from the current session
+    if (!userId) {
+      const { data } = await supabase.auth.getUser();
+      userId = data.user?.id;
+      
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+    }
+    
     // Create the ensemble
     const { data: ensemble, error: ensembleError } = await supabase
       .from('tenues')

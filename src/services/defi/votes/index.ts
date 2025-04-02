@@ -1,7 +1,23 @@
 
-export * from './submitVote';
-export * from './getUserVote';
-export * from './getDefiParticipationsWithVotes';
-export * from './fetchDefiById';
+// Re-export core vote functionality
+export { submitVote } from './submitVote';
+export { getUserVote } from './getUserVote';
+
+// Export DefiParticipationWithVotes interface and function
+export { 
+  getDefiParticipationsWithVotes, 
+  checkUserParticipation
+} from './getDefiParticipationsWithVotes';
+export type { ParticipationWithVotes } from './getDefiParticipationsWithVotes';
+
+// Export fetchDefiById
+export { fetchDefiById } from './fetchDefiById';
+
+// Export vote types
 export * from './types';
-export * from './utils';
+
+// Export utility functions
+export { 
+  organizeVetementsByType,
+  displayWeatherType 
+} from './utils';

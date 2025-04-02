@@ -1,37 +1,67 @@
 
-import { supabase } from '@/lib/supabase';
-import { VoteCount } from '@/services/votes/types';
+import { Vetement } from '@/services/vetement/types';
 
 /**
- * Récupère l'ID de l'utilisateur actuel
+ * Organiser les vêtements par type pour un affichage structuré
  */
-export const getCurrentUser = async (): Promise<string | null> => {
-  const { data: { session } } = await supabase.auth.getSession();
-  return session?.user?.id || null;
+export const organizeVetementsByType = (vetements: any[]): Record<string, any[]> => {
+  const result: Record<string, any[]> = {
+    hauts: [],
+    bas: [],
+    chaussures: [],
+    accessoires: [],
+    autres: []
+  };
+  
+  if (!vetements || !Array.isArray(vetements)) {
+    return result;
+  }
+  
+  vetements.forEach(item => {
+    const vetement = item.vetement;
+    const categorie = vetement?.categorie?.toLowerCase();
+    
+    if (!categorie) {
+      result.autres.push(item);
+      return;
+    }
+    
+    if (categorie.includes('haut') || categorie.includes('t-shirt') || categorie.includes('chemise') || categorie.includes('pull')) {
+      result.hauts.push(item);
+    } else if (categorie.includes('pantalon') || categorie.includes('jupe') || categorie.includes('short')) {
+      result.bas.push(item);
+    } else if (categorie.includes('chaussure') || categorie.includes('basket') || categorie.includes('boot')) {
+      result.chaussures.push(item);
+    } else if (categorie.includes('access') || categorie.includes('bijou') || categorie.includes('montre')) {
+      result.accessoires.push(item);
+    } else {
+      result.autres.push(item);
+    }
+  });
+  
+  return result;
 };
 
 /**
- * Calcule le score à partir du décompte des votes
+ * Affiche le type de météo de manière lisible
  */
-export const calculateScore = (votes: VoteCount): number => {
-  return votes.up - votes.down;
-};
-
-/**
- * Récupère les informations d'un défi par son ID
- */
-export const fetchDefiById = async (defiId: number) => {
-  try {
-    const { data, error } = await supabase
-      .from('defis')
-      .select('*')
-      .eq('id', defiId)
-      .single();
-      
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error(`Erreur lors de la récupération du défi ${defiId}:`, error);
-    return null;
+export const displayWeatherType = (weatherType: string | null | undefined): string => {
+  if (!weatherType) return 'Normal';
+  
+  switch(weatherType.toLowerCase()) {
+    case 'rain':
+    case 'pluie':
+      return 'Pluie';
+    case 'snow':
+    case 'neige':
+      return 'Neige';
+    case 'sun':
+    case 'soleil':
+      return 'Ensoleillé';
+    case 'cloud':
+    case 'nuage':
+      return 'Nuageux';
+    default:
+      return 'Normal';
   }
 };

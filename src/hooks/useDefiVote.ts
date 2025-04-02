@@ -1,6 +1,6 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { submitVote } from '@/services/votes';
+import { submitVote } from '@/services/votes/submitVote';
 import { getDefiParticipationsWithVotes, ParticipationWithVotes } from '@/services/defi/votes/getDefiParticipationsWithVotes';
 import { VoteType, VoteCount } from '@/services/votes/types';
 import { useToast } from './use-toast';
@@ -33,38 +33,55 @@ export const useDefiVote = (defiId: string | number) => {
       data.forEach(participation => {
         const ensembleId = participation.ensemble_id;
         
-        // Count votes by type
-        const upvotes = participation.votes?.filter(v => v.vote_type === 'upvote').length || 0;
-        const downvotes = participation.votes?.filter(v => v.vote_type === 'downvote').length || 0;
+        // Set vote counts
+        counts[ensembleId] = { 
+          up: participation.votes.up,
+          down: participation.votes.down
+        };
         
-        counts[ensembleId] = { upvotes, downvotes };
-        
-        // Check if user has voted
-        const userVote = participation.votes?.find(v => v.is_user_vote);
-        if (userVote) {
-          votes[ensembleId] = userVote.vote_type as VoteType;
-        }
+        // Set user vote
+        votes[ensembleId] = participation.userVote || null;
       });
       
       setUserVotes(votes);
       setVoteCounts(counts);
+      
+      setConnectionError(false);
     } catch (err) {
       console.error('Error loading participations:', err);
       setError(err instanceof Error ? err : new Error('Failed to load participations'));
       
       toast({
-        title: 'Erreur',
-        description: 'Impossible de charger les participations au défi',
-        variant: 'destructive'
+        title: "Erreur",
+        description: "Impossible de charger les participations au défi",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   }, [numericDefiId, toast]);
   
+  // Track connection status
+  const [connectionError, setConnectionError] = useState(!navigator.onLine);
+  
   // Initial load
   useEffect(() => {
     loadParticipations();
+    
+    const handleOnlineStatusChange = () => {
+      setConnectionError(!navigator.onLine);
+      if (navigator.onLine) {
+        loadParticipations();
+      }
+    };
+    
+    window.addEventListener('online', handleOnlineStatusChange);
+    window.addEventListener('offline', handleOnlineStatusChange);
+    
+    return () => {
+      window.removeEventListener('online', handleOnlineStatusChange);
+      window.removeEventListener('offline', handleOnlineStatusChange);
+    };
   }, [loadParticipations]);
   
   // Handle voting
@@ -74,13 +91,9 @@ export const useDefiVote = (defiId: string | number) => {
       
       // Check if user is changing their vote
       const existingVote = userVotes[ensembleId];
-      if (existingVote === voteType) {
-        // User is clicking the same vote type again, we'll consider this a vote removal
-        await submitVote(ensembleId, null); // Pass null to remove vote
-      } else {
-        // Submit new vote
-        await submitVote(ensembleId, voteType);
-      }
+      
+      // Submit vote to API
+      await submitVote('ensemble', ensembleId, voteType);
       
       // Refresh data
       await loadParticipations();
@@ -114,6 +127,7 @@ export const useDefiVote = (defiId: string | number) => {
     loading,
     error,
     votingInProgress,
+    connectionError,
     handleVote,
     refreshData: loadParticipations
   };

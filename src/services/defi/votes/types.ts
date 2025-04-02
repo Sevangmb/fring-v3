@@ -1,33 +1,25 @@
 
-export * from '@/services/votes/types';
+export { VoteType, VoteCount, calculateScore } from '@/services/votes/types';
 
-export interface ParticipationWithVotes {
-  id: number;
+export interface DefiVote {
   defi_id: number;
+  ensemble_id?: number;
   user_id: string;
-  ensemble_id: number;
+  vote_type: 'up' | 'down' | null;
   created_at: string;
-  commentaire?: string;
-  tenue: {
-    id: number;
-    nom: string;
-    description?: string;
-    occasion?: string;
-    saison?: string;
-    created_at: string;
-    user_id: string;
-    vetements: {
-      id: number;
-      vetement: any;
-    }[];
-  };
-  user_email?: string;
-  votes: {
-    userVote: 'up' | 'down' | null;
-    votesCount: {
-      up: number;
-      down: number;
-    };
-  };
-  score?: number;
+}
+
+export interface DefiVoteCounts {
+  up: number;
+  down: number;
+  total: number;
+}
+
+export interface DefiVoteSummary {
+  ensembleId: number;
+  totalVotes: number;
+  upvotes: number;
+  downvotes: number;
+  score: number;
+  userVote: 'up' | 'down' | null;
 }

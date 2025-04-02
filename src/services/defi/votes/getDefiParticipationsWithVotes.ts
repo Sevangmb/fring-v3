@@ -95,20 +95,23 @@ export const getDefiParticipationsWithVotes = async (defiId: number): Promise<Pa
         // Get user's vote if authenticated
         let userVote = null;
         if (userId) {
-          userVote = await getUserVote('ensemble', ensembleId, userId);
+          userVote = await getUserVote('ensemble', ensembleId);
         }
         
         // Calculate score (upvotes - downvotes)
         const score = votesCount.up - votesCount.down;
         
-        // Format ensemble data
+        // Extract ensemble data from the nested response
+        const ensemble = participation.ensemble;
+        
+        // Format ensemble data correctly
         const formattedEnsemble = {
-          id: participation.ensemble.id,
-          nom: participation.ensemble.nom,
-          description: participation.ensemble.description,
-          user_id: participation.ensemble.user_id,
-          created_at: participation.ensemble.created_at,
-          vetements: participation.ensemble.tenues_vetements.map(item => ({
+          id: ensemble.id,
+          nom: ensemble.nom,
+          description: ensemble.description,
+          user_id: ensemble.user_id,
+          created_at: ensemble.created_at,
+          vetements: ensemble.tenues_vetements.map(item => ({
             id: item.vetement_id,
             vetement: item.vetement,
             position_ordre: item.position_ordre,
@@ -116,7 +119,7 @@ export const getDefiParticipationsWithVotes = async (defiId: number): Promise<Pa
         };
         
         // Get user email from user data
-        const userEmail = participation.user?.[0]?.email;
+        const userEmail = participation.user?.email;
         
         return {
           id: participation.id,
@@ -143,8 +146,18 @@ export const getDefiParticipationsWithVotes = async (defiId: number): Promise<Pa
 };
 
 // Check if a user has participated in a defi
-export const checkUserParticipation = async (defiId: number, userId: string): Promise<{ participe: boolean; ensembleId?: number }> => {
+export const checkUserParticipation = async (defiId: number, userId?: string): Promise<{ participe: boolean; ensembleId?: number }> => {
   try {
+    // If userId not provided, get it from the current session
+    if (!userId) {
+      const { data } = await supabase.auth.getUser();
+      userId = data.user?.id;
+      
+      if (!userId) {
+        return { participe: false };
+      }
+    }
+    
     const { data, error } = await supabase
       .from('defis_participations')
       .select('id, ensemble_id')

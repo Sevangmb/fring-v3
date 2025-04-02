@@ -1,20 +1,23 @@
 
 import { supabase } from '@/lib/supabase';
-import { EnsembleCreateData } from './types';
+import { EnsembleCreateParams } from './types';
 import { initializeEnsembleData } from '../database/ensembleInitialization';
 
 /**
  * Crée un nouvel ensemble dans la base de données
  */
-export const createEnsemble = async (data: EnsembleCreateData) => {
+export const createEnsemble = async (data: EnsembleCreateParams, userId?: string) => {
   try {
     await initializeEnsembleData();
 
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = sessionData.session?.user?.id;
-
+    // If userId is not provided, get it from the session
     if (!userId) {
-      throw new Error("Utilisateur non connecté");
+      const { data: sessionData } = await supabase.auth.getSession();
+      userId = sessionData.session?.user?.id;
+
+      if (!userId) {
+        throw new Error("Utilisateur non connecté");
+      }
     }
 
     const { data: ensembleData, error: ensembleError } = await supabase

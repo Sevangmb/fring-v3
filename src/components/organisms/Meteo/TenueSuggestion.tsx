@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Text } from '@/components/atoms/Typography';
@@ -10,7 +9,7 @@ import TenueHeader from './TenueSuggestion/TenueHeader';
 import TenuePreviews from './TenueSuggestion/TenuePreviews';
 import TenueDetails from './TenueSuggestion/TenueDetails';
 import { useToast } from '@/hooks/use-toast';
-import { createEnsemble, EnsembleCreateData } from '@/services/ensembleService';
+import { createEnsemble, EnsembleCreateParams } from '@/services/ensemble';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -48,7 +47,7 @@ const TenueSuggestion: React.FC<TenueSuggestionProps> = ({
       setSaving(true);
       
       // Préparer les données pour la création d'ensemble
-      const ensembleData: EnsembleCreateData = {
+      const ensembleData: EnsembleCreateParams = {
         nom: `Tenue pour ${isRainyWeather ? 'temps pluvieux' : 'aujourd\'hui'}`,
         description: message,
         vetements: [

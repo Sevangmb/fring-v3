@@ -1,11 +1,11 @@
 
 import { supabase } from '@/lib/supabase';
-import { EnsembleUpdateData } from './types';
+import { EnsembleUpdateParams } from './types';
 
 /**
  * Met à jour un ensemble existant
  */
-export const updateEnsemble = async (data: EnsembleUpdateData): Promise<void> => {
+export const updateEnsemble = async (data: EnsembleUpdateParams): Promise<void> => {
   try {
     const { data: sessionData } = await supabase.auth.getSession();
     const userId = sessionData.session?.user?.id;

@@ -66,21 +66,26 @@ export const fetchEnsemblesAmis = async (userId: string): Promise<Ensemble[]> =>
     }
 
     // Transform the data to match the Ensemble interface
-    return ensembles.map(item => ({
-      id: item.id,
-      nom: item.nom,
-      description: item.description,
-      saison: item.saison,
-      occasion: item.occasion,
-      user_id: item.user_id,
-      created_at: item.created_at,
-      email: item.user?.email,
-      vetements: item.tenues_vetements.map(tv => ({
-        id: tv.vetement_id,
-        vetement: tv.vetement,
-        position_ordre: tv.position_ordre,
-      })),
-    }));
+    return ensembles.map(item => {
+      // Extract email correctly
+      const email = item.user?.email || undefined;
+      
+      return {
+        id: item.id,
+        nom: item.nom,
+        description: item.description,
+        saison: item.saison,
+        occasion: item.occasion,
+        user_id: item.user_id,
+        created_at: item.created_at,
+        email: email,
+        vetements: item.tenues_vetements.map(tv => ({
+          id: tv.vetement_id,
+          vetement: tv.vetement,
+          position_ordre: tv.position_ordre,
+        })),
+      };
+    });
   } catch (error) {
     console.error('Error in fetchEnsemblesAmis:', error);
     return [];

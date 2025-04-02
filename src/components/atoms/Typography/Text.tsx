@@ -8,7 +8,7 @@ export interface TextProps {
   className?: string;
   weight?: string;
   title?: string;
-  as?: string;
+  as?: React.ElementType;
 }
 
 const Text = ({
@@ -34,7 +34,6 @@ const Text = ({
 
   const weightStyle = weight ? `font-${weight}` : '';
   
-  // @ts-ignore - Dynamic component
   return (
     <Component 
       className={cn(

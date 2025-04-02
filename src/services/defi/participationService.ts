@@ -92,7 +92,7 @@ export const getDefiParticipations = async (defiId: number): Promise<DefiPartici
       })
     );
 
-    return enrichedData as DefiParticipation[];
+    return enrichedData;
   } catch (error) {
     console.error("Erreur lors de la récupération des participations:", error);
     throw error;
@@ -138,23 +138,28 @@ export const participerDefi = async (defiId: number, ensembleId: number, comment
 /**
  * Vérifier si un utilisateur a déjà participé à un défi
  */
-export const checkUserParticipation = async (defiId: number): Promise<boolean> => {
+export const checkUserParticipation = async (defiId: number): Promise<{participe: boolean; ensembleId?: number}> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return false;
+    if (!session) return { participe: false };
 
     const { data, error } = await supabase
       .from('defi_participations')
-      .select('id')
+      .select('id, ensemble_id')
       .eq('defi_id', defiId)
       .eq('user_id', session.user.id)
       .maybeSingle();
 
     if (error) throw error;
 
-    return !!data;
+    return data ? { 
+      participe: true, 
+      ensembleId: data.ensemble_id 
+    } : { 
+      participe: false 
+    };
   } catch (error) {
     console.error("Erreur lors de la vérification de participation:", error);
-    return false;
+    return { participe: false };
   }
 };
