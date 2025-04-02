@@ -82,7 +82,7 @@ export const fetchEnsemblesAmis = async (): Promise<Ensemble[]> => {
       occasion: item.occasion,
       user_id: item.user_id,
       created_at: item.created_at,
-      user_email: item.profiles ? item.profiles.email : undefined,
+      user_email: item.profiles && item.profiles.email ? item.profiles.email : undefined,
       vetements: item.tenues_vetements.map((tv: any) => ({
         id: tv.id,
         position_ordre: tv.position_ordre,
