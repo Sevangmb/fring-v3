@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, useRoutes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -7,7 +8,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { initializeVoteTables } from './services/database/voteTables';
 import { allRoutes } from './routes';
 import { useAppInitialization } from './hooks/useAppInitialization';
-import { setupLogInterceptors } from './services/logs';
 
 // Import styles
 import './App.css';
@@ -32,15 +32,7 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
       }
     };
     
-    // Initialiser les intercepteurs de logs
-    const cleanupLogInterceptors = setupLogInterceptors();
-    
     initTables();
-    
-    // Nettoyer les intercepteurs lors du démontage
-    return () => {
-      cleanupLogInterceptors();
-    };
   }, []);
   
   return <>{children}</>;

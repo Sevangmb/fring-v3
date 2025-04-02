@@ -8,6 +8,7 @@ export interface TextProps {
   className?: string;
   weight?: string;
   title?: string;
+  as?: string;
 }
 
 const Text = ({
@@ -16,6 +17,7 @@ const Text = ({
   className,
   weight,
   title,
+  as: Component = 'p',
   ...props
 }: TextProps) => {
   const styles = {
@@ -31,9 +33,10 @@ const Text = ({
   };
 
   const weightStyle = weight ? `font-${weight}` : '';
-
+  
+  // @ts-ignore - Dynamic component
   return (
-    <p 
+    <Component 
       className={cn(
         variant && styles[variant],
         weightStyle,
@@ -43,7 +46,7 @@ const Text = ({
       {...props}
     >
       {children}
-    </p>
+    </Component>
   );
 };
 

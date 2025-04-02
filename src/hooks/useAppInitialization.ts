@@ -1,17 +1,18 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { setupLogInterceptors } from '@/services/logs';
 
 export const useAppInitialization = () => {
-  const { user, setUser, signOut } = useAuth();
+  const { user, setUser } = useAuth();
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     const initialize = async () => {
       try {
         // Set up log interceptors
-        setupLogInterceptors();
+        const cleanupInterceptors = setupLogInterceptors();
 
         // Check for existing session
         const { data, error } = await supabase.auth.getSession();
@@ -36,16 +37,22 @@ export const useAppInitialization = () => {
           }
         );
         
+        setInitialized(true);
+        
         // Cleanup subscription
         return () => {
           subscription.unsubscribe();
+          cleanupInterceptors();
         };
       } catch (error) {
         console.error('Error initializing app:', error);
+        setInitialized(true); // Still set initialized to true so app can proceed
       }
     };
     
     // Call the initialize function directly
     initialize();
-  }, [setUser, signOut]);
+  }, [setUser]);
+
+  return { initialized, user };
 };

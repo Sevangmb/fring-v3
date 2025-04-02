@@ -1,10 +1,7 @@
 
-// Exportation des fonctions de vote
-export { getDefiParticipationsWithVotes } from './getDefiParticipationsWithVotes';
-export { submitVote } from './submitVote';
-export { getUserVote } from './getUserVote';
-export { fetchDefiById } from './fetchDefiById';
-export { getCurrentUser } from './utils';
-
-// Export types
+export * from './submitVote';
+export * from './getUserVote';
+export * from './getDefiParticipationsWithVotes';
+export * from './fetchDefiById';
 export * from './types';
+export * from './utils';

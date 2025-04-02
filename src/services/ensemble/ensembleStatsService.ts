@@ -1,115 +1,128 @@
 
 import { supabase } from '@/lib/supabase';
 
-/**
- * Récupère les statistiques sur les ensembles de l'utilisateur
- */
-export const getEnsembleStats = async () => {
+export interface EnsembleStats {
+  totalEnsembles: number;
+  ensemblesPerSeason: { [key: string]: number };
+  mostUsedVetements: { id: number; nom: string; count: number }[];
+  recentEnsembles: { id: number; nom: string; date: string }[];
+}
+
+export const getEnsembleStats = async (userId: string): Promise<EnsembleStats> => {
   try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = sessionData.session?.user?.id;
-
-    if (!userId) {
-      throw new Error("Utilisateur non connecté");
-    }
-
-    // Récupérer le nombre total d'ensembles
+    // Get total ensembles
     const { count: totalEnsembles, error: countError } = await supabase
       .from('tenues')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId);
 
     if (countError) {
-      console.error("Erreur lors du comptage des ensembles:", countError);
-      throw countError;
+      console.error('Error counting ensembles:', countError);
+      return {
+        totalEnsembles: 0,
+        ensemblesPerSeason: {},
+        mostUsedVetements: [],
+        recentEnsembles: []
+      };
     }
 
-    // Récupérer les ensembles par saison
-    const { data: saisonData, error: saisonError } = await supabase
+    // Get ensembles per season
+    const { data: seasonData, error: seasonError } = await supabase
       .from('tenues')
       .select('saison')
-      .eq('user_id', userId)
-      .not('saison', 'is', null);
+      .eq('user_id', userId);
 
-    if (saisonError) {
-      console.error("Erreur lors de la récupération des saisons:", saisonError);
-      throw saisonError;
+    if (seasonError) {
+      console.error('Error getting season data:', seasonError);
+      return {
+        totalEnsembles: totalEnsembles || 0,
+        ensemblesPerSeason: {},
+        mostUsedVetements: [],
+        recentEnsembles: []
+      };
     }
 
-    // Comptage par saison
-    const saisonStats = saisonData.reduce((acc: Record<string, number>, item) => {
-      const saison = item.saison || "Non spécifié";
-      acc[saison] = (acc[saison] || 0) + 1;
-      return acc;
-    }, {});
+    const ensemblesPerSeason: { [key: string]: number } = {};
+    seasonData.forEach(ensemble => {
+      const season = ensemble.saison || 'Non spécifié';
+      ensemblesPerSeason[season] = (ensemblesPerSeason[season] || 0) + 1;
+    });
 
-    // Récupérer les ensembles par occasion
-    const { data: occasionData, error: occasionError } = await supabase
-      .from('tenues')
-      .select('occasion')
-      .eq('user_id', userId)
-      .not('occasion', 'is', null);
-
-    if (occasionError) {
-      console.error("Erreur lors de la récupération des occasions:", occasionError);
-      throw occasionError;
-    }
-
-    // Comptage par occasion
-    const occasionStats = occasionData.reduce((acc: Record<string, number>, item) => {
-      const occasion = item.occasion || "Non spécifié";
-      acc[occasion] = (acc[occasion] || 0) + 1;
-      return acc;
-    }, {});
-
-    return {
-      totalEnsembles,
-      saisonStats,
-      occasionStats
-    };
-  } catch (error) {
-    console.error("Erreur lors de la récupération des statistiques d'ensembles:", error);
-    throw error;
-  }
-};
-
-/**
- * Récupère les statistiques d'utilisation des vêtements dans les ensembles
- */
-export const getVetementsUsageStats = async () => {
-  try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = sessionData.session?.user?.id;
-
-    if (!userId) {
-      throw new Error("Utilisateur non connecté");
-    }
-
-    // Récupérer le nombre d'utilisations de chaque vêtement dans les ensembles
-    const { data, error } = await supabase
+    // Get most used vetements
+    const { data: vetementData, error: vetementError } = await supabase
       .from('tenues_vetements')
       .select(`
         vetement_id,
-        tenue:tenue_id(user_id),
-        count
+        vetement:vetements (id, nom)
       `)
-      .eq('tenue.user_id', userId);
+      .in('tenue_id', supabase.from('tenues').select('id').eq('user_id', userId));
 
-    if (error) {
-      console.error("Erreur lors de la récupération des statistiques d'utilisation:", error);
-      throw error;
+    if (vetementError) {
+      console.error('Error getting vetement data:', vetementError);
+      return {
+        totalEnsembles: totalEnsembles || 0,
+        ensemblesPerSeason,
+        mostUsedVetements: [],
+        recentEnsembles: []
+      };
     }
 
-    // Comptage par vêtement
-    const vetementsUsage = data.reduce((acc: Record<number, number>, item) => {
-      const vetementId = item.vetement_id;
-      acc[vetementId] = (acc[vetementId] || 0) + 1;
-      return acc;
-    }, {});
+    const vetementCounts: { [key: number]: { id: number; nom: string; count: number } } = {};
+    vetementData.forEach(item => {
+      if (item.vetement) {
+        const id = item.vetement.id;
+        if (!vetementCounts[id]) {
+          vetementCounts[id] = {
+            id,
+            nom: item.vetement.nom,
+            count: 0
+          };
+        }
+        vetementCounts[id].count++;
+      }
+    });
 
-    return vetementsUsage;
+    const mostUsedVetements = Object.values(vetementCounts)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    // Get recent ensembles
+    const { data: recentData, error: recentError } = await supabase
+      .from('tenues')
+      .select('id, nom, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (recentError) {
+      console.error('Error getting recent ensembles:', recentError);
+      return {
+        totalEnsembles: totalEnsembles || 0,
+        ensemblesPerSeason,
+        mostUsedVetements,
+        recentEnsembles: []
+      };
+    }
+
+    const recentEnsembles = recentData.map(ensemble => ({
+      id: ensemble.id,
+      nom: ensemble.nom,
+      date: ensemble.created_at
+    }));
+
+    return {
+      totalEnsembles: totalEnsembles || 0,
+      ensemblesPerSeason,
+      mostUsedVetements,
+      recentEnsembles
+    };
   } catch (error) {
-    console.error("Erreur lors de la récupération des statistiques d'utilisation:", error);
-    throw error;
+    console.error('Error in getEnsembleStats:', error);
+    return {
+      totalEnsembles: 0,
+      ensemblesPerSeason: {},
+      mostUsedVetements: [],
+      recentEnsembles: []
+    };
   }
 };
