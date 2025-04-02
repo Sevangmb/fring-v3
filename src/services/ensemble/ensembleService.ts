@@ -1,133 +1,40 @@
-
 import { supabase } from '@/lib/supabase';
 import { Ensemble, EnsembleCreateParams, EnsembleUpdateParams } from './types';
-import { Vetement } from '@/services/vetement/types';
 
-export const fetchEnsembles = async (userId?: string): Promise<Ensemble[]> => {
-  try {
-    // If userId not provided, get it from the current session
-    if (!userId) {
-      const { data } = await supabase.auth.getUser();
-      userId = data.user?.id;
-      
-      if (!userId) {
-        return [];
-      }
-    }
-    
-    const { data, error } = await supabase
-      .from('tenues')
-      .select(`
-        id,
-        nom,
-        description,
-        saison,
-        occasion,
-        user_id,
-        created_at,
-        tenues_vetements (
-          id,
-          vetement_id,
-          position_ordre,
-          vetement:vetements (
-            id,
-            nom,
-            description,
-            image_url,
-            couleur,
-            marque,
-            categorie,
-            saison,
-            temperature_min,
-            temperature_max,
-            user_id,
-            created_at,
-            meteorologie
-          )
-        )
-      `)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching ensembles:', error);
-      return [];
-    }
-
-    // Transform the data to match the Ensemble interface
-    return data.map(item => ({
-      id: item.id,
-      nom: item.nom,
-      description: item.description,
-      saison: item.saison,
-      occasion: item.occasion,
-      user_id: item.user_id,
-      created_at: item.created_at,
-      vetements: item.tenues_vetements.map(tv => {
-        // Ensure vetement is properly handled (could be an array or object)
-        const vetementData = Array.isArray(tv.vetement) ? tv.vetement[0] : tv.vetement;
-        
-        // Create a proper Vetement object
-        const vetement: Vetement = {
-          id: vetementData.id,
-          nom: vetementData.nom,
-          description: vetementData.description || '',
-          image_url: vetementData.image_url,
-          couleur: vetementData.couleur,
-          marque: vetementData.marque || '',
-          categorie_id: 0, // Default value
-          categorie: vetementData.categorie,
-          taille: '',  // Default value
-          saison: vetementData.saison,
-          temperature_min: vetementData.temperature_min,
-          temperature_max: vetementData.temperature_max,
-          user_id: vetementData.user_id,
-          created_at: vetementData.created_at,
-          meteorologie: vetementData.meteorologie
-        };
-        
-        return {
-          id: tv.vetement_id,
-          vetement: vetement,
-          position_ordre: tv.position_ordre
-        };
-      })
-    }));
-  } catch (error) {
-    console.error('Error in fetchEnsembles:', error);
-    return [];
-  }
-};
-
+/**
+ * Récupère un ensemble par son ID
+ * @param ensembleId ID de l'ensemble à récupérer
+ * @returns L'ensemble trouvé ou null si non trouvé
+ */
 export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | null> => {
   try {
     const { data, error } = await supabase
       .from('tenues')
       .select(`
-        id,
-        nom,
-        description,
-        saison,
-        occasion,
-        user_id,
-        created_at,
+        id, 
+        nom, 
+        description, 
+        saison, 
+        occasion, 
+        user_id, 
+        created_at, 
         tenues_vetements (
-          id,
-          vetement_id,
+          id, 
           position_ordre,
-          vetement:vetements (
-            id,
-            nom,
-            description,
-            image_url,
-            couleur,
-            marque,
-            categorie,
-            saison,
-            temperature_min,
-            temperature_max,
-            user_id,
-            created_at,
+          vetement:vetement_id (
+            id, 
+            nom, 
+            description, 
+            image_url, 
+            couleur, 
+            marque, 
+            categorie_id, 
+            saison, 
+            temperature_min, 
+            temperature_max, 
+            taille,
+            user_id, 
+            created_at, 
             meteorologie
           )
         )
@@ -136,11 +43,15 @@ export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | 
       .single();
 
     if (error) {
-      console.error('Error fetching ensemble by ID:', error);
+      throw error;
+    }
+
+    if (!data) {
       return null;
     }
 
-    return {
+    // Transform data to match Ensemble type
+    const ensemble: Ensemble = {
       id: data.id,
       nom: data.nom,
       description: data.description,
@@ -148,147 +59,184 @@ export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | 
       occasion: data.occasion,
       user_id: data.user_id,
       created_at: data.created_at,
-      vetements: data.tenues_vetements.map(tv => {
-        // Ensure vetement is properly handled (could be an array or object)
-        const vetementData = Array.isArray(tv.vetement) ? tv.vetement[0] : tv.vetement;
-        
-        // Create a proper Vetement object
-        const vetement: Vetement = {
-          id: vetementData.id,
-          nom: vetementData.nom,
-          description: vetementData.description || '',
-          image_url: vetementData.image_url,
-          couleur: vetementData.couleur,
-          marque: vetementData.marque || '',
-          categorie_id: 0, // Default value
-          categorie: vetementData.categorie,
-          taille: '',  // Default value
-          saison: vetementData.saison,
-          temperature_min: vetementData.temperature_min,
-          temperature_max: vetementData.temperature_max,
-          user_id: vetementData.user_id,
-          created_at: vetementData.created_at,
-          meteorologie: vetementData.meteorologie
-        };
-        
-        return {
-          id: tv.vetement_id,
-          vetement: vetement,
-          position_ordre: tv.position_ordre
-        };
-      }),
+      vetements: data.tenues_vetements.map((tv: any) => ({
+        id: tv.id,
+        position_ordre: tv.position_ordre,
+        vetement: {
+          id: tv.vetement.id,
+          nom: tv.vetement.nom,
+          categorie_id: tv.vetement.categorie_id,
+          couleur: tv.vetement.couleur,
+          taille: tv.vetement.taille,
+          image_url: tv.vetement.image_url,
+          description: tv.vetement.description,
+          marque: tv.vetement.marque,
+          saison: tv.vetement.saison,
+          temperature_min: tv.vetement.temperature_min,
+          temperature_max: tv.vetement.temperature_max,
+          user_id: tv.vetement.user_id,
+          created_at: tv.vetement.created_at,
+          meteorologie: tv.vetement.meteorologie
+        }
+      }))
     };
+
+    return ensemble;
   } catch (error) {
-    console.error('Error in fetchEnsembleById:', error);
+    console.error('Error fetching ensemble by ID:', error);
     return null;
   }
 };
 
-export const createEnsemble = async (ensembleData: EnsembleCreateParams, userId?: string): Promise<Ensemble | null> => {
+/**
+ * Récupère tous les ensembles de l'utilisateur
+ * @returns Liste des ensembles de l'utilisateur
+ */
+export const fetchEnsembles = async (): Promise<Ensemble[]> => {
   try {
-    // If userId not provided, get it from the current session
-    if (!userId) {
-      const { data } = await supabase.auth.getUser();
-      userId = data.user?.id;
-      
-      if (!userId) {
-        throw new Error('User not authenticated');
-      }
-    }
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
     
-    // Create the ensemble
-    const { data: ensemble, error: ensembleError } = await supabase
+    if (!userId) {
+      return [];
+    }
+
+    const { data, error } = await supabase
       .from('tenues')
-      .insert({
-        nom: ensembleData.nom,
-        description: ensembleData.description,
-        saison: ensembleData.saison,
-        occasion: ensembleData.occasion,
-        user_id: userId,
-      })
-      .select()
+      .select(`
+        id, 
+        nom, 
+        description, 
+        saison, 
+        occasion, 
+        user_id, 
+        created_at, 
+        tenues_vetements (
+          id, 
+          position_ordre,
+          vetement:vetement_id (
+            id, 
+            nom, 
+            description, 
+            image_url, 
+            couleur, 
+            marque, 
+            categorie_id, 
+            saison, 
+            temperature_min, 
+            temperature_max, 
+            taille,
+            user_id, 
+            created_at, 
+            meteorologie
+          )
+        )
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    // Transform the data to match the Ensemble type, ensuring correct categories field
+    const ensembles: Ensemble[] = data.map(item => ({
+      id: item.id,
+      nom: item.nom,
+      description: item.description,
+      saison: item.saison,
+      occasion: item.occasion,
+      user_id: item.user_id,
+      created_at: item.created_at,
+      vetements: item.tenues_vetements.map((tv: any) => ({
+        id: tv.id,
+        position_ordre: tv.position_ordre,
+        vetement: {
+          id: tv.vetement.id,
+          nom: tv.vetement.nom,
+          categorie_id: tv.vetement.categorie_id,
+          couleur: tv.vetement.couleur,
+          taille: tv.vetement.taille,
+          image_url: tv.vetement.image_url,
+          description: tv.vetement.description,
+          marque: tv.vetement.marque,
+          saison: tv.vetement.saison,
+          temperature_min: tv.vetement.temperature_min,
+          temperature_max: tv.vetement.temperature_max,
+          user_id: tv.vetement.user_id,
+          created_at: tv.vetement.created_at,
+          meteorologie: tv.vetement.meteorologie
+        }
+      }))
+    }));
+
+    return ensembles;
+  } catch (error) {
+    console.error('Error fetching ensembles:', error);
+    return [];
+  }
+};
+
+/**
+ * Create a new ensemble
+ */
+export const createEnsemble = async (ensemble: EnsembleCreateParams): Promise<number | null> => {
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+
+    if (!userId) {
+      console.error('User not authenticated');
+      return null;
+    }
+
+    const { data, error } = await supabase
+      .from('tenues')
+      .insert([
+        {
+          nom: ensemble.nom,
+          description: ensemble.description,
+          saison: ensemble.saison,
+          occasion: ensemble.occasion,
+          user_id: userId
+        }
+      ])
+      .select('id')
       .single();
 
-    if (ensembleError) {
-      console.error('Error creating ensemble:', ensembleError);
-      return null;
+    if (error) {
+      throw error;
     }
 
-    // Add vetements to the ensemble
-    const tenues_vetements = ensembleData.vetements.map((v, index) => ({
-      tenue_id: ensemble.id,
-      vetement_id: v.id,
-      position_ordre: index + 1,
-    }));
-
-    const { error: vetementsError } = await supabase
-      .from('tenues_vetements')
-      .insert(tenues_vetements);
-
-    if (vetementsError) {
-      console.error('Error adding vetements to ensemble:', vetementsError);
-      // Clean up the created ensemble
-      await supabase.from('tenues').delete().eq('id', ensemble.id);
-      return null;
-    }
-
-    // Return the created ensemble with vetements
-    return fetchEnsembleById(ensemble.id);
+    return data.id;
   } catch (error) {
-    console.error('Error in createEnsemble:', error);
+    console.error('Error creating ensemble:', error);
     return null;
   }
 };
 
-export const updateEnsemble = async (ensembleData: EnsembleUpdateParams): Promise<Ensemble | null> => {
+/**
+ * Update an existing ensemble
+ */
+export const updateEnsemble = async (ensembleId: number, ensemble: EnsembleUpdateParams): Promise<boolean> => {
   try {
-    // Update the ensemble
-    const { error: ensembleError } = await supabase
+    const { error } = await supabase
       .from('tenues')
       .update({
-        nom: ensembleData.nom,
-        description: ensembleData.description,
-        saison: ensembleData.saison,
-        occasion: ensembleData.occasion,
+        nom: ensemble.nom,
+        description: ensemble.description,
+        saison: ensemble.saison,
+        occasion: ensemble.occasion
       })
-      .eq('id', ensembleData.id);
+      .eq('id', ensembleId);
 
-    if (ensembleError) {
-      console.error('Error updating ensemble:', ensembleError);
-      return null;
+    if (error) {
+      throw error;
     }
 
-    // Delete existing vetements
-    const { error: deleteError } = await supabase
-      .from('tenues_vetements')
-      .delete()
-      .eq('tenue_id', ensembleData.id);
-
-    if (deleteError) {
-      console.error('Error deleting existing vetements:', deleteError);
-      return null;
-    }
-
-    // Add new vetements
-    const tenues_vetements = ensembleData.vetements.map((v, index) => ({
-      tenue_id: ensembleData.id,
-      vetement_id: v.id,
-      position_ordre: index + 1,
-    }));
-
-    const { error: vetementsError } = await supabase
-      .from('tenues_vetements')
-      .insert(tenues_vetements);
-
-    if (vetementsError) {
-      console.error('Error adding vetements to ensemble:', vetementsError);
-      return null;
-    }
-
-    // Return the updated ensemble
-    return fetchEnsembleById(ensembleData.id);
+    return true;
   } catch (error) {
-    console.error('Error in updateEnsemble:', error);
-    return null;
+    console.error('Error updating ensemble:', error);
+    return false;
   }
 };

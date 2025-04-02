@@ -9,6 +9,7 @@ export interface TextProps {
   weight?: string;
   title?: string;
   as?: React.ElementType;
+  [x: string]: any; // Allow any other props
 }
 
 const Text = ({
@@ -34,17 +35,15 @@ const Text = ({
 
   const weightStyle = weight ? `font-${weight}` : '';
   
-  const componentProps = {
-    className: cn(
-      variant && styles[variant],
-      weightStyle,
-      className
-    ),
-    title,
-    ...props
-  };
-  
-  return <Component {...componentProps}>{children}</Component>;
+  return (
+    <Component 
+      className={cn(variant && styles[variant], weightStyle, className)} 
+      title={title} 
+      {...props}
+    >
+      {children}
+    </Component>
+  );
 };
 
 export default Text;

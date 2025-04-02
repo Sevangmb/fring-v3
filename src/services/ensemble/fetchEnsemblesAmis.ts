@@ -1,137 +1,113 @@
 
 import { supabase } from '@/lib/supabase';
 import { Ensemble } from './types';
-import { Vetement } from '@/services/vetement/types';
 
 /**
  * Récupère les ensembles des amis d'un utilisateur
- * @param userId ID de l'utilisateur (optionnel)
  * @returns Liste des ensembles des amis
  */
-export const fetchEnsemblesAmis = async (userId?: string): Promise<Ensemble[]> => {
+export const fetchEnsemblesAmis = async (): Promise<Ensemble[]> => {
   try {
-    // Si l'ID de l'utilisateur n'est pas fourni, on utilise l'utilisateur connecté
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+    
     if (!userId) {
-      const { data: sessionData } = await supabase.auth.getSession();
-      userId = sessionData.session?.user?.id;
-      
-      if (!userId) {
-        throw new Error("Utilisateur non connecté");
-      }
+      return [];
     }
 
-    // Récupérer les amis de l'utilisateur
+    // Récupérer les IDs des amis de l'utilisateur (relations acceptées)
     const { data: amisData, error: amisError } = await supabase
       .from('amis')
       .select('ami_id')
       .eq('user_id', userId)
-      .eq('statut', 'accepte');
+      .eq('statut', 'accepté');
 
     if (amisError) {
-      console.error("Erreur lors de la récupération des amis:", amisError);
-      return [];
+      throw amisError;
     }
 
     if (!amisData || amisData.length === 0) {
       return [];
     }
 
-    // Construire un tableau des IDs des amis
+    // Extraire les IDs des amis
     const amisIds = amisData.map(ami => ami.ami_id);
 
     // Récupérer les ensembles des amis
     const { data: ensemblesData, error: ensemblesError } = await supabase
       .from('tenues')
       .select(`
-        id,
-        nom,
-        description,
-        saison,
-        occasion,
-        user_id,
-        created_at,
+        id, 
+        nom, 
+        description, 
+        saison, 
+        occasion, 
+        user_id, 
+        created_at, 
+        profiles:user_id(email),
         tenues_vetements (
-          id,
-          vetement_id,
+          id, 
           position_ordre,
-          vetement:vetements (
-            id,
-            nom,
-            description,
-            image_url,
-            couleur,
-            marque,
-            categorie,
-            saison,
-            temperature_min,
-            temperature_max,
-            user_id,
-            created_at,
+          vetement:vetement_id (
+            id, 
+            nom, 
+            description, 
+            image_url, 
+            couleur, 
+            marque, 
+            categorie_id, 
+            saison, 
+            temperature_min, 
+            temperature_max, 
+            taille,
+            user_id, 
+            created_at, 
             meteorologie
           )
-        ),
-        users (
-          email
         )
       `)
-      .in('user_id', amisIds);
+      .in('user_id', amisIds)
+      .order('created_at', { ascending: false });
 
     if (ensemblesError) {
-      console.error("Erreur lors de la récupération des ensembles des amis:", ensemblesError);
-      return [];
+      throw ensemblesError;
     }
 
-    // Transformer les données pour correspondre au type Ensemble
-    const ensembles: Ensemble[] = ensemblesData.map(ensemble => {
-      // Extract email safely
-      let email = '';
-      if (ensemble.users && Array.isArray(ensemble.users) && ensemble.users.length > 0) {
-        email = ensemble.users[0]?.email || '';
-      }
+    // Transformer les données dans le format attendu
+    const ensemblesAmis: Ensemble[] = ensemblesData.map(item => ({
+      id: item.id,
+      nom: item.nom,
+      description: item.description,
+      saison: item.saison,
+      occasion: item.occasion,
+      user_id: item.user_id,
+      created_at: item.created_at,
+      user_email: item.profiles?.email,
+      vetements: item.tenues_vetements.map((tv: any) => ({
+        id: tv.id,
+        position_ordre: tv.position_ordre,
+        vetement: {
+          id: tv.vetement.id,
+          nom: tv.vetement.nom,
+          categorie_id: tv.vetement.categorie_id,
+          couleur: tv.vetement.couleur,
+          taille: tv.vetement.taille,
+          image_url: tv.vetement.image_url,
+          description: tv.vetement.description,
+          marque: tv.vetement.marque,
+          saison: tv.vetement.saison,
+          temperature_min: tv.vetement.temperature_min,
+          temperature_max: tv.vetement.temperature_max,
+          user_id: tv.vetement.user_id,
+          created_at: tv.vetement.created_at,
+          meteorologie: tv.vetement.meteorologie
+        }
+      }))
+    }));
 
-      return {
-        id: ensemble.id,
-        nom: ensemble.nom,
-        description: ensemble.description,
-        saison: ensemble.saison,
-        occasion: ensemble.occasion,
-        user_id: ensemble.user_id,
-        created_at: ensemble.created_at,
-        email,
-        vetements: ensemble.tenues_vetements.map(item => {
-          const vetementData = Array.isArray(item.vetement) ? item.vetement[0] : item.vetement;
-          
-          // Create a proper Vetement object that matches the type
-          const vetement: Vetement = {
-            id: vetementData.id,
-            nom: vetementData.nom,
-            description: vetementData.description || '',
-            image_url: vetementData.image_url,
-            couleur: vetementData.couleur,
-            marque: vetementData.marque || '',
-            categorie_id: 0, // Default value
-            categorie: vetementData.categorie,
-            taille: '', // Default value
-            saison: vetementData.saison,
-            temperature_min: vetementData.temperature_min,
-            temperature_max: vetementData.temperature_max,
-            user_id: vetementData.user_id,
-            created_at: vetementData.created_at,
-            meteorologie: vetementData.meteorologie
-          };
-          
-          return {
-            id: item.id,
-            vetement: vetement,
-            position_ordre: item.position_ordre
-          };
-        })
-      };
-    });
-
-    return ensembles;
+    return ensemblesAmis;
   } catch (error) {
-    console.error("Erreur lors de la récupération des ensembles des amis:", error);
+    console.error('Error fetching friends ensembles:', error);
     return [];
   }
 };

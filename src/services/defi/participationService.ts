@@ -1,5 +1,53 @@
-
 import { supabase } from '@/lib/supabase';
+
+/**
+ * Interface for defi participation
+ */
+export interface DefiParticipation {
+  id: number;
+  defi_id: number;
+  user_id: string;
+  ensemble_id: number;
+  created_at: string;
+  // Optional joined fields
+  user_email?: string;
+  ensemble_nom?: string;
+}
+
+/**
+ * Get participations for a specific defi
+ */
+export const getDefiParticipations = async (defiId: number): Promise<DefiParticipation[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('defi_participations')
+      .select(`
+        id,
+        defi_id,
+        user_id,
+        ensemble_id,
+        created_at,
+        profiles:user_id(email),
+        tenues:ensemble_id(nom)
+      `)
+      .eq('defi_id', defiId);
+
+    if (error) throw error;
+
+    return (data || []).map(item => ({
+      id: item.id,
+      defi_id: item.defi_id,
+      user_id: item.user_id,
+      ensemble_id: item.ensemble_id,
+      created_at: item.created_at,
+      user_email: item.profiles?.email,
+      ensemble_nom: item.tenues?.nom
+    }));
+  } catch (error) {
+    console.error('Error fetching defi participations:', error);
+    return [];
+  }
+};
 
 /**
  * Vérifie si un utilisateur a participé à un défi

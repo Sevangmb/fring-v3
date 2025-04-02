@@ -1,11 +1,12 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { setupLogInterceptors } from '@/services/logs';
 
 export const useAppInitialization = () => {
   const { user, setUser, signOut } = useAuth();
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     const initialize = async () => {
@@ -33,16 +34,22 @@ export const useAppInitialization = () => {
           }
         });
 
+        // Mark as initialized
+        setInitialized(true);
+
         // Cleanup subscription
         return () => {
           subscription.unsubscribe();
         };
       } catch (error) {
         console.error('Error initializing app:', error);
+        setInitialized(true); // Still mark as initialized even on error
       }
     };
 
     // Call the initialize function directly
     initialize();
   }, [setUser, signOut]);
+
+  return { initialized };
 };

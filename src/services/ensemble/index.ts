@@ -8,14 +8,18 @@ export type {
 
 // Export ensemble services
 export { 
-  fetchEnsembles, 
-  fetchEnsembleById, 
   createEnsemble, 
   updateEnsemble 
 } from './ensembleService';
 
+// Re-export ensembleService functions
+export { fetchEnsembleById, fetchEnsembles } from './ensembleService';
+
 // Export fetch ensembles from friends
 export { fetchEnsemblesAmis } from './fetchEnsemblesAmis';
+
+// Re-export fetchUserEnsembles 
+export { fetchUserEnsembles } from './fetchUserEnsembles';
 
 // Export stats service
 export { getEnsembleStats } from './ensembleStatsService';
