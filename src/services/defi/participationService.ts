@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -43,8 +44,8 @@ export const getDefiParticipations = async (defiId: number): Promise<DefiPartici
       ensemble_id: item.ensemble_id,
       commentaire: item.commentaire,
       created_at: item.created_at,
-      user_email: item.profiles && item.profiles.email ? item.profiles.email : undefined,
-      ensemble_nom: item.tenues && item.tenues.nom ? item.tenues.nom : undefined
+      user_email: item.profiles && typeof item.profiles === 'object' ? item.profiles.email : undefined,
+      ensemble_nom: item.tenues && typeof item.tenues === 'object' ? item.tenues.nom : undefined
     }));
   } catch (error) {
     console.error('Error fetching defi participations:', error);
