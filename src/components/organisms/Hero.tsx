@@ -30,7 +30,7 @@ const Hero = ({ className }: HeroProps) => {
           <Sun className="h-10 w-10 text-amber-400" />
         </div>
         
-        <Heading level={1} className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 max-w-4xl">
+        <Heading className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 max-w-4xl">
           Gérez votre garde-robe selon le temps
         </Heading>
         
