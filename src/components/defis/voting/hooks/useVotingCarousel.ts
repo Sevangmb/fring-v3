@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from "react";
 import { useCarouselNavigation } from "./useCarouselNavigation";
 import { submitVote, getUserVote, getVotesCount } from "@/services/votes/voteService";
@@ -16,15 +15,13 @@ export const useVotingCarousel = (defiId: number) => {
   const [connectionError, setConnectionError] = useState(false);
   const [loadComplete, setLoadComplete] = useState(false);
 
-  // Setup carousel navigation for filtered participations
   const {
     currentIndex,
     setMaxItems,
     navigatePrevious,
     navigateNext
-  } = useCarouselNavigation(0); // Initialize with 0, will update when we have data
+  } = useCarouselNavigation(0);
 
-  // Filter participations to only show unvoted ones
   const filterUnvotedParticipations = useCallback(() => {
     if (!allParticipations.length) return [];
     
@@ -36,21 +33,17 @@ export const useVotingCarousel = (defiId: number) => {
     return unvotedParticipations;
   }, [allParticipations, votingState]);
 
-  // Load defi data and participations
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      // Check connection
       if (!navigator.onLine) {
         setConnectionError(true);
         setLoading(false);
         return;
       }
 
-      // Load defi data
       const { supabase } = await import('@/lib/supabase');
       
-      // Fetch defi details
       const { data: defiData, error: defiError } = await supabase
         .from('defis')
         .select('*')
@@ -60,7 +53,6 @@ export const useVotingCarousel = (defiId: number) => {
       if (defiError) throw defiError;
       setDefi(defiData);
       
-      // Fetch participations with their ensembles
       const { data: participationsData, error: participationsError } = await supabase
         .from('defi_participations')
         .select(`
@@ -89,23 +81,18 @@ export const useVotingCarousel = (defiId: number) => {
       
       if (participationsError) throw participationsError;
       
-      // Get votes for each participation
       const enhancedParticipations = await Promise.all(participationsData.map(async (p) => {
-        // Modifier pour obtenir les votes de l'ensemble, pas du défi
-        const votes = await getVotesCount('tenue', p.ensemble_id);
+        const votes = await getVotesCount('ensemble', p.ensemble_id);
         const score = votes.up - votes.down;
         return { ...p, votes, score };
       }));
       
-      // Sort by score
       const sortedParticipations = enhancedParticipations.sort((a, b) => b.score - a.score);
       setAllParticipations(sortedParticipations);
       
-      // Get user votes for each participation
       const userVotes: Record<number, VoteType> = {};
       for (const p of sortedParticipations) {
-        // Modifier pour obtenir le vote de l'utilisateur pour l'ensemble, pas pour le défi
-        const userVote = await getUserVote('tenue', p.ensemble_id);
+        const userVote = await getUserVote('ensemble', p.ensemble_id);
         userVotes[p.ensemble_id] = userVote;
       }
       setVotingState(userVotes);
@@ -125,7 +112,6 @@ export const useVotingCarousel = (defiId: number) => {
     }
   }, [defiId, toast]);
   
-  // Update filtered participations when all participations or voting state changes
   useEffect(() => {
     if (loadComplete) {
       const unvotedParticipations = filterUnvotedParticipations();
@@ -134,11 +120,9 @@ export const useVotingCarousel = (defiId: number) => {
     }
   }, [allParticipations, votingState, loadComplete, filterUnvotedParticipations, setMaxItems]);
   
-  // Load data on mount
   useEffect(() => {
     loadData();
     
-    // Setup network status change listeners
     const handleOnlineStatusChange = () => {
       if (navigator.onLine) {
         setConnectionError(false);
@@ -157,47 +141,40 @@ export const useVotingCarousel = (defiId: number) => {
     };
   }, [defiId, loadData]);
   
-  // Handle vote
   const handleVote = useCallback(async (ensembleId: number, vote: VoteType) => {
     if (isSubmitting || connectionError) return;
     
     setIsSubmitting(true);
     
     try {
-      // Update state optimistically
       const oldVote = votingState[ensembleId];
       setVotingState(prev => ({
         ...prev,
         [ensembleId]: vote
       }));
       
-      // Update participations with new vote counts
       setAllParticipations(prev => 
         prev.map(p => {
           if (p.ensemble_id === ensembleId) {
             const votes = { ...p.votes };
             
-            // If changing existing vote, remove old vote
             if (oldVote) {
               if (oldVote === 'up') votes.up = Math.max(0, votes.up - 1);
               if (oldVote === 'down') votes.down = Math.max(0, votes.down - 1);
             }
             
-            // Add new vote
             if (vote === 'up') votes.up += 1;
             if (vote === 'down') votes.down += 1;
             
-            // Recalculate score
             const score = votes.up - votes.down;
             
             return { ...p, votes, score };
           }
           return p;
-        }).sort((a, b) => b.score - a.score) // Re-sort by score
+        }).sort((a, b) => b.score - a.score)
       );
       
-      // Submit vote to server - vote pour l'ensemble
-      await submitVote('tenue', ensembleId, vote);
+      await submitVote('ensemble', ensembleId, vote);
       
       toast({
         title: "Vote enregistré !",
@@ -205,11 +182,8 @@ export const useVotingCarousel = (defiId: number) => {
         variant: vote === 'up' ? "default" : "destructive",
       });
       
-      // After voting, check if we need to navigate to the next item
       if (currentIndex >= filteredParticipations.length - 1) {
-        // We've reached the end of the list
         if (filteredParticipations.length === 1) {
-          // This was the last unvoted item
           toast({
             title: "Terminé !",
             description: "Vous avez voté pour tous les ensembles.",
@@ -225,7 +199,6 @@ export const useVotingCarousel = (defiId: number) => {
         variant: "destructive"
       });
       
-      // Reload data to reset state
       loadData();
     } finally {
       setIsSubmitting(false);
@@ -234,8 +207,8 @@ export const useVotingCarousel = (defiId: number) => {
 
   return {
     defi,
-    participations: filteredParticipations, // Now returning filtered participations
-    allParticipations,  // Keep this for the ranking list
+    participations: filteredParticipations,
+    allParticipations,
     currentIndex,
     loading,
     votingState,

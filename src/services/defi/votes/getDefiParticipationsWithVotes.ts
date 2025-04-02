@@ -75,11 +75,19 @@ export const getDefiParticipationsWithVotes = async (defiId: number) => {
       const userVote = await getUserVote(defiId, ensembleId);
       const votesCount = await getVotesCount('defi', defiId, ensembleId);
       
+      // Vérifier si tenue est un tableau ou un objet avant d'accéder à vetements
+      const tenue = Array.isArray(participation.tenue)
+        ? participation.tenue[0]
+        : participation.tenue;
+      
+      // S'assurer que vetements existe
+      const vetements = tenue?.vetements || [];
+      
       return {
         ...participation,
         tenue: {
-          ...participation.tenue,
-          vetements: participation.tenue.vetements
+          ...tenue,
+          vetements: vetements
         },
         user_email: userData?.email || 'Utilisateur inconnu',
         votes: {

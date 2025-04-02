@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { submitVote } from "@/services/defi/voteService";
 import { fetchWithRetry, checkConnection } from "../utils/networkUtils";
+import { VoteType } from "@/services/votes/types";
 
 export const useDefiVoting = ({
   defiId,
@@ -13,14 +14,14 @@ export const useDefiVoting = ({
 }: {
   defiId: number;
   participations: any[];
-  votingState: Record<number, 'up' | 'down' | null>;
+  votingState: Record<number, VoteType>;
   setParticipations: React.Dispatch<React.SetStateAction<any[]>>;
-  setVotingState: React.Dispatch<React.SetStateAction<Record<number, 'up' | 'down' | null>>>;
+  setVotingState: React.Dispatch<React.SetStateAction<Record<number, VoteType>>>;
 }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleVote = async (ensembleId: number, vote: 'up' | 'down') => {
+  const handleVote = async (ensembleId: number, vote: VoteType) => {
     // Prevent voting while already submitting
     if (isSubmitting) return;
     

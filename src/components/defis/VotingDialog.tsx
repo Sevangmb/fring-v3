@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -42,7 +41,6 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
   const [isVoting, setIsVoting] = useState(false);
   const [transitionDelay, setTransitionDelay] = useState(false);
   
-  // Reset index when dialog opens
   useEffect(() => {
     if (open) {
       setCurrentIndex(0);
@@ -54,7 +52,6 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
     }
   }, [open]);
   
-  // When all ensembles are voted on, fetch the winner
   useEffect(() => {
     const fetchWinner = async () => {
       if (allVoted && defiId) {
@@ -84,10 +81,8 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
     setIsVoting(true);
     
     try {
-      // Pour un vote pouce+, on compte le vote, pour pouce- on n'ajoute pas de point
-      await submitVote('tenue', currentEnsemble.id, vote);
+      await submitVote('ensemble', currentEnsemble.id, vote);
       
-      // Mettre à jour les résultats de vote
       setVotingResults(prev => {
         const ensembleName = currentEnsemble.nom || "Ensemble sans nom";
         const currentVotes = prev[currentEnsemble.id] || { id: currentEnsemble.id, name: ensembleName, upVotes: 0, totalVotes: 0 };
@@ -122,20 +117,17 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
         onVoteSubmitted(currentEnsemble.id, vote);
       }
       
-      // Mettre en place le délai avant de passer à l'ensemble suivant
       setTransitionDelay(true);
       setTimeout(() => {
-        // Passer à l'ensemble suivant, sans fermer la fenêtre
         if (currentIndex < ensembles.length - 1) {
           setCurrentIndex(prevIndex => prevIndex + 1);
           setIsVoting(false);
         } else {
-          // Tous les ensembles ont été votés
           setAllVoted(true);
           setIsVoting(false);
         }
         setTransitionDelay(false);
-      }, 1500); // Augmentation du délai à 1.5 secondes pour donner plus de temps
+      }, 1500);
     } catch (error) {
       console.error("Erreur lors du vote:", error);
       toast({
@@ -154,9 +146,8 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
     <Dialog 
       open={open} 
       onOpenChange={(newState) => {
-        // Empêcher la fermeture automatique pendant le vote ou la transition
         if ((isVoting || transitionDelay) && newState === false) {
-          return; // Ne rien faire si l'utilisateur essaie de fermer pendant un vote ou une transition
+          return;
         }
         onOpenChange(newState);
       }}

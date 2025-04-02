@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { VoteType } from "@/services/votes/types";
@@ -82,11 +81,11 @@ export const useEnsembleVote = ({
     
     try {
       // Récupérer le vote de l'utilisateur
-      const vote = await getUserVote('tenue', ensembleId);
+      const vote = await getUserVote('ensemble', ensembleId);
       setUserVote(vote);
       
       // Récupérer le décompte des votes
-      const votes = await getVotesCount('tenue', ensembleId);
+      const votes = await getVotesCount('ensemble', ensembleId);
       setVotesCount(votes);
     } catch (err) {
       console.error("Erreur lors du chargement des votes:", err);
@@ -109,10 +108,10 @@ export const useEnsembleVote = ({
       // Soumettre le vote
       if (defiId) {
         // Si c'est un vote dans le cadre d'un défi
-        await submitVote('tenue', ensembleId, vote);
+        await submitVote('ensemble', ensembleId, vote);
       } else {
         // Vote pour un ensemble hors défi
-        await submitVote('tenue', ensembleId, vote);
+        await submitVote('ensemble', ensembleId, vote);
       }
       
       // Mettre à jour l'état local

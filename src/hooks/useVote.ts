@@ -1,8 +1,7 @@
-
-import { useState, useEffect, useCallback } from 'react';
-import { VoteType, EntityType } from '@/services/votes/types';
-import { submitVote, getUserVote, getVotesCount } from '@/services/votes/voteService';
-import { useToast } from './use-toast';
+import { useState, useEffect, useCallback } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { VoteType, EntityType } from "@/services/votes/types";
+import { submitVote, getUserVote, getVotesCount } from "@/services/votes/voteService";
 
 interface UseVoteOptions {
   onVoteSuccess?: (vote: VoteType) => void;
@@ -20,7 +19,6 @@ export function useVote(
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const { toast } = useToast();
 
-  // Vérifier la connectivité
   useEffect(() => {
     const handleOnlineStatus = () => {
       setIsOffline(!navigator.onLine);
@@ -35,7 +33,6 @@ export function useVote(
     };
   }, []);
 
-  // Charger les données de vote initiales
   const loadVoteData = useCallback(async () => {
     if (!entityId || isOffline) return;
 
@@ -52,12 +49,10 @@ export function useVote(
     }
   }, [entityType, entityId, isOffline]);
 
-  // Charger les données au montage du composant
   useEffect(() => {
     loadVoteData();
   }, [loadVoteData]);
 
-  // Fonction pour soumettre un vote
   const handleSubmitVote = useCallback(async (vote: VoteType) => {
     if (isOffline) {
       toast({
@@ -72,34 +67,28 @@ export function useVote(
     try {
       await submitVote(entityType, entityId, vote);
       
-      // Mettre à jour l'état local
       setUserVote(vote);
       
-      // Mettre à jour le compte de votes
       setVotesCount(prev => {
         const newCounts = { ...prev };
         
-        // Si l'utilisateur change son vote
         if (userVote) {
           if (userVote === 'up') newCounts.up = Math.max(0, newCounts.up - 1);
           if (userVote === 'down') newCounts.down = Math.max(0, newCounts.down - 1);
         }
         
-        // Ajouter le nouveau vote
         if (vote === 'up') newCounts.up += 1;
         if (vote === 'down') newCounts.down += 1;
         
         return newCounts;
       });
       
-      // Appeler le callback de succès si défini
       if (options?.onVoteSuccess) {
         options.onVoteSuccess(vote);
       }
     } catch (error) {
       console.error('Erreur lors du vote:', error);
       
-      // Afficher une notification d'erreur
       toast({
         title: 'Erreur',
         description: error instanceof Error 
@@ -108,7 +97,6 @@ export function useVote(
         variant: 'destructive',
       });
       
-      // Appeler le callback d'erreur si défini
       if (options?.onVoteError && error instanceof Error) {
         options.onVoteError(error);
       }
