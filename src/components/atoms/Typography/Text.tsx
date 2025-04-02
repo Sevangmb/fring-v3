@@ -34,19 +34,18 @@ const Text = ({
 
   const weightStyle = weight ? `font-${weight}` : '';
   
-  return (
-    <Component 
-      className={cn(
-        variant && styles[variant],
-        weightStyle,
-        className
-      )}
-      title={title}
-      {...props}
-    >
-      {children}
-    </Component>
-  );
+  // Fix the props issue by using destructuring and spreading properly
+  const componentProps = {
+    className: cn(
+      variant && styles[variant],
+      weightStyle,
+      className
+    ),
+    title,
+    ...props
+  };
+  
+  return <Component {...componentProps}>{children}</Component>;
 };
 
 export default Text;

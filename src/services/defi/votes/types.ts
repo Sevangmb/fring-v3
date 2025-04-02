@@ -1,5 +1,10 @@
 
-export { VoteType, VoteCount, calculateScore } from '@/services/votes/types';
+export type VoteType = 'up' | 'down' | null;
+export type VoteCount = { up: number; down: number; };
+
+export const calculateScore = (counts: VoteCount): number => {
+  return counts.up - counts.down;
+};
 
 export interface DefiVote {
   defi_id: number;
