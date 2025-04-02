@@ -45,7 +45,7 @@ export const checkUserParticipation = async (
     }
 
     const { data, error } = await supabase
-      .from('defis_participations')
+      .from('defi_participations')
       .select('ensemble_id')
       .eq('defi_id', defiId)
       .eq('user_id', userId)
@@ -77,7 +77,7 @@ export const getDefiParticipationsWithVotes = async (
   try {
     // Get participations with ensemble details and user information
     const { data: participations, error: participationsError } = await supabase
-      .from('defis_participations')
+      .from('defi_participations')
       .select(`
         id,
         defi_id,
@@ -135,18 +135,21 @@ export const getDefiParticipationsWithVotes = async (
         // Get user email safely
         let userEmail = '';
         if (participation.users && Array.isArray(participation.users) && participation.users.length > 0) {
-          userEmail = participation.users[0].email || '';
+          userEmail = participation.users[0]?.email || '';
         }
 
         // Ensure we have vetements data
         const vetements = ensemble.tenues_vetements
-          ? ensemble.tenues_vetements.map(item => ({
-              id: item.vetement.id,
-              nom: item.vetement.nom,
-              image_url: item.vetement.image_url,
-              categorie: item.vetement.categorie,
-              couleur: item.vetement.couleur
-            }))
+          ? ensemble.tenues_vetements.map(item => {
+              const vetementData = Array.isArray(item.vetement) ? item.vetement[0] : item.vetement;
+              return {
+                id: vetementData.id,
+                nom: vetementData.nom,
+                image_url: vetementData.image_url,
+                categorie: vetementData.categorie,
+                couleur: vetementData.couleur
+              };
+            })
           : [];
 
         // Get vote counts for this participation
@@ -172,7 +175,7 @@ export const getDefiParticipationsWithVotes = async (
 
         // Get the current user's vote
         const userVote = currentUserId 
-          ? await getUserVote(Number(defiId), Number(ensemble.id), currentUserId)
+          ? await getUserVote(Number(defiId), Number(ensemble.id))
           : null;
 
         return {

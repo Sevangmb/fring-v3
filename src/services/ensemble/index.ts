@@ -3,9 +3,7 @@
 export type { 
   Ensemble, 
   EnsembleCreateParams, 
-  EnsembleUpdateParams,
-  EnsembleCreateData,
-  EnsembleUpdateData 
+  EnsembleUpdateParams
 } from './types';
 
 // Export ensemble services
@@ -16,11 +14,11 @@ export {
   updateEnsemble 
 } from './ensembleService';
 
+// Export fetch ensembles from friends
+export { fetchEnsemblesAmis } from './fetchEnsemblesAmis';
+
 // Export stats service
 export { getEnsembleStats } from './ensembleStatsService';
-
-// Export friends ensembles service
-export { fetchEnsemblesAmis } from './fetchEnsemblesAmis';
 
 // Delete ensemble function
 export const deleteEnsemble = async (ensembleId: number): Promise<boolean> => {
@@ -39,6 +37,3 @@ export const deleteEnsemble = async (ensembleId: number): Promise<boolean> => {
     return false;
   }
 };
-
-// Re-export fetchUserEnsembles for backward compatibility
-export { fetchEnsembles as fetchUserEnsembles };

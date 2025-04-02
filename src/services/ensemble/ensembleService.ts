@@ -63,11 +63,35 @@ export const fetchEnsembles = async (userId?: string): Promise<Ensemble[]> => {
       occasion: item.occasion,
       user_id: item.user_id,
       created_at: item.created_at,
-      vetements: item.tenues_vetements.map(tv => ({
-        id: tv.vetement_id,
-        vetement: tv.vetement as Vetement,
-        position_ordre: tv.position_ordre,
-      })),
+      vetements: item.tenues_vetements.map(tv => {
+        // Ensure vetement is properly handled (could be an array or object)
+        const vetementData = Array.isArray(tv.vetement) ? tv.vetement[0] : tv.vetement;
+        
+        // Create a proper Vetement object
+        const vetement: Vetement = {
+          id: vetementData.id,
+          nom: vetementData.nom,
+          description: vetementData.description || '',
+          image_url: vetementData.image_url,
+          couleur: vetementData.couleur,
+          marque: vetementData.marque || '',
+          categorie_id: 0, // Default value
+          categorie: vetementData.categorie,
+          taille: '',  // Default value
+          saison: vetementData.saison,
+          temperature_min: vetementData.temperature_min,
+          temperature_max: vetementData.temperature_max,
+          user_id: vetementData.user_id,
+          created_at: vetementData.created_at,
+          meteorologie: vetementData.meteorologie
+        };
+        
+        return {
+          id: tv.vetement_id,
+          vetement: vetement,
+          position_ordre: tv.position_ordre
+        };
+      })
     }));
   } catch (error) {
     console.error('Error in fetchEnsembles:', error);
@@ -124,11 +148,35 @@ export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | 
       occasion: data.occasion,
       user_id: data.user_id,
       created_at: data.created_at,
-      vetements: data.tenues_vetements.map(tv => ({
-        id: tv.vetement_id,
-        vetement: tv.vetement as Vetement,
-        position_ordre: tv.position_ordre,
-      })),
+      vetements: data.tenues_vetements.map(tv => {
+        // Ensure vetement is properly handled (could be an array or object)
+        const vetementData = Array.isArray(tv.vetement) ? tv.vetement[0] : tv.vetement;
+        
+        // Create a proper Vetement object
+        const vetement: Vetement = {
+          id: vetementData.id,
+          nom: vetementData.nom,
+          description: vetementData.description || '',
+          image_url: vetementData.image_url,
+          couleur: vetementData.couleur,
+          marque: vetementData.marque || '',
+          categorie_id: 0, // Default value
+          categorie: vetementData.categorie,
+          taille: '',  // Default value
+          saison: vetementData.saison,
+          temperature_min: vetementData.temperature_min,
+          temperature_max: vetementData.temperature_max,
+          user_id: vetementData.user_id,
+          created_at: vetementData.created_at,
+          meteorologie: vetementData.meteorologie
+        };
+        
+        return {
+          id: tv.vetement_id,
+          vetement: vetement,
+          position_ordre: tv.position_ordre
+        };
+      }),
     };
   } catch (error) {
     console.error('Error in fetchEnsembleById:', error);

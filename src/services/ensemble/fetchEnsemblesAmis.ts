@@ -86,7 +86,7 @@ export const fetchEnsemblesAmis = async (userId?: string): Promise<Ensemble[]> =
       // Extract email safely
       let email = '';
       if (ensemble.users && Array.isArray(ensemble.users) && ensemble.users.length > 0) {
-        email = ensemble.users[0].email || '';
+        email = ensemble.users[0]?.email || '';
       }
 
       return {
@@ -105,10 +105,10 @@ export const fetchEnsemblesAmis = async (userId?: string): Promise<Ensemble[]> =
           const vetement: Vetement = {
             id: vetementData.id,
             nom: vetementData.nom,
-            description: vetementData.description,
+            description: vetementData.description || '',
             image_url: vetementData.image_url,
             couleur: vetementData.couleur,
-            marque: vetementData.marque,
+            marque: vetementData.marque || '',
             categorie_id: 0, // Default value
             categorie: vetementData.categorie,
             taille: '', // Default value

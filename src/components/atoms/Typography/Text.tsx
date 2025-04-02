@@ -34,7 +34,6 @@ const Text = ({
 
   const weightStyle = weight ? `font-${weight}` : '';
   
-  // Fix the props issue by using destructuring and spreading properly
   const componentProps = {
     className: cn(
       variant && styles[variant],

@@ -1,23 +1,17 @@
 
-// Re-export core vote functionality
-export { submitVote } from './submitVote';
-export { getUserVote } from './getUserVote';
-
-// Export DefiParticipationWithVotes interface and function
-export { 
-  getDefiParticipationsWithVotes, 
-  checkUserParticipation
-} from './getDefiParticipationsWithVotes';
-export type { ParticipationWithVotes } from './getDefiParticipationsWithVotes';
-
-// Export fetchDefiById
-export { fetchDefiById } from './fetchDefiById';
-
-// Export vote types
+// Export all vote types and interfaces
 export * from './types';
 
-// Export utility functions
+// Export specific functions
+export { getUserVote } from './getUserVote';
+export { submitVote } from './submitVote';
+export { getWinningEnsemble } from './getWinningEnsemble';
+
+// Re-export from getDefiParticipationsWithVotes
 export { 
-  organizeVetementsByType,
-  displayWeatherType 
-} from './utils';
+  getDefiParticipationsWithVotes, 
+  checkUserParticipation 
+} from './getDefiParticipationsWithVotes';
+
+// Re-export fetchDefiById for convenience
+export { fetchDefiById } from './fetchDefiById';

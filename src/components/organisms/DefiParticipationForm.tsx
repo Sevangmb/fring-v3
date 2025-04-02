@@ -4,8 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { fetchEnsembles } from "@/services/ensemble";
-import { participerDefi, checkUserParticipation } from "@/services/defi/participationService";
+import { fetchEnsembles } from "@/services/ensemble/ensembleService";
+import { checkUserParticipation, participerDefi } from "@/services/defi/participationService";
 import { Loader2, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -22,7 +22,7 @@ const DefiParticipationForm: React.FC<DefiParticipationFormProps> = ({
   const [selectedEnsembleId, setSelectedEnsembleId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [participation, setParticipation] = useState<any>(null);
+  const [participation, setParticipation] = useState<{participe: boolean; ensembleId?: number} | null>(null);
   const { toast } = useToast();
   
   useEffect(() => {
