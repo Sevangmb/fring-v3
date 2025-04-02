@@ -8,7 +8,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { initializeVoteTables } from './services/database/voteTables';
 import { allRoutes } from './routes';
 import { useAppInitialization } from './hooks/useAppInitialization';
-import { setupAllLogInterceptors } from './services/logs';
+import { setupAllLogInterceptors } from './services/logs/index';
 
 // Import styles
 import './App.css';
