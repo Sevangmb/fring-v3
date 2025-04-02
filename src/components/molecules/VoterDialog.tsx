@@ -64,7 +64,9 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
       if (elementType === "ensemble") {
         success = await submitEnsembleVote(elementId, vote);
       } else if (elementType === "defi") {
-        success = await submitDefiVote(elementId, vote, ensembleId || 0);
+        // Ensure ensembleId is a number by using Number() conversion or the default 0
+        const ensembleIdNumber = ensembleId ? Number(ensembleId) : 0;
+        success = await submitDefiVote(elementId, vote, ensembleIdNumber);
       }
       
       if (success) {
