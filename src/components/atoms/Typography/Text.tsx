@@ -4,11 +4,11 @@ import { cn } from '@/lib/utils';
 
 export interface TextProps {
   children: React.ReactNode;
-  variant?: 'lead' | 'large' | 'small' | 'muted' | 'subtle'; // Ajout de 'subtle'
-  weight?: 'normal' | 'medium' | 'semibold' | 'bold'; // Ajout de la prop weight
-  as?: 'p' | 'span' | 'div' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'; // Ajout des éléments de titre
+  variant?: 'lead' | 'large' | 'small' | 'muted' | 'subtle';
+  weight?: 'normal' | 'medium' | 'semibold' | 'bold';
+  as?: 'p' | 'span' | 'div' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
   className?: string;
-  title?: string; // Ajout du titre
+  title?: string;
 }
 
 const Text: React.FC<TextProps> = ({
@@ -32,7 +32,7 @@ const Text: React.FC<TextProps> = ({
         return 'text-sm font-medium';
       case 'muted':
         return 'text-sm text-muted-foreground';
-      case 'subtle': // Ajout de la variante 'subtle'
+      case 'subtle':
         return 'text-sm text-muted-foreground opacity-75';
       default:
         return 'text-base text-foreground';

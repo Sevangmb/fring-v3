@@ -1,78 +1,47 @@
 
-export * from './types';
-export * from './fetchEnsembles';
-// export * from './fetchEnsemblesAmis'; // Commenté car non existant pour l'instant
-export * from './fetchEnsembleById';
-export * from './createEnsemble';
-export * from './votes';
+export * from './ensembleService';
+export * from './ensembleStatsService';
 
-// Ajout des exports manquants
+// Add alias for fetchEnsembles as fetchUserEnsembles for backward compatibility
+import { fetchEnsembles } from './ensembleService';
+export const fetchUserEnsembles = fetchEnsembles;
+
+// Delete ensemble function
 export const deleteEnsemble = async (ensembleId: number): Promise<boolean> => {
   try {
     const { supabase } = await import('@/lib/supabase');
+    
+    // Delete the ensemble record
     const { error } = await supabase
-      .from('tenues')
+      .from('ensembles')
       .delete()
       .eq('id', ensembleId);
     
     if (error) throw error;
+    
     return true;
   } catch (error) {
-    console.error("Erreur lors de la suppression de l'ensemble:", error);
+    console.error('Error deleting ensemble:', error);
     return false;
   }
 };
 
-// Alias pour fetchEnsembles pour compatibilité
-export const fetchUserEnsembles = async () => {
-  const { fetchEnsembles } = await import('./fetchEnsembles');
-  return fetchEnsembles();
-};
-
-// Fonction pour mettre à jour un ensemble
-export const updateEnsemble = async (ensemble: any): Promise<boolean> => {
+// Update ensemble function
+export const updateEnsemble = async (ensembleId: number, data: any): Promise<boolean> => {
   try {
     const { supabase } = await import('@/lib/supabase');
     
-    // Mise à jour des informations de base de l'ensemble
-    const { error: ensembleError } = await supabase
-      .from('tenues')
-      .update({
-        nom: ensemble.nom,
-        description: ensemble.description,
-        occasion: ensemble.occasion,
-        saison: ensemble.saison
-      })
-      .eq('id', ensemble.id);
+    // Update the ensemble record
+    const { error } = await supabase
+      .from('ensembles')
+      .update(data)
+      .eq('id', ensembleId);
     
-    if (ensembleError) throw ensembleError;
-    
-    // Suppression des vêtements existants de l'ensemble
-    const { error: deleteError } = await supabase
-      .from('tenues_vetements')
-      .delete()
-      .eq('tenue_id', ensemble.id);
-    
-    if (deleteError) throw deleteError;
-    
-    // Ajout des nouveaux vêtements
-    const vetementPromises = ensemble.vetements.map(async (item: any, index: number) => {
-      const { error: vetementError } = await supabase
-        .from('tenues_vetements')
-        .insert({
-          tenue_id: ensemble.id,
-          vetement_id: item.id,
-          position_ordre: index
-        });
-      
-      if (vetementError) throw vetementError;
-    });
-    
-    await Promise.all(vetementPromises);
+    if (error) throw error;
     
     return true;
   } catch (error) {
-    console.error("Erreur lors de la mise à jour de l'ensemble:", error);
+    console.error('Error updating ensemble:', error);
     return false;
   }
 };

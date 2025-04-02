@@ -8,8 +8,8 @@ import {
   submitVote,
   fetchDefiById
 } from "@/services/defi/votes";
-import { ParticipationWithVotes } from "@/services/defi/votes/types";
-import { calculateScore } from "@/services/defi/votes/utils";
+
+import { calculateScore } from "@/services/votes/types";
 
 interface EnsembleVoteState {
   [ensembleId: number]: VoteType;
@@ -18,7 +18,7 @@ interface EnsembleVoteState {
 export const useDefiVote = (defiId: number) => {
   const { toast } = useToast();
   const [votingState, setVotingState] = useState<EnsembleVoteState>({});
-  const [participations, setParticipations] = useState<ParticipationWithVotes[]>([]);
+  const [participations, setParticipations] = useState<any[]>([]);
   const [defi, setDefi] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

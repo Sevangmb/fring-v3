@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { setupAllLogInterceptors } from '@/services/logs';
+import { setupLogInterceptors } from '@/services/logs';
 
 /**
  * Hook pour initialiser l'application et configurer les services nécessaires
@@ -12,7 +12,7 @@ export const useAppInitialization = () => {
 
   useEffect(() => {
     // Configurer les intercepteurs de logs
-    const cleanupLogs = setupAllLogInterceptors();
+    const cleanupLogs = setupLogInterceptors();
     console.info('Initialisation de l\'application...', { userId: user?.id });
 
     // Écouter les changements d'authentification Supabase
