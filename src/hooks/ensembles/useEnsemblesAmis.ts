@@ -3,20 +3,32 @@ import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Ensemble } from "@/services/ensemble";
 import { fetchEnsemblesAmis } from "@/services/ensemble";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const useEnsemblesAmis = (friendId?: string) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [ensemblesAmis, setEnsemblesAmis] = useState<Ensemble[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   const loadEnsemblesAmis = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      setError(new Error("Utilisateur non connecté"));
+      return;
+    }
+    
     try {
       setLoading(true);
       setError(null);
       
       console.log("Chargement des ensembles pour l'ami:", friendId || "tous les amis");
-      const data = await fetchEnsemblesAmis(friendId);
+      
+      // Éviter d'appeler avec son propre ID comme friendId
+      const effectiveFriendId = (friendId && friendId === user.id) ? "all" : friendId;
+      
+      const data = await fetchEnsemblesAmis(effectiveFriendId);
       
       setEnsemblesAmis(data);
       console.log("Ensembles des amis chargés:", data.length);
@@ -31,7 +43,7 @@ export const useEnsemblesAmis = (friendId?: string) => {
     } finally {
       setLoading(false);
     }
-  }, [toast, friendId]);
+  }, [toast, friendId, user]);
 
   useEffect(() => {
     loadEnsemblesAmis();

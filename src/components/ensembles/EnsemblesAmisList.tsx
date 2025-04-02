@@ -6,13 +6,16 @@ import EnsembleCard from './EnsembleCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import { Shirt, ChevronDown } from 'lucide-react';
+import { Shirt, ChevronDown, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Text } from '@/components/atoms/Typography';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Drawer, DrawerContent, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
 import FloatingAddButton from '@/components/molecules/FloatingAddButton';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 
 const EnsemblesAmisList: React.FC = () => {
+  const { user } = useAuth();
   const { filteredAmis, loadingAmis } = useAmis();
   const [selectedFriend, setSelectedFriend] = useState<string>("all");
   const { ensemblesAmis, loading, error, refreshEnsemblesAmis } = useEnsemblesAmis(selectedFriend !== "all" ? selectedFriend : undefined);
@@ -21,18 +24,12 @@ const EnsemblesAmisList: React.FC = () => {
   // État pour savoir si le drawer des amis est ouvert (mobile uniquement)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   
-  // Ajouter un état de débogage pour visualiser les erreurs éventuelles
-  const [debugInfo, setDebugInfo] = useState<string | null>(null);
-  
   // État pour stocker le nom de l'ami sélectionné
   const [selectedFriendName, setSelectedFriendName] = useState<string>("Tous les amis");
   
   useEffect(() => {
     if (error) {
       console.error("Erreur de chargement des ensembles:", error);
-      setDebugInfo(error.message || "Erreur inconnue");
-    } else {
-      setDebugInfo(null);
     }
     
     // Log des ensembles pour débogage
@@ -44,13 +41,19 @@ const EnsemblesAmisList: React.FC = () => {
   const handleFriendChange = (friendId: string) => {
     setSelectedFriend(friendId);
     
+    // Ne pas permettre de sélectionner son propre ID comme ami
+    if (friendId === user?.id) {
+      friendId = "all";
+    }
+    
     // Mettre à jour le nom de l'ami sélectionné
     if (friendId === "all") {
       setSelectedFriendName("Tous les amis");
     } else {
-      const ami = filteredAmis.amisAcceptes.find(ami => 
-        (ami.ami_id === ami.user_id ? ami.ami_id : ami.user_id) === friendId
-      );
+      const ami = filteredAmis.amisAcceptes.find(ami => {
+        const amiId = ami.ami_id === ami.user_id ? ami.ami_id : ami.user_id;
+        return amiId === friendId;
+      });
       setSelectedFriendName(ami?.email?.split('@')[0] || "Ami");
     }
     
@@ -58,6 +61,10 @@ const EnsemblesAmisList: React.FC = () => {
     if (isMobile) {
       setIsDrawerOpen(false);
     }
+  };
+  
+  const handleRetry = () => {
+    refreshEnsemblesAmis();
   };
 
   if (loadingAmis) {
@@ -138,7 +145,12 @@ const EnsemblesAmisList: React.FC = () => {
             Tous les amis
           </TabsTrigger>
           {filteredAmis.amisAcceptes.map((ami) => (
-            <TabsTrigger key={ami.id} value={ami.ami_id === ami.user_id ? ami.ami_id : ami.user_id} className="mb-1">
+            <TabsTrigger 
+              key={ami.id} 
+              value={ami.ami_id === ami.user_id ? ami.ami_id : ami.user_id} 
+              className="mb-1"
+              disabled={ami.ami_id === user?.id || ami.user_id === user?.id} // Désactiver l'onglet si c'est l'utilisateur actuel
+            >
               {ami.email?.split('@')[0] || 'Ami'}
             </TabsTrigger>
           ))}
@@ -175,16 +187,19 @@ const EnsemblesAmisList: React.FC = () => {
     if (error) {
       return (
         <Card>
-          <CardContent className="pt-6">
-            <Text className="text-center text-red-500">
+          <CardContent className="pt-6 flex flex-col items-center justify-center py-10">
+            <AlertTriangle size={48} className="text-amber-500 mb-2" />
+            <Text className="text-center text-red-500 mb-4">
               Une erreur est survenue lors du chargement des ensembles.
-              {debugInfo && (
-                <details className="mt-2 text-xs">
-                  <summary>Détails de l'erreur</summary>
-                  <pre className="bg-muted p-2 rounded mt-1">{debugInfo}</pre>
-                </details>
-              )}
             </Text>
+            <Button 
+              onClick={handleRetry} 
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <RefreshCw size={16} />
+              Réessayer
+            </Button>
           </CardContent>
         </Card>
       );
