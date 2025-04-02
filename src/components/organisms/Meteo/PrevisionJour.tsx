@@ -4,7 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Card } from '@/components/ui/card';
 import { Text } from '@/components/atoms/Typography';
-import { Thermometer, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface PrevisionJourProps {
   date: string;
@@ -42,6 +42,17 @@ const PrevisionJour: React.FC<PrevisionJourProps> = ({
     formattedDate = date;
   }
   
+  // Fonction pour formater correctement l'URL de l'icône
+  const formatIconUrl = (iconCode: string) => {
+    // Si l'URL est déjà complète ou contient '//'
+    if (iconCode.startsWith('http') || iconCode.startsWith('//')) {
+      // S'assurer que les URLs relatives commençant par '//' ont le protocole 'https:'
+      return iconCode.startsWith('//') ? `https:${iconCode}` : iconCode;
+    }
+    // Sinon utiliser l'URL de l'API OpenWeatherMap
+    return `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+  };
+  
   return (
     <Card className={`p-3 flex flex-col items-center h-full ${isToday ? 'border-primary bg-primary/5' : ''}`}>
       <Text className="font-medium" title={isToday ? "Aujourd'hui" : ""}>
@@ -49,9 +60,16 @@ const PrevisionJour: React.FC<PrevisionJourProps> = ({
       </Text>
       
       <img 
-        src={icon.startsWith('//') ? `https:${icon}` : icon} 
+        src={formatIconUrl(icon)} 
         alt={description}
-        className="w-14 h-14 my-2" 
+        className="w-14 h-14 my-2"
+        onError={(e) => {
+          console.error(`Erreur de chargement d'icône météo:`, icon);
+          // Fallback vers une icône par défaut
+          const target = e.target as HTMLImageElement;
+          target.src = "/lovable-uploads/375c0bdb-76f7-4e16-ad2e-eeef3e06e5c9.png";
+          target.className = "w-14 h-14";
+        }}
       />
       
       <Text className="text-center text-sm capitalize mb-1" title={description}>

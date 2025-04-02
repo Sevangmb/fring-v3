@@ -82,6 +82,15 @@ export const fetchMeteoData = async (latitude: number, longitude: number): Promi
     const isCurrentlyRaining = isRainDescription(currentDesc, currentConditionCode) || 
                               data.current.precip_mm > 0;
     
+    // S'assurer que les URLs des icônes ont le bon format
+    const formatIconUrl = (iconUrl: string) => {
+      // S'assurer que l'URL commence par https:// si c'est une URL relative
+      if (iconUrl && iconUrl.startsWith('//')) {
+        return `https:${iconUrl}`;
+      }
+      return iconUrl;
+    };
+    
     // Formater les données depuis WeatherAPI pour notre application
     const meteoData: MeteoData = {
       city: data.location.name,
@@ -89,7 +98,7 @@ export const fetchMeteoData = async (latitude: number, longitude: number): Promi
       current: {
         temperature: Math.round(data.current.temp_c),
         description: data.current.condition.text,
-        icon: data.current.condition.icon,
+        icon: formatIconUrl(data.current.condition.icon),
         humidity: data.current.humidity,
         windSpeed: Math.round(data.current.wind_kph),
         feelsLike: Math.round(data.current.feelslike_c),
@@ -106,7 +115,7 @@ export const fetchMeteoData = async (latitude: number, longitude: number): Promi
           date: day.date,
           temperature: Math.round(day.day.avgtemp_c),
           description: day.day.condition.text,
-          icon: day.day.condition.icon,
+          icon: formatIconUrl(day.day.condition.icon),
           temperatureMin: Math.round(day.day.mintemp_c),
           temperatureMax: Math.round(day.day.maxtemp_c),
           humidity: day.day.avghumidity,

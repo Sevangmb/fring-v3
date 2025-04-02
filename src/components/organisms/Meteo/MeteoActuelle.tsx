@@ -26,6 +26,17 @@ const MeteoActuelle: React.FC<MeteoActuelleProps> = ({
 }) => {
   const isMobile = useIsMobile();
   
+  // Fonction pour formater correctement l'URL de l'icône
+  const formatIconUrl = (iconCode: string) => {
+    // Si l'URL est déjà complète ou contient '//'
+    if (iconCode.startsWith('http') || iconCode.startsWith('//')) {
+      // S'assurer que les URLs relatives commençant par '//' ont le protocole 'https:'
+      return iconCode.startsWith('//') ? `https:${iconCode}` : iconCode;
+    }
+    // Sinon utiliser l'URL de l'API OpenWeatherMap
+    return `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+  };
+  
   return (
     <Card className="overflow-hidden border-theme-teal-medium/30 dark:border-theme-teal-medium/20">
       <CardContent className="p-6">
@@ -33,9 +44,16 @@ const MeteoActuelle: React.FC<MeteoActuelleProps> = ({
           <div>
             <div className="flex items-center mb-1">
               <img 
-                src={`https://openweathermap.org/img/wn/${icon}@2x.png`}
+                src={formatIconUrl(icon)}
                 alt={description}
                 className="w-16 h-16 -ml-4 -mt-2"
+                onError={(e) => {
+                  console.error(`Erreur de chargement d'icône météo:`, icon);
+                  // Fallback vers une icône par défaut
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/lovable-uploads/375c0bdb-76f7-4e16-ad2e-eeef3e06e5c9.png";
+                  target.className = "w-16 h-16";
+                }}
               />
               <div>
                 <Text variant="h3" className="text-primary">
