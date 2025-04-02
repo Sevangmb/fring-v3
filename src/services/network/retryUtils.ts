@@ -1,66 +1,37 @@
 
 /**
- * Retry a function with exponential backoff
- * @param fn Function to retry
- * @param maxRetries Maximum number of retries
- * @param delay Initial delay in ms
- * @returns Result of the function
+ * Fonction pour réessayer une requête API en cas d'échec
+ * 
+ * @param fetchFunction Fonction qui effectue la requête API
+ * @param maxRetries Nombre maximum de tentatives
+ * @param retryDelay Délai entre chaque tentative en ms
+ * @returns Résultat de la requête API
  */
 export const fetchWithRetry = async <T>(
-  fn: () => Promise<T>, 
-  maxRetries = 3, 
-  delay = 1000
+  fetchFunction: () => Promise<T>,
+  maxRetries: number = 3,
+  retryDelay: number = 1000
 ): Promise<T> => {
-  let retries = 0;
   let lastError: any;
-
-  while (retries < maxRetries) {
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      return await fn();
+      const result = await fetchFunction();
+      return result;
     } catch (error) {
+      console.error(`Tentative ${attempt}/${maxRetries} échouée:`, error);
       lastError = error;
-      retries++;
       
-      if (retries >= maxRetries) {
-        break;
+      // Si ce n'est pas la dernière tentative, attendre avant de réessayer
+      if (attempt < maxRetries) {
+        // Délai exponentiel avec un peu de hasard pour éviter les collisions
+        const jitter = Math.random() * 0.3 + 0.85; // entre 0.85 et 1.15
+        const delay = retryDelay * Math.pow(1.5, attempt - 1) * jitter;
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
-      
-      console.log(`Retry ${retries}/${maxRetries} after ${delay}ms...`);
-      
-      // Wait before next retry
-      await new Promise(resolve => setTimeout(resolve, delay));
-      
-      // Exponential backoff
-      delay *= 2;
     }
   }
-
-  throw lastError;
-};
-
-/**
- * Check if the application has internet connection
- * @returns Promise<boolean> True if connected, false otherwise
- */
-export const checkConnection = async (): Promise<boolean> => {
-  // If navigator.onLine is false, we're definitely offline
-  if (!navigator.onLine) {
-    return false;
-  }
   
-  // Try to fetch a resource to confirm connectivity
-  try {
-    await fetch('/api/health-check', { 
-      method: 'HEAD',
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      }
-    });
-    return true;
-  } catch (error) {
-    console.error('Connection check failed:', error);
-    return false;
-  }
+  // Si toutes les tentatives ont échoué, propager la dernière erreur
+  throw lastError;
 };

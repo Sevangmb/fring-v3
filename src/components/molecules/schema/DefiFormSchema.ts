@@ -1,42 +1,39 @@
 
 import { z } from "zod";
 
-// Validation schema for creating or editing defis
+// Schéma de validation pour le formulaire de défi
 export const defiFormSchema = z.object({
-  titre: z
-    .string()
-    .min(3, { message: "Le titre doit contenir au moins 3 caractères" })
-    .max(50, { message: "Le titre ne peut pas dépasser 50 caractères" }),
-  description: z
-    .string()
-    .min(10, { message: "La description doit contenir au moins 10 caractères" })
-    .max(200, { message: "La description ne peut pas dépasser 200 caractères" }),
-  dateDebut: z
-    .string()
-    .min(1, { message: "La date de début est requise" }),
-  dateFin: z
-    .string()
-    .min(1, { message: "La date de fin est requise" })
+  titre: z.string().min(5, "Le titre doit contenir au moins 5 caractères"),
+  description: z.string().min(10, "La description doit contenir au moins 10 caractères"),
+  dateDebut: z.string().refine(val => !!val, "La date de début est requise"),
+  dateFin: z.string().refine(val => !!val, "La date de fin est requise")
 });
 
-// Type for the form values inferred from the schema
+// Type dérivé du schéma
 export type DefiFormValues = z.infer<typeof defiFormSchema>;
 
-// Validation function that checks if end date is after start date
-export const validateDateRange = (data: DefiFormValues): { success: boolean; error?: string } => {
-  if (!data.dateDebut || !data.dateFin) {
-    return { success: true }; // Let the schema validation handle empty dates
-  }
+// Fonction auxiliaire pour valider la logique des dates
+export const validateDateRange = (data: DefiFormValues): { success: boolean, error: string | null } => {
+  const dateDebut = new Date(data.dateDebut);
+  const dateFin = new Date(data.dateFin);
+  const today = new Date();
   
-  const startDate = new Date(data.dateDebut);
-  const endDate = new Date(data.dateFin);
+  // Réinitialiser les heures pour comparer uniquement les dates
+  today.setHours(0, 0, 0, 0);
   
-  if (endDate <= startDate) {
-    return { 
-      success: false, 
-      error: "La date de fin doit être après la date de début" 
+  if (dateDebut < today) {
+    return {
+      success: false,
+      error: "La date de début doit être égale ou postérieure à aujourd'hui"
     };
   }
   
-  return { success: true };
+  if (dateFin < dateDebut) {
+    return {
+      success: false,
+      error: "La date de fin doit être postérieure à la date de début"
+    };
+  }
+  
+  return { success: true, error: null };
 };

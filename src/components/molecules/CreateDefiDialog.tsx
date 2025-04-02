@@ -1,43 +1,67 @@
-import React, { useState } from "react";
+
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import DefiForm from "./DefiForm";
+
 interface CreateDefiDialogProps {
-  onDefiCreated?: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onDefiCreated?: () => void;
 }
+
 const CreateDefiDialog: React.FC<CreateDefiDialogProps> = ({
-  onDefiCreated,
-  open: controlledOpen,
-  onOpenChange: controlledOnOpenChange
+  open,
+  onOpenChange,
+  onDefiCreated
 }) => {
-  const [internalOpen, setInternalOpen] = useState(false);
-  const isControlled = controlledOpen !== undefined && controlledOnOpenChange !== undefined;
-  const isOpen = isControlled ? controlledOpen : internalOpen;
-  const setIsOpen = isControlled ? controlledOnOpenChange : setInternalOpen;
+  const [isDialogOpen, setIsDialogOpen] = React.useState(open || false);
+  
+  const handleOpenChange = (value: boolean) => {
+    setIsDialogOpen(value);
+    if (onOpenChange) {
+      onOpenChange(value);
+    }
+  };
+  
   const handleDefiCreated = () => {
-    setIsOpen(false);
+    handleOpenChange(false);
     if (onDefiCreated) {
       onDefiCreated();
     }
   };
-  return <Dialog open={isOpen} onOpenChange={setIsOpen}>
+  
+  return (
+    <Dialog open={open !== undefined ? open : isDialogOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        
+        <Button className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          <span>Créer un défi</span>
+        </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>Créer un nouveau défi</DialogTitle>
           <DialogDescription>
-            Remplissez le formulaire ci-dessous pour créer un nouveau défi pour la communauté.
+            Créez un défi pour la communauté et invitez les utilisateurs à y participer avec leurs ensembles.
           </DialogDescription>
         </DialogHeader>
         
-        <DefiForm onClose={() => setIsOpen(false)} onSuccess={handleDefiCreated} />
-        
+        <DefiForm
+          onClose={() => handleOpenChange(false)}
+          onSuccess={handleDefiCreated}
+        />
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 };
+
 export default CreateDefiDialog;

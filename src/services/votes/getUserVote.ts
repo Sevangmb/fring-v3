@@ -1,46 +1,46 @@
 
-import { supabase } from "@/lib/supabase";
-import { VoteType, EntityType } from "./types";
-import { fetchWithRetry } from "@/services/network/retryUtils";
-import { isValidEntityId, getEntityTableInfo } from "./utils/voteUtils";
+import { supabase } from '@/lib/supabase';
+import { VoteType } from './types';
 
 /**
- * Récupérer le vote de l'utilisateur pour une entité
+ * Récupère le vote d'un utilisateur pour un élément
  */
 export const getUserVote = async (
-  entityType: EntityType,
-  entityId: number
+  elementType: 'ensemble' | 'defi', 
+  elementId: number, 
+  ensembleId?: number
 ): Promise<VoteType> => {
-  if (!isValidEntityId(entityId)) return null;
-  
   try {
+    // Vérifier que l'utilisateur est connecté
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) return null;
-
-    const { tableName, idField } = getEntityTableInfo(entityType);
-
-    // Build query
-    const query = supabase
-      .from(tableName)
-      .select('vote')
-      .eq(idField, entityId)
-      .eq('user_id', session.user.id);
-      
-    // Special handling for defi votes
-    if (entityType === 'defi') {
-      // For direct defi votes, we need to check where ensemble_id is null
-      query.is('ensemble_id', null);
+    const userId = session?.user?.id;
+    
+    if (!userId) {
+      return null;
     }
     
-    const { data, error } = await fetchWithRetry(
-      async () => await query.maybeSingle(),
-      3
-    );
-
+    // Déterminer la table et les conditions en fonction du type d'élément
+    const tableName = `${elementType}_votes`;
+    let query = supabase
+      .from(tableName)
+      .select('vote')
+      .eq(elementType === 'ensemble' ? 'ensemble_id' : 'defi_id', elementId)
+      .eq('user_id', userId);
+    
+    // Si on vérifie un vote pour un ensemble spécifique dans un défi
+    if (elementType === 'defi' && ensembleId) {
+      query = query.eq('ensemble_id', ensembleId);
+    } else if (elementType === 'defi') {
+      query = query.is('ensemble_id', null);
+    }
+    
+    const { data, error } = await query.maybeSingle();
+    
     if (error) throw error;
-    return data ? data.vote : null;
+    
+    return data?.vote as VoteType || null;
   } catch (error) {
-    console.error("Erreur lors de la récupération du vote:", error);
+    console.error('Erreur lors de la récupération du vote:', error);
     return null;
   }
 };

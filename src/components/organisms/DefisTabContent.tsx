@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { PlusCircle, Flag, Calendar, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,7 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
       }
     }
   }, [externalLoading]);
+  
   useEffect(() => {
     loadDefis();
   }, [loadDefis, refreshTrigger]);
@@ -77,7 +79,8 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
     setRefreshTrigger(prev => prev + 1);
   };
 
-  return <div className="space-y-8">
+  return (
+    <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Défis de la communauté</h2>
@@ -92,15 +95,21 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
         </div>
       </div>
 
-      {isLoading ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map(i => <div key={i} className="h-64 rounded-lg border border-border animate-pulse bg-muted/50" />)}
-        </div> : <>
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-64 rounded-lg border border-border animate-pulse bg-muted/50" />
+          ))}
+        </div>
+      ) : (
+        <>
           <section>
             <div className="flex items-center gap-2 mb-4">
               <Flag className="h-5 w-5 text-primary" />
               <h3 className="text-xl font-semibold">Défis en cours</h3>
             </div>
-            {groupedDefis.current?.length ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {groupedDefis.current?.length ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {groupedDefis.current.map(defi => (
                   <div key={defi.id} className="relative">
                     <DefiCard 
@@ -122,9 +131,12 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
                     </div>
                   </div>
                 ))}
-              </div> : <Text className="text-muted-foreground italic">
+              </div>
+            ) : (
+              <Text className="text-muted-foreground italic">
                 Aucun défi en cours pour le moment
-              </Text>}
+              </Text>
+            )}
           </section>
 
           <section>
@@ -132,7 +144,8 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
               <Calendar className="h-5 w-5 text-secondary" />
               <h3 className="text-xl font-semibold">Défis à venir</h3>
             </div>
-            {groupedDefis.upcoming?.length ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {groupedDefis.upcoming?.length ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {groupedDefis.upcoming.map(defi => (
                   <div key={defi.id} className="relative">
                     <DefiCard 
@@ -153,9 +166,12 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
                     </div>
                   </div>
                 ))}
-              </div> : <Text className="text-muted-foreground italic">
+              </div>
+            ) : (
+              <Text className="text-muted-foreground italic">
                 Aucun défi à venir pour le moment
-              </Text>}
+              </Text>
+            )}
           </section>
 
           <section>
@@ -163,7 +179,8 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
               <Trophy className="h-5 w-5 text-muted-foreground" />
               <h3 className="text-xl font-semibold">Défis passés</h3>
             </div>
-            {groupedDefis.past?.length ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {groupedDefis.past?.length ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {groupedDefis.past.map(defi => (
                   <div key={defi.id} className="relative">
                     <DefiCard 
@@ -185,14 +202,19 @@ const DefisTabContent: React.FC<DefisTabContentProps> = ({
                     </div>
                   </div>
                 ))}
-              </div> : <Text className="text-muted-foreground italic">
+              </div>
+            ) : (
+              <Text className="text-muted-foreground italic">
                 Aucun défi passé pour le moment
-              </Text>}
+              </Text>
+            )}
           </section>
-        </>}
+        </>
+      )}
 
       <CreateDefiDialog open={openCreateDialog} onOpenChange={setOpenCreateDialog} onDefiCreated={handleDefiCreated} />
-    </div>;
+    </div>
+  );
 };
 
 export default DefisTabContent;

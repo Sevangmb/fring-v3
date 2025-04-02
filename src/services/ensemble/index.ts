@@ -1,8 +1,7 @@
 
-export * from './createEnsemble';
-export * from './fetchEnsembles';
-export * from './updateEnsemble';
-export * from './deleteEnsemble';
 export * from './types';
+export * from './fetchEnsembles';
+export * from './fetchEnsemblesAmis';
 export * from './fetchEnsembleById';
-export * from './fetchUserEnsembles';
+export * from './createEnsemble';
+export * from './votes';

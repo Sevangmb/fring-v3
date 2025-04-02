@@ -1,25 +1,10 @@
 
-import { supabase } from "@/lib/supabase";
-import { fetchWithRetry } from "@/services/network/retryUtils";
+import { supabase } from '@/lib/supabase';
 
 /**
- * Récupérer la session utilisateur courante
+ * Récupère l'ID de l'utilisateur actuel
  */
-export const getCurrentUser = async () => {
-  const { data: { session }, error } = await fetchWithRetry(
-    async () => {
-      return await supabase.auth.getSession();
-    }
-  );
-  
-  if (error) throw error;
-  
-  return session?.user?.id;
-};
-
-/**
- * Calcule le score basé sur les votes positifs et négatifs
- */
-export const calculateScore = (votes: { up: number; down: number }): number => {
-  return votes.up - votes.down;
+export const getCurrentUser = async (): Promise<string | null> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user?.id || null;
 };

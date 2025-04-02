@@ -1,90 +1,71 @@
 
-import { supabase } from "@/lib/supabase";
-import { VoteType, EntityType } from "./types";
-import { fetchWithRetry } from "@/services/network/retryUtils";
-import { isValidEntityId, getEntityTableInfo } from "./utils/voteUtils";
+import { supabase } from '@/lib/supabase';
+import { VoteType } from './types';
 
 /**
- * Submit a vote for a specific entity
+ * Soumettre un vote pour un élément (ensemble, défi, etc.)
  */
 export const submitVote = async (
-  entityType: EntityType,
-  entityId: number,
-  vote: VoteType
+  elementType: 'ensemble' | 'defi', 
+  elementId: number, 
+  vote: VoteType, 
+  ensembleId?: number
 ): Promise<boolean> => {
-  if (!isValidEntityId(entityId)) {
-    console.error(`ID d'entité invalide: ${entityId}`);
-    return false;
-  }
-
   try {
-    // Get current session
+    // Vérifier que l'utilisateur est connecté
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) {
-      throw new Error("Vous devez être connecté pour voter");
-    }
-
-    // Get table and field names based on entity type
-    const { tableName, idField } = getEntityTableInfo(entityType);
-
-    // Check if user already voted
-    const query = supabase
-      .from(tableName)
-      .select('id, vote')
-      .eq(idField, entityId)
-      .eq('user_id', session.user.id);
-      
-    // Special handling for defi votes
-    if (entityType === 'defi') {
-      // For direct defi votes, we need to check where ensemble_id is null
-      query.is('ensemble_id', null);
+    const userId = session?.user?.id;
+    
+    if (!userId) {
+      throw new Error('Vous devez être connecté pour voter');
     }
     
-    const { data: existingVote, error: fetchError } = await fetchWithRetry(
-      async () => await query.maybeSingle(),
-      3
-    );
-
-    if (fetchError) throw fetchError;
-
-    if (existingVote) {
-      // Update existing vote
-      const { error: updateError } = await fetchWithRetry(
-        async () => await supabase
-          .from(tableName)
-          .update({ vote })
-          .eq('id', existingVote.id),
-        3
-      );
-
-      if (updateError) throw updateError;
-      console.log(`Vote mis à jour: ${vote} pour ${entityType} ${entityId}`);
-    } else {
-      // Insert new vote
-      const voteData: Record<string, any> = {
-        [idField]: entityId,
-        user_id: session.user.id,
-        vote
-      };
-      
-      // Special handling for direct defi votes
-      if (entityType === 'defi') {
-        // For direct defi votes, we set ensemble_id to null explicitly
-        voteData.ensemble_id = null;
+    // Déterminer la table et les données en fonction du type d'élément
+    const tableName = `${elementType}_votes`;
+    const data: any = {
+      user_id: userId,
+      vote: vote
+    };
+    
+    // Ajouter les IDs appropriés selon le type d'élément
+    if (elementType === 'ensemble') {
+      data.ensemble_id = elementId;
+    } else if (elementType === 'defi') {
+      data.defi_id = elementId;
+      // Si on vote pour un ensemble spécifique dans un défi
+      if (ensembleId) {
+        data.ensemble_id = ensembleId;
       }
-      
-      const { error: insertError } = await fetchWithRetry(
-        async () => await supabase.from(tableName).insert(voteData),
-        3
-      );
-
-      if (insertError) throw insertError;
-      console.log(`Nouveau vote: ${vote} pour ${entityType} ${entityId}`);
     }
-
+    
+    // Vérifier si l'utilisateur a déjà voté
+    const { data: existingVote } = await supabase
+      .from(tableName)
+      .select('id')
+      .eq(elementType === 'ensemble' ? 'ensemble_id' : 'defi_id', elementId)
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    if (existingVote) {
+      // Mettre à jour le vote existant
+      const { error } = await supabase
+        .from(tableName)
+        .update({ vote })
+        .eq('id', existingVote.id);
+      
+      if (error) throw error;
+    } else {
+      // Créer un nouveau vote
+      const { error } = await supabase
+        .from(tableName)
+        .insert([data]);
+      
+      if (error) throw error;
+    }
+    
     return true;
   } catch (error) {
-    console.error("Erreur lors du vote:", error);
-    throw error;
+    console.error('Erreur lors de la soumission du vote:', error);
+    return false;
   }
 };

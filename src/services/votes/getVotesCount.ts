@@ -1,61 +1,50 @@
 
-import { supabase } from "@/lib/supabase";
-import { EntityType, VoteOptions, VotesCount } from "./types";
-import { fetchWithRetry } from "@/services/network/retryUtils";
-import { isValidEntityId, isOnline, getEntityTableInfo } from "./utils/voteUtils";
+import { supabase } from '@/lib/supabase';
+import { VoteCount } from './types';
 
 /**
- * Obtenir tous les votes pour une entité
+ * Récupère le nombre de votes pour un élément
  */
 export const getVotesCount = async (
-  entityType: EntityType,
-  entityId: number | undefined,
-  options?: VoteOptions
-): Promise<VotesCount> => {
+  elementType: 'ensemble' | 'defi', 
+  elementId: number, 
+  ensembleId?: number
+): Promise<VoteCount> => {
   try {
-    // Verify that entityId is provided
-    if (!isValidEntityId(entityId)) {
-      console.warn("ID de l'entité manquant lors de la récupération des votes");
-      return { up: 0, down: 0 };
-    }
-    
-    if (!isOnline()) {
-      console.warn('Pas de connexion Internet, impossible de récupérer les votes');
-      return { up: 0, down: 0 };
-    }
-    
-    // Get the appropriate table and field names
-    const { tableName, idField } = getEntityTableInfo(entityType);
-    const voteField = options?.voteField || "vote";
-    
-    // Build query
-    const query = supabase
+    // Déterminer la table et les conditions en fonction du type d'élément
+    const tableName = `${elementType}_votes`;
+    let query = supabase
       .from(tableName)
-      .select(`${voteField}`)
-      .eq(idField, entityId);
+      .select('vote');
+    
+    // Ajouter les conditions appropriées selon le type d'élément
+    if (elementType === 'ensemble') {
+      query = query.eq('ensemble_id', elementId);
+    } else if (elementType === 'defi') {
+      query = query.eq('defi_id', elementId);
       
-    // Special handling for defi votes
-    if (entityType === 'defi') {
-      // For direct defi votes, we count where ensemble_id is null
-      query.is('ensemble_id', null);
+      // Si on compte les votes pour un ensemble spécifique dans un défi
+      if (ensembleId) {
+        query = query.eq('ensemble_id', ensembleId);
+      } else {
+        query = query.is('ensemble_id', null);
+      }
     }
     
-    // Obtenir les votes avec retry
-    const { data, error } = await fetchWithRetry(
-      async () => await query,
-      2
-    );
+    const { data, error } = await query;
     
     if (error) throw error;
     
-    // Compter les votes
-    const votes = data || [];
-    const upVotes = votes.filter(item => item[voteField] === 'up').length;
-    const downVotes = votes.filter(item => item[voteField] === 'down').length;
+    // Compter les votes positifs et négatifs
+    const upVotes = data.filter(v => v.vote === 'up').length;
+    const downVotes = data.filter(v => v.vote === 'down').length;
     
-    return { up: upVotes, down: downVotes };
-  } catch (err) {
-    console.error('Erreur lors de la récupération des votes:', err);
+    return {
+      up: upVotes,
+      down: downVotes
+    };
+  } catch (error) {
+    console.error('Erreur lors de la récupération du nombre de votes:', error);
     return { up: 0, down: 0 };
   }
 };

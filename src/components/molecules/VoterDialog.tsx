@@ -1,99 +1,154 @@
 
-import React, { useState } from "react";
-import { ThumbsUp, X } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from "@/components/ui/dialog";
+import React, { useState, useEffect } from "react";
+import { ThumbsUp, ThumbsDown } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { VoteType, EntityType } from "@/services/votes/types";
-import VoteButtons from "@/components/defis/voting/VoteButtons";
-import { useVote } from "@/hooks/useVote";
-import { Typography, Box } from "@mui/material";
+import { submitVote as submitEnsembleVote } from "@/services/ensemble/votes";
+import { submitVote as submitDefiVote } from "@/services/defi/votes/submitVote";
+import { getUserVote as getUserEnsembleVote } from "@/services/ensemble/getUserVote";
+import { getUserVote as getUserDefiVote } from "@/services/defi/votes/getUserVote";
+import { VoteType } from "@/services/votes/types";
+import { useToast } from "@/hooks/use-toast";
 
 interface VoterDialogProps {
   elementId: number;
-  elementType: EntityType;
-  onVoteSubmitted?: (vote: VoteType) => void;
-  title?: string;
-  description?: string;
-  disabled?: boolean;
+  elementType: "ensemble" | "defi";
+  onVoteSubmitted?: (vote: "up" | "down") => void;
+  ensembleId?: number;
 }
 
 const VoterDialog: React.FC<VoterDialogProps> = ({
   elementId,
   elementType,
   onVoteSubmitted,
-  title,
-  description,
-  disabled = false
+  ensembleId
 }) => {
-  const [open, setOpen] = useState(false);
-  const {
-    submitVote,
-    userVote,
-    isLoading,
-    isOffline,
-    loadVoteData
-  } = useVote(elementType, elementId, {
-    onVoteSuccess: () => {
-      if (onVoteSubmitted && userVote) {
-        onVoteSubmitted(userVote);
+  const [isOpen, setIsOpen] = useState(false);
+  const [userVote, setUserVote] = useState<VoteType>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Charger le vote actuel de l'utilisateur
+    const loadUserVote = async () => {
+      try {
+        let vote: VoteType = null;
+        
+        if (elementType === "ensemble") {
+          vote = await getUserEnsembleVote(elementId);
+        } else if (elementType === "defi") {
+          vote = await getUserDefiVote(elementId, ensembleId);
+        }
+        
+        setUserVote(vote);
+      } catch (error) {
+        console.error("Erreur lors du chargement du vote:", error);
       }
+    };
 
-      // Ajout d'un délai avant de fermer la boîte de dialogue pour donner à l'utilisateur
-      // le temps de voir la confirmation visuelle du vote
-      setTimeout(() => {
-        setOpen(false);
-      }, 1000); // Délai de 1 seconde
+    loadUserVote();
+  }, [elementId, elementType, ensembleId]);
+
+  const handleVote = async (vote: "up" | "down") => {
+    setIsSubmitting(true);
+    try {
+      let success = false;
+      
+      if (elementType === "ensemble") {
+        success = await submitEnsembleVote(elementId, vote);
+      } else if (elementType === "defi") {
+        success = await submitDefiVote(elementId, vote, ensembleId);
+      }
+      
+      if (success) {
+        setUserVote(vote);
+        toast({
+          title: "Vote enregistré",
+          description: vote === "up" ? "Vous aimez cet élément" : "Vous n'aimez pas cet élément",
+        });
+        
+        if (onVoteSubmitted) {
+          onVoteSubmitted(vote);
+        }
+        
+        setIsOpen(false);
+      } else {
+        toast({
+          title: "Erreur",
+          description: "Impossible d'enregistrer votre vote. Veuillez réessayer.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Erreur lors du vote:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de l'enregistrement de votre vote.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-  });
-
-  const handleOpen = () => {
-    setOpen(true);
-    loadVoteData();
   };
-
-  const handleVote = async (vote: VoteType) => {
-    await submitVote(vote);
-    // La fermeture du dialogue est maintenant gérée par le callback onVoteSuccess
-  };
-
-  const dialogTitle = title || `Voter pour cet ${elementType === 'tenue' ? 'ensemble' : 'élément'}`;
-  const dialogDescription = description || `Donnez votre avis sur ce${elementType === 'tenue' ? 't ensemble' : ' défi'}.`;
 
   return (
-    <>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleOpen}
-        disabled={disabled}
-        className="flex items-center gap-1 text-sm font-medium"
-      >
-        <ThumbsUp className="h-4 w-4" />
-        <span>Voter</span>
-      </Button>
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{dialogTitle}</DialogTitle>
-            <DialogDescription className="text-center text-muted-foreground">
-              {dialogDescription}
-            </DialogDescription>
-            <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </DialogClose>
-          </DialogHeader>
-          
-          <Box sx={{
-            padding: '16px 0',
-            textAlign: 'center'
-          }}>
-            <VoteButtons userVote={userVote} onVote={handleVote} size="lg" isLoading={isLoading} connectionError={isOffline} className="py-4" />
-          </Box>
-        </DialogContent>
-      </Dialog>
-    </>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant={userVote ? "default" : "outline"}
+          size="icon"
+          className={`rounded-full ${
+            userVote === "up"
+              ? "bg-green-500 hover:bg-green-600"
+              : userVote === "down"
+              ? "bg-red-500 hover:bg-red-600"
+              : ""
+          }`}
+        >
+          {userVote === "up" ? (
+            <ThumbsUp className="h-4 w-4" />
+          ) : userVote === "down" ? (
+            <ThumbsDown className="h-4 w-4" />
+          ) : (
+            <ThumbsUp className="h-4 w-4" />
+          )}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Voter</DialogTitle>
+          <DialogDescription>
+            Donnez votre avis sur {elementType === "ensemble" ? "cet ensemble" : "ce défi"}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex justify-center space-x-4 py-4">
+          <Button
+            onClick={() => handleVote("up")}
+            disabled={isSubmitting}
+            className="bg-green-500 hover:bg-green-600"
+          >
+            <ThumbsUp className="h-5 w-5 mr-2" />
+            J'aime
+          </Button>
+          <Button
+            onClick={() => handleVote("down")}
+            disabled={isSubmitting}
+            variant="outline"
+            className="border-red-500 text-red-500 hover:bg-red-50 hover:text-red-600"
+          >
+            <ThumbsDown className="h-5 w-5 mr-2" />
+            Je n'aime pas
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
