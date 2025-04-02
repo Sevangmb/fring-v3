@@ -26,9 +26,9 @@ export const useEnsemblesAmis = (friendId?: string) => {
       console.log("Chargement des ensembles pour l'ami:", friendId || "tous les amis");
       
       // Éviter d'appeler avec son propre ID comme friendId
-      const effectiveFriendId = (friendId && friendId === user.id) ? "all" : friendId;
+      const effectiveFriendId = (friendId && friendId === user.id) ? undefined : friendId;
       
-      const data = await fetchEnsemblesAmis(effectiveFriendId);
+      const data = await fetchEnsemblesAmis();
       
       setEnsemblesAmis(data);
       console.log("Ensembles des amis chargés:", data.length);

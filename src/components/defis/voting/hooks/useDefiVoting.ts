@@ -35,7 +35,7 @@ export const useDefiVoting = (defiId: string | number) => {
   const handleVote = async (ensembleId: number, voteType: VoteType) => {
     try {
       setVotingInProgress(true);
-      await submitVote(numericDefiId, voteType, ensembleId);
+      await submitVote(numericDefiId, ensembleId, voteType);
       
       // Refresh participations after voting
       const updatedParticipations = await getDefiParticipationsWithVotes(numericDefiId);

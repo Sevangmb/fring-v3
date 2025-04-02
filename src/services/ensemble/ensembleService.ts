@@ -1,96 +1,9 @@
+
 import { supabase } from '@/lib/supabase';
 import { Ensemble, EnsembleCreateParams, EnsembleUpdateParams } from './types';
 
 /**
- * Récupère un ensemble par son ID
- * @param ensembleId ID de l'ensemble à récupérer
- * @returns L'ensemble trouvé ou null si non trouvé
- */
-export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('tenues')
-      .select(`
-        id, 
-        nom, 
-        description, 
-        saison, 
-        occasion, 
-        user_id, 
-        created_at, 
-        tenues_vetements (
-          id, 
-          position_ordre,
-          vetement:vetement_id (
-            id, 
-            nom, 
-            description, 
-            image_url, 
-            couleur, 
-            marque, 
-            categorie_id, 
-            saison, 
-            temperature_min, 
-            temperature_max, 
-            taille,
-            user_id, 
-            created_at, 
-            meteorologie
-          )
-        )
-      `)
-      .eq('id', ensembleId)
-      .single();
-
-    if (error) {
-      throw error;
-    }
-
-    if (!data) {
-      return null;
-    }
-
-    // Transform data to match Ensemble type
-    const ensemble: Ensemble = {
-      id: data.id,
-      nom: data.nom,
-      description: data.description,
-      saison: data.saison,
-      occasion: data.occasion,
-      user_id: data.user_id,
-      created_at: data.created_at,
-      vetements: data.tenues_vetements.map((tv: any) => ({
-        id: tv.id,
-        position_ordre: tv.position_ordre,
-        vetement: {
-          id: tv.vetement.id,
-          nom: tv.vetement.nom,
-          categorie_id: tv.vetement.categorie_id,
-          couleur: tv.vetement.couleur,
-          taille: tv.vetement.taille,
-          image_url: tv.vetement.image_url,
-          description: tv.vetement.description,
-          marque: tv.vetement.marque,
-          saison: tv.vetement.saison,
-          temperature_min: tv.vetement.temperature_min,
-          temperature_max: tv.vetement.temperature_max,
-          user_id: tv.vetement.user_id,
-          created_at: tv.vetement.created_at,
-          meteorologie: tv.vetement.meteorologie
-        }
-      }))
-    };
-
-    return ensemble;
-  } catch (error) {
-    console.error('Error fetching ensemble by ID:', error);
-    return null;
-  }
-};
-
-/**
- * Récupère tous les ensembles de l'utilisateur
- * @returns Liste des ensembles de l'utilisateur
+ * Fetch all ensembles for the current user
  */
 export const fetchEnsembles = async (): Promise<Ensemble[]> => {
   try {
@@ -135,12 +48,9 @@ export const fetchEnsembles = async (): Promise<Ensemble[]> => {
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
-    // Transform the data to match the Ensemble type, ensuring correct categories field
-    const ensembles: Ensemble[] = data.map(item => ({
+    return (data || []).map(item => ({
       id: item.id,
       nom: item.nom,
       description: item.description,
@@ -169,11 +79,90 @@ export const fetchEnsembles = async (): Promise<Ensemble[]> => {
         }
       }))
     }));
-
-    return ensembles;
   } catch (error) {
     console.error('Error fetching ensembles:', error);
     return [];
+  }
+};
+
+/**
+ * Fetch a specific ensemble by ID
+ */
+export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('tenues')
+      .select(`
+        id, 
+        nom, 
+        description, 
+        saison, 
+        occasion, 
+        user_id, 
+        created_at, 
+        tenues_vetements (
+          id, 
+          position_ordre,
+          vetement:vetement_id (
+            id, 
+            nom, 
+            description, 
+            image_url, 
+            couleur, 
+            marque, 
+            categorie_id, 
+            saison, 
+            temperature_min, 
+            temperature_max, 
+            taille,
+            user_id, 
+            created_at, 
+            meteorologie
+          )
+        )
+      `)
+      .eq('id', ensembleId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null; // No rows found
+      }
+      throw error;
+    }
+
+    return {
+      id: data.id,
+      nom: data.nom,
+      description: data.description,
+      saison: data.saison,
+      occasion: data.occasion,
+      user_id: data.user_id,
+      created_at: data.created_at,
+      vetements: data.tenues_vetements.map((tv: any) => ({
+        id: tv.id,
+        position_ordre: tv.position_ordre,
+        vetement: {
+          id: tv.vetement.id,
+          nom: tv.vetement.nom,
+          categorie_id: tv.vetement.categorie_id,
+          couleur: tv.vetement.couleur,
+          taille: tv.vetement.taille,
+          image_url: tv.vetement.image_url,
+          description: tv.vetement.description,
+          marque: tv.vetement.marque,
+          saison: tv.vetement.saison,
+          temperature_min: tv.vetement.temperature_min,
+          temperature_max: tv.vetement.temperature_max,
+          user_id: tv.vetement.user_id,
+          created_at: tv.vetement.created_at,
+          meteorologie: tv.vetement.meteorologie
+        }
+      }))
+    };
+  } catch (error) {
+    console.error('Error fetching ensemble by ID:', error);
+    return null;
   }
 };
 
@@ -184,31 +173,42 @@ export const createEnsemble = async (ensemble: EnsembleCreateParams): Promise<nu
   try {
     const { data: sessionData } = await supabase.auth.getSession();
     const userId = sessionData.session?.user?.id;
-
+    
     if (!userId) {
-      console.error('User not authenticated');
-      return null;
+      throw new Error('User not authenticated');
     }
 
-    const { data, error } = await supabase
+    // Insert the ensemble
+    const { data: ensembleData, error: ensembleError } = await supabase
       .from('tenues')
-      .insert([
-        {
-          nom: ensemble.nom,
-          description: ensemble.description,
-          saison: ensemble.saison,
-          occasion: ensemble.occasion,
-          user_id: userId
-        }
-      ])
+      .insert({
+        nom: ensemble.nom,
+        description: ensemble.description,
+        occasion: ensemble.occasion,
+        saison: ensemble.saison,
+        user_id: userId
+      })
       .select('id')
       .single();
 
-    if (error) {
-      throw error;
-    }
+    if (ensembleError) throw ensembleError;
 
-    return data.id;
+    const ensembleId = ensembleData.id;
+
+    // Insert ensemble-vetement associations with position order
+    const vetementsToInsert = ensemble.vetements.map((v, index) => ({
+      tenue_id: ensembleId,
+      vetement_id: v.id,
+      position_ordre: index + 1
+    }));
+
+    const { error: vetementsError } = await supabase
+      .from('tenues_vetements')
+      .insert(vetementsToInsert);
+
+    if (vetementsError) throw vetementsError;
+
+    return ensembleId;
   } catch (error) {
     console.error('Error creating ensemble:', error);
     return null;
@@ -218,21 +218,41 @@ export const createEnsemble = async (ensemble: EnsembleCreateParams): Promise<nu
 /**
  * Update an existing ensemble
  */
-export const updateEnsemble = async (ensembleId: number, ensemble: EnsembleUpdateParams): Promise<boolean> => {
+export const updateEnsemble = async (ensemble: EnsembleUpdateParams): Promise<boolean> => {
   try {
-    const { error } = await supabase
+    // Update ensemble basic info
+    const { error: ensembleError } = await supabase
       .from('tenues')
       .update({
         nom: ensemble.nom,
         description: ensemble.description,
-        saison: ensemble.saison,
-        occasion: ensemble.occasion
+        occasion: ensemble.occasion,
+        saison: ensemble.saison
       })
-      .eq('id', ensembleId);
+      .eq('id', ensemble.id);
 
-    if (error) {
-      throw error;
-    }
+    if (ensembleError) throw ensembleError;
+
+    // Delete existing vetement associations
+    const { error: deleteError } = await supabase
+      .from('tenues_vetements')
+      .delete()
+      .eq('tenue_id', ensemble.id);
+
+    if (deleteError) throw deleteError;
+
+    // Insert new vetement associations with position order
+    const vetementsToInsert = ensemble.vetements.map((v, index) => ({
+      tenue_id: ensemble.id,
+      vetement_id: v.id,
+      position_ordre: index + 1
+    }));
+
+    const { error: vetementsError } = await supabase
+      .from('tenues_vetements')
+      .insert(vetementsToInsert);
+
+    if (vetementsError) throw vetementsError;
 
     return true;
   } catch (error) {

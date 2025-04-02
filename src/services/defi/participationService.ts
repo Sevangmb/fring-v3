@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -9,6 +10,7 @@ export interface DefiParticipation {
   user_id: string;
   ensemble_id: number;
   created_at: string;
+  commentaire?: string;
   // Optional joined fields
   user_email?: string;
   ensemble_nom?: string;
@@ -26,6 +28,7 @@ export const getDefiParticipations = async (defiId: number): Promise<DefiPartici
         defi_id,
         user_id,
         ensemble_id,
+        commentaire,
         created_at,
         profiles:user_id(email),
         tenues:ensemble_id(nom)
@@ -39,9 +42,10 @@ export const getDefiParticipations = async (defiId: number): Promise<DefiPartici
       defi_id: item.defi_id,
       user_id: item.user_id,
       ensemble_id: item.ensemble_id,
+      commentaire: item.commentaire,
       created_at: item.created_at,
-      user_email: item.profiles?.email,
-      ensemble_nom: item.tenues?.nom
+      user_email: item.profiles ? item.profiles.email : undefined,
+      ensemble_nom: item.tenues ? item.tenues.nom : undefined
     }));
   } catch (error) {
     console.error('Error fetching defi participations:', error);
