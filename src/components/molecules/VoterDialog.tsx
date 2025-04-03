@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import {
@@ -64,8 +65,9 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
         success = await submitEnsembleVote(elementId, vote);
       } else if (elementType === "defi") {
         // Ensure ensembleId is always a number
+        // Convert ensembleId to number before passing it to the function
         const ensembleIdNumber = ensembleId !== undefined ? 
-          (typeof ensembleId === 'string' ? parseInt(ensembleId, 10) : Number(ensembleId)) : 0;
+          (typeof ensembleId === 'string' ? parseInt(ensembleId) : ensembleId) : 0;
         
         success = await submitDefiVote(elementId, vote, ensembleIdNumber);
       }

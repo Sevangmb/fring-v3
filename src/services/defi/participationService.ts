@@ -12,8 +12,8 @@ export interface DefiParticipation {
   created_at: string;
   commentaire?: string;
   // Optional joined fields
-  user_email?: string;
-  ensemble_nom?: string;
+  user_email?: string | undefined;
+  ensemble_nom?: string | undefined;
 }
 
 /**
@@ -37,6 +37,7 @@ export const getDefiParticipations = async (defiId: number): Promise<DefiPartici
 
     if (error) throw error;
 
+    // Use type assertion to ensure the returned type matches DefiParticipation[]
     return (data || []).map(item => ({
       id: item.id,
       defi_id: item.defi_id,
@@ -44,9 +45,13 @@ export const getDefiParticipations = async (defiId: number): Promise<DefiPartici
       ensemble_id: item.ensemble_id,
       commentaire: item.commentaire,
       created_at: item.created_at,
-      user_email: item.profiles && typeof item.profiles === 'object' && 'email' in item.profiles ? item.profiles.email : undefined,
-      ensemble_nom: item.tenues && typeof item.tenues === 'object' && 'nom' in item.tenues ? item.tenues.nom : undefined
-    }));
+      user_email: item.profiles && typeof item.profiles === 'object' && 'email' in item.profiles 
+        ? (item.profiles.email as string) 
+        : undefined,
+      ensemble_nom: item.tenues && typeof item.tenues === 'object' && 'nom' in item.tenues 
+        ? (item.tenues.nom as string) 
+        : undefined
+    })) as DefiParticipation[];
   } catch (error) {
     console.error('Error fetching defi participations:', error);
     return [];
