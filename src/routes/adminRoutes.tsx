@@ -1,54 +1,43 @@
 
 import React from 'react';
 import { RouteObject } from 'react-router-dom';
-import ProtectedRoute from '../components/atoms/ProtectedRoute';
 
 // Import admin pages
-import Admin from '../pages/Admin';
-import AdminUsersPage from '../pages/admin/AdminUsersPage';
-import AdminVetementsPage from '../pages/admin/AdminVetementsPage';
-import AdminEnsemblesPage from '../pages/admin/AdminEnsemblesPage';
-import AdminStatsPage from '../pages/admin/AdminStatsPage';
-import AdminSettingsPage from '../pages/admin/AdminSettingsPage';
-import AdminDatabasePage from '../pages/admin/AdminDatabasePage';
-import AdminLogsPage from '../pages/admin/AdminLogsPage';
-
-// Helper function to wrap components with ProtectedRoute
-const protect = (Component: React.ComponentType) => {
-  return <ProtectedRoute><Component /></ProtectedRoute>;
-};
+import AdminDatabasePage from '@/pages/admin/AdminDatabasePage';
+import AdminEnsemblesPage from '@/pages/admin/AdminEnsemblesPage';
+import AdminSettingsPage from '@/pages/admin/AdminSettingsPage';
+import AdminStatsPage from '@/pages/admin/AdminStatsPage';
+import AdminUsersPage from '@/pages/admin/AdminUsersPage';
+import AdminVetementsPage from '@/pages/admin/AdminVetementsPage';
+import AdminLogsPage from '@/pages/admin/AdminLogsPage';
 
 export const adminRoutes: RouteObject[] = [
   {
-    path: "/admin",
-    element: protect(Admin)
-  },
-  {
-    path: "/admin/users",
-    element: protect(AdminUsersPage)
-  },
-  {
-    path: "/admin/vetements",
-    element: protect(AdminVetementsPage)
+    path: "/admin/database",
+    element: <AdminDatabasePage />,
   },
   {
     path: "/admin/ensembles",
-    element: protect(AdminEnsemblesPage)
-  },
-  {
-    path: "/admin/stats",
-    element: protect(AdminStatsPage)
+    element: <AdminEnsemblesPage />,
   },
   {
     path: "/admin/settings",
-    element: protect(AdminSettingsPage)
+    element: <AdminSettingsPage />,
   },
   {
-    path: "/admin/database",
-    element: protect(AdminDatabasePage)
+    path: "/admin/stats",
+    element: <AdminStatsPage />,
+  },
+  {
+    path: "/admin/users",
+    element: <AdminUsersPage />,
+  },
+  {
+    path: "/admin/vetements",
+    element: <AdminVetementsPage />,
   },
   {
     path: "/admin/logs",
-    element: protect(AdminLogsPage)
-  }
+    element: <AdminLogsPage />,
+  },
 ];
