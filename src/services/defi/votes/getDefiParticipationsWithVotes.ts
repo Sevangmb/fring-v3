@@ -49,7 +49,7 @@ export const checkUserParticipation = async (
       .select('ensemble_id')
       .eq('defi_id', defiId)
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();  // Utiliser maybeSingle() au lieu de single()
 
     if (error || !data) {
       return { participe: false };
@@ -157,7 +157,7 @@ export const getDefiParticipationsWithVotes = async (
           .from('defi_votes')
           .select('vote_type')
           .eq('defi_id', defiId)
-          .eq('ensemble_id', ensemble.id);
+          .eq('tenue_id', ensemble.id);  // Utiliser tenue_id au lieu de ensemble_id
 
         if (voteError) {
           console.error('Error fetching votes:', voteError);

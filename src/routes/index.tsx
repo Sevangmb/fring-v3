@@ -58,14 +58,16 @@ export const allRoutes: RouteObject[] = [
     path: "/contact",
     element: <Contact />,
   },
-  {
-    path: "/defis/:id",
-    element: <DefiPage />,
-  },
+  // Important: route plus spécifique d'abord
   {
     path: "/defis/resultats/:id",
     element: <ResultatsDefi />,
   },
+  {
+    path: "/defis/:id",
+    element: <DefiPage />,
+  },
+  // La route catch-all doit toujours être en dernier
   {
     path: "*",
     element: <NotFound />,

@@ -12,7 +12,8 @@ import { VoteType } from '@/services/votes/types';
 export const submitVote = async (
   defiId: number,
   ensembleId: number,
-  vote: VoteType
+  vote: VoteType,
+  entityType = 'ensemble'
 ): Promise<boolean> => {
   try {
     if (!vote) return false;
@@ -29,11 +30,11 @@ export const submitVote = async (
       .from('defi_votes')
       .select('id, vote_type')
       .eq('defi_id', defiId)
-      .eq('ensemble_id', ensembleId)
+      .eq('tenue_id', ensembleId)  // Utiliser tenue_id au lieu de ensemble_id
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();  // Utiliser maybeSingle() au lieu de single()
 
-    if (checkError && checkError.code !== 'PGRST116') {
+    if (checkError) {
       console.error('Erreur lors de la vérification du vote:', checkError);
       return false;
     }
@@ -61,7 +62,7 @@ export const submitVote = async (
         .from('defi_votes')
         .insert({
           defi_id: defiId,
-          ensemble_id: ensembleId,
+          tenue_id: ensembleId,  // Utiliser tenue_id au lieu de ensemble_id
           user_id: userId,
           vote_type: vote
         });

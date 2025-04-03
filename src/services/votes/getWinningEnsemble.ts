@@ -38,15 +38,15 @@ export const getWinningEnsemble = async (defiId: number) => {
       // Obtenir les votes pour cet ensemble dans ce défi
       const { data: votes, error: votesError } = await supabase
         .from('defi_votes')
-        .select('vote')
+        .select('vote_type')
         .eq('defi_id', defiId)
-        .eq('ensemble_id', ensembleId);
+        .eq('tenue_id', ensembleId);  // Utiliser tenue_id au lieu de ensemble_id
       
       if (votesError) throw votesError;
       
       // Calculer le score (votes positifs - votes négatifs)
-      const upVotes = votes.filter(v => v.vote === 'up').length;
-      const downVotes = votes.filter(v => v.vote === 'down').length;
+      const upVotes = votes.filter(v => v.vote_type === 'up').length;
+      const downVotes = votes.filter(v => v.vote_type === 'down').length;
       const score = upVotes - downVotes;
       
       scores[ensembleId] = score;
@@ -80,14 +80,15 @@ export const getWinningEnsemble = async (defiId: number) => {
       .from('profiles')
       .select('email')
       .eq('id', winningParticipation.user_id)
-      .single();
+      .maybeSingle();  // Utiliser maybeSingle() au lieu de single()
     
     if (userError) throw userError;
     
     return {
       ...winningParticipation.tenue,
       user_email: userData?.email,
-      score: maxScore
+      score: maxScore,
+      ensembleName: winningParticipation.tenue?.nom || `Ensemble #${winningEnsembleId}`
     };
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'ensemble gagnant:', error);

@@ -30,20 +30,16 @@ export const getUserVote = async (
       .from('defi_votes')
       .select('vote_type')
       .eq('defi_id', defiId)
-      .eq('ensemble_id', ensembleId)
+      .eq('tenue_id', ensembleId)  // Utiliser tenue_id au lieu de ensemble_id
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();  // Utiliser maybeSingle() au lieu de single()
     
     if (error) {
-      // Si l'erreur est due à l'absence de résultat, renvoyer null
-      if (error.code === 'PGRST116') {
-        return null;
-      }
       console.error('Erreur lors de la récupération du vote:', error);
       return null;
     }
 
-    return data.vote_type;
+    return data?.vote_type || null;
   } catch (error) {
     console.error('Erreur lors de la récupération du vote:', error);
     return null;
