@@ -14,9 +14,12 @@ import Conditions from '../pages/Conditions';
 import Contact from '../pages/Contact';
 import NotFound from '../pages/NotFound';
 
-// Importez vos nouvelles pages de défi ici
+// Import defi pages
 import DefiPage from "@/pages/DefiPage";
 import ResultatsDefi from "@/pages/defis/ResultatsDefi";
+
+// Import admin routes
+import { adminRoutes } from './adminRoutes';
 
 export const allRoutes: RouteObject[] = [
   {
@@ -67,4 +70,6 @@ export const allRoutes: RouteObject[] = [
     path: "/defis/resultats/:id",
     element: <ResultatsDefi />,
   },
+  // Include admin routes
+  ...adminRoutes
 ];
