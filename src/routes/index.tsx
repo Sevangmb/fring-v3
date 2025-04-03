@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { RouteObject } from 'react-router-dom';
 
@@ -15,6 +16,7 @@ import NotFound from '../pages/NotFound';
 
 // Importez vos nouvelles pages de défi ici
 import DefiPage from "@/pages/DefiPage";
+import ResultatsDefi from "@/pages/defis/ResultatsDefi";
 
 export const allRoutes: RouteObject[] = [
   {
@@ -60,5 +62,9 @@ export const allRoutes: RouteObject[] = [
   {
     path: "/defis/:id",
     element: <DefiPage />,
+  },
+  {
+    path: "/defis/resultats/:id",
+    element: <ResultatsDefi />,
   },
 ];

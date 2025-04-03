@@ -1,76 +1,80 @@
 
 import { supabase } from '@/lib/supabase';
-import { VoteType } from './types';
+import { VoteType } from '@/services/votes/types';
 
 /**
- * Submit a vote for an ensemble or defi
- * @param entityId ID of the defi or ensemble
- * @param targetId ID of the ensemble or other entity being voted on
- * @param voteType Type of vote (up or down)
- * @param entityType Type of entity ('ensemble' or 'defi')
- * @returns Success status
+ * Soumet un vote pour un ensemble dans un défi
+ * @param defiId ID du défi
+ * @param ensembleId ID de l'ensemble
+ * @param vote Type de vote (up/down)
+ * @returns Succès ou échec
  */
 export const submitVote = async (
-  entityId: number,
-  targetId: number, 
-  voteType: VoteType,
-  entityType: 'ensemble' | 'defi' = 'ensemble'
+  defiId: number,
+  ensembleId: number,
+  vote: VoteType
 ): Promise<boolean> => {
   try {
-    const { data: session } = await supabase.auth.getSession();
-    const userId = session.session?.user?.id;
+    if (!vote) return false;
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
     
     if (!userId) {
-      throw new Error('User not authenticated');
+      throw new Error("Utilisateur non connecté");
     }
-    
-    // Determine which table to use based on entity type
-    const tableName = entityType === 'ensemble' ? 'ensemble_votes' : 'defi_votes';
-    const entityIdColumn = entityType === 'ensemble' ? 'defi_id' : 'entity_id';
-    const targetIdColumn = entityType === 'ensemble' ? 'ensemble_id' : 'target_id';
-    
-    // Check if user has already voted for this entity
+
+    // Vérifier si l'utilisateur a déjà voté pour cet ensemble dans ce défi
     const { data: existingVote, error: checkError } = await supabase
-      .from(tableName)
-      .select('*')
-      .eq(entityIdColumn, entityId)
-      .eq(targetIdColumn, targetId)
+      .from('defi_votes')
+      .select('id, vote_type')
+      .eq('defi_id', defiId)
+      .eq('ensemble_id', ensembleId)
       .eq('user_id', userId)
       .single();
-    
+
     if (checkError && checkError.code !== 'PGRST116') {
-      throw checkError;
+      console.error('Erreur lors de la vérification du vote:', checkError);
+      return false;
     }
-    
+
+    // Si l'utilisateur a déjà voté, mettre à jour son vote
     if (existingVote) {
-      // Update existing vote
+      // Si le vote est identique, ne rien faire
+      if (existingVote.vote_type === vote) {
+        return true;
+      }
+
+      // Mettre à jour le vote
       const { error: updateError } = await supabase
-        .from(tableName)
-        .update({ vote_type: voteType })
+        .from('defi_votes')
+        .update({ vote_type: vote })
         .eq('id', existingVote.id);
-      
-      if (updateError) throw updateError;
+
+      if (updateError) {
+        console.error('Erreur lors de la mise à jour du vote:', updateError);
+        return false;
+      }
     } else {
-      // Create new vote
-      const voteData: any = {
-        user_id: userId,
-        vote_type: voteType
-      };
-      
-      // Set the correct field names based on entity type
-      voteData[entityIdColumn] = entityId;
-      voteData[targetIdColumn] = targetId;
-      
+      // Sinon, insérer un nouveau vote
       const { error: insertError } = await supabase
-        .from(tableName)
-        .insert(voteData);
-      
-      if (insertError) throw insertError;
+        .from('defi_votes')
+        .insert({
+          defi_id: defiId,
+          ensemble_id: ensembleId,
+          user_id: userId,
+          vote_type: vote
+        });
+
+      if (insertError) {
+        console.error('Erreur lors de l\'ajout du vote:', insertError);
+        return false;
+      }
     }
-    
+
     return true;
   } catch (error) {
-    console.error('Error submitting vote:', error);
+    console.error('Erreur lors du vote:', error);
     return false;
   }
 };
