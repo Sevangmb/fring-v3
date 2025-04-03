@@ -59,16 +59,16 @@ export const allRoutes: RouteObject[] = [
     element: <Contact />,
   },
   {
-    path: "*",
-    element: <NotFound />,
-  },
-  {
     path: "/defis/:id",
     element: <DefiPage />,
   },
   {
     path: "/defis/resultats/:id",
     element: <ResultatsDefi />,
+  },
+  {
+    path: "*",
+    element: <NotFound />,
   },
   // Include admin routes
   ...adminRoutes

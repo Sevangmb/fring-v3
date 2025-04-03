@@ -5,6 +5,7 @@ import { Award, Vote, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useVote } from "@/hooks/useVote";
 import { getWinningEnsemble } from "@/services/votes/getWinningEnsemble";
+import { Link } from "react-router-dom";
 
 interface PastDefiFooterProps {
   defiId: number;
@@ -58,7 +59,7 @@ const PastDefiFooter: React.FC<PastDefiFooterProps> = ({
         className="text-sm"
         asChild
       >
-        <a href={`/defis/resultats/${defiId}`}>Voir les résultats</a>
+        <Link to={`/defis/resultats/${defiId}`}>Voir les résultats</Link>
       </Button>
     </div>
   );
