@@ -6,7 +6,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { initializeVoteTables } from './services/database/voteTables';
-import { initializeLogsSystem } from './services/logs';
+import { initializeLogsSystem } from './services/logsService';
 import { allRoutes } from './routes';
 import { useAppInitialization } from './hooks/useAppInitialization';
 

@@ -2,7 +2,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { writeLog, initializeLogsSystem } from '@/services/logs';
+import { writeLog } from '@/services/logs';
+import { initializeLogsSystem } from '@/services/logsService';
 import { checkEnsembleUserIdColumn, addUserIdToEnsembles } from '@/services/database/ensembleInitialization';
 
 export const useAppInitialization = () => {

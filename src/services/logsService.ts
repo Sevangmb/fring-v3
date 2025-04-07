@@ -2,12 +2,12 @@
 // Re-export all log-related functions from the logs module
 export * from './logs';
 
-// Initialize logs table if needed
-import { checkLogsTableExists } from './logs';
-
 // Initialize the logs system
 export const initializeLogsSystem = async () => {
   try {
+    // Import the function from the correct module
+    const { checkLogsTableExists } = await import('./logs');
+    
     const exists = await checkLogsTableExists();
     if (!exists) {
       console.log("La table de logs n'existe pas, elle sera créée automatiquement lors de la première écriture.");
