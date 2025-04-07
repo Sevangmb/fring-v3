@@ -6,7 +6,10 @@ import LogsViewer from '@/components/admin/logs/LogsViewer';
 
 const AdminLogsPage: React.FC = () => {
   return (
-    <AdminModuleTemplate>
+    <AdminModuleTemplate 
+      title="Journaux d'activité système"
+      description="Consultez et filtrez les journaux d'activité pour suivre les événements et détecter les problèmes."
+    >
       <div className="space-y-6">
         <Heading variant="h3">Journaux d'activité système</Heading>
         <p className="text-muted-foreground">

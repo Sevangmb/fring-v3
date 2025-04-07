@@ -468,41 +468,27 @@ export type Database = {
     }
     Functions: {
       accepter_ami_simple: {
-        Args: {
-          ami_id_param: number
-        }
+        Args: { ami_id_param: number }
         Returns: boolean
       }
       accepter_demande_ami: {
-        Args: {
-          demande_id: number
-          current_user_id: string
-        }
+        Args: { demande_id: number; current_user_id: string }
         Returns: boolean
       }
       assign_all_clothes_to_user: {
-        Args: {
-          target_user_id: string
-        }
+        Args: { target_user_id: string }
         Returns: boolean
       }
       check_user_has_vetements: {
-        Args: {
-          user_id_param: string
-        }
+        Args: { user_id_param: string }
         Returns: number
       }
       create_table: {
-        Args: {
-          table_name: string
-          columns: string
-        }
+        Args: { table_name: string; columns: string }
         Returns: undefined
       }
       exec_sql: {
-        Args: {
-          query: string
-        }
+        Args: { query: string }
         Returns: undefined
       }
       get_conversation_previews: {
@@ -517,9 +503,7 @@ export type Database = {
         }[]
       }
       get_friend_ensembles: {
-        Args: {
-          friend_id_param: string
-        }
+        Args: { friend_id_param: string }
         Returns: {
           id: number
           nom: string
@@ -533,9 +517,7 @@ export type Database = {
         }[]
       }
       get_friend_vetements: {
-        Args: {
-          friend_id_param: string
-        }
+        Args: { friend_id_param: string }
         Returns: {
           id: number
           nom: string
@@ -551,9 +533,7 @@ export type Database = {
         }[]
       }
       get_friends_clothes: {
-        Args: {
-          current_user_id_param?: string
-        }
+        Args: { current_user_id_param?: string }
         Returns: {
           id: number
           nom: string
@@ -599,9 +579,7 @@ export type Database = {
         }[]
       }
       get_specific_friend_clothes: {
-        Args: {
-          friend_id_param: string
-        }
+        Args: { friend_id_param: string }
         Returns: {
           id: number
           nom: string
@@ -617,61 +595,42 @@ export type Database = {
         }[]
       }
       get_user_id_by_email: {
-        Args: {
-          email_param: string
-        }
+        Args: { email_param: string }
         Returns: string
       }
       get_users_by_ids: {
-        Args: {
-          user_ids: string[]
-        }
+        Args: { user_ids: string[] }
         Returns: {
           id: string
           email: string
         }[]
       }
       gtrgm_compress: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
       gtrgm_decompress: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
       gtrgm_in: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
       gtrgm_options: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: undefined
       }
       gtrgm_out: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
       increment: {
-        Args: {
-          row_id: number
-          table_name: string
-        }
+        Args: { row_id: number; table_name: string }
         Returns: number
       }
       search_admin_users: {
-        Args: {
-          search_term: string
-        }
+        Args: { search_term: string }
         Returns: {
           id: string
           email: string
@@ -682,9 +641,7 @@ export type Database = {
         }[]
       }
       search_users_by_email: {
-        Args: {
-          search_term: string
-        }
+        Args: { search_term: string }
         Returns: {
           id: string
           email: string
@@ -692,9 +649,7 @@ export type Database = {
         }[]
       }
       set_limit: {
-        Args: {
-          "": number
-        }
+        Args: { "": number }
         Returns: number
       }
       show_limit: {
@@ -702,9 +657,7 @@ export type Database = {
         Returns: number
       }
       show_trgm: {
-        Args: {
-          "": string
-        }
+        Args: { "": string }
         Returns: string[]
       }
     }
@@ -717,27 +670,29 @@ export type Database = {
   }
 }
 
-type PublicSchema = Database[Extract<keyof Database, "public">]
+type DefaultSchema = Database[Extract<keyof Database, "public">]
 
 export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-        PublicSchema["Views"])
-    ? (PublicSchema["Tables"] &
-        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -745,20 +700,22 @@ export type Tables<
     : never
 
 export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -766,20 +723,22 @@ export type TablesInsert<
     : never
 
 export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -787,21 +746,23 @@ export type TablesUpdate<
     : never
 
 export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof PublicSchema["Enums"]
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof PublicSchema["CompositeTypes"]
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof Database
@@ -810,6 +771,12 @@ export type CompositeTypes<
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
   ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
-    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
