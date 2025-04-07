@@ -2,54 +2,52 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { setupLogInterceptors } from '@/services/logs';
+import { writeLog } from '@/services/logs';
+import { checkEnsembleUserIdColumn, addUserIdToEnsembles } from '@/services/database/ensembleInitialization';
 
 export const useAppInitialization = () => {
-  const { user, setUser, signOut } = useAuth();
+  const { user } = useAuth();
   const [initialized, setInitialized] = useState(false);
-
+  const [error, setError] = useState<Error | null>(null);
+  
   useEffect(() => {
-    const initialize = async () => {
+    const initializeApp = async () => {
       try {
-        // Set up log interceptors
-        setupLogInterceptors();
-
-        // Check for existing session
-        const { data, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error('Error getting session:', error);
-          return;
+        if (user) {
+          console.log("Initialisation de l'application pour l'utilisateur:", user.id);
+          
+          // Vérifier si la structure des ensembles est correcte
+          const hasUserIdColumn = await checkEnsembleUserIdColumn();
+          
+          if (!hasUserIdColumn) {
+            console.log("Ajout de la colonne user_id à la table tenues");
+            await addUserIdToEnsembles();
+          }
+          
+          writeLog(
+            `Application initialisée pour l'utilisateur ${user.email}`, 
+            'info', 
+            `User ID: ${user.id}`, 
+            'initialization'
+          );
         }
         
-        if (data?.session?.user) {
-          setUser(data.session.user);
-        }
-
-        // Subscribe to auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-          if (event === 'SIGNED_IN' && session?.user) {
-            setUser(session.user);
-          } else if (event === 'SIGNED_OUT') {
-            setUser(null);
-          }
-        });
-
-        // Mark as initialized
         setInitialized(true);
-
-        // Cleanup subscription
-        return () => {
-          subscription.unsubscribe();
-        };
-      } catch (error) {
-        console.error('Error initializing app:', error);
-        setInitialized(true); // Still mark as initialized even on error
+      } catch (err) {
+        console.error("Erreur lors de l'initialisation de l'application:", err);
+        setError(err instanceof Error ? err : new Error('Erreur d\'initialisation inconnue'));
+        
+        writeLog(
+          "Erreur d'initialisation de l'application", 
+          'error', 
+          err instanceof Error ? err.message : 'Erreur inconnue', 
+          'initialization'
+        );
       }
     };
-
-    // Call the initialize function directly
-    initialize();
-  }, [setUser, signOut]);
-
-  return { initialized };
+    
+    initializeApp();
+  }, [user]);
+  
+  return { initialized, error };
 };

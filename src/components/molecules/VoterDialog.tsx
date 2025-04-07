@@ -21,7 +21,7 @@ interface VoterDialogProps {
   elementId: number;
   elementType: "ensemble" | "defi";
   onVoteSubmitted?: (vote: "up" | "down") => void;
-  ensembleId?: number;
+  ensembleId?: number | string;
 }
 
 const VoterDialog: React.FC<VoterDialogProps> = ({
@@ -68,7 +68,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
       if (elementType === "ensemble") {
         success = await submitEnsembleVote(elementId, vote);
       } else if (elementType === "defi") {
-        // Convert ensembleId to number before passing it to the function
+        // Ensure ensembleId is always a number when passed to submitDefiVote
         const ensembleIdNumber = ensembleId !== undefined ? 
           (typeof ensembleId === 'string' ? parseInt(ensembleId, 10) : ensembleId) : 0;
         
