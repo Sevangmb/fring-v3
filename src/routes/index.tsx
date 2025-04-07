@@ -67,11 +67,11 @@ export const allRoutes: RouteObject[] = [
     path: "/defis/:id",
     element: <DefiPage />,
   },
+  // Include admin routes
+  ...adminRoutes,
   // La route catch-all doit toujours être en dernier
   {
     path: "*",
     element: <NotFound />,
   },
-  // Include admin routes
-  ...adminRoutes
 ];

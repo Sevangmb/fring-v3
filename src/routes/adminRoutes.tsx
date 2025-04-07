@@ -3,41 +3,47 @@ import React from 'react';
 import { RouteObject } from 'react-router-dom';
 
 // Import admin pages
-import AdminDatabasePage from '@/pages/admin/AdminDatabasePage';
-import AdminEnsemblesPage from '@/pages/admin/AdminEnsemblesPage';
-import AdminSettingsPage from '@/pages/admin/AdminSettingsPage';
-import AdminStatsPage from '@/pages/admin/AdminStatsPage';
-import AdminUsersPage from '@/pages/admin/AdminUsersPage';
-import AdminVetementsPage from '@/pages/admin/AdminVetementsPage';
-import AdminLogsPage from '@/pages/admin/AdminLogsPage';
+import Admin from '../pages/Admin';
+import AdminDatabasePage from '../pages/admin/AdminDatabasePage';
+import AdminEnsemblesPage from '../pages/admin/AdminEnsemblesPage';
+import AdminLogsPage from '../pages/admin/AdminLogsPage';
+import AdminSettingsPage from '../pages/admin/AdminSettingsPage';
+import AdminStatsPage from '../pages/admin/AdminStatsPage';
+import AdminUsersPage from '../pages/admin/AdminUsersPage';
+import AdminVetementsPage from '../pages/admin/AdminVetementsPage';
 
+// Admin routes configuration
 export const adminRoutes: RouteObject[] = [
   {
-    path: "/admin/database",
+    path: '/admin',
+    element: <Admin />,
+  },
+  {
+    path: '/admin/database',
     element: <AdminDatabasePage />,
   },
   {
-    path: "/admin/ensembles",
+    path: '/admin/ensembles',
     element: <AdminEnsemblesPage />,
   },
   {
-    path: "/admin/settings",
+    path: '/admin/logs',
+    element: <AdminLogsPage />,
+  },
+  {
+    path: '/admin/settings',
     element: <AdminSettingsPage />,
   },
   {
-    path: "/admin/stats",
+    path: '/admin/stats',
     element: <AdminStatsPage />,
   },
   {
-    path: "/admin/users",
+    path: '/admin/users',
     element: <AdminUsersPage />,
   },
   {
-    path: "/admin/vetements",
+    path: '/admin/vetements',
     element: <AdminVetementsPage />,
-  },
-  {
-    path: "/admin/logs",
-    element: <AdminLogsPage />,
   },
 ];
