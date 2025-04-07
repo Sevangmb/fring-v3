@@ -84,11 +84,14 @@ export const getWinningEnsemble = async (defiId: number) => {
     
     if (userError) throw userError;
     
+    // Fix: Access properties from tenue object, not as an array
+    const tenue = winningParticipation.tenue;
+    
     return {
-      ...winningParticipation.tenue,
+      ...tenue,
       user_email: userData?.email,
       score: maxScore,
-      ensembleName: winningParticipation.tenue?.nom || `Ensemble #${winningEnsembleId}`
+      ensembleName: tenue?.nom || `Ensemble #${winningEnsembleId}`
     };
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'ensemble gagnant:', error);
