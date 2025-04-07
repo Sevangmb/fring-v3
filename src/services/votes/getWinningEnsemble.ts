@@ -84,8 +84,8 @@ export const getWinningEnsemble = async (defiId: number) => {
     
     if (userError) throw userError;
     
-    // Fix: Access properties from tenue object, not as an array
-    const tenue = winningParticipation.tenue;
+    // Ensure tenue is treated as an object, not an array
+    const tenue = winningParticipation.tenue as any;
     
     return {
       ...tenue,
