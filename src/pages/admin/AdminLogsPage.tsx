@@ -1,31 +1,20 @@
 
 import React from 'react';
+import { Heading } from '@/components/atoms/Typography';
 import AdminModuleTemplate from '@/components/admin/AdminModuleTemplate';
-import { useAuth } from '@/contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
-import { isAdmin } from '@/utils/adminUtils';
 import LogsViewer from '@/components/admin/logs/LogsViewer';
 
 const AdminLogsPage: React.FC = () => {
-  const { user } = useAuth();
-  
-  // Vérification des autorisations administratives
-  const authorized = isAdmin(user);
-  
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  if (!authorized) {
-    return <Navigate to="/admin" replace />;
-  }
-
   return (
-    <AdminModuleTemplate 
-      title="Logs système" 
-      description="Surveillez l'activité système et les erreurs de l'application Fring."
-    >
-      <LogsViewer />
+    <AdminModuleTemplate>
+      <div className="space-y-6">
+        <Heading variant="h3">Journaux d'activité système</Heading>
+        <p className="text-muted-foreground">
+          Consultez et filtrez les journaux d'activité pour suivre les événements et détecter les problèmes.
+        </p>
+        
+        <LogsViewer />
+      </div>
     </AdminModuleTemplate>
   );
 };
