@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { writeLog } from '@/services/logs';
+import { writeLog, initializeLogsSystem } from '@/services/logs';
 import { checkEnsembleUserIdColumn, addUserIdToEnsembles } from '@/services/database/ensembleInitialization';
 
 export const useAppInitialization = () => {
@@ -13,6 +13,9 @@ export const useAppInitialization = () => {
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        // Initialiser d'abord le système de logs
+        await initializeLogsSystem();
+        
         if (user) {
           console.log("Initialisation de l'application pour l'utilisateur:", user.id);
           
@@ -24,7 +27,8 @@ export const useAppInitialization = () => {
             await addUserIdToEnsembles();
           }
           
-          writeLog(
+          // Log d'initialisation réussie
+          await writeLog(
             `Application initialisée pour l'utilisateur ${user.email}`, 
             'info', 
             `User ID: ${user.id}`, 
@@ -37,12 +41,17 @@ export const useAppInitialization = () => {
         console.error("Erreur lors de l'initialisation de l'application:", err);
         setError(err instanceof Error ? err : new Error('Erreur d\'initialisation inconnue'));
         
-        writeLog(
-          "Erreur d'initialisation de l'application", 
-          'error', 
-          err instanceof Error ? err.message : 'Erreur inconnue', 
-          'initialization'
-        );
+        // Log d'erreur d'initialisation
+        try {
+          await writeLog(
+            "Erreur d'initialisation de l'application", 
+            'error', 
+            err instanceof Error ? err.message : 'Erreur inconnue', 
+            'initialization'
+          );
+        } catch (logError) {
+          console.error("Impossible d'écrire le log d'erreur:", logError);
+        }
       }
     };
     

@@ -6,6 +6,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { initializeVoteTables } from './services/database/voteTables';
+import { initializeLogsSystem } from './services/logs';
 import { allRoutes } from './routes';
 import { useAppInitialization } from './hooks/useAppInitialization';
 
@@ -25,10 +26,15 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
   React.useEffect(() => {
     const initTables = async () => {
       try {
+        // Initialisation du système de logs
+        await initializeLogsSystem();
+        console.log("Système de logs initialisé");
+        
+        // Initialisation des tables de vote
         await initializeVoteTables();
         console.log("Tables de vote initialisées avec succès");
       } catch (error) {
-        console.error("Échec de l'initialisation des tables de vote:", error);
+        console.error("Échec de l'initialisation des tables:", error);
       }
     };
     

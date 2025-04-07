@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import {
@@ -15,6 +16,7 @@ import { getUserVote as getUserEnsembleVote } from "@/services/ensemble/getUserV
 import { getUserVote as getUserDefiVote } from "@/services/defi/votes/getUserVote";
 import { VoteType } from "@/services/votes/types";
 import { useToast } from "@/hooks/use-toast";
+import { writeLog } from "@/services/logs";
 
 interface VoterDialogProps {
   elementId: number;
@@ -51,6 +53,12 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
         setUserVote(vote);
       } catch (error) {
         console.error("Erreur lors du chargement du vote:", error);
+        writeLog(
+          "Erreur lors du chargement du vote utilisateur", 
+          "error", 
+          `Element type: ${elementType}, Element ID: ${elementId}, Error: ${error instanceof Error ? error.message : String(error)}`,
+          "votes"
+        );
       }
     };
 
@@ -65,8 +73,9 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
       if (elementType === "ensemble") {
         success = await submitEnsembleVote(elementId, vote);
       } else if (elementType === "defi") {
-        const ensembleIdNumber = ensembleId !== undefined ? 
-          (typeof ensembleId === 'string' ? parseInt(ensembleId, 10) : ensembleId) : 0;
+        // Conversion explicite de l'ensembleId en nombre
+        const ensembleIdNumber: number = ensembleId !== undefined ? 
+          (typeof ensembleId === 'string' ? parseInt(ensembleId, 10) : ensembleId as number) : 0;
         
         success = await submitDefiVote(elementId, vote, ensembleIdNumber);
       }
@@ -77,6 +86,13 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
           title: "Vote enregistré",
           description: vote === "up" ? "Vous aimez cet élément" : "Vous n'aimez pas cet élément",
         });
+        
+        writeLog(
+          `Vote ${vote} enregistré`, 
+          "info", 
+          `Element type: ${elementType}, Element ID: ${elementId}`,
+          "votes"
+        );
         
         if (onVoteSubmitted) {
           onVoteSubmitted(vote);
@@ -89,6 +105,13 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
           description: "Impossible d'enregistrer votre vote. Veuillez réessayer.",
           variant: "destructive",
         });
+        
+        writeLog(
+          "Échec de l'enregistrement du vote", 
+          "warning", 
+          `Element type: ${elementType}, Element ID: ${elementId}, Vote: ${vote}`,
+          "votes"
+        );
       }
     } catch (error) {
       console.error("Erreur lors du vote:", error);
@@ -97,6 +120,13 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
         description: "Une erreur est survenue lors de l'enregistrement de votre vote.",
         variant: "destructive",
       });
+      
+      writeLog(
+        "Erreur lors de l'enregistrement du vote", 
+        "error", 
+        `Element type: ${elementType}, Element ID: ${elementId}, Vote: ${vote}, Error: ${error instanceof Error ? error.message : String(error)}`,
+        "votes"
+      );
     } finally {
       setIsSubmitting(false);
     }
