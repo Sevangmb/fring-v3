@@ -79,7 +79,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
         const ensembleIdNumber = typeof ensembleId === 'string' 
           ? parseInt(ensembleId, 10) 
           : (ensembleId || 0);
-        
+          
         success = await submitDefiVote(elementId, vote, ensembleIdNumber);
       }
       
