@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter, useRoutes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -6,7 +5,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { initializeVoteTables } from './services/database/voteTables';
-import { initializeLogsSystem } from './services/logsService';
+import { initializeLogsSystem } from './services/logs';
 import { allRoutes } from './routes';
 import { useAppInitialization } from './hooks/useAppInitialization';
 

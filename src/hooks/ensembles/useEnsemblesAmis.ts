@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Ensemble } from "@/services/ensemble";
@@ -26,25 +25,20 @@ export const useEnsemblesAmis = (friendId?: string) => {
       
       console.log("Chargement des ensembles pour l'ami:", friendId || "tous les amis");
       
-      // Éviter d'appeler avec son propre ID comme friendId
       const effectiveFriendId = (friendId && friendId === user.id) ? undefined : friendId;
       
-      // Gestion plus robuste des erreurs
       let data: Ensemble[] = [];
       try {
         data = await fetchEnsemblesAmis(effectiveFriendId);
       } catch (apiError) {
-        // Log de l'erreur pour une meilleure traçabilité
         console.error("Erreur lors de l'appel à fetchEnsemblesAmis:", apiError);
         
         if (apiError && typeof apiError === 'object' && 'message' in apiError) {
           const errorMessage = apiError.message;
           
-          // Si l'erreur est "Cet utilisateur n'est pas dans vos amis...", on gère différemment
           if (errorMessage && typeof errorMessage === 'string' && 
               errorMessage.includes("n'est pas dans vos amis")) {
             
-            // On écrit un log et on retourne un tableau vide plutôt que de lancer une erreur
             writeLog(
               `Tentative d'accès aux ensembles d'un non-ami`, 
               'warning', 
@@ -52,21 +46,18 @@ export const useEnsemblesAmis = (friendId?: string) => {
               'ensembles'
             );
             
-            // Informer l'utilisateur
             toast({
               title: "Attention",
               description: "Cet utilisateur n'est pas dans vos amis ou la demande n'est pas acceptée.",
               variant: "default"
             });
             
-            // Définir un tableau vide mais sans erreur bloquante
             setEnsemblesAmis([]);
             setLoading(false);
             return;
           }
         }
         
-        // Pour les autres erreurs, on continue à les propager
         throw apiError;
       }
       

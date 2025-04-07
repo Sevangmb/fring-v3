@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { Ensemble } from './types';
 import { writeLog } from '@/services/logs';
