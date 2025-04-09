@@ -1,73 +1,80 @@
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Edit, Trash2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import { deleteEnsemble } from '@/services/ensemble';
-import FavoriButton from '@/components/atoms/FavoriButton';
+import React from "react";
+import { Share2, Bookmark } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import FavoriButton from "../atoms/FavoriButton";
+import RedditStyleVoter from "../molecules/RedditStyleVoter";
 
 interface EnsembleActionsProps {
   ensembleId: number;
-  onDelete?: () => void;
-  nom?: string;
+  size?: "sm" | "md" | "lg";
+  orientation?: "horizontal" | "vertical";
+  showTooltips?: boolean;
 }
 
-const EnsembleActions: React.FC<EnsembleActionsProps> = ({ 
-  ensembleId, 
-  onDelete,
-  nom
+const EnsembleActions: React.FC<EnsembleActionsProps> = ({
+  ensembleId,
+  size = "md",
+  orientation = "horizontal",
+  showTooltips = true
 }) => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [isDeleting, setIsDeleting] = React.useState(false);
-
-  const handleEdit = () => {
-    navigate(`/ensembles/modifier/${ensembleId}`);
-  };
-
-  const handleDelete = async () => {
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer cet ensemble ?")) {
-      try {
-        setIsDeleting(true);
-        await deleteEnsemble(ensembleId);
-        toast({
-          title: "Succès",
-          description: "L'ensemble a été supprimé avec succès"
-        });
-        if (onDelete) onDelete();
-      } catch (error) {
-        console.error("Erreur lors de la suppression de l'ensemble:", error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de supprimer l'ensemble",
-          variant: "destructive"
-        });
-      } finally {
-        setIsDeleting(false);
-      }
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: "Partager cet ensemble",
+        url: `${window.location.origin}/ensembles/${ensembleId}`,
+      });
+    } else {
+      navigator.clipboard.writeText(
+        `${window.location.origin}/ensembles/${ensembleId}`
+      );
     }
   };
 
-  return (
-    <div className="absolute top-2 right-2 flex gap-1 z-10">
-      <FavoriButton 
-        type="ensemble" 
-        elementId={ensembleId} 
-        nom={nom}
+  const actionButtons = (
+    <>
+      <RedditStyleVoter 
+        entityType="ensemble"
+        entityId={ensembleId}
+        size={size}
+        vertical={orientation === "vertical"}
+        className="mr-2"
       />
-      <Button variant="ghost" size="icon" onClick={handleEdit} className="h-8 w-8 bg-background/80 backdrop-blur-sm">
-        <Edit size={16} className="text-muted-foreground hover:text-primary" />
-      </Button>
-      <Button 
+
+      <FavoriButton 
+        elementId={String(ensembleId)} 
+        typeFavori="ensemble" 
+        size={size === "lg" ? "default" : "sm"}
         variant="ghost" 
-        size="icon" 
-        onClick={handleDelete} 
-        className="h-8 w-8 bg-background/80 backdrop-blur-sm"
-        disabled={isDeleting}
+        className="rounded-full"
+      />
+
+      <Button
+        variant="ghost"
+        size={size === "lg" ? "default" : "sm"}
+        onClick={handleShare}
+        className="rounded-full"
       >
-        <Trash2 size={16} className="text-muted-foreground hover:text-destructive" />
+        <Share2 className={size === "sm" ? "h-4 w-4" : "h-5 w-5"} />
+        <span className="sr-only">Partager</span>
       </Button>
+    </>
+  );
+
+  if (!showTooltips) {
+    return (
+      <div className={`flex ${orientation === "vertical" ? "flex-col" : "flex-row"} items-center gap-1`}>
+        {actionButtons}
+      </div>
+    );
+  }
+
+  return (
+    <div className={`flex ${orientation === "vertical" ? "flex-col" : "flex-row"} items-center gap-1`}>
+      <TooltipProvider>
+        {actionButtons}
+      </TooltipProvider>
     </div>
   );
 };

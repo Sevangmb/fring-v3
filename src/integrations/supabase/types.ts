@@ -330,6 +330,36 @@ export type Database = {
         }
         Relationships: []
       }
+      system_logs: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          details: string | null
+          id: string
+          level: string
+          message: string
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          details?: string | null
+          id?: string
+          level: string
+          message: string
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          details?: string | null
+          id?: string
+          level?: string
+          message?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       tenues: {
         Row: {
           created_at: string
