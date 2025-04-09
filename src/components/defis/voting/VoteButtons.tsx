@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import RedditStyleVoter from "@/components/molecules/RedditStyleVoter";
 import { VoteType } from "@/services/votes/types";
 

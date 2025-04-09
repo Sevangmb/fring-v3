@@ -1,12 +1,12 @@
 
 // Re-export all log-related functions from the logs module
-export * from './logs';
+export * from '../services/logs';
 
 // Initialize the logs system
 export const initializeLogsSystem = async () => {
   try {
     // Import the function from the correct module
-    const { initializeLogsSystem: initialize } = await import('./logs');
+    const { initializeLogsSystem: initialize } = await import('../services/logs');
     
     const success = await initialize();
     if (success) {

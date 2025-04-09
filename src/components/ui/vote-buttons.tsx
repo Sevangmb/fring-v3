@@ -30,9 +30,9 @@ export function VoteButtons({
 }: VoteButtonsProps) {
   // Size configurations
   const config = {
-    sm: { buttonSize: "sm", iconSize: 16, fontSize: "text-xs" },
-    md: { buttonSize: "sm", iconSize: 18, fontSize: "text-sm" },
-    lg: { buttonSize: "default", iconSize: 22, fontSize: "text-base" },
+    sm: { buttonSize: "sm" as const, iconSize: 16, fontSize: "text-xs" },
+    md: { buttonSize: "sm" as const, iconSize: 18, fontSize: "text-sm" },
+    lg: { buttonSize: "default" as const, iconSize: 22, fontSize: "text-base" },
   }
   
   const { buttonSize, iconSize, fontSize } = config[size]

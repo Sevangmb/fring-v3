@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Share2, Bookmark } from "lucide-react";
+import { Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import FavoriButton from "../atoms/FavoriButton";
@@ -44,7 +44,7 @@ const EnsembleActions: React.FC<EnsembleActionsProps> = ({
 
       <FavoriButton 
         elementId={String(ensembleId)} 
-        typeFavori="ensemble" 
+        type="ensemble" 
         size={size === "lg" ? "default" : "sm"}
         variant="ghost" 
         className="rounded-full"

@@ -45,9 +45,9 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
           vote = await getUserEnsembleVote(elementId);
         } else if (elementType === "defi") {
           // Properly convert ensembleId to number if it's a string
-          const ensembleIdNumber = typeof ensembleId === 'string' 
-            ? parseInt(ensembleId, 10) 
-            : (ensembleId || 0);
+          const ensembleIdNumber = ensembleId !== undefined 
+            ? (typeof ensembleId === 'string' ? parseInt(ensembleId, 10) : ensembleId)
+            : 0;
           
           vote = await getUserDefiVote(elementId, ensembleIdNumber);
         }
@@ -76,9 +76,9 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
         success = await submitEnsembleVote(elementId, vote);
       } else if (elementType === "defi") {
         // Convert ensembleId to number properly
-        const ensembleIdNumber = typeof ensembleId === 'string' 
-          ? parseInt(ensembleId, 10) 
-          : (ensembleId || 0);
+        const ensembleIdNumber = ensembleId !== undefined 
+          ? (typeof ensembleId === 'string' ? parseInt(ensembleId, 10) : ensembleId)
+          : 0;
           
         success = await submitDefiVote(elementId, vote, ensembleIdNumber);
       }

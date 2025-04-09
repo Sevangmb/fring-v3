@@ -18,6 +18,8 @@ interface RedditStyleVoterProps {
   showScore?: boolean;
   className?: string;
   onVoteChange?: (type: VoteType) => void;
+  isLoading?: boolean;
+  disabled?: boolean;
 }
 
 const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
@@ -30,13 +32,15 @@ const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
   vertical = true,
   showScore = true,
   className,
-  onVoteChange
+  onVoteChange,
+  isLoading: externalIsLoading,
+  disabled: externalDisabled
 }) => {
   const { toast } = useToast();
   const {
     userVote,
     votesCount,
-    isLoading,
+    isLoading: internalIsLoading,
     isOffline,
     submitVote,
     loadVoteData
@@ -71,9 +75,13 @@ const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
       ? calculateScore(votesCount) 
       : 0;
 
+  // Combined loading and disabled states
+  const isLoading = externalIsLoading || internalIsLoading || isSubmitting;
+  const isDisabled = externalDisabled || isOffline;
+
   // Handle upvote
   const handleUpvote = async () => {
-    if (isLoading || isSubmitting || isOffline) return;
+    if (isLoading || isDisabled) return;
     
     setIsSubmitting(true);
     try {
@@ -96,7 +104,7 @@ const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
 
   // Handle downvote
   const handleDownvote = async () => {
-    if (isLoading || isSubmitting || isOffline) return;
+    if (isLoading || isDisabled) return;
     
     setIsSubmitting(true);
     try {
@@ -124,7 +132,7 @@ const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
       size={size}
       onUpvote={handleUpvote}
       onDownvote={handleDownvote}
-      isLoading={isLoading || isSubmitting}
+      isLoading={isLoading}
       vertical={vertical}
       showScore={showScore}
       className={className}
