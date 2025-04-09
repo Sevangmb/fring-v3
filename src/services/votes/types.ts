@@ -5,6 +5,11 @@
 export type VoteType = 'up' | 'down' | null;
 
 /**
+ * Types d'entités pour lesquelles on peut voter
+ */
+export type EntityType = 'ensemble' | 'defi' | 'tenue';
+
+/**
  * Structure pour le décompte des votes
  */
 export interface VoteCount {
