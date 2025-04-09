@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Shirt, Users, Loader2 } from "lucide-react";
 import { Text } from "@/components/atoms/Typography";
 import EnsembleCard from "@/components/ensembles/EnsembleCard";
+import RedditStyleVoter from "@/components/molecules/RedditStyleVoter";
 
 interface DefiParticipationsListProps {
   participations: any[];
@@ -35,9 +36,12 @@ const DefiParticipationsList: React.FC<DefiParticipationsListProps> = ({
   
   // Trouver l'ensemble avec le plus de votes positifs
   let topParticipation = participations[0];
-  let topScore = participations[0]?.votes.votesCount.up - participations[0]?.votes.votesCount.down;
+  let topScore = participations[0]?.votes?.votesCount?.up - participations[0]?.votes?.votesCount?.down || 0;
   
   participations.forEach(p => {
+    // Protection contre les données manquantes
+    if (!p?.votes?.votesCount) return;
+    
     const score = p.votes.votesCount.up - p.votes.votesCount.down;
     if (score > topScore) {
       topScore = score;
@@ -84,10 +88,15 @@ const DefiParticipationsList: React.FC<DefiParticipationsListProps> = ({
                 {participations.map((participation) => (
                   <div key={participation.id} className="relative">
                     <EnsembleCard ensemble={formatEnsemble(participation)} />
-                    <div className="absolute top-2 right-2 flex items-center gap-1">
-                      <Badge variant="secondary">
-                        👍 {participation.votes.votesCount.up}
-                      </Badge>
+                    <div className="absolute top-2 right-2 flex flex-col items-end gap-2">
+                      {/* Vote Reddit style pour l'ensemble */}
+                      <RedditStyleVoter
+                        entityType="ensemble"
+                        entityId={participation.tenue.id}
+                        size="sm"
+                        showScore={true}
+                        vertical={false}
+                      />
                     </div>
                   </div>
                 ))}
@@ -98,17 +107,22 @@ const DefiParticipationsList: React.FC<DefiParticipationsListProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {participations
                   .sort((a, b) => {
-                    const scoreA = a.votes.votesCount.up - a.votes.votesCount.down;
-                    const scoreB = b.votes.votesCount.up - b.votes.votesCount.down;
+                    const scoreA = a.votes?.votesCount?.up - a.votes?.votesCount?.down || 0;
+                    const scoreB = b.votes?.votesCount?.up - b.votes?.votesCount?.down || 0;
                     return scoreB - scoreA;
                   })
                   .map((participation) => (
                     <div key={participation.id} className="relative">
                       <EnsembleCard ensemble={formatEnsemble(participation)} />
-                      <div className="absolute top-2 right-2 flex items-center gap-1">
-                        <Badge variant="secondary">
-                          👍 {participation.votes.votesCount.up}
-                        </Badge>
+                      <div className="absolute top-2 right-2 flex flex-col items-end gap-2">
+                        {/* Vote Reddit style pour l'ensemble */}
+                        <RedditStyleVoter
+                          entityType="ensemble"
+                          entityId={participation.tenue.id}
+                          size="sm"
+                          showScore={true}
+                          vertical={false}
+                        />
                       </div>
                     </div>
                   ))}
@@ -130,10 +144,10 @@ const DefiParticipationsList: React.FC<DefiParticipationsListProps> = ({
               <EnsembleCard ensemble={formatEnsemble(topParticipation)} />
               <div className="mt-4 text-center">
                 <Badge className="mb-2" variant="secondary">
-                  Score: {topParticipation.votes.votesCount.up - topParticipation.votes.votesCount.down}
+                  Score: {(topParticipation.votes?.votesCount?.up || 0) - (topParticipation.votes?.votesCount?.down || 0)}
                 </Badge>
                 <Text>
-                  Félicitations à {topParticipation.user_email.split('@')[0]} pour son ensemble "{topParticipation.tenue.nom}" !
+                  Félicitations à {topParticipation.user_email?.split('@')[0]} pour son ensemble "{topParticipation.tenue.nom}" !
                 </Text>
               </div>
             </div>

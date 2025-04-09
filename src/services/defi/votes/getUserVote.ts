@@ -30,9 +30,9 @@ export const getUserVote = async (
       .from('defi_votes')
       .select('vote_type')
       .eq('defi_id', defiId)
-      .eq('tenue_id', ensembleId)  // Utiliser tenue_id au lieu de ensemble_id
+      .eq('tenue_id', ensembleId)
       .eq('user_id', userId)
-      .maybeSingle();  // Utiliser maybeSingle() au lieu de single()
+      .maybeSingle();
     
     if (error) {
       console.error('Erreur lors de la récupération du vote:', error);

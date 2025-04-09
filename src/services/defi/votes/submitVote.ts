@@ -30,9 +30,9 @@ export const submitVote = async (
       .from('defi_votes')
       .select('id, vote_type')
       .eq('defi_id', defiId)
-      .eq('tenue_id', ensembleId)  // Utiliser tenue_id au lieu de ensemble_id
+      .eq('tenue_id', ensembleId)
       .eq('user_id', userId)
-      .maybeSingle();  // Utiliser maybeSingle() au lieu de single()
+      .maybeSingle();
 
     if (checkError) {
       console.error('Erreur lors de la vérification du vote:', checkError);
@@ -62,7 +62,7 @@ export const submitVote = async (
         .from('defi_votes')
         .insert({
           defi_id: defiId,
-          tenue_id: ensembleId,  // Utiliser tenue_id au lieu de ensemble_id
+          tenue_id: ensembleId,
           user_id: userId,
           vote_type: vote
         });
