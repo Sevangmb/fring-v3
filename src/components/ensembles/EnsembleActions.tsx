@@ -45,7 +45,7 @@ const EnsembleActions: React.FC<EnsembleActionsProps> = ({
       <FavoriButton 
         elementId={String(ensembleId)} 
         type="ensemble" 
-        size={size === "lg" ? "default" : "sm"}
+        // Modified this line to use the correct variant name
         variant="ghost" 
         className="rounded-full"
       />
