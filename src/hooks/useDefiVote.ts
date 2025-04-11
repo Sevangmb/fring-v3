@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { submitVote } from '@/services/defi/votes/submitVote';
-import { VoteType } from '@/services/defi/votes/types';
+import { VoteType } from '@/services/votes/types';
 import { ParticipationWithVotes } from '@/services/defi/votes/getDefiParticipationsWithVotes';
 
 export const useDefiVote = (defiId: number, participations: ParticipationWithVotes[]) => {
@@ -51,8 +51,8 @@ export const useDefiVote = (defiId: number, participations: ParticipationWithVot
     try {
       setVoting(true);
       
-      // Submit the vote to the backend - passing 'ensemble' as the entity type
-      await submitVote(defiId, ensembleId, voteType, 'ensemble');
+      // Submit the vote to the backend - using three arguments as expected
+      await submitVote(defiId, ensembleId, voteType);
       
       // Update the local state
       setVotedParticipations(prev => [...prev, ensembleId]);

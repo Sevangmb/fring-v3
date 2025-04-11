@@ -34,7 +34,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
 
   // Convert ensembleId to number to prevent type errors
   const ensembleIdAsNumber = ensembleId !== undefined 
-    ? (typeof ensembleId === 'string' ? parseInt(ensembleId, 10) : Number(ensembleId)) 
+    ? (typeof ensembleId === 'string' ? parseInt(ensembleId, 10) : ensembleId) 
     : undefined;
 
   useEffect(() => {
@@ -47,7 +47,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
           vote = await getUserEnsembleVote(elementId);
         } else if (elementType === "defi") {
           const { getUserVote: getUserDefiVote } = await import("@/services/defi/votes/getUserVote");
-          // Ensure ensembleIdAsNumber is a number
+          // Pass the numeric version of ensembleId
           vote = await getUserDefiVote(elementId, ensembleIdAsNumber || 0);
         }
         
@@ -80,7 +80,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
       } else if (elementType === "defi") {
         const { submitVote: submitDefiVote } = await import("@/services/defi/votes/submitVote");
         // Ensure ensembleIdAsNumber is a number when passing to the function
-        success = await submitDefiVote(elementId, vote, ensembleIdAsNumber || 0);
+        success = await submitDefiVote(elementId, ensembleIdAsNumber || 0, vote);
       }
       
       if (success) {
