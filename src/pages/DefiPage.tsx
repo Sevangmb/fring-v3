@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PageLayout from "@/components/templates/PageLayout";
@@ -7,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchDefiById } from "@/services/defi/votes/fetchDefiById";
 import { getDefiParticipationsWithVotes } from "@/services/defi/votes/getDefiParticipationsWithVotes";
-import { Loader2, ArrowLeft, Calendar, Users, Trophy } from "lucide-react";
+import { Loader2, ArrowLeft, Calendar, Users, Trophy, ThumbsUp } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import VoterDialog from "@/components/molecules/VoterDialog";
@@ -24,33 +23,33 @@ const DefiPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   
-  useEffect(() => {
-    const loadDefi = async () => {
-      if (!id) return;
-      
-      try {
-        setLoading(true);
-        const defiData = await fetchDefiById(Number(id));
-        
-        if (!defiData) {
-          setError("Défi non trouvé");
-          return;
-        }
-        
-        setDefi(defiData);
-        
-        // Charger les participations
-        const participationsData = await getDefiParticipationsWithVotes(Number(id));
-        setParticipations(participationsData);
-      } catch (error) {
-        console.error("Erreur lors du chargement du défi:", error);
-        setError("Une erreur est survenue lors du chargement du défi");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadDefiData = async () => {
+    if (!id) return;
     
-    loadDefi();
+    try {
+      setLoading(true);
+      const defiData = await fetchDefiById(Number(id));
+      
+      if (!defiData) {
+        setError("Défi non trouvé");
+        return;
+      }
+      
+      setDefi(defiData);
+      
+      // Charger les participations
+      const participationsData = await getDefiParticipationsWithVotes(Number(id));
+      setParticipations(participationsData);
+    } catch (error) {
+      console.error("Erreur lors du chargement du défi:", error);
+      setError("Une erreur est survenue lors du chargement du défi");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
+    loadDefiData();
   }, [id]);
   
   const handleBack = () => {
@@ -67,6 +66,11 @@ const DefiPage: React.FC = () => {
     if (endDate < now) return "past";
     if (startDate > now) return "upcoming";
     return "current";
+  };
+  
+  const handleVoteUpdated = async () => {
+    // Recharger le défi pour mettre à jour le nombre de votes
+    await loadDefiData();
   };
   
   const handleParticipationUpdated = async () => {
@@ -130,10 +134,15 @@ const DefiPage: React.FC = () => {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <h1 className="text-3xl font-bold">{defi.titre}</h1>
-              <div className="ml-2">
+              <div className="flex items-center ml-2 gap-2">
+                <div className="flex items-center text-muted-foreground">
+                  <ThumbsUp className="mr-1 h-4 w-4" />
+                  <span>{defi.votes_count || 0}</span>
+                </div>
                 <VoterDialog 
                   elementId={defi.id} 
-                  elementType="defi" 
+                  elementType="defi"
+                  onVoteUpdated={handleVoteUpdated}
                 />
               </div>
             </div>
@@ -202,6 +211,7 @@ const DefiPage: React.FC = () => {
               participations={participations} 
               defiStatus={defiStatus} 
               defiId={defi.id}
+              onVoteUpdated={handleParticipationUpdated}
             />
           </TabsContent>
         </Tabs>
