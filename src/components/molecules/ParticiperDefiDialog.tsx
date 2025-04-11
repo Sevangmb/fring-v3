@@ -9,11 +9,12 @@ import {
   DialogClose 
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X, Award } from "lucide-react";
+import { X, Award, Plus } from "lucide-react";
 import { participerDefi } from "@/services/defi/participationService";
 import { fetchUserEnsembles } from "@/services/ensemble";
 import { useToast } from "@/hooks/use-toast";
 import EnsembleSelector from "./EnsembleSelector";
+import { Link } from "react-router-dom";
 
 interface ParticiperDefiDialogProps {
   defiId: number;
@@ -116,6 +117,20 @@ const ParticiperDefiDialog: React.FC<ParticiperDefiDialogProps> = ({
     }
   };
 
+  const EmptyEnsemblesView = () => (
+    <div className="flex flex-col items-center justify-center p-4 text-center">
+      <p className="text-muted-foreground mb-4">Aucun ensemble disponible. Veuillez en créer un avant de pouvoir participer.</p>
+      <DialogClose asChild>
+        <Link to="/ensembles/ajouter">
+          <Button className="flex items-center gap-1">
+            <Plus size={16} />
+            <span>Créer un ensemble</span>
+          </Button>
+        </Link>
+      </DialogClose>
+    </div>
+  );
+
   return (
     <>
       <Button 
@@ -142,30 +157,36 @@ const ParticiperDefiDialog: React.FC<ParticiperDefiDialogProps> = ({
           </DialogHeader>
 
           <div className="py-4">
-            <EnsembleSelector
-              ensembles={ensembles}
-              selectedEnsembleId={selectedEnsemble}
-              onChange={handleEnsembleChange}
-              loading={loading}
-            />
+            {ensembles.length === 0 && !loading ? (
+              <EmptyEnsemblesView />
+            ) : (
+              <EnsembleSelector
+                ensembles={ensembles}
+                selectedEnsembleId={selectedEnsemble}
+                onChange={handleEnsembleChange}
+                loading={loading}
+              />
+            )}
           </div>
 
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={submitting}
-            >
-              Annuler
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={!selectedEnsemble || submitting}
-              className="gap-1"
-            >
-              {submitting ? "Traitement en cours..." : "Participer"}
-            </Button>
-          </div>
+          {ensembles.length > 0 && (
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setOpen(false)}
+                disabled={submitting}
+              >
+                Annuler
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={!selectedEnsemble || submitting}
+                className="gap-1"
+              >
+                {submitting ? "Traitement en cours..." : "Participer"}
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>

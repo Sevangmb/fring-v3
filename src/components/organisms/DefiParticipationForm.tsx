@@ -8,6 +8,7 @@ import { fetchEnsembles } from "@/services/ensemble/ensembleService";
 import { checkUserParticipation, participerDefi } from "@/services/defi/participationService";
 import { Loader2, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 interface DefiParticipationFormProps {
   defiId: number;
@@ -124,10 +125,12 @@ const DefiParticipationForm: React.FC<DefiParticipationFormProps> = ({
             <p className="text-muted-foreground mb-4">
               Vous devez créer au moins un ensemble pour participer à ce défi
             </p>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Créer un ensemble
-            </Button>
+            <Link to="/ensembles/ajouter">
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Créer un ensemble
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>
