@@ -51,7 +51,10 @@ export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | 
     // Get the email from the users field
     // The users field is returned directly as an object with email property
     // instead of an array when using the user_id foreign key in the select
-    const userEmail = ensemble.users?.email || undefined;
+    // Need to properly handle the type here
+    const userEmail = ensemble.users && typeof ensemble.users === 'object' 
+      ? (ensemble.users as { email?: string }).email 
+      : undefined;
 
     // Format the result to match the Ensemble type
     return {
