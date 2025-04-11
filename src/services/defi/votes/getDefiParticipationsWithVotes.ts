@@ -1,7 +1,6 @@
-
 import { supabase } from '@/lib/supabase';
 import { getUserVote } from './getUserVote';
-import { VoteCount, calculateScore } from './types';
+import { VoteCount, calculateScore } from '@/services/votes/types';
 
 export interface ParticipationWithVotes {
   id: number;
@@ -34,7 +33,6 @@ export const checkUserParticipation = async (
   userId?: string
 ): Promise<{ participe: boolean; ensembleId?: number }> => {
   try {
-    // If userId is not provided, get the current user's ID
     if (!userId) {
       const { data: sessionData } = await supabase.auth.getSession();
       userId = sessionData.session?.user?.id;
@@ -49,7 +47,7 @@ export const checkUserParticipation = async (
       .select('ensemble_id')
       .eq('defi_id', defiId)
       .eq('user_id', userId)
-      .maybeSingle();  // Utiliser maybeSingle() au lieu de single()
+      .maybeSingle();
 
     if (error || !data) {
       return { participe: false };
@@ -75,7 +73,6 @@ export const getDefiParticipationsWithVotes = async (
   userId?: string
 ): Promise<ParticipationWithVotes[]> => {
   try {
-    // Get participations with ensemble details and user information
     const { data: participations, error: participationsError } = await supabase
       .from('defi_participations')
       .select(`
@@ -115,30 +112,25 @@ export const getDefiParticipationsWithVotes = async (
       throw participationsError;
     }
 
-    // Get current user ID if not provided
     let currentUserId = userId;
     if (!currentUserId) {
       const { data: sessionData } = await supabase.auth.getSession();
       currentUserId = sessionData.session?.user?.id;
     }
 
-    // Get votes for each participation
     const participationsWithVotes: ParticipationWithVotes[] = await Promise.all(
       (participations || []).map(async (participation) => {
-        // We need to handle array access properly for TypeScript
         if (!participation.tenues || !Array.isArray(participation.tenues) || participation.tenues.length === 0) {
           throw new Error(`No ensemble found for participation ${participation.id}`);
         }
 
         const ensemble = participation.tenues[0];
         
-        // Get user email safely
         let userEmail = '';
         if (participation.users && Array.isArray(participation.users) && participation.users.length > 0) {
           userEmail = participation.users[0]?.email || '';
         }
 
-        // Ensure we have vetements data
         const vetements = ensemble.tenues_vetements
           ? ensemble.tenues_vetements.map(item => {
               const vetementData = Array.isArray(item.vetement) ? item.vetement[0] : item.vetement;
@@ -152,30 +144,26 @@ export const getDefiParticipationsWithVotes = async (
             })
           : [];
 
-        // Get vote counts for this participation
         const { data: voteData, error: voteError } = await supabase
           .from('defi_votes')
           .select('vote_type')
           .eq('defi_id', defiId)
-          .eq('tenue_id', ensemble.id);  // Utiliser tenue_id au lieu de ensemble_id
+          .eq('tenue_id', ensemble.id);
 
         if (voteError) {
           console.error('Error fetching votes:', voteError);
           throw voteError;
         }
 
-        // Count votes
         const votes: VoteCount = {
           up: voteData?.filter(v => v.vote_type === 'up').length || 0,
           down: voteData?.filter(v => v.vote_type === 'down').length || 0
         };
 
-        // Calculate score
         const score = calculateScore(votes);
 
-        // Get the current user's vote
         const userVote = currentUserId 
-          ? await getUserVote(Number(defiId), Number(ensemble.id))
+          ? await getUserVote(Number(defiId), Number(ensemble.id), currentUserId)
           : null;
 
         return {

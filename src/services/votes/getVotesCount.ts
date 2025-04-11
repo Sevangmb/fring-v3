@@ -15,7 +15,7 @@ export const getVotesCount = async (
     const tableName = `${elementType}_votes`;
     let query = supabase
       .from(tableName)
-      .select('vote');
+      .select('vote_type');
     
     // Ajouter les conditions appropriées selon le type d'élément
     if (elementType === 'ensemble') {
@@ -25,9 +25,7 @@ export const getVotesCount = async (
       
       // Si on compte les votes pour un ensemble spécifique dans un défi
       if (ensembleId !== undefined) {
-        query = query.eq('ensemble_id', ensembleId);
-      } else {
-        query = query.is('ensemble_id', null);
+        query = query.eq('tenue_id', ensembleId);
       }
     }
     
@@ -36,8 +34,8 @@ export const getVotesCount = async (
     if (error) throw error;
     
     // Compter les votes positifs et négatifs
-    const upVotes = data.filter(v => v.vote === 'up').length;
-    const downVotes = data.filter(v => v.vote === 'down').length;
+    const upVotes = data.filter(v => v.vote_type === 'up').length;
+    const downVotes = data.filter(v => v.vote_type === 'down').length;
     
     return {
       up: upVotes,

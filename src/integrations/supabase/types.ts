@@ -107,22 +107,28 @@ export type Database = {
           created_at: string
           defi_id: number
           id: number
+          tenue_id: number | null
           user_id: string
           vote: string
+          vote_type: string
         }
         Insert: {
           created_at?: string
           defi_id: number
           id?: number
+          tenue_id?: number | null
           user_id: string
           vote: string
+          vote_type: string
         }
         Update: {
           created_at?: string
           defi_id?: number
           id?: number
+          tenue_id?: number | null
           user_id?: string
           vote?: string
+          vote_type?: string
         }
         Relationships: [
           {
@@ -130,6 +136,13 @@ export type Database = {
             columns: ["defi_id"]
             isOneToOne: false
             referencedRelation: "defis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "defi_votes_tenue_id_fkey"
+            columns: ["tenue_id"]
+            isOneToOne: false
+            referencedRelation: "tenues"
             referencedColumns: ["id"]
           },
         ]

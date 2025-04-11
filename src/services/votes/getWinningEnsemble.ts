@@ -40,7 +40,7 @@ export const getWinningEnsemble = async (defiId: number) => {
         .from('defi_votes')
         .select('vote_type')
         .eq('defi_id', defiId)
-        .eq('tenue_id', ensembleId);  // Utiliser tenue_id au lieu de ensemble_id
+        .eq('tenue_id', ensembleId);
       
       if (votesError) throw votesError;
       
@@ -80,7 +80,7 @@ export const getWinningEnsemble = async (defiId: number) => {
       .from('profiles')
       .select('email')
       .eq('id', winningParticipation.user_id)
-      .maybeSingle();  // Utiliser maybeSingle() au lieu de single()
+      .maybeSingle();
     
     if (userError) throw userError;
     

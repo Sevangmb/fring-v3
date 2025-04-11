@@ -22,35 +22,46 @@ export const submitVote = async (
     
     // Déterminer la table et les données en fonction du type d'élément
     const tableName = `${elementType}_votes`;
-    const data: any = {
-      user_id: userId,
-      vote: vote
-    };
+    let data: Record<string, any>;
     
-    // Ajouter les IDs appropriés selon le type d'élément
     if (elementType === 'ensemble') {
-      data.ensemble_id = elementId;
+      data = {
+        user_id: userId,
+        ensemble_id: elementId,
+        vote_type: vote
+      };
     } else if (elementType === 'defi') {
-      data.defi_id = elementId;
+      data = {
+        user_id: userId,
+        defi_id: elementId,
+        vote_type: vote
+      };
+      
       // Si on vote pour un ensemble spécifique dans un défi
       if (ensembleId !== undefined) {
-        data.ensemble_id = ensembleId;
+        data.tenue_id = ensembleId;
       }
     }
     
     // Vérifier si l'utilisateur a déjà voté
-    const { data: existingVote } = await supabase
-      .from(tableName)
-      .select('id')
-      .eq(elementType === 'ensemble' ? 'ensemble_id' : 'defi_id', elementId)
-      .eq('user_id', userId)
-      .maybeSingle();
+    let query = supabase.from(tableName).select('id');
+    
+    if (elementType === 'ensemble') {
+      query = query.eq('ensemble_id', elementId);
+    } else if (elementType === 'defi') {
+      query = query.eq('defi_id', elementId);
+      if (ensembleId !== undefined) {
+        query = query.eq('tenue_id', ensembleId);
+      }
+    }
+    
+    const { data: existingVote } = await query.eq('user_id', userId).maybeSingle();
     
     if (existingVote) {
       // Mettre à jour le vote existant
       const { error } = await supabase
         .from(tableName)
-        .update({ vote })
+        .update({ vote_type: vote })
         .eq('id', existingVote.id);
       
       if (error) throw error;

@@ -18,7 +18,7 @@ interface VoterDialogProps {
   elementId: number;
   elementType: "ensemble" | "defi";
   onVoteSubmitted?: (vote: "up" | "down") => void;
-  onVoteUpdated?: () => Promise<void>;  // Ajout de cette nouvelle prop
+  onVoteUpdated?: () => Promise<void>;
   ensembleId?: number | string;
 }
 
