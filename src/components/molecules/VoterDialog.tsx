@@ -15,13 +15,15 @@ interface VoterDialogProps {
   elementType: "ensemble" | "defi";
   onVoteSubmitted?: (vote: "up" | "down" | null) => void;
   ensembleId?: number;
+  onVoteUpdated?: () => Promise<void>;
 }
 
 const VoterDialog: React.FC<VoterDialogProps> = ({
   elementId,
   elementType,
   onVoteSubmitted,
-  ensembleId
+  ensembleId,
+  onVoteUpdated
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [ensemble, setEnsemble] = useState<any>(null);
@@ -73,6 +75,11 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
   const handleVoteChange = (vote: "up" | "down" | null) => {
     if (onVoteSubmitted) {
       onVoteSubmitted(vote);
+    }
+    
+    // Call onVoteUpdated if it exists
+    if (onVoteUpdated) {
+      onVoteUpdated();
     }
     
     // Fermer le dialogue après le vote
