@@ -22,6 +22,7 @@ export const fetchUserEnsembles = async (userId?: string): Promise<Ensemble[]> =
 
     console.log("fetchUserEnsembles: Récupération des ensembles pour l'utilisateur", userId);
 
+    // Requête modifiée pour éviter les références aux colonnes qui pourraient ne pas exister
     const { data, error } = await supabase
       .from('tenues')
       .select(`
@@ -43,13 +44,9 @@ export const fetchUserEnsembles = async (userId?: string): Promise<Ensemble[]> =
             couleur, 
             marque, 
             categorie_id, 
-            saison, 
-            temperature_min, 
-            temperature_max, 
             taille,
             user_id, 
-            created_at, 
-            meteorologie
+            created_at
           )
         )
       `)
@@ -84,12 +81,8 @@ export const fetchUserEnsembles = async (userId?: string): Promise<Ensemble[]> =
           image_url: tv.vetement.image_url,
           description: tv.vetement.description,
           marque: tv.vetement.marque,
-          saison: tv.vetement.saison,
-          temperature_min: tv.vetement.temperature_min,
-          temperature_max: tv.vetement.temperature_max,
           user_id: tv.vetement.user_id,
-          created_at: tv.vetement.created_at,
-          meteorologie: tv.vetement.meteorologie
+          created_at: tv.vetement.created_at
         }
       }))
     }));
