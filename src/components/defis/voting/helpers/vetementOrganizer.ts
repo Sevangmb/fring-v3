@@ -1,52 +1,61 @@
 
 /**
- * Organise les vêtements d'un ensemble par type
+ * Fonction qui organise les vêtements par catégorie
  */
-export const organizeVetementsByType = (vetements: any[] = []): Record<string, any[]> => {
-  if (!vetements || vetements.length === 0) {
-    return {};
-  }
-
-  const categoriesMap: Record<number, string> = {
-    1: "Hauts",
-    2: "Bas",
-    3: "Chaussures",
-    4: "Accessoires",
-    5: "Manteaux",
-    // Ajoutez d'autres catégories au besoin
+export const organizeVetementsByType = (vetements: any[]): Record<string, any[]> => {
+  const types: Record<string, any[]> = {
+    hauts: [],
+    bas: [],
+    chaussures: [],
+    accessoires: [],
+    autres: []
   };
-
-  // Préparer un objet pour stocker les vêtements par type
-  const result: Record<string, any[]> = {};
-
-  // Parcourir chaque vêtement et l'ajouter à sa catégorie
+  
+  if (!vetements || !Array.isArray(vetements)) {
+    console.warn("Les vêtements ne sont pas dans un format valide pour l'organisation:", vetements);
+    return types;
+  }
+  
+  // Parcourir tous les vêtements et les organiser par catégorie
   vetements.forEach(item => {
-    if (!item.vetement) return;
+    // Vérifier si l'objet vêtement est correctement formaté
+    let vetement;
     
-    // Vérifier si vetement est un tableau ou un objet
-    const vetement = Array.isArray(item.vetement) ? item.vetement[0] : item.vetement;
-    if (!vetement) return;
-    
-    // Déterminer la catégorie
-    const categorieId = vetement.categorie_id;
-    const categorieName = categoriesMap[categorieId] || "Autres";
-    
-    // Créer le tableau pour cette catégorie s'il n'existe pas
-    if (!result[categorieName]) {
-      result[categorieName] = [];
+    if (item && item.vetement) {
+      // Format standard des jointures de la base de données
+      vetement = item.vetement;
+    } else if (item && typeof item === 'object' && 'categorie_id' in item) {
+      // Format direct de l'objet vêtement
+      vetement = item;
+    } else {
+      console.warn("Format de vêtement non reconnu:", item);
+      return;
     }
     
-    // Ajouter le vêtement à sa catégorie
-    result[categorieName].push({
-      id: vetement.id,
-      nom: vetement.nom,
-      description: vetement.description,
-      image_url: vetement.image_url,
-      couleur: vetement.couleur,
-      marque: vetement.marque,
-      taille: vetement.taille
-    });
+    if (!vetement) {
+      return;
+    }
+    
+    // Déterminer la catégorie en fonction du categorie_id
+    const categorieId = vetement.categorie_id;
+    
+    if (categorieId === 1 || categorieId === 4) {
+      // Hauts et vestes
+      types.hauts.push(vetement);
+    } else if (categorieId === 2 || categorieId === 5) {
+      // Bas et jupes
+      types.bas.push(vetement);
+    } else if (categorieId === 3) {
+      // Chaussures
+      types.chaussures.push(vetement);
+    } else if (categorieId === 6) {
+      // Accessoires
+      types.accessoires.push(vetement);
+    } else {
+      // Tout autre type
+      types.autres.push(vetement);
+    }
   });
-
-  return result;
+  
+  return types;
 };

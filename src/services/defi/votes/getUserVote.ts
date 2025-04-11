@@ -3,10 +3,10 @@ import { supabase } from '@/lib/supabase';
 import { VoteType } from '@/services/votes/types';
 
 /**
- * Récupère le vote d'un utilisateur pour un ensemble dans un défi
+ * Récupère le vote d'un utilisateur pour un ensemble dans le cadre d'un défi
  * @param defiId ID du défi
  * @param ensembleId ID de l'ensemble
- * @param userId ID de l'utilisateur (optionnel, utilise l'utilisateur courant si non fourni)
+ * @param userId ID de l'utilisateur (optionnel, utilise l'utilisateur courant si non spécifié)
  * @returns Le type de vote ou null si l'utilisateur n'a pas voté
  */
 export const getUserVote = async (
@@ -15,17 +15,20 @@ export const getUserVote = async (
   userId?: string
 ): Promise<VoteType> => {
   try {
-    // Si l'ID utilisateur n'est pas fourni, obtenir l'utilisateur courant
+    // Si userId n'est pas spécifié, obtenir l'utilisateur courant
     if (!userId) {
       const { data: sessionData } = await supabase.auth.getSession();
       userId = sessionData.session?.user?.id;
       
       if (!userId) {
+        // Pas d'utilisateur connecté
         return null;
       }
     }
-
-    // Récupérer le vote de l'utilisateur
+    
+    console.log(`Getting vote for defi ${defiId}, ensemble ${ensembleId}, user ${userId}`);
+    
+    // Récupérer le vote pour l'ensemble dans le défi
     const { data, error } = await supabase
       .from('defi_votes')
       .select('vote_type')
@@ -35,13 +38,13 @@ export const getUserVote = async (
       .maybeSingle();
     
     if (error) {
-      console.error('Erreur lors de la récupération du vote:', error);
+      console.error('Error getting user vote:', error);
       return null;
     }
-
+    
     return data?.vote_type || null;
   } catch (error) {
-    console.error('Erreur lors de la récupération du vote:', error);
+    console.error('Error getting user vote:', error);
     return null;
   }
 };

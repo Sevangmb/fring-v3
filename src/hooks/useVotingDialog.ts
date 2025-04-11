@@ -23,6 +23,8 @@ export function useVotingDialog(defiId?: number) {
     setError(null);
 
     try {
+      console.log(`Loading ensembles for defi ID: ${defiId}`);
+      
       // Récupérer les participations du défi
       const { data: participations, error: participationsError } = await supabase
         .from('defi_participations')
@@ -47,31 +49,43 @@ export function useVotingDialog(defiId?: number) {
         .eq('defi_id', defiId)
         .order('created_at', { ascending: false });
 
-      if (participationsError) throw participationsError;
+      if (participationsError) {
+        console.error("Error fetching participations:", participationsError);
+        throw participationsError;
+      }
 
       // Transformer les données pour avoir une structure plus simple
-      const formattedEnsembles = participations.map(p => ({
-        id: p.ensemble_id,
-        ...p.tenue,
-      })).filter(e => e !== null);
+      const formattedEnsembles = participations
+        .filter(p => p.tenue !== null)
+        .map(p => ({
+          id: p.ensemble_id,
+          ...p.tenue,
+        }));
 
+      console.log(`Found ${formattedEnsembles.length} ensembles for defi ${defiId}`);
       setAllEnsembles(formattedEnsembles);
       
       // Récupérer les votes de l'utilisateur pour ce défi
       const { data: userVotes, error: votesError } = await supabase
         .from('defi_votes')
-        .select('ensemble_id, vote')
+        .select('tenue_id, vote_type')
         .eq('defi_id', defiId)
-        .not('ensemble_id', 'is', null);
+        .not('tenue_id', 'is', null);
         
-      if (votesError) throw votesError;
+      if (votesError) {
+        console.error("Error fetching user votes:", votesError);
+        throw votesError;
+      }
+      
+      console.log(`Found ${userVotes.length} votes for defi ${defiId}`);
       
       // Extraire les IDs des ensembles déjà votés
-      const votedIds = userVotes.map(vote => vote.ensemble_id);
+      const votedIds = userVotes.map(vote => vote.tenue_id);
       setVotedEnsembles(votedIds);
       
       // Filtrer les ensembles non votés
       const unvotedEnsembles = formattedEnsembles.filter(e => !votedIds.includes(e.id));
+      console.log(`${unvotedEnsembles.length} ensembles remaining to vote`);
       setEnsembles(unvotedEnsembles);
       
     } catch (err) {
@@ -125,7 +139,13 @@ export function useVotingDialog(defiId?: number) {
       if (defiId) {
         await supabase
           .from('defis')
-          .update({ votes_count: supabase.rpc('increment', { row_id: defiId, table_name: 'defis' }) })
+          .update({ 
+            participants_count: supabase.rpc('increment', { 
+              row_id: defiId, 
+              table_name: 'defis',
+              column_name: 'participants_count'
+            })
+          })
           .eq('id', defiId);
       }
         
@@ -136,6 +156,9 @@ export function useVotingDialog(defiId?: number) {
 
   // Ouvrir le dialogue
   const openDialog = useCallback(() => {
+    // Charger les ensembles à nouveau lorsqu'on ouvre le dialogue
+    loadEnsembles();
+    
     // Vérifier s'il reste des ensembles à voter
     if (ensembles.length === 0) {
       toast({
@@ -146,7 +169,7 @@ export function useVotingDialog(defiId?: number) {
       return;
     }
     setOpen(true);
-  }, [ensembles.length, toast]);
+  }, [ensembles.length, toast, loadEnsembles]);
 
   return {
     ensembles,            // Ensembles non votés

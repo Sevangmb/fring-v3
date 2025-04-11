@@ -4,54 +4,67 @@ import { Ensemble } from './types';
 
 /**
  * Récupère un ensemble par son ID
+ * @param ensembleId ID de l'ensemble à récupérer
+ * @returns L'ensemble avec ses vêtements, ou null si non trouvé
  */
-export const fetchEnsembleById = async (id: number): Promise<Ensemble | null> => {
+export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | null> => {
   try {
-    console.log(`Fetching ensemble with id: ${id}`);
-    const { data: ensembleData, error: ensembleError } = await supabase
+    console.log(`Fetching ensemble with ID: ${ensembleId}`);
+    const { data: ensemble, error } = await supabase
       .from('tenues')
       .select(`
-        *,
+        id,
+        nom,
+        description,
+        occasion,
+        saison,
+        created_at,
+        user_id,
         tenues_vetements:tenues_vetements(
           id,
-          position_ordre,
           vetement:vetement_id(
             id,
             nom,
-            description, 
-            image_url, 
+            description,
+            image_url,
             couleur,
             marque,
             taille,
             categorie_id
           )
-        )
+        ),
+        users:user_id(email)
       `)
-      .eq('id', id)
-      .single();
-    
-    if (ensembleError) {
-      console.error("Error fetching ensemble by ID:", ensembleError);
-      throw ensembleError;
+      .eq('id', ensembleId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error fetching ensemble by ID:", error);
+      throw error;
     }
-    
-    if (!ensembleData) {
+
+    if (!ensemble) {
+      console.log(`No ensemble found with ID: ${ensembleId}`);
       return null;
     }
-    
-    // Transforme les données pour avoir une structure plus simple
+
+    // Extract email from users relation
+    const email = ensemble.users?.email;
+
+    // Format the result to match the Ensemble type
     return {
-      id: ensembleData.id,
-      nom: ensembleData.nom,
-      description: ensembleData.description,
-      occasion: ensembleData.occasion,
-      saison: ensembleData.saison,
-      created_at: ensembleData.created_at,
-      user_id: ensembleData.user_id,
-      vetements: ensembleData.tenues_vetements || []
+      id: ensemble.id,
+      nom: ensemble.nom || "Ensemble sans nom",
+      description: ensemble.description,
+      occasion: ensemble.occasion,
+      saison: ensemble.saison,
+      created_at: ensemble.created_at,
+      user_id: ensemble.user_id,
+      vetements: ensemble.tenues_vetements || [],
+      email: email
     };
   } catch (error) {
     console.error("Error fetching ensemble by ID:", error);
-    return null;
+    throw error;
   }
 };

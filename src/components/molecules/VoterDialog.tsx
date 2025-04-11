@@ -48,6 +48,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
       try {
         setLoading(true);
         setError(null);
+        console.log(`Loading ensemble with ID: ${targetEnsembleId} for voting dialog`);
         
         // Charger les données de l'ensemble
         const ensembleData = await fetchEnsembleById(targetEnsembleId);
@@ -55,6 +56,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
           throw new Error("Impossible de charger les détails de l'ensemble");
         }
         
+        console.log("Ensemble loaded successfully:", ensembleData);
         setEnsemble(ensembleData);
         
         // Organiser les vêtements par type
