@@ -15,6 +15,9 @@ import { VoteType } from "@/services/votes/types";
 import { useToast } from "@/hooks/use-toast";
 import RedditStyleVoter from "@/components/molecules/RedditStyleVoter";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { fetchEnsembleById } from "@/services/ensemble/fetchEnsembleById";
+import EnsembleContentDisplay from "@/components/molecules/EnsembleContentDisplay";
+import { organizeVetementsByType } from "@/components/defis/voting/helpers/vetementOrganizer";
 
 interface VoterDialogProps {
   elementId: number;
@@ -34,12 +37,50 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
   const [userVote, setUserVote] = useState<VoteType>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ensemble, setEnsemble] = useState<any>(null);
+  const [vetementsByType, setVetementsByType] = useState<Record<string, any[]>>({});
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   // Convert ensembleId to number to prevent type errors
   const ensembleIdAsNumber = ensembleId !== undefined 
     ? (typeof ensembleId === 'string' ? parseInt(ensembleId, 10) : ensembleId) 
     : undefined;
+    
+  // ID de l'ensemble à afficher et pour lequel voter
+  const targetEnsembleId = elementType === "ensemble" ? elementId : ensembleIdAsNumber;
+
+  // Charger l'ensemble
+  useEffect(() => {
+    const loadEnsemble = async () => {
+      if (!targetEnsembleId || !isOpen) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Charger les données de l'ensemble
+        const ensembleData = await fetchEnsembleById(targetEnsembleId);
+        if (!ensembleData) {
+          throw new Error("Impossible de charger les détails de l'ensemble");
+        }
+        
+        setEnsemble(ensembleData);
+        
+        // Organiser les vêtements par type
+        const vetements = ensembleData?.vetements || [];
+        const organizedVetements = organizeVetementsByType(vetements);
+        setVetementsByType(organizedVetements);
+      } catch (err) {
+        console.error("Erreur lors du chargement de l'ensemble:", err);
+        setError("Erreur lors du chargement de l'ensemble");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadEnsemble();
+  }, [targetEnsembleId, isOpen]);
 
   useEffect(() => {
     const loadUserVote = async () => {
@@ -96,7 +137,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
         setUserVote(vote);
         toast({
           title: "Vote enregistré",
-          description: vote === "up" ? "Vous aimez cet élément" : "Vous n'aimez pas cet élément",
+          description: vote === "up" ? "Vous aimez cet ensemble" : "Vous n'aimez pas cet ensemble",
         });
         
         if (onVoteSubmitted && (vote === "up" || vote === "down")) {
@@ -156,7 +197,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
         </DialogClose>
 
         <DialogHeader>
-          <DialogTitle>Voter</DialogTitle>
+          <DialogTitle>Voter pour {ensemble?.nom || 'cet ensemble'}</DialogTitle>
           <DialogDescription>
             Donnez votre avis sur {elementType === "ensemble" ? "cet ensemble" : "ce défi"}
           </DialogDescription>
@@ -167,6 +208,16 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
+        
+        {/* Affichage du contenu de l'ensemble */}
+        <div className="py-2 mb-4">
+          <EnsembleContentDisplay
+            ensemble={ensemble}
+            loading={loading}
+            error={error || ''}
+            vetementsByType={vetementsByType}
+          />
+        </div>
         
         <div className="flex justify-center gap-6 py-4">
           <Button

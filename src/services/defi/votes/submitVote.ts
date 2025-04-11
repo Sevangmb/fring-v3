@@ -24,6 +24,8 @@ export const submitVote = async (
       throw new Error("Utilisateur non connecté");
     }
 
+    console.log(`Soumission du vote: défi=${defiId}, ensemble=${ensembleId}, vote=${vote}, utilisateur=${userId}`);
+
     // Vérifier si l'utilisateur a déjà voté pour cet ensemble dans ce défi
     const { data: existingVote, error: checkError } = await supabase
       .from('defi_votes')
@@ -48,7 +50,10 @@ export const submitVote = async (
       // Mettre à jour le vote
       const { error: updateError } = await supabase
         .from('defi_votes')
-        .update({ vote_type: vote })
+        .update({ 
+          vote_type: vote,
+          vote: vote // Pour la rétrocompatibilité
+        })
         .eq('id', existingVote.id);
 
       if (updateError) {
@@ -63,7 +68,8 @@ export const submitVote = async (
           defi_id: defiId,
           tenue_id: ensembleId,
           user_id: userId,
-          vote_type: vote
+          vote_type: vote,
+          vote: vote // Pour la rétrocompatibilité
         });
 
       if (insertError) {

@@ -12,6 +12,8 @@ export const submitVote = async (
   ensembleId?: number
 ): Promise<boolean> => {
   try {
+    console.log(`Soumission du vote: type=${elementType}, id=${elementId}, vote=${vote}, ensembleId=${ensembleId}`);
+    
     // Vérifier que l'utilisateur est connecté
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
@@ -28,7 +30,8 @@ export const submitVote = async (
       data = {
         user_id: userId,
         ensemble_id: elementId,
-        vote_type: vote
+        vote_type: vote,
+        vote: vote // Pour la rétrocompatibilité
       };
     } else if (elementType === 'defi') {
       if (ensembleId !== undefined) {
@@ -41,7 +44,8 @@ export const submitVote = async (
         data = {
           user_id: userId,
           defi_id: elementId,
-          vote_type: vote
+          vote_type: vote,
+          vote: vote // Pour la rétrocompatibilité
         };
       }
     }
@@ -73,7 +77,10 @@ export const submitVote = async (
       // Mettre à jour le vote existant
       const { error } = await supabase
         .from(tableName)
-        .update({ vote_type: vote })
+        .update({ 
+          vote_type: vote,
+          vote: vote // Pour la rétrocompatibilité
+        })
         .eq('id', existingVote.id);
       
       if (error) {
