@@ -7,20 +7,31 @@ import { Ensemble } from './types';
  */
 export const fetchEnsembleById = async (id: number): Promise<Ensemble | null> => {
   try {
+    console.log(`Fetching ensemble with id: ${id}`);
     const { data: ensembleData, error: ensembleError } = await supabase
       .from('tenues')
       .select(`
         *,
         tenues_vetements:tenues_vetements(
-          *,
-          vetement:vetement_id(*)
+          id,
+          position_ordre,
+          vetement:vetement_id(
+            id,
+            nom,
+            description, 
+            image_url, 
+            couleur,
+            marque,
+            taille,
+            categorie_id
+          )
         )
       `)
       .eq('id', id)
       .single();
     
     if (ensembleError) {
-      console.error("Erreur lors de la récupération de l'ensemble:", ensembleError);
+      console.error("Error fetching ensemble by ID:", ensembleError);
       throw ensembleError;
     }
     
@@ -28,6 +39,7 @@ export const fetchEnsembleById = async (id: number): Promise<Ensemble | null> =>
       return null;
     }
     
+    // Transforme les données pour avoir une structure plus simple
     return {
       id: ensembleData.id,
       nom: ensembleData.nom,
@@ -35,11 +47,11 @@ export const fetchEnsembleById = async (id: number): Promise<Ensemble | null> =>
       occasion: ensembleData.occasion,
       saison: ensembleData.saison,
       created_at: ensembleData.created_at,
-      vetements: ensembleData.tenues_vetements,
-      user_id: ensembleData.user_id
+      user_id: ensembleData.user_id,
+      vetements: ensembleData.tenues_vetements || []
     };
   } catch (error) {
-    console.error("Erreur lors de la récupération de l'ensemble:", error);
+    console.error("Error fetching ensemble by ID:", error);
     return null;
   }
 };

@@ -36,9 +36,15 @@ export const submitVote = async (
     // Déterminer la table et les données pour le vote standard
     const tableName = `${elementType}_votes`;
     const data: Record<string, any> = {
-      user_id: userId,
-      vote_type: vote
+      user_id: userId
     };
+    
+    // Ajout du vote en fonction de la structure de la table
+    if (tableName === 'ensemble_votes') {
+      data.vote = vote; // La table ensemble_votes utilise 'vote' et non 'vote_type'
+    } else {
+      data.vote_type = vote;
+    }
     
     // Ajouter l'ID approprié selon le type d'élément
     if (elementType === 'ensemble') {
@@ -48,7 +54,7 @@ export const submitVote = async (
     }
     
     // Vérifier si l'utilisateur a déjà voté
-    let query = supabase.from(tableName).select('id, vote_type');
+    let query = supabase.from(tableName).select('id');
     
     if (elementType === 'ensemble') {
       query = query.eq('ensemble_id', elementId);
@@ -87,14 +93,18 @@ export const submitVote = async (
     
     if (existingVote) {
       // Si le vote est identique, ne rien faire
-      if (existingVote.vote_type === vote) {
-        return true;
+      // Mettre à jour le vote existant
+      let updateData = {};
+      
+      if (tableName === 'ensemble_votes') {
+        updateData = { vote };
+      } else {
+        updateData = { vote_type: vote };
       }
       
-      // Mettre à jour le vote existant
       const { error } = await supabase
         .from(tableName)
-        .update({ vote_type: vote })
+        .update(updateData)
         .eq('id', existingVote.id);
       
       if (error) {

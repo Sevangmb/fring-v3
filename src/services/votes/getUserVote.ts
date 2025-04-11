@@ -45,9 +45,12 @@ export const getUserVote = async (
     const tableName = `${elementType}_votes`;
     const idColumnName = `${elementType}_id`;
     
+    // Pour la table ensemble_votes, on doit utiliser "vote" au lieu de "vote_type"
+    const voteColumnName = tableName === 'ensemble_votes' ? 'vote' : 'vote_type';
+    
     const { data, error } = await supabase
       .from(tableName)
-      .select('vote_type')
+      .select(voteColumnName)
       .eq(idColumnName, elementId)
       .eq('user_id', userId)
       .maybeSingle();
@@ -57,7 +60,7 @@ export const getUserVote = async (
       return null;
     }
     
-    return data?.vote_type || null;
+    return data?.[voteColumnName] || null;
   } catch (error) {
     console.error('Erreur lors de la récupération du vote:', error);
     return null;

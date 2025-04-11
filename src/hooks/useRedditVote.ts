@@ -1,233 +1,196 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { VoteType, EntityType } from '@/services/votes/types';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect, useCallback } from "react";
+import { submitVote, getUserVote, getVotesCount } from "@/services/votes";
+import type { VoteType } from "@/services/votes/types";
 
 interface UseRedditVoteProps {
-  entityType: EntityType;
+  entityType: "ensemble" | "defi" | "tenue";
   entityId: number;
   defiId?: number;
-  initialVote?: VoteType;
-  onVoteSuccess?: (vote: VoteType) => void;
+  onVoteChange?: (vote: VoteType) => void;
 }
 
-export function useRedditVote({
+export const useRedditVote = ({
   entityType,
   entityId,
   defiId,
-  initialVote = null,
-  onVoteSuccess
-}: UseRedditVoteProps) {
-  const [userVote, setUserVote] = useState<VoteType>(initialVote);
-  const [score, setScore] = useState<number>(0);
+  onVoteChange
+}: UseRedditVoteProps) => {
+  // Store the user's vote
+  const [userVote, setUserVote] = useState<VoteType>(null);
+  // Store the vote count
+  const [voteCount, setVoteCount] = useState({ up: 0, down: 0 });
+  // Score calculation
+  const [score, setScore] = useState(0);
+  // Loading state
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
   
-  // Charger le vote initial et le score
-  useEffect(() => {
-    const loadVoteData = async () => {
-      if (!entityId) return;
+  // Effective entity type for API calls
+  let effectiveEntityType = entityType;
+  if (entityType === "tenue") {
+    effectiveEntityType = "ensemble";
+  }
+  
+  // Fetch initial user vote and count
+  const fetchVoteData = useCallback(async () => {
+    try {
+      setIsLoading(true);
       
-      try {
-        setIsLoading(true);
-        
-        // Import dynamiquement pour éviter des dépendances circulaires
-        const { getUserVote } = await import('@/services/votes/getUserVote');
-        const { getVotesCount } = await import('@/services/votes/getVotesCount');
-        
-        // Récupérer le vote de l'utilisateur
-        const vote = await getUserVote(
-          entityType === 'tenue' ? 'ensemble' : entityType, 
-          entityId,
-          defiId
-        );
-        
-        // Récupérer le nombre de votes
-        const counts = await getVotesCount(
-          entityType === 'tenue' ? 'ensemble' : entityType, 
-          entityId,
-          defiId
-        );
-        
+      // For votes in a defi context
+      if (defiId && entityType === "tenue") {
+        const vote = await getUserVote("defi", defiId, entityId);
         setUserVote(vote);
-        setScore(counts.up - counts.down);
-      } catch (err) {
-        console.error('Erreur lors du chargement des données de vote:', err);
-      } finally {
-        setIsLoading(false);
+        
+        const count = await getVotesCount("defi", defiId, entityId);
+        setVoteCount(count);
+        setScore(count.up - count.down);
+        return;
       }
-    };
-    
-    loadVoteData();
-  }, [entityType, entityId, defiId]);
+      
+      // Standard entity votes
+      const vote = await getUserVote(effectiveEntityType, entityId);
+      const count = await getVotesCount(effectiveEntityType, entityId);
+      
+      setUserVote(vote);
+      setVoteCount(count);
+      setScore(count.up - count.down);
+    } catch (error) {
+      console.error("Error fetching vote data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [entityType, entityId, defiId, effectiveEntityType]);
   
-  // Gérer un upvote
+  // Load initial data
+  useEffect(() => {
+    if (entityId) {
+      fetchVoteData();
+    }
+  }, [entityId, fetchVoteData]);
+  
+  // Handle upvoting
   const handleUpvote = useCallback(async () => {
     if (isLoading) return;
     
+    // Determine the new vote value
+    const newVote: VoteType = userVote === "up" ? null : "up";
+    
+    // Optimistic update
+    setIsLoading(true);
+    const previousVote = userVote;
+    setUserVote(newVote);
+    
+    // Update vote count optimistically
+    setVoteCount(prev => {
+      const newCount = { ...prev };
+      
+      // Remove previous vote if any
+      if (previousVote === "up") newCount.up--;
+      if (previousVote === "down") newCount.down--;
+      
+      // Add new vote if not null
+      if (newVote === "up") newCount.up++;
+      
+      return newCount;
+    });
+    
+    // Update score
+    setScore(prev => {
+      let change = 0;
+      if (previousVote === "up") change--;
+      if (previousVote === "down") change++;
+      if (newVote === "up") change++;
+      
+      return prev + change;
+    });
+    
     try {
-      setIsLoading(true);
-      
-      // Déterminer la nouvelle valeur du vote
-      // Si déjà upvoté, retirer le vote (null). Sinon, upvoter
-      const newVote: VoteType = userVote === 'up' ? null : 'up';
-      
-      // Mettre à jour l'UI de manière optimiste
-      setUserVote(newVote);
-      
-      // Mettre à jour le score de manière optimiste
-      setScore(prevScore => {
-        if (userVote === 'up') {
-          // Retrait d'un upvote
-          return prevScore - 1;
-        } else if (userVote === 'down') {
-          // Changement de downvote à upvote (+2)
-          return prevScore + 2;
-        } else {
-          // Nouveau upvote
-          return prevScore + 1;
-        }
-      });
-      
-      // Import dynamiquement pour éviter des dépendances circulaires
-      const { submitVote } = await import('@/services/votes/submitVote');
-      
-      // Soumettre le vote
-      await submitVote(
-        entityType === 'tenue' ? 'ensemble' : entityType,
-        entityId,
-        newVote,
-        defiId
-      );
-      
-      if (onVoteSuccess) {
-        onVoteSuccess(newVote);
+      // Call the appropriate API
+      if (defiId && entityType === "tenue") {
+        await submitVote("defi", defiId, newVote, entityId);
+      } else {
+        await submitVote(effectiveEntityType, entityId, newVote);
       }
       
-      // Afficher un toast uniquement pour l'ajout de vote, pas pour le retrait
-      if (userVote !== 'up' && newVote === 'up') {
-        toast({
-          title: 'Vote positif',
-          description: 'Vous avez aimé cet élément',
-        });
+      // Notify parent component if needed
+      if (onVoteChange) {
+        onVoteChange(newVote);
       }
-    } catch (err) {
-      console.error('Erreur lors du vote:', err);
-      
-      // Annuler les mises à jour optimistes
-      const { getUserVote, getVotesCount } = await import('@/services/votes/voteService');
-      
-      const vote = await getUserVote(
-        entityType === 'tenue' ? 'ensemble' : entityType, 
-        entityId,
-        defiId
-      );
-      
-      const counts = await getVotesCount(
-        entityType === 'tenue' ? 'ensemble' : entityType, 
-        entityId,
-        defiId
-      );
-      
-      setUserVote(vote);
-      setScore(counts.up - counts.down);
-      
-      toast({
-        title: 'Erreur',
-        description: 'Une erreur est survenue lors de l\'enregistrement du vote',
-        variant: 'destructive',
-      });
+    } catch (error) {
+      console.error("Error submitting vote:", error);
+      // Rollback on failure
+      setUserVote(previousVote);
+      await fetchVoteData(); // Refresh from server
     } finally {
       setIsLoading(false);
     }
-  }, [entityType, entityId, defiId, userVote, isLoading, onVoteSuccess, toast]);
+  }, [userVote, isLoading, entityId, defiId, entityType, effectiveEntityType, onVoteChange, fetchVoteData]);
   
-  // Gérer un downvote
+  // Handle downvoting
   const handleDownvote = useCallback(async () => {
     if (isLoading) return;
     
+    // Determine the new vote value
+    const newVote: VoteType = userVote === "down" ? null : "down";
+    
+    // Optimistic update
+    setIsLoading(true);
+    const previousVote = userVote;
+    setUserVote(newVote);
+    
+    // Update vote count optimistically
+    setVoteCount(prev => {
+      const newCount = { ...prev };
+      
+      // Remove previous vote if any
+      if (previousVote === "up") newCount.up--;
+      if (previousVote === "down") newCount.down--;
+      
+      // Add new vote if not null
+      if (newVote === "down") newCount.down++;
+      
+      return newCount;
+    });
+    
+    // Update score
+    setScore(prev => {
+      let change = 0;
+      if (previousVote === "up") change--;
+      if (previousVote === "down") change++;
+      if (newVote === "down") change--;
+      
+      return prev + change;
+    });
+    
     try {
-      setIsLoading(true);
-      
-      // Déterminer la nouvelle valeur du vote
-      // Si déjà downvoté, retirer le vote (null). Sinon, downvoter
-      const newVote: VoteType = userVote === 'down' ? null : 'down';
-      
-      // Mettre à jour l'UI de manière optimiste
-      setUserVote(newVote);
-      
-      // Mettre à jour le score de manière optimiste
-      setScore(prevScore => {
-        if (userVote === 'down') {
-          // Retrait d'un downvote
-          return prevScore + 1;
-        } else if (userVote === 'up') {
-          // Changement de upvote à downvote (-2)
-          return prevScore - 2;
-        } else {
-          // Nouveau downvote
-          return prevScore - 1;
-        }
-      });
-      
-      // Import dynamiquement pour éviter des dépendances circulaires
-      const { submitVote } = await import('@/services/votes/submitVote');
-      
-      // Soumettre le vote
-      await submitVote(
-        entityType === 'tenue' ? 'ensemble' : entityType,
-        entityId,
-        newVote,
-        defiId
-      );
-      
-      if (onVoteSuccess) {
-        onVoteSuccess(newVote);
+      // Call the appropriate API
+      if (defiId && entityType === "tenue") {
+        await submitVote("defi", defiId, newVote, entityId);
+      } else {
+        await submitVote(effectiveEntityType, entityId, newVote);
       }
       
-      // Afficher un toast uniquement pour l'ajout de vote, pas pour le retrait
-      if (userVote !== 'down' && newVote === 'down') {
-        toast({
-          title: 'Vote négatif',
-          description: 'Vous n\'avez pas aimé cet élément',
-        });
+      // Notify parent component if needed
+      if (onVoteChange) {
+        onVoteChange(newVote);
       }
-    } catch (err) {
-      console.error('Erreur lors du vote:', err);
-      
-      // Annuler les mises à jour optimistes
-      const { getUserVote, getVotesCount } = await import('@/services/votes/voteService');
-      
-      const vote = await getUserVote(
-        entityType === 'tenue' ? 'ensemble' : entityType, 
-        entityId,
-        defiId
-      );
-      
-      const counts = await getVotesCount(
-        entityType === 'tenue' ? 'ensemble' : entityType, 
-        entityId,
-        defiId
-      );
-      
-      setUserVote(vote);
-      setScore(counts.up - counts.down);
-      
-      toast({
-        title: 'Erreur',
-        description: 'Une erreur est survenue lors de l\'enregistrement du vote',
-        variant: 'destructive',
-      });
+    } catch (error) {
+      console.error("Error submitting vote:", error);
+      // Rollback on failure
+      setUserVote(previousVote);
+      await fetchVoteData(); // Refresh from server
     } finally {
       setIsLoading(false);
     }
-  }, [entityType, entityId, defiId, userVote, isLoading, onVoteSuccess, toast]);
-
+  }, [userVote, isLoading, entityId, defiId, entityType, effectiveEntityType, onVoteChange, fetchVoteData]);
+  
   return {
     userVote,
+    voteCount,
     score,
-    isLoading,
     handleUpvote,
-    handleDownvote
+    handleDownvote,
+    isLoading,
+    refresh: fetchVoteData
   };
-}
+};

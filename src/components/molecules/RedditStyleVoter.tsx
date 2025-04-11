@@ -1,64 +1,52 @@
 
 import React from "react";
-import { VoteButtons } from "@/components/ui/vote-buttons";
 import { useRedditVote } from "@/hooks/useRedditVote";
-import { VoteType, EntityType } from "@/services/votes/types";
+import { VoteButtons } from "@/components/ui/vote-buttons";
 
 interface RedditStyleVoterProps {
-  entityType: EntityType;
+  entityType: "ensemble" | "defi" | "tenue";
   entityId: number;
   defiId?: number;
-  initialScore?: number;
-  initialVote?: VoteType;
   size?: "sm" | "md" | "lg";
-  vertical?: boolean;
+  onVoteChange?: (vote: "up" | "down" | null) => void;
   showScore?: boolean;
+  vertical?: boolean;
   className?: string;
-  onVoteChange?: (type: VoteType) => void;
-  isLoading?: boolean;
-  disabled?: boolean;
 }
 
 const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
   entityType,
   entityId,
   defiId,
-  initialScore,
-  initialVote = null,
   size = "md",
-  vertical = true,
-  showScore = true,
-  className,
   onVoteChange,
-  isLoading: externalIsLoading,
-  disabled: externalDisabled
+  showScore = false,
+  vertical = true,
+  className
 }) => {
+  // Use our custom hook for vote logic
   const {
     userVote,
+    voteCount,
     score,
-    isLoading: internalIsLoading,
     handleUpvote,
-    handleDownvote
+    handleDownvote,
+    isLoading
   } = useRedditVote({
-    entityType,
-    entityId,
-    defiId,
-    initialVote,
-    onVoteSuccess: onVoteChange
+    entityType: entityType, 
+    entityId: entityId,
+    defiId: defiId,
+    onVoteChange: onVoteChange
   });
-  
-  const finalScore = initialScore !== undefined ? initialScore : score;
-  const isLoading = externalIsLoading || internalIsLoading;
 
   return (
     <VoteButtons
-      score={finalScore}
       userVote={userVote}
+      score={score}
       size={size}
       onUpvote={handleUpvote}
       onDownvote={handleDownvote}
       isLoading={isLoading}
-      disabled={externalDisabled}
       vertical={vertical}
       showScore={showScore}
       className={className}

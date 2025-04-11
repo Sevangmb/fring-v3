@@ -1,46 +1,29 @@
 
-import { VetementType } from '@/services/meteo/tenue';
-import { Vetement } from '@/services/vetement/types';
-
+/**
+ * Interface pour un ensemble (tenue)
+ */
 export interface Ensemble {
   id: number;
   nom: string;
   description?: string;
-  saison?: string;
   occasion?: string;
-  user_id: string;
+  saison?: string;
   created_at: string;
-  email?: string; // Added for friend ensembles
-  vetements: {
-    id: number;
-    vetement: Vetement;
-    position_ordre: number;
-  }[];
+  user_id?: string;
+  vetements: any[];
+  image_url?: string;
 }
 
-export interface EnsembleCreateParams {
-  nom: string;
-  description?: string;
-  saison?: string;
-  occasion?: string;
-  vetements: {
-    id: number;
-    type: VetementType;
-  }[];
-}
-
-export interface EnsembleUpdateParams {
+/**
+ * Interface pour un vêtement dans un ensemble
+ */
+export interface VetementInEnsemble {
   id: number;
   nom: string;
   description?: string;
-  saison?: string;
-  occasion?: string;
-  vetements: {
-    id: number;
-    type: VetementType;
-  }[];
+  image_url?: string;
+  couleur?: string;
+  marque?: string;
+  taille?: string;
+  categorie_id: number;
 }
-
-// Alias types for backward compatibility
-export type EnsembleCreateData = EnsembleCreateParams;
-export type EnsembleUpdateData = EnsembleUpdateParams;

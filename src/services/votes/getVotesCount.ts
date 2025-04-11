@@ -38,9 +38,12 @@ export const getVotesCount = async (
     const tableName = `${elementType}_votes`;
     const idColumnName = `${elementType}_id`;
     
+    // Pour la table ensemble_votes, on doit utiliser "vote" au lieu de "vote_type"
+    const voteColumnName = tableName === 'ensemble_votes' ? 'vote' : 'vote_type';
+    
     const { data, error } = await supabase
       .from(tableName)
-      .select('vote_type')
+      .select(voteColumnName)
       .eq(idColumnName, elementId);
     
     if (error) {
@@ -48,8 +51,9 @@ export const getVotesCount = async (
       return { up: 0, down: 0 };
     }
     
-    const upVotes = data.filter(v => v.vote_type === 'up').length;
-    const downVotes = data.filter(v => v.vote_type === 'down').length;
+    // Compte des votes en fonction du nom de colonne approprié
+    const upVotes = data.filter(v => v[voteColumnName] === 'up').length;
+    const downVotes = data.filter(v => v[voteColumnName] === 'down').length;
     
     return { up: upVotes, down: downVotes };
   } catch (error) {
