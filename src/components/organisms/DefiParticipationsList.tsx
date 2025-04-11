@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -96,7 +97,6 @@ const DefiParticipationsList: React.FC<DefiParticipationsListProps> = ({
                         entityId={participation.tenue.id}
                         size="sm"
                         showScore={true}
-                        vertical={false}
                       />
                     </div>
                   </div>
@@ -122,7 +122,6 @@ const DefiParticipationsList: React.FC<DefiParticipationsListProps> = ({
                           entityId={participation.tenue.id}
                           size="sm"
                           showScore={true}
-                          vertical={false}
                         />
                       </div>
                     </div>

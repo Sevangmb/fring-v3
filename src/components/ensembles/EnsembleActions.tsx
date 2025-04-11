@@ -38,13 +38,12 @@ const EnsembleActions: React.FC<EnsembleActionsProps> = ({
         entityType="ensemble"
         entityId={ensembleId}
         size={size}
-        className="mr-2"
+        vertical={orientation === "vertical"}
       />
 
       <FavoriButton 
         elementId={String(ensembleId)} 
         type="ensemble" 
-        // Modified this line to use the correct variant name
         variant="ghost" 
         className="rounded-full"
       />

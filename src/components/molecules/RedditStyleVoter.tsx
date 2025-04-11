@@ -16,6 +16,8 @@ interface RedditStyleVoterProps {
   size?: "sm" | "md" | "lg";
   onVoteChange?: (vote: "up" | "down" | null) => void;
   showScore?: boolean;
+  className?: string;
+  vertical?: boolean;
 }
 
 const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
@@ -24,7 +26,9 @@ const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
   defiId,
   size = "md",
   onVoteChange,
-  showScore = false
+  showScore = false,
+  className = "",
+  vertical = false
 }) => {
   const [userVote, setUserVote] = useState<VoteType>(null);
   const [score, setScore] = useState(0);
@@ -135,7 +139,11 @@ const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className={cn(
+      "flex items-center gap-2",
+      vertical ? "flex-col" : "flex-row",
+      className
+    )}>
       <Button
         size="icon"
         variant="ghost"

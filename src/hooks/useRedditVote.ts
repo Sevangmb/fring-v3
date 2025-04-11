@@ -44,10 +44,10 @@ export const useRedditVote = ({
       
       // For votes in a defi context
       if (defiId && entityType === "tenue") {
-        const vote = await getUserVote("defi", defiId, entityId);
+        const vote = await getUserVote("defi", defiId);
         setUserVote(vote);
         
-        const count = await getVotesCount("defi", defiId, entityId);
+        const count = await getVotesCount("defi", defiId);
         setVoteCount(count);
         setScore(count.up - count.down);
         return;
@@ -113,9 +113,9 @@ export const useRedditVote = ({
     });
     
     try {
-      // Call the appropriate API
+      // Call the appropriate API - fix the argument count issue here
       if (defiId && entityType === "tenue") {
-        await submitVote("defi", defiId, newVote, entityId);
+        await submitVote("defi", defiId, newVote);
       } else {
         await submitVote(effectiveType, entityId, newVote);
       }
@@ -173,9 +173,9 @@ export const useRedditVote = ({
     });
     
     try {
-      // Call the appropriate API
+      // Call the appropriate API - fix the argument count issue here
       if (defiId && entityType === "tenue") {
-        await submitVote("defi", defiId, newVote, entityId);
+        await submitVote("defi", defiId, newVote);
       } else {
         await submitVote(effectiveType, entityId, newVote);
       }

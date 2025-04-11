@@ -48,8 +48,8 @@ export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | 
       return null;
     }
 
-    // Extract email from users relation
-    const email = ensemble.users ? ensemble.users.email : undefined;
+    // Extract email from users relation - corrected to access the email directly
+    const userEmail = ensemble.users ? ensemble.users.email : undefined;
 
     // Format the result to match the Ensemble type
     return {
@@ -61,7 +61,7 @@ export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | 
       created_at: ensemble.created_at,
       user_id: ensemble.user_id,
       vetements: ensemble.tenues_vetements || [],
-      email: email
+      email: userEmail
     };
   } catch (error) {
     console.error("Error fetching ensemble by ID:", error);
