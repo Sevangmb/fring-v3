@@ -8,33 +8,39 @@ interface UseRedditVoteProps {
   entityId: number;
   defiId?: number;
   onVoteChange?: (vote: VoteType) => void;
+  initialScore?: number;
+  initialVote?: VoteType;
 }
 
 export const useRedditVote = ({
   entityType,
   entityId,
   defiId,
-  onVoteChange
+  onVoteChange,
+  initialScore = 0,
+  initialVote = null
 }: UseRedditVoteProps) => {
   // Store the user's vote
-  const [userVote, setUserVote] = useState<VoteType>(null);
+  const [userVote, setUserVote] = useState<VoteType>(initialVote);
   // Store the vote count
   const [voteCount, setVoteCount] = useState({ up: 0, down: 0 });
   // Score calculation
-  const [score, setScore] = useState(0);
+  const [score, setScore] = useState(initialScore || 0);
   // Loading state
   const [isLoading, setIsLoading] = useState(false);
   
   // Effective entity type for API calls
-  let effectiveEntityType = entityType;
-  if (entityType === "tenue") {
-    effectiveEntityType = "ensemble";
-  }
+  const getEffectiveEntityType = useCallback(() => {
+    // Si c'est une tenue, on utilise "ensemble" pour l'API
+    return entityType === "tenue" ? "ensemble" : entityType;
+  }, [entityType]);
   
   // Fetch initial user vote and count
   const fetchVoteData = useCallback(async () => {
     try {
       setIsLoading(true);
+      
+      const effectiveType = getEffectiveEntityType();
       
       // For votes in a defi context
       if (defiId && entityType === "tenue") {
@@ -48,8 +54,8 @@ export const useRedditVote = ({
       }
       
       // Standard entity votes
-      const vote = await getUserVote(effectiveEntityType, entityId);
-      const count = await getVotesCount(effectiveEntityType, entityId);
+      const vote = await getUserVote(effectiveType, entityId);
+      const count = await getVotesCount(effectiveType, entityId);
       
       setUserVote(vote);
       setVoteCount(count);
@@ -59,18 +65,20 @@ export const useRedditVote = ({
     } finally {
       setIsLoading(false);
     }
-  }, [entityType, entityId, defiId, effectiveEntityType]);
+  }, [entityType, entityId, defiId, getEffectiveEntityType]);
   
   // Load initial data
   useEffect(() => {
-    if (entityId) {
+    if (entityId && !initialVote && !initialScore) {
       fetchVoteData();
     }
-  }, [entityId, fetchVoteData]);
+  }, [entityId, fetchVoteData, initialVote, initialScore]);
   
   // Handle upvoting
   const handleUpvote = useCallback(async () => {
     if (isLoading) return;
+    
+    const effectiveType = getEffectiveEntityType();
     
     // Determine the new vote value
     const newVote: VoteType = userVote === "up" ? null : "up";
@@ -109,7 +117,7 @@ export const useRedditVote = ({
       if (defiId && entityType === "tenue") {
         await submitVote("defi", defiId, newVote, entityId);
       } else {
-        await submitVote(effectiveEntityType, entityId, newVote);
+        await submitVote(effectiveType, entityId, newVote);
       }
       
       // Notify parent component if needed
@@ -124,11 +132,13 @@ export const useRedditVote = ({
     } finally {
       setIsLoading(false);
     }
-  }, [userVote, isLoading, entityId, defiId, entityType, effectiveEntityType, onVoteChange, fetchVoteData]);
+  }, [userVote, isLoading, entityId, defiId, entityType, onVoteChange, fetchVoteData, getEffectiveEntityType]);
   
   // Handle downvoting
   const handleDownvote = useCallback(async () => {
     if (isLoading) return;
+    
+    const effectiveType = getEffectiveEntityType();
     
     // Determine the new vote value
     const newVote: VoteType = userVote === "down" ? null : "down";
@@ -167,7 +177,7 @@ export const useRedditVote = ({
       if (defiId && entityType === "tenue") {
         await submitVote("defi", defiId, newVote, entityId);
       } else {
-        await submitVote(effectiveEntityType, entityId, newVote);
+        await submitVote(effectiveType, entityId, newVote);
       }
       
       // Notify parent component if needed
@@ -182,7 +192,7 @@ export const useRedditVote = ({
     } finally {
       setIsLoading(false);
     }
-  }, [userVote, isLoading, entityId, defiId, entityType, effectiveEntityType, onVoteChange, fetchVoteData]);
+  }, [userVote, isLoading, entityId, defiId, entityType, onVoteChange, fetchVoteData, getEffectiveEntityType]);
   
   return {
     userVote,

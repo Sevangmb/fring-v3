@@ -1,16 +1,16 @@
 
 import { supabase } from '@/lib/supabase';
-import { VoteType } from './types';
+import { VoteType, EntityType } from './types';
 
 /**
  * Récupère le vote d'un utilisateur pour un élément
- * @param elementType Type d'élément ('ensemble' ou 'defi')
+ * @param elementType Type d'élément ('ensemble', 'defi', 'tenue')
  * @param elementId ID de l'élément
  * @param ensembleId ID de l'ensemble (uniquement pour les votes dans un défi)
  * @returns Type de vote ou null si pas de vote
  */
 export const getUserVote = async (
-  elementType: 'ensemble' | 'defi', 
+  elementType: EntityType, 
   elementId: number, 
   ensembleId?: number
 ): Promise<VoteType> => {
@@ -23,8 +23,11 @@ export const getUserVote = async (
       return null;
     }
     
+    // Si le type est "tenue", utiliser "ensemble" pour la table
+    const effectiveType = elementType === "tenue" ? "ensemble" : elementType;
+    
     // Cas spécial: vote pour un ensemble dans un défi
-    if (elementType === 'defi' && ensembleId !== undefined) {
+    if (effectiveType === 'defi' && ensembleId !== undefined) {
       const { data, error } = await supabase
         .from('defi_votes')
         .select('vote_type')
@@ -42,8 +45,8 @@ export const getUserVote = async (
     }
     
     // Votes standards
-    const tableName = `${elementType}_votes`;
-    const idColumnName = `${elementType}_id`;
+    const tableName = `${effectiveType}_votes`;
+    const idColumnName = `${effectiveType}_id`;
     
     // Pour la table ensemble_votes, on doit utiliser "vote" au lieu de "vote_type"
     const voteColumnName = tableName === 'ensemble_votes' ? 'vote' : 'vote_type';

@@ -11,7 +11,7 @@ export interface VoteButtonsProps extends React.HTMLAttributes<HTMLDivElement> {
   onUpvote: () => void;
   onDownvote: () => void;
   isLoading?: boolean;
-  disabled?: boolean;
+  disabled?: boolean; // Ajout du paramètre disabled
   vertical?: boolean;
   showScore?: boolean;
 }

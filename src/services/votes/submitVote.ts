@@ -1,17 +1,17 @@
 
 import { supabase } from '@/lib/supabase';
-import { VoteType } from './types';
+import { VoteType, EntityType } from './types';
 
 /**
  * Soumettre un vote pour un élément (ensemble, défi, etc.)
- * @param elementType Type d'élément ('ensemble' ou 'defi')
+ * @param elementType Type d'élément ('ensemble', 'defi', 'tenue')
  * @param elementId ID de l'élément
  * @param vote Type de vote (up/down/null)
  * @param ensembleId ID de l'ensemble (uniquement pour les votes dans un défi)
  * @returns Succès ou échec de l'opération
  */
 export const submitVote = async (
-  elementType: 'ensemble' | 'defi', 
+  elementType: EntityType, 
   elementId: number, 
   vote: VoteType, 
   ensembleId?: number
@@ -27,14 +27,17 @@ export const submitVote = async (
       throw new Error('Vous devez être connecté pour voter');
     }
     
+    // Si le type est "tenue", utiliser "ensemble" pour la table
+    const effectiveType = elementType === "tenue" ? "ensemble" : elementType;
+    
     // Si c'est un vote pour un ensemble dans un défi, rediriger vers le service spécialisé
-    if (elementType === 'defi' && ensembleId !== undefined) {
+    if (effectiveType === 'defi' && ensembleId !== undefined) {
       const { submitVote: submitDefiVote } = await import('@/services/defi/votes/submitVote');
       return await submitDefiVote(elementId, ensembleId, vote);
     }
     
     // Déterminer la table et les données pour le vote standard
-    const tableName = `${elementType}_votes`;
+    const tableName = `${effectiveType}_votes`;
     const data: Record<string, any> = {
       user_id: userId
     };
@@ -47,18 +50,18 @@ export const submitVote = async (
     }
     
     // Ajouter l'ID approprié selon le type d'élément
-    if (elementType === 'ensemble') {
+    if (effectiveType === 'ensemble') {
       data.ensemble_id = elementId;
-    } else if (elementType === 'defi') {
+    } else if (effectiveType === 'defi') {
       data.defi_id = elementId;
     }
     
     // Vérifier si l'utilisateur a déjà voté
     let query = supabase.from(tableName).select('id');
     
-    if (elementType === 'ensemble') {
+    if (effectiveType === 'ensemble') {
       query = query.eq('ensemble_id', elementId);
-    } else if (elementType === 'defi') {
+    } else if (effectiveType === 'defi') {
       query = query.eq('defi_id', elementId);
     }
     

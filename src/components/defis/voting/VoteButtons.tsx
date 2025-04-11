@@ -49,13 +49,13 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
       <RedditStyleVoter
         entityType="ensemble"
         entityId={0} // This is a dummy ID since we're controlling vote state externally
-        initialScore={score}
-        initialVote={userVote}
         size={size}
         isLoading={isLoading}
         disabled={disabled || connectionError}
         onVoteChange={handleVoteChange}
         showScore={showScore}
+        initialScore={score}
+        initialVote={userVote}
       />
       
       {showLabels && (

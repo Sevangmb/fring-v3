@@ -12,6 +12,9 @@ interface RedditStyleVoterProps {
   showScore?: boolean;
   vertical?: boolean;
   className?: string;
+  initialScore?: number;
+  initialVote?: "up" | "down" | null;
+  disabled?: boolean; // Ajout de la prop disabled
 }
 
 const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
@@ -22,7 +25,10 @@ const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
   onVoteChange,
   showScore = false,
   vertical = true,
-  className
+  className,
+  initialScore,
+  initialVote,
+  disabled = false
 }) => {
   // Use our custom hook for vote logic
   const {
@@ -36,7 +42,9 @@ const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
     entityType: entityType, 
     entityId: entityId,
     defiId: defiId,
-    onVoteChange: onVoteChange
+    onVoteChange: onVoteChange,
+    initialScore,
+    initialVote
   });
 
   return (
@@ -47,6 +55,7 @@ const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
       onUpvote={handleUpvote}
       onDownvote={handleDownvote}
       isLoading={isLoading}
+      disabled={disabled}
       vertical={vertical}
       showScore={showScore}
       className={className}
