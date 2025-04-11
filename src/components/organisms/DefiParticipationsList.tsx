@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,12 +11,14 @@ interface DefiParticipationsListProps {
   participations: any[];
   defiStatus: string;
   defiId: number;
+  onVoteUpdated?: () => Promise<void>;  // Ajout de cette nouvelle prop
 }
 
 const DefiParticipationsList: React.FC<DefiParticipationsListProps> = ({
   participations,
   defiStatus,
-  defiId
+  defiId,
+  onVoteUpdated
 }) => {
   const [selectedTab, setSelectedTab] = React.useState("all");
   
