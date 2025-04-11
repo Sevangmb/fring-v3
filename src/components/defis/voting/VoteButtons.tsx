@@ -50,12 +50,12 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
         entityType="ensemble"
         entityId={0} // This is a dummy ID since we're controlling vote state externally
         size={size}
-        isLoading={isLoading}
-        disabled={disabled || connectionError}
         onVoteChange={handleVoteChange}
         showScore={showScore}
         initialScore={score}
         initialVote={userVote}
+        disabled={disabled || connectionError}
+        isLoading={isLoading}
       />
       
       {showLabels && (

@@ -14,7 +14,8 @@ interface RedditStyleVoterProps {
   className?: string;
   initialScore?: number;
   initialVote?: "up" | "down" | null;
-  disabled?: boolean; // Ajout de la prop disabled
+  disabled?: boolean;
+  isLoading?: boolean; // Ajout de la prop manquante isLoading
 }
 
 const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
@@ -28,7 +29,8 @@ const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
   className,
   initialScore,
   initialVote,
-  disabled = false
+  disabled = false,
+  isLoading: externalIsLoading // Utiliser la prop isLoading externe
 }) => {
   // Use our custom hook for vote logic
   const {
@@ -37,7 +39,7 @@ const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
     score,
     handleUpvote,
     handleDownvote,
-    isLoading
+    isLoading: hookIsLoading
   } = useRedditVote({
     entityType: entityType, 
     entityId: entityId,
@@ -46,6 +48,9 @@ const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
     initialScore,
     initialVote
   });
+
+  // Prendre en compte isLoading externe si fourni
+  const isLoading = externalIsLoading !== undefined ? externalIsLoading : hookIsLoading;
 
   return (
     <VoteButtons

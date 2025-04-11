@@ -37,7 +37,10 @@ export interface EnsembleCreateParams {
   description?: string;
   occasion?: string;
   saison?: string;
-  vetements: { id: number }[];
+  vetements: { 
+    id: number; 
+    type?: string; // Ajout de la propriété type comme optionnelle
+  }[];
 }
 
 /**
@@ -49,5 +52,8 @@ export interface EnsembleUpdateParams {
   description?: string;
   occasion?: string;
   saison?: string;
-  vetements?: { id: number }[];
+  vetements?: { 
+    id: number;
+    type?: string; // Ajout de la propriété type comme optionnelle
+  }[];
 }
