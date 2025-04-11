@@ -18,6 +18,9 @@ interface VoterDialogProps {
   onVoteUpdated?: () => Promise<void>;
 }
 
+// LocalStorage key for storing votes
+const VOTE_STORAGE_KEY = "fring-votes";
+
 const VoterDialog: React.FC<VoterDialogProps> = ({
   elementId,
   elementType,
@@ -74,6 +77,24 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
     loadEnsemble();
   }, [targetEnsembleId, isOpen]);
 
+  // Récupérer les votes sauvegardés au démarrage
+  useEffect(() => {
+    // Nous chargeons les votes sauvegardés uniquement quand le dialog s'ouvre
+    if (isOpen && targetEnsembleId) {
+      try {
+        const savedVotes = localStorage.getItem(VOTE_STORAGE_KEY);
+        if (savedVotes) {
+          const votesData = JSON.parse(savedVotes);
+          // Si un vote existe pour cet ensemble, vous pouvez le récupérer ici
+          // mais nous ne faisons rien car RedditStyleVoter gère sa propre persistance
+          console.log("Votes data loaded from localStorage:", votesData);
+        }
+      } catch (err) {
+        console.error("Error loading votes from localStorage:", err);
+      }
+    }
+  }, [isOpen, targetEnsembleId]);
+
   const handleVoteChange = (vote: "up" | "down" | null) => {
     if (onVoteSubmitted) {
       onVoteSubmitted(vote);
@@ -82,6 +103,25 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
     // Call onVoteUpdated if it exists
     if (onVoteUpdated) {
       onVoteUpdated();
+    }
+    
+    // Sauvegarder le vote dans le localStorage
+    if (targetEnsembleId) {
+      try {
+        // Récupérer les votes existants
+        const savedVotes = localStorage.getItem(VOTE_STORAGE_KEY) || "{}";
+        const votesData = JSON.parse(savedVotes);
+        
+        // Mettre à jour le vote pour cet ensemble
+        const voteKey = `${elementType}_${targetEnsembleId}`;
+        votesData[voteKey] = vote;
+        
+        // Sauvegarder les votes mis à jour
+        localStorage.setItem(VOTE_STORAGE_KEY, JSON.stringify(votesData));
+        console.log(`Vote saved to localStorage: ${voteKey} = ${vote}`);
+      } catch (err) {
+        console.error("Error saving vote to localStorage:", err);
+      }
     }
     
     // Fermer le dialogue après le vote
@@ -145,6 +185,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
             size="lg"
             onVoteChange={handleVoteChange}
             showScore={true}
+            persistVotes={true} 
           />
         </div>
       </DialogContent>
