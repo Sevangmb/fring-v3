@@ -48,8 +48,9 @@ export const fetchEnsembleById = async (ensembleId: number): Promise<Ensemble | 
       return null;
     }
 
-    // Extract email from users relation
-    const email = ensemble.users?.email;
+    // Extract email from users relation - ensure it's an email string, not an array
+    // The users relation returns an object, not an array, so we access the email directly
+    const email = ensemble.users ? ensemble.users.email : undefined;
 
     // Format the result to match the Ensemble type
     return {
