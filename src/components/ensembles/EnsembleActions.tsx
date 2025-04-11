@@ -38,7 +38,6 @@ const EnsembleActions: React.FC<EnsembleActionsProps> = ({
         entityType="ensemble"
         entityId={ensembleId}
         size={size}
-        vertical={orientation === "vertical"}
         className="mr-2"
       />
 

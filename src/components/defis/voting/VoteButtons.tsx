@@ -52,10 +52,6 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
         size={size}
         onVoteChange={handleVoteChange}
         showScore={showScore}
-        initialScore={score}
-        initialVote={userVote}
-        disabled={disabled || connectionError}
-        isLoading={isLoading}
       />
       
       {showLabels && (

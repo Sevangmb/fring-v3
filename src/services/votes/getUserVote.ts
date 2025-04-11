@@ -3,16 +3,14 @@ import { supabase } from '@/lib/supabase';
 import { VoteType, EntityType } from './types';
 
 /**
- * Récupère le vote d'un utilisateur pour un élément
- * @param elementType Type d'élément ('ensemble', 'defi', 'tenue')
- * @param elementId ID de l'élément
- * @param ensembleId ID de l'ensemble (uniquement pour les votes dans un défi)
- * @returns Type de vote ou null si pas de vote
+ * Récupère le vote d'un utilisateur pour une entité
+ * @param entityType Type de l'entité ('ensemble' ou 'tenue')
+ * @param entityId ID de l'entité
+ * @returns Type de vote ou null si l'utilisateur n'a pas voté
  */
 export const getUserVote = async (
-  elementType: EntityType, 
-  elementId: number, 
-  ensembleId?: number
+  entityType: EntityType,
+  entityId: number
 ): Promise<VoteType> => {
   try {
     // Vérifier que l'utilisateur est connecté
@@ -20,41 +18,32 @@ export const getUserVote = async (
     const userId = session?.user?.id;
     
     if (!userId) {
+      console.log('Utilisateur non connecté, impossible de récupérer le vote');
       return null;
     }
     
-    // Si le type est "tenue", utiliser "ensemble" pour la table
-    const effectiveType = elementType === "tenue" ? "ensemble" : elementType;
+    let tableName: string;
+    let columnName: string;
+    let voteColumnName: string;
     
-    // Cas spécial: vote pour un ensemble dans un défi
-    if (effectiveType === 'defi' && ensembleId !== undefined) {
-      const { data, error } = await supabase
-        .from('defi_votes')
-        .select('vote_type')
-        .eq('defi_id', elementId)
-        .eq('tenue_id', ensembleId)
-        .eq('user_id', userId)
-        .maybeSingle();
-      
-      if (error) {
-        console.error('Erreur lors de la récupération du vote:', error);
-        return null;
-      }
-      
-      return data?.vote_type || null;
+    // Déterminer la table et la colonne selon le type d'entité
+    if (entityType === 'ensemble' || entityType === 'tenue') {
+      tableName = 'ensemble_votes';
+      columnName = 'ensemble_id';
+      voteColumnName = 'vote';
+    } else {
+      tableName = 'defi_votes';
+      columnName = 'defi_id';
+      voteColumnName = 'vote_type';
     }
     
-    // Votes standards
-    const tableName = `${effectiveType}_votes`;
-    const idColumnName = `${effectiveType}_id`;
+    console.log(`Récupération du vote pour ${entityType} ${entityId} par l'utilisateur ${userId}`);
     
-    // Pour la table ensemble_votes, on doit utiliser "vote" au lieu de "vote_type"
-    const voteColumnName = tableName === 'ensemble_votes' ? 'vote' : 'vote_type';
-    
+    // Récupérer le vote de l'utilisateur
     const { data, error } = await supabase
       .from(tableName)
       .select(voteColumnName)
-      .eq(idColumnName, elementId)
+      .eq(columnName, entityId)
       .eq('user_id', userId)
       .maybeSingle();
     
@@ -63,7 +52,11 @@ export const getUserVote = async (
       return null;
     }
     
-    return data?.[voteColumnName] || null;
+    if (!data) {
+      return null;
+    }
+    
+    return data[voteColumnName] as VoteType;
   } catch (error) {
     console.error('Erreur lors de la récupération du vote:', error);
     return null;

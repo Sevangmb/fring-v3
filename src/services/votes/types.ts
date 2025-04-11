@@ -1,16 +1,16 @@
 
 /**
- * Type pour représenter un vote (up, down ou null pour pas de vote)
+ * Type de vote
  */
-export type VoteType = "up" | "down" | null;
+export type VoteType = 'up' | 'down' | null;
 
 /**
- * Type pour les entités pouvant être votées
+ * Type d'entité
  */
-export type EntityType = "ensemble" | "defi" | "tenue";
+export type EntityType = 'ensemble' | 'tenue' | 'defi';
 
 /**
- * Structure pour le comptage des votes
+ * Comptage des votes
  */
 export interface VoteCount {
   up: number;
@@ -18,7 +18,7 @@ export interface VoteCount {
 }
 
 /**
- * Calcule le score à partir du nombre de votes
+ * Calcule le score à partir du comptage des votes
  */
 export const calculateScore = (votes: VoteCount): number => {
   return votes.up - votes.down;

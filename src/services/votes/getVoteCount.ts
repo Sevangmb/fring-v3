@@ -19,14 +19,17 @@ export const getVoteCount = async (
   try {
     let tableName: string;
     let columnName: string;
+    let voteColumnName: string;
     
     // Déterminer la table et la colonne selon le type d'entité
     if (entityType === 'ensemble' || entityType === 'tenue') {
       tableName = 'ensemble_votes';
       columnName = 'ensemble_id';
+      voteColumnName = 'vote';
     } else {
       tableName = 'defi_votes';
       columnName = 'defi_id';
+      voteColumnName = 'vote_type';
     }
     
     console.log(`Getting votes count for ${entityType} ${entityId} from ${tableName}`);
@@ -34,7 +37,7 @@ export const getVoteCount = async (
     // Récupérer tous les votes pour l'entité
     const { data, error } = await supabase
       .from(tableName)
-      .select('vote')
+      .select(voteColumnName)
       .eq(columnName, entityId);
     
     if (error) {
@@ -47,8 +50,8 @@ export const getVoteCount = async (
     }
     
     // Compter les votes positifs et négatifs
-    const upVotes = data.filter(vote => vote.vote === 'up').length;
-    const downVotes = data.filter(vote => vote.vote === 'down').length;
+    const upVotes = data.filter(vote => vote[voteColumnName] === 'up').length;
+    const downVotes = data.filter(vote => vote[voteColumnName] === 'down').length;
     
     console.log(`Vote count for ${entityType} ${entityId}: ${upVotes} up, ${downVotes} down`);
     

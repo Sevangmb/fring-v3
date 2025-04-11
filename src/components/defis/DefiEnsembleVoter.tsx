@@ -11,7 +11,6 @@ interface DefiEnsembleVoterProps {
   showScore?: boolean;
   size?: "sm" | "md" | "lg";
   onVoteChange?: (vote: VoteType) => void;
-  vertical?: boolean;
 }
 
 /**
@@ -23,16 +22,14 @@ const DefiEnsembleVoter: React.FC<DefiEnsembleVoterProps> = ({
   className = "",
   showScore = true,
   size = "md",
-  onVoteChange,
-  vertical = true
+  onVoteChange
 }) => {
   return (
-    <div className={`flex ${vertical ? "flex-col" : "flex-row"} items-center ${className}`}>
+    <div className={`flex flex-col items-center ${className}`}>
       <RedditStyleVoter
         entityType="ensemble"
         entityId={ensembleId}
         size={size}
-        vertical={vertical}
         showScore={showScore}
         onVoteChange={onVoteChange}
       />

@@ -3,13 +3,11 @@ import React, { useState, useEffect } from "react";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { getUserVote } from "@/services/defi/votes/getUserVote";
+import { getUserVote } from "@/services/votes/getUserVote";
 import { submitVote as submitDefiVote } from "@/services/defi/votes";
 import { submitVote as submitEnsembleVote } from "@/services/votes/submitVote";
 import { getVoteCount } from "@/services/votes/getVoteCount";
-
-// LocalStorage key for storing votes
-const VOTES_STORAGE_KEY = "fring-votes";
+import { VoteType } from "@/services/votes/types";
 
 interface RedditStyleVoterProps {
   entityType: "ensemble" | "tenue" | "defi";
@@ -18,7 +16,6 @@ interface RedditStyleVoterProps {
   size?: "sm" | "md" | "lg";
   onVoteChange?: (vote: "up" | "down" | null) => void;
   showScore?: boolean;
-  persistVotes?: boolean;
 }
 
 const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
@@ -27,10 +24,9 @@ const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
   defiId,
   size = "md",
   onVoteChange,
-  showScore = false,
-  persistVotes = true
+  showScore = false
 }) => {
-  const [userVote, setUserVote] = useState<"up" | "down" | null>(null);
+  const [userVote, setUserVote] = useState<VoteType>(null);
   const [score, setScore] = useState(0);
   const [loading, setLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
@@ -50,47 +46,21 @@ const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
   const iconSize = iconSizes[size];
   const buttonSize = buttonSizes[size];
 
-  // Load saved vote and score from localStorage and/or server
+  // Load saved vote and score from database
   useEffect(() => {
     const loadVoteAndScore = async () => {
       if (!entityId) return;
       
       setLoading(true);
       try {
-        // Try to get vote from localStorage first
-        let vote: "up" | "down" | null = null;
-        
-        if (persistVotes) {
-          try {
-            const savedVotes = localStorage.getItem(VOTES_STORAGE_KEY);
-            if (savedVotes) {
-              const votesData = JSON.parse(savedVotes);
-              const voteKey = `${entityType}_${entityId}`;
-              vote = votesData[voteKey] || null;
-              
-              if (vote) {
-                console.log(`Found saved vote for ${voteKey}: ${vote}`);
-                setUserVote(vote);
-              }
-            }
-          } catch (err) {
-            console.error("Error loading vote from localStorage:", err);
-          }
+        // Get vote from database
+        const vote = await getUserVote(entityType, entityId);
+        if (vote) {
+          console.log(`Found saved vote for ${entityType}_${entityId}: ${vote}`);
+          setUserVote(vote);
         }
         
-        // If no vote in localStorage, try to get from server
-        if (!vote) {
-          if (entityType === "defi" || (entityType === "tenue" && defiId)) {
-            // Get vote for tenue in defi context
-            const serverVote = await getUserVote(defiId!, entityId);
-            setUserVote(serverVote);
-          } else {
-            // TODO: Implement getUserVote for ensembles
-            // For now, we'll use null as default
-          }
-        }
-        
-        // Get score from server
+        // Get score from database
         if (showScore) {
           try {
             const voteCount = await getVoteCount(entityType, entityId);
@@ -109,9 +79,9 @@ const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
     };
     
     loadVoteAndScore();
-  }, [entityId, entityType, defiId, showScore, persistVotes]);
+  }, [entityId, entityType, showScore]);
 
-  const handleVote = async (vote: "up" | "down") => {
+  const handleVote = async (vote: VoteType) => {
     if (loading || !initialized) return;
     
     const newVote = userVote === vote ? null : vote;
@@ -131,23 +101,7 @@ const RedditStyleVoter: React.FC<RedditStyleVoterProps> = ({
     }
     
     try {
-      // Save to local storage if persistVotes is enabled
-      if (persistVotes) {
-        try {
-          const savedVotes = localStorage.getItem(VOTES_STORAGE_KEY) || "{}";
-          const votesData = JSON.parse(savedVotes);
-          
-          const voteKey = `${entityType}_${entityId}`;
-          votesData[voteKey] = newVote;
-          
-          localStorage.setItem(VOTES_STORAGE_KEY, JSON.stringify(votesData));
-          console.log(`Saved vote to localStorage: ${voteKey} = ${newVote}`);
-        } catch (err) {
-          console.error("Error saving vote to localStorage:", err);
-        }
-      }
-      
-      // Submit vote to server
+      // Submit vote to database
       if (entityType === "defi" || (entityType === "tenue" && defiId)) {
         // For defi votes
         await submitDefiVote(defiId!, entityId, newVote);
