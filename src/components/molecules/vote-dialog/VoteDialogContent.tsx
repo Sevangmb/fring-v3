@@ -1,10 +1,11 @@
 
 import React from "react";
 import { Box, Typography } from "@mui/material";
-import { WifiOff, AlertTriangle } from "lucide-react";
+import { WifiOff, AlertTriangle, ThumbsUp, ThumbsDown } from "lucide-react";
 import VoteButtons from "@/components/defis/voting/VoteButtons";
 import EnsembleContentDisplay from "../EnsembleContentDisplay";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 interface VoteDialogContentProps {
   ensemble: any;
@@ -81,15 +82,39 @@ const VoteDialogContent: React.FC<VoteDialogContentProps> = ({
       />
       
       {!hasVoted && ensemble && (
-        <VoteButtons
-          userVote={userVote}
-          onVote={onVote}
-          size="lg"
-          isLoading={isVoting}
-          disabled={loading || isVoting}
-          connectionError={connectionError}
-          className="pt-4"
-        />
+        <div className="flex justify-center gap-6 pt-4">
+          <Button
+            onClick={() => onVote('up')}
+            disabled={isVoting || loading || isOffline}
+            variant="outline"
+            className={`p-6 rounded-full hover:bg-green-100 transition-colors ${
+              userVote === 'up' ? 'bg-green-100 border-green-500' : ''
+            }`}
+            aria-label="J'aime"
+          >
+            {isVoting ? (
+              <div className="animate-spin h-6 w-6 border-2 border-green-500 border-t-transparent rounded-full"></div>
+            ) : (
+              <ThumbsUp size={32} className={userVote === 'up' ? 'text-green-500' : 'text-gray-500'} />
+            )}
+          </Button>
+          
+          <Button
+            onClick={() => onVote('down')}
+            disabled={isVoting || loading || isOffline}
+            variant="outline"
+            className={`p-6 rounded-full hover:bg-red-100 transition-colors ${
+              userVote === 'down' ? 'bg-red-100 border-red-500' : ''
+            }`}
+            aria-label="Je n'aime pas"
+          >
+            {isVoting ? (
+              <div className="animate-spin h-6 w-6 border-2 border-red-500 border-t-transparent rounded-full"></div>
+            ) : (
+              <ThumbsDown size={32} className={userVote === 'down' ? 'text-red-500' : 'text-gray-500'} />
+            )}
+          </Button>
+        </div>
       )}
     </>
   );

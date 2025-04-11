@@ -24,9 +24,9 @@ export function Toaster() {
               : "border-theme-blue-medium bg-white text-gray-900 dark:bg-slate-800 dark:text-slate-100"}
           >
             <div className="grid gap-1">
-              {title && <ToastTitle className="text-gray-900 dark:text-slate-100">{title}</ToastTitle>}
+              {title && <ToastTitle className={variant === "destructive" ? "text-red-900 dark:text-red-50" : "text-gray-900 dark:text-slate-100"}>{title}</ToastTitle>}
               {description && (
-                <ToastDescription className="text-gray-700 dark:text-slate-300">
+                <ToastDescription className={variant === "destructive" ? "text-red-700 dark:text-red-200" : "text-gray-700 dark:text-slate-300"}>
                   {description}
                 </ToastDescription>
               )}

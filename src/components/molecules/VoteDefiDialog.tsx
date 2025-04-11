@@ -9,10 +9,11 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, X } from "lucide-react";
+import { ThumbsUp, X, ThumbsDown } from "lucide-react";
 import { useEnsembleVote } from "@/hooks/useEnsembleVote";
 import VoteDialogContent from "./vote-dialog/VoteDialogContent";
 import VoteSuccessView from "./vote-dialog/VoteSuccessView";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface VoteDefiDialogProps {
   defiId: number;
@@ -101,6 +102,12 @@ const VoteDefiDialog: React.FC<VoteDefiDialogProps> = ({
               <span className="sr-only">Close</span>
             </DialogClose>
           </DialogHeader>
+          
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           
           {/* Affichage conditionnel : contenu normal ou confirmation de vote */}
           {hasVoted ? (

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { ThumbsUp, ThumbsDown } from "lucide-react";
+import { ThumbsUp, ThumbsDown, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -8,6 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogDescription,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { VoteType } from "@/services/votes/types";
@@ -69,8 +70,10 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
       }
     };
 
-    loadUserVote();
-  }, [elementId, elementType, ensembleIdAsNumber]);
+    if (isOpen) {
+      loadUserVote();
+    }
+  }, [elementId, elementType, ensembleIdAsNumber, isOpen]);
 
   const handleVoteInDialog = async (vote: VoteType) => {
     if (!vote) return;
@@ -137,15 +140,21 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
           }`}
         >
           {userVote === "up" ? (
-            <ThumbsUp className="h-4 w-4" />
+            <ThumbsUp className="h-4 w-4 text-white" />
           ) : userVote === "down" ? (
-            <ThumbsDown className="h-4 w-4" />
+            <ThumbsDown className="h-4 w-4 text-white" />
           ) : (
             <ThumbsUp className="h-4 w-4" />
           )}
         </Button>
       </DialogTrigger>
+      
       <DialogContent className="sm:max-w-[425px]">
+        <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+          <X className="h-4 w-4" />
+          <span className="sr-only">Fermer</span>
+        </DialogClose>
+
         <DialogHeader>
           <DialogTitle>Voter</DialogTitle>
           <DialogDescription>
@@ -159,19 +168,38 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
           </Alert>
         )}
         
-        <div className="flex justify-center py-4">
-          <RedditStyleVoter
-            entityType={elementType}
-            entityId={elementId}
-            defiId={ensembleIdAsNumber}
-            initialVote={userVote}
-            size="lg"
-            vertical={false}
-            showScore={false}
-            onVoteChange={(vote) => handleVoteInDialog(vote)}
-            isLoading={isSubmitting}
-            className="gap-6"
-          />
+        <div className="flex justify-center gap-6 py-4">
+          <Button
+            onClick={() => handleVoteInDialog("up")}
+            disabled={isSubmitting}
+            variant="outline"
+            className={`p-6 rounded-full hover:bg-green-100 transition-colors ${
+              userVote === 'up' ? 'bg-green-100 border-green-500' : ''
+            }`}
+            aria-label="J'aime"
+          >
+            {isSubmitting ? (
+              <div className="animate-spin h-6 w-6 border-2 border-green-500 border-t-transparent rounded-full"></div>
+            ) : (
+              <ThumbsUp size={32} className={userVote === 'up' ? 'text-green-500' : 'text-gray-500'} />
+            )}
+          </Button>
+          
+          <Button
+            onClick={() => handleVoteInDialog("down")}
+            disabled={isSubmitting}
+            variant="outline"
+            className={`p-6 rounded-full hover:bg-red-100 transition-colors ${
+              userVote === 'down' ? 'bg-red-100 border-red-500' : ''
+            }`}
+            aria-label="Je n'aime pas"
+          >
+            {isSubmitting ? (
+              <div className="animate-spin h-6 w-6 border-2 border-red-500 border-t-transparent rounded-full"></div>
+            ) : (
+              <ThumbsDown size={32} className={userVote === 'down' ? 'text-red-500' : 'text-gray-500'} />
+            )}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
