@@ -31,14 +31,18 @@ export const fetchEnsembles = async (): Promise<Ensemble[]> => {
       throw error;
     }
 
+    if (!ensembles) {
+      return [];
+    }
+
     return ensembles.map(ensemble => ({
       id: ensemble.id,
-      nom: ensemble.nom,
+      nom: ensemble.nom || "Ensemble sans nom",
       description: ensemble.description,
       occasion: ensemble.occasion,
       saison: ensemble.saison,
       created_at: ensemble.created_at,
-      vetements: ensemble.tenues_vetements,
+      vetements: ensemble.tenues_vetements || [],
       user_id: ensemble.user_id
     }));
   } catch (error) {
@@ -53,6 +57,13 @@ export const fetchEnsembles = async (): Promise<Ensemble[]> => {
 export const fetchEnsemblesAmis = async (friendId?: string): Promise<Ensemble[]> => {
   try {
     console.log("Appel à fetchEnsemblesAmis avec friendId:", friendId);
+    
+    const { data: sessionData } = await supabase.auth.getSession();
+    const currentUserId = sessionData.session?.user?.id;
+    
+    if (!currentUserId) {
+      throw new Error("Utilisateur non connecté");
+    }
     
     // Si friendId est undefined ou vide, utiliser la fonction qui récupère tous les ensembles d'amis
     if (!friendId || friendId === "all") {
@@ -78,9 +89,6 @@ export const fetchEnsemblesAmis = async (friendId?: string): Promise<Ensemble[]>
       console.log("Récupération des ensembles pour un ami spécifique:", friendId);
       
       // Vérification pour éviter d'appeler avec son propre ID
-      const { data: sessionData } = await supabase.auth.getSession();
-      const currentUserId = sessionData.session?.user?.id;
-      
       if (friendId === currentUserId) {
         console.log("Tentative de récupérer ses propres ensembles comme si c'était un ami, redirection vers fetchEnsembles");
         return fetchEnsembles();

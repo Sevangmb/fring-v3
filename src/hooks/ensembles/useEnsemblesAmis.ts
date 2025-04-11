@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Ensemble } from "@/services/ensemble";
@@ -73,7 +74,7 @@ export const useEnsemblesAmis = (friendId?: string) => {
         'ensembles'
       );
       
-      setError(error instanceof Error ? error : new Error("Erreur de chargement"));
+      setError(error instanceof Error ? error : new Error("Impossible de charger les ensembles. Veuillez réessayer plus tard."));
       toast({
         title: "Erreur",
         description: "Impossible de charger les ensembles des amis.",

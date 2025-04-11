@@ -13,6 +13,7 @@ import { Drawer, DrawerContent, DrawerTrigger, DrawerClose } from '@/components/
 import FloatingAddButton from '@/components/molecules/FloatingAddButton';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const EnsemblesAmisList: React.FC = () => {
   const { user } = useAuth();
@@ -50,7 +51,7 @@ const EnsemblesAmisList: React.FC = () => {
     if (friendId === "all") {
       setSelectedFriendName("Tous les amis");
     } else {
-      const ami = filteredAmis.amisAcceptes.find(ami => {
+      const ami = filteredAmis?.amisAcceptes?.find(ami => {
         const amiId = ami.ami_id === ami.user_id ? ami.ami_id : ami.user_id;
         return amiId === friendId;
       });
@@ -80,7 +81,7 @@ const EnsemblesAmisList: React.FC = () => {
     );
   }
 
-  if (!filteredAmis?.amisAcceptes.length) {
+  if (!filteredAmis?.amisAcceptes || filteredAmis.amisAcceptes.length === 0) {
     return (
       <Card>
         <CardContent className="pt-6 flex flex-col items-center justify-center py-10">
@@ -188,14 +189,16 @@ const EnsemblesAmisList: React.FC = () => {
       return (
         <Card>
           <CardContent className="pt-6 flex flex-col items-center justify-center py-10">
-            <AlertTriangle size={48} className="text-amber-500 mb-2" />
-            <Text className="text-center text-red-500 mb-4">
-              Une erreur est survenue lors du chargement des ensembles.
-            </Text>
+            <Alert variant="destructive" className="mb-4 w-full">
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              <AlertDescription>
+                Impossible de charger les ensembles. Veuillez réessayer plus tard.
+              </AlertDescription>
+            </Alert>
             <Button 
               onClick={handleRetry} 
               variant="outline"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 mt-4"
             >
               <RefreshCw size={16} />
               Réessayer

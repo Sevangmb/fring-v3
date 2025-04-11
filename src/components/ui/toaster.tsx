@@ -20,7 +20,7 @@ export function Toaster() {
             key={id} 
             {...props} 
             className={variant === "destructive" 
-              ? "border-red-600 bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-50" 
+              ? "border-red-500 bg-red-50 text-red-900 dark:bg-red-900 dark:text-red-50" 
               : "border-theme-blue-medium bg-white text-gray-900 dark:bg-slate-800 dark:text-slate-100"}
           >
             <div className="grid gap-1">
