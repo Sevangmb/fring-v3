@@ -9,12 +9,13 @@ import {
   DialogClose 
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X, Award, Plus } from "lucide-react";
+import { X, Award, Plus, AlertCircle } from "lucide-react";
 import { participerDefi } from "@/services/defi/participationService";
 import { fetchUserEnsembles } from "@/services/ensemble";
 import { useToast } from "@/hooks/use-toast";
 import EnsembleSelector from "./EnsembleSelector";
 import { Link } from "react-router-dom";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ParticiperDefiDialogProps {
   defiId: number;
@@ -31,15 +32,19 @@ const ParticiperDefiDialog: React.FC<ParticiperDefiDialogProps> = ({
   const [ensembles, setEnsembles] = useState<any[]>([]);
   const [selectedEnsemble, setSelectedEnsemble] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
   const loadEnsembles = async () => {
     setLoading(true);
+    setError(null);
     try {
       const ensemblesData = await fetchUserEnsembles();
       
-      if (ensemblesData.length === 0) {
+      console.log("Ensembles récupérés:", ensemblesData);
+      
+      if (ensemblesData && ensemblesData.length === 0) {
         toast({
           title: "Aucun ensemble disponible",
           description: "Vous devez créer un ensemble avant de pouvoir participer",
@@ -47,9 +52,10 @@ const ParticiperDefiDialog: React.FC<ParticiperDefiDialogProps> = ({
         });
       }
       
-      setEnsembles(ensemblesData);
+      setEnsembles(ensemblesData || []);
     } catch (error) {
       console.error("Erreur lors du chargement des ensembles:", error);
+      setError("Impossible de charger vos ensembles. Veuillez réessayer.");
       toast({
         title: "Erreur",
         description: "Impossible de charger vos ensembles",
@@ -117,6 +123,10 @@ const ParticiperDefiDialog: React.FC<ParticiperDefiDialogProps> = ({
     }
   };
 
+  const handleRetryLoad = () => {
+    loadEnsembles();
+  };
+
   const EmptyEnsemblesView = () => (
     <div className="flex flex-col items-center justify-center p-4 text-center">
       <p className="text-muted-foreground mb-4">Aucun ensemble disponible. Veuillez en créer un avant de pouvoir participer.</p>
@@ -157,7 +167,17 @@ const ParticiperDefiDialog: React.FC<ParticiperDefiDialogProps> = ({
           </DialogHeader>
 
           <div className="py-4">
-            {ensembles.length === 0 && !loading ? (
+            {error ? (
+              <div className="space-y-4">
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+                <Button onClick={handleRetryLoad} variant="outline" className="w-full">
+                  Réessayer
+                </Button>
+              </div>
+            ) : ensembles.length === 0 && !loading ? (
               <EmptyEnsemblesView />
             ) : (
               <EnsembleSelector

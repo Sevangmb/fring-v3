@@ -15,9 +15,12 @@ export const fetchUserEnsembles = async (userId?: string): Promise<Ensemble[]> =
       userId = sessionData.session?.user?.id;
       
       if (!userId) {
+        console.warn("fetchUserEnsembles: Aucun utilisateur connecté");
         return [];
       }
     }
+
+    console.log("fetchUserEnsembles: Récupération des ensembles pour l'utilisateur", userId);
 
     const { data, error } = await supabase
       .from('tenues')
@@ -54,8 +57,11 @@ export const fetchUserEnsembles = async (userId?: string): Promise<Ensemble[]> =
       .order('created_at', { ascending: false });
 
     if (error) {
+      console.error("fetchUserEnsembles: Erreur lors de la requête", error);
       throw error;
     }
+
+    console.log("fetchUserEnsembles: Ensembles récupérés", data?.length || 0);
 
     // Transform the data to match the Ensemble type
     const ensembles: Ensemble[] = data.map(item => ({

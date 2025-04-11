@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fetchEnsembles } from "@/services/ensemble/ensembleService";
 import { checkUserParticipation, participerDefi } from "@/services/defi/participationService";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface DefiParticipationFormProps {
   defiId: number;
@@ -22,6 +23,7 @@ const DefiParticipationForm: React.FC<DefiParticipationFormProps> = ({
   const [ensembles, setEnsembles] = useState<any[]>([]);
   const [selectedEnsembleId, setSelectedEnsembleId] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [participation, setParticipation] = useState<{participe: boolean; ensembleId?: number} | null>(null);
   const { toast } = useToast();
@@ -30,9 +32,13 @@ const DefiParticipationForm: React.FC<DefiParticipationFormProps> = ({
     const loadData = async () => {
       try {
         setLoading(true);
+        setError(null);
+        
         // Charger les ensembles de l'utilisateur
+        console.log("Chargement des ensembles...");
         const data = await fetchEnsembles();
-        setEnsembles(data);
+        console.log("Ensembles récupérés:", data?.length || 0);
+        setEnsembles(data || []);
         
         // Vérifier si l'utilisateur a déjà participé
         const participationData = await checkUserParticipation(defiId);
@@ -44,6 +50,7 @@ const DefiParticipationForm: React.FC<DefiParticipationFormProps> = ({
         }
       } catch (error) {
         console.error("Erreur lors du chargement des données:", error);
+        setError("Impossible de charger vos ensembles. Veuillez réessayer.");
         toast({
           title: "Erreur",
           description: "Impossible de charger vos ensembles. Veuillez réessayer.",
@@ -105,12 +112,49 @@ const DefiParticipationForm: React.FC<DefiParticipationFormProps> = ({
       setSubmitting(false);
     }
   };
+
+  const handleRetry = () => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await fetchEnsembles();
+        setEnsembles(data || []);
+      } catch (error) {
+        console.error("Erreur lors du rechargement des données:", error);
+        setError("Impossible de charger vos ensembles. Veuillez réessayer.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  };
   
   if (loading) {
     return (
       <Card>
         <CardContent className="p-6 flex justify-center items-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+          <Button 
+            onClick={handleRetry}
+            className="w-full"
+          >
+            Réessayer
+          </Button>
         </CardContent>
       </Card>
     );
