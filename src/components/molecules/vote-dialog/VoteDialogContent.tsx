@@ -6,6 +6,7 @@ import VoteButtons from "@/components/defis/voting/VoteButtons";
 import EnsembleContentDisplay from "../EnsembleContentDisplay";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import EnsembleImages from "@/components/ensembles/EnsembleImages";
 
 interface VoteDialogContentProps {
   ensemble: any;
@@ -72,6 +73,24 @@ const VoteDialogContent: React.FC<VoteDialogContentProps> = ({
         <Alert variant="destructive" className="mb-4 bg-red-100 text-red-900 border-red-200 dark:bg-red-900 dark:text-red-50 dark:border-red-800">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
+      )}
+      
+      {ensemble && !loading && (
+        <div className="text-center mb-4">
+          <h3 className="text-xl font-semibold text-primary">{ensemble.nom}</h3>
+          {ensemble.description && (
+            <p className="text-muted-foreground mt-1">{ensemble.description}</p>
+          )}
+        </div>
+      )}
+      
+      {ensemble && !loading && (
+        <div className="mb-6">
+          <EnsembleImages 
+            vetementsByType={vetementsByType}
+            className="w-full"
+          />
+        </div>
       )}
       
       <EnsembleContentDisplay

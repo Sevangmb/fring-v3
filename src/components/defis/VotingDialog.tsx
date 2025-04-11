@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -11,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getWinningEnsemble } from "@/services/votes/getWinningEnsemble";
 import VotingForm from "./voting/VotingForm";
 import ResultsDisplay from "./voting/ResultsDisplay";
+import { organizeVetementsByType } from "./voting/helpers/vetementOrganizer";
 
 interface VotingDialogProps {
   open: boolean;

@@ -9,6 +9,7 @@ import { fetchEnsembleById } from "@/services/ensemble/fetchEnsembleById";
 import { organizeVetementsByType } from "@/components/defis/voting/helpers/vetementOrganizer";
 import EnsembleContentDisplay from "@/components/molecules/EnsembleContentDisplay";
 import RedditStyleVoter from "@/components/molecules/RedditStyleVoter";
+import EnsembleImages from "@/components/ensembles/EnsembleImages";
 
 interface VoterDialogProps {
   elementId: number;
@@ -115,8 +116,10 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
         </DialogClose>
 
         <DialogHeader>
-          <DialogTitle>Voter pour {ensemble?.nom || 'cet ensemble'}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-center text-primary">
+            Voter pour {ensemble?.nom || 'cet ensemble'}
+          </DialogTitle>
+          <DialogDescription className="text-center">
             Donnez votre avis sur cet ensemble
           </DialogDescription>
         </DialogHeader>
@@ -125,6 +128,16 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
           <Alert variant="destructive" className="mb-4">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
+        )}
+        
+        {/* Affichage des images de l'ensemble */}
+        {!loading && ensemble && (
+          <div className="mb-4">
+            <EnsembleImages 
+              vetementsByType={vetementsByType}
+              className="w-full" 
+            />
+          </div>
         )}
         
         {/* Affichage du contenu de l'ensemble */}

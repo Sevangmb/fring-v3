@@ -17,7 +17,7 @@ const EnsembleImages: React.FC<EnsembleImagesProps> = ({ vetementsByType, classN
     // Vérifier les URLs d'images
     Object.entries(vetementsByType).forEach(([type, items]) => {
       items.forEach((item, idx) => {
-        console.log(`Type ${type}, item ${idx}, image_url:`, item.image_url);
+        console.log(`Type ${type}, item ${idx}, image_url:`, item.vetement?.image_url || item.image_url);
       });
     });
   }, [vetementsByType]);
@@ -30,10 +30,15 @@ const EnsembleImages: React.FC<EnsembleImagesProps> = ({ vetementsByType, classN
     );
   }
   
+  const getImageUrl = (item: any) => {
+    // Support both vetement and direct image_url formats
+    return item.vetement?.image_url || item.image_url;
+  };
+  
   const renderVetementImage = (type: string, placeholderIcon: React.ReactNode, label: string) => {
     const vetements = vetementsByType[type];
     const hasVetement = vetements && vetements.length > 0;
-    const imageUrl = hasVetement && vetements[0]?.image_url ? vetements[0].image_url : null;
+    const imageUrl = hasVetement ? getImageUrl(vetements[0]) : null;
     
     console.log(`Rendering ${type} with image URL:`, imageUrl);
     

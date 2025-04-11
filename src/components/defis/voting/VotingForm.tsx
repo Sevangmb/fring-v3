@@ -6,6 +6,8 @@ import { Progress } from "@/components/ui/progress";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import VetementsList from "./VetementsList";
 import { VoteType } from "@/services/votes/types";
+import EnsembleImages from "@/components/ensembles/EnsembleImages";
+import { organizeVetementsByType } from "./helpers/vetementOrganizer";
 
 interface VotingFormProps {
   currentEnsemble: any;
@@ -24,6 +26,7 @@ const VotingForm: React.FC<VotingFormProps> = ({
 }) => {
   // Extract vetements from the ensemble
   const vetements = currentEnsemble.vetements || [];
+  const vetementsByType = organizeVetementsByType(currentEnsemble);
   
   return (
     <>
@@ -50,6 +53,11 @@ const VotingForm: React.FC<VotingFormProps> = ({
           <span>{Math.round((currentIndex + 1) / totalEnsembles * 100)}% complété</span>
         </div>
         <Progress value={(currentIndex + 1) / totalEnsembles * 100} className="h-2" />
+      </div>
+      
+      {/* Display images of the ensemble */}
+      <div className="my-4">
+        <EnsembleImages vetementsByType={vetementsByType} />
       </div>
       
       <VetementsList vetements={vetements} />
