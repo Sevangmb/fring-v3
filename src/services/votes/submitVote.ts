@@ -31,47 +31,65 @@ export const submitVote = async (
         vote_type: vote
       };
     } else if (elementType === 'defi') {
-      data = {
-        user_id: userId,
-        defi_id: elementId,
-        vote_type: vote
-      };
-      
-      // Si on vote pour un ensemble spécifique dans un défi
       if (ensembleId !== undefined) {
-        data.tenue_id = ensembleId;
+        // Pour les votes sur des ensembles dans un défi
+        // Utiliser le service spécifique pour ce cas
+        const { submitVote: submitDefiVote } = await import('@/services/defi/votes/submitVote');
+        return await submitDefiVote(elementId, ensembleId, vote);
+      } else {
+        // Pour les votes sur des défis uniquement
+        data = {
+          user_id: userId,
+          defi_id: elementId,
+          vote_type: vote
+        };
       }
     }
     
     // Vérifier si l'utilisateur a déjà voté
-    let query = supabase.from(tableName).select('id');
+    let query = supabase.from(tableName).select('id, vote_type');
     
     if (elementType === 'ensemble') {
       query = query.eq('ensemble_id', elementId);
-    } else if (elementType === 'defi') {
+    } else if (elementType === 'defi' && !ensembleId) { 
       query = query.eq('defi_id', elementId);
-      if (ensembleId !== undefined) {
-        query = query.eq('tenue_id', ensembleId);
-      }
     }
     
-    const { data: existingVote } = await query.eq('user_id', userId).maybeSingle();
+    const { data: existingVote, error: queryError } = await query
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    if (queryError) {
+      console.error('Erreur lors de la vérification du vote:', queryError);
+      return false;
+    }
     
     if (existingVote) {
+      // Si le vote est identique, ne rien faire
+      if (existingVote.vote_type === vote) {
+        return true;
+      }
+      
       // Mettre à jour le vote existant
       const { error } = await supabase
         .from(tableName)
         .update({ vote_type: vote })
         .eq('id', existingVote.id);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur lors de la mise à jour du vote:', error);
+        return false;
+      }
     } else {
       // Créer un nouveau vote
       const { error } = await supabase
         .from(tableName)
         .insert([data]);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur lors de l\'ajout du vote:', error);
+        return false;
+      }
     }
     
     return true;

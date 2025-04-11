@@ -51,8 +51,17 @@ export const useDefiVote = (defiId: number, participations: ParticipationWithVot
     try {
       setVoting(true);
       
-      // Submit the vote to the backend - using three arguments as expected
-      await submitVote(defiId, ensembleId, voteType);
+      // Utiliser le service correct - s'assurer qu'un vote_type est fourni
+      if (!voteType) {
+        throw new Error("Type de vote non spécifié");
+      }
+      
+      // Soumettre le vote au backend
+      const success = await submitVote(defiId, ensembleId, voteType);
+      
+      if (!success) {
+        throw new Error("Échec lors de l'enregistrement du vote");
+      }
       
       // Update the local state
       setVotedParticipations(prev => [...prev, ensembleId]);
@@ -64,6 +73,7 @@ export const useDefiVote = (defiId: number, participations: ParticipationWithVot
         variant: "default"
       });
       
+      return true;
     } catch (error) {
       console.error('Error submitting vote:', error);
       toast({
@@ -71,6 +81,7 @@ export const useDefiVote = (defiId: number, participations: ParticipationWithVot
         description: "Une erreur est survenue lors de l'envoi de votre vote.",
         variant: "destructive"
       });
+      return false;
     } finally {
       setVoting(false);
     }

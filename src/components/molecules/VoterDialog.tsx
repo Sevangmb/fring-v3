@@ -7,8 +7,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogDescription,
   DialogClose,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { VoteType } from "@/services/votes/types";
@@ -48,10 +48,10 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
         let vote: VoteType = null;
         
         if (elementType === "ensemble") {
-          const { getUserVote: getUserEnsembleVote } = await import("@/services/ensemble/getUserVote");
+          const { getUserVote: getUserEnsembleVote } = await import("@/services/ensemble/votes");
           vote = await getUserEnsembleVote(elementId);
         } else if (elementType === "defi") {
-          const { getUserVote: getUserDefiVote } = await import("@/services/defi/votes/getUserVote");
+          const { getUserVote: getUserDefiVote } = await import("@/services/defi/votes");
           // Pass the numeric version of ensembleId
           vote = await getUserDefiVote(elementId, ensembleIdAsNumber || 0);
         }
