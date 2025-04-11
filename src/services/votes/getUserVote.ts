@@ -4,6 +4,10 @@ import { VoteType } from './types';
 
 /**
  * Récupère le vote d'un utilisateur pour un élément
+ * @param elementType Type d'élément ('ensemble' ou 'defi')
+ * @param elementId ID de l'élément
+ * @param ensembleId ID de l'ensemble (uniquement pour les votes dans un défi)
+ * @returns Type de vote ou null si pas de vote
  */
 export const getUserVote = async (
   elementType: 'ensemble' | 'defi', 
@@ -19,24 +23,41 @@ export const getUserVote = async (
       return null;
     }
     
-    // Déterminer la table et les conditions en fonction du type d'élément
-    const tableName = `${elementType}_votes`;
-    let query = supabase
-      .from(tableName)
-      .select('vote_type')
-      .eq(elementType === 'ensemble' ? 'ensemble_id' : 'defi_id', elementId)
-      .eq('user_id', userId);
-    
-    // Si on vérifie un vote pour un ensemble spécifique dans un défi
+    // Cas spécial: vote pour un ensemble dans un défi
     if (elementType === 'defi' && ensembleId !== undefined) {
-      query = query.eq('tenue_id', ensembleId);
+      const { data, error } = await supabase
+        .from('defi_votes')
+        .select('vote_type')
+        .eq('defi_id', elementId)
+        .eq('tenue_id', ensembleId)
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Erreur lors de la récupération du vote:', error);
+        return null;
+      }
+      
+      return data?.vote_type || null;
     }
     
-    const { data, error } = await query.maybeSingle();
+    // Votes standards
+    const tableName = `${elementType}_votes`;
+    const idColumnName = `${elementType}_id`;
     
-    if (error) throw error;
+    const { data, error } = await supabase
+      .from(tableName)
+      .select('vote_type')
+      .eq(idColumnName, elementId)
+      .eq('user_id', userId)
+      .maybeSingle();
     
-    return data?.vote_type as VoteType || null;
+    if (error) {
+      console.error('Erreur lors de la récupération du vote:', error);
+      return null;
+    }
+    
+    return data?.vote_type || null;
   } catch (error) {
     console.error('Erreur lors de la récupération du vote:', error);
     return null;

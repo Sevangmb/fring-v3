@@ -29,7 +29,7 @@ export function VoteButtons({
   className,
   ...props
 }: VoteButtonsProps) {
-  // Determine sizes based on the size prop
+  // Déterminer les tailles basées sur la prop size
   const buttonSizes = {
     sm: "h-6 w-6",
     md: "h-8 w-8",

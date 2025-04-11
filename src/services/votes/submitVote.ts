@@ -4,6 +4,11 @@ import { VoteType } from './types';
 
 /**
  * Soumettre un vote pour un élément (ensemble, défi, etc.)
+ * @param elementType Type d'élément ('ensemble' ou 'defi')
+ * @param elementId ID de l'élément
+ * @param vote Type de vote (up/down/null)
+ * @param ensembleId ID de l'ensemble (uniquement pour les votes dans un défi)
+ * @returns Succès ou échec de l'opération
  */
 export const submitVote = async (
   elementType: 'ensemble' | 'defi', 
@@ -22,32 +27,24 @@ export const submitVote = async (
       throw new Error('Vous devez être connecté pour voter');
     }
     
-    // Déterminer la table et les données en fonction du type d'élément
-    const tableName = `${elementType}_votes`;
-    let data: Record<string, any>;
+    // Si c'est un vote pour un ensemble dans un défi, rediriger vers le service spécialisé
+    if (elementType === 'defi' && ensembleId !== undefined) {
+      const { submitVote: submitDefiVote } = await import('@/services/defi/votes/submitVote');
+      return await submitDefiVote(elementId, ensembleId, vote);
+    }
     
+    // Déterminer la table et les données pour le vote standard
+    const tableName = `${elementType}_votes`;
+    const data: Record<string, any> = {
+      user_id: userId,
+      vote_type: vote
+    };
+    
+    // Ajouter l'ID approprié selon le type d'élément
     if (elementType === 'ensemble') {
-      data = {
-        user_id: userId,
-        ensemble_id: elementId,
-        vote_type: vote,
-        vote: vote // Pour la rétrocompatibilité
-      };
+      data.ensemble_id = elementId;
     } else if (elementType === 'defi') {
-      if (ensembleId !== undefined) {
-        // Pour les votes sur des ensembles dans un défi
-        // Utiliser le service spécifique pour ce cas
-        const { submitVote: submitDefiVote } = await import('@/services/defi/votes/submitVote');
-        return await submitDefiVote(elementId, ensembleId, vote);
-      } else {
-        // Pour les votes sur des défis uniquement
-        data = {
-          user_id: userId,
-          defi_id: elementId,
-          vote_type: vote,
-          vote: vote // Pour la rétrocompatibilité
-        };
-      }
+      data.defi_id = elementId;
     }
     
     // Vérifier si l'utilisateur a déjà voté
@@ -55,7 +52,7 @@ export const submitVote = async (
     
     if (elementType === 'ensemble') {
       query = query.eq('ensemble_id', elementId);
-    } else if (elementType === 'defi' && !ensembleId) { 
+    } else if (elementType === 'defi') {
       query = query.eq('defi_id', elementId);
     }
     
@@ -68,6 +65,26 @@ export const submitVote = async (
       return false;
     }
     
+    // Si vote est null, supprimer le vote
+    if (vote === null && existingVote) {
+      const { error } = await supabase
+        .from(tableName)
+        .delete()
+        .eq('id', existingVote.id);
+        
+      if (error) {
+        console.error('Erreur lors de la suppression du vote:', error);
+        return false;
+      }
+      
+      return true;
+    }
+    
+    // Pas de vote et vote null = ne rien faire
+    if (!existingVote && vote === null) {
+      return true;
+    }
+    
     if (existingVote) {
       // Si le vote est identique, ne rien faire
       if (existingVote.vote_type === vote) {
@@ -77,17 +94,14 @@ export const submitVote = async (
       // Mettre à jour le vote existant
       const { error } = await supabase
         .from(tableName)
-        .update({ 
-          vote_type: vote,
-          vote: vote // Pour la rétrocompatibilité
-        })
+        .update({ vote_type: vote })
         .eq('id', existingVote.id);
       
       if (error) {
         console.error('Erreur lors de la mise à jour du vote:', error);
         return false;
       }
-    } else {
+    } else if (vote) {
       // Créer un nouveau vote
       const { error } = await supabase
         .from(tableName)
