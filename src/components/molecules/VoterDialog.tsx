@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { VoteType } from "@/services/votes/types";
 import { useToast } from "@/hooks/use-toast";
 import RedditStyleVoter from "@/components/molecules/RedditStyleVoter";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface VoterDialogProps {
   elementId: number;
@@ -31,6 +32,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [userVote, setUserVote] = useState<VoteType>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Convert ensembleId to number to prevent type errors
@@ -41,6 +43,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
   useEffect(() => {
     const loadUserVote = async () => {
       try {
+        setError(null);
         let vote: VoteType = null;
         
         if (elementType === "ensemble") {
@@ -55,6 +58,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
         setUserVote(vote);
       } catch (error) {
         console.error("Erreur lors du chargement du vote:", error);
+        setError("Erreur lors du chargement de votre vote. Veuillez réessayer.");
         const { writeLog } = await import("@/services/logs");
         writeLog(
           "Erreur lors du chargement du vote utilisateur", 
@@ -71,6 +75,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
   const handleVoteInDialog = async (vote: VoteType) => {
     if (!vote) return;
     setIsSubmitting(true);
+    setError(null);
     
     try {
       let success = false;
@@ -97,6 +102,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
         
         setIsOpen(false);
       } else {
+        setError("Impossible d'enregistrer votre vote. Veuillez réessayer.");
         toast({
           title: "Erreur",
           description: "Impossible d'enregistrer votre vote. Veuillez réessayer.",
@@ -105,6 +111,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
       }
     } catch (error) {
       console.error("Erreur lors du vote:", error);
+      setError("Une erreur est survenue lors de l'enregistrement de votre vote.");
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de l'enregistrement de votre vote.",
@@ -145,6 +152,13 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
             Donnez votre avis sur {elementType === "ensemble" ? "cet ensemble" : "ce défi"}
           </DialogDescription>
         </DialogHeader>
+        
+        {error && (
+          <Alert variant="destructive" className="mb-4 bg-red-100 text-red-900 border-red-200 dark:bg-red-900 dark:text-red-50 dark:border-red-800">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        
         <div className="flex justify-center py-4">
           <RedditStyleVoter
             entityType={elementType}

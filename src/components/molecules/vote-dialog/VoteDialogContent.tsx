@@ -1,9 +1,10 @@
 
 import React from "react";
-import { Alert, Box, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { WifiOff, AlertTriangle } from "lucide-react";
 import VoteButtons from "@/components/defis/voting/VoteButtons";
 import EnsembleContentDisplay from "../EnsembleContentDisplay";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface VoteDialogContentProps {
   ensemble: any;
@@ -34,35 +35,41 @@ const VoteDialogContent: React.FC<VoteDialogContentProps> = ({
   return (
     <>
       {connectionError && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert variant="destructive" className="mb-4 bg-red-100 text-red-900 border-red-200 dark:bg-red-900 dark:text-red-50 dark:border-red-800">
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <WifiOff size={16} />
-            <Typography variant="body2">
+            <AlertDescription>
               Problème de connexion. Vérifiez votre connexion internet.
-            </Typography>
+            </AlertDescription>
           </Box>
         </Alert>
       )}
       
       {(!ensemble && !loading && !error) && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
+        <Alert variant="destructive" className="mb-4 bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900 dark:text-amber-50 dark:border-amber-800">
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <AlertTriangle size={16} />
-            <Typography variant="body2">
+            <AlertDescription>
               Aucun ensemble disponible. L'ensemble n'a pas pu être chargé ou n'existe pas.
-            </Typography>
+            </AlertDescription>
           </Box>
         </Alert>
       )}
       
       {hasEmptyEnsemble && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
+        <Alert variant="destructive" className="mb-4 bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900 dark:text-amber-50 dark:border-amber-800">
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <AlertTriangle size={16} />
-            <Typography variant="body2">
+            <AlertDescription>
               Cet ensemble ne contient aucun vêtement.
-            </Typography>
+            </AlertDescription>
           </Box>
+        </Alert>
+      )}
+      
+      {error && (
+        <Alert variant="destructive" className="mb-4 bg-red-100 text-red-900 border-red-200 dark:bg-red-900 dark:text-red-50 dark:border-red-800">
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
       
