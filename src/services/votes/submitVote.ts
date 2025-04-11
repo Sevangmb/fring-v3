@@ -33,7 +33,7 @@ export const submitVote = async (
     } else if (elementType === 'defi') {
       data.defi_id = elementId;
       // Si on vote pour un ensemble spécifique dans un défi
-      if (ensembleId) {
+      if (ensembleId !== undefined) {
         data.ensemble_id = ensembleId;
       }
     }

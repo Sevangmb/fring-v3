@@ -24,7 +24,7 @@ export const getVotesCount = async (
       query = query.eq('defi_id', elementId);
       
       // Si on compte les votes pour un ensemble spécifique dans un défi
-      if (ensembleId) {
+      if (ensembleId !== undefined) {
         query = query.eq('ensemble_id', ensembleId);
       } else {
         query = query.is('ensemble_id', null);

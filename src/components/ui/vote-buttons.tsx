@@ -1,19 +1,19 @@
 
-import * as React from "react"
-import { ArrowBigDown, ArrowBigUp, Loader2 } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { VoteType } from "@/services/votes/types"
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { ArrowUp, ArrowDown, Loader2 } from "lucide-react";
 
-interface VoteButtonsProps extends React.HTMLAttributes<HTMLDivElement> {
-  score?: number
-  userVote?: VoteType
-  size?: "sm" | "md" | "lg"
-  onUpvote?: () => void
-  onDownvote?: () => void
-  isLoading?: boolean
-  vertical?: boolean
-  showScore?: boolean
+export interface VoteButtonsProps extends React.HTMLAttributes<HTMLDivElement> {
+  score?: number;
+  userVote?: 'up' | 'down' | null;
+  size?: "sm" | "md" | "lg";
+  onUpvote: () => void;
+  onDownvote: () => void;
+  isLoading?: boolean;
+  disabled?: boolean;
+  vertical?: boolean;
+  showScore?: boolean;
 }
 
 export function VoteButtons({
@@ -23,76 +23,75 @@ export function VoteButtons({
   onUpvote,
   onDownvote,
   isLoading = false,
+  disabled = false,
   vertical = true,
   showScore = true,
   className,
   ...props
 }: VoteButtonsProps) {
-  // Size configurations
-  const config = {
-    sm: { buttonSize: "sm" as const, iconSize: 16, fontSize: "text-xs" },
-    md: { buttonSize: "sm" as const, iconSize: 18, fontSize: "text-sm" },
-    lg: { buttonSize: "default" as const, iconSize: 22, fontSize: "text-base" },
-  }
-  
-  const { buttonSize, iconSize, fontSize } = config[size]
-  
-  // Determine score color based on value
-  const scoreColor = 
-    score > 0 ? "text-orange-600" : 
-    score < 0 ? "text-blue-600" : 
-    "text-gray-500"
+  // Determine sizes based on the size prop
+  const buttonSizes = {
+    sm: "h-6 w-6",
+    md: "h-8 w-8",
+    lg: "h-10 w-10",
+  };
+
+  const iconSizes = {
+    sm: "h-3 w-3",
+    md: "h-4 w-4",
+    lg: "h-5 w-5",
+  };
+
+  const scoreSizes = {
+    sm: "text-xs",
+    md: "text-sm",
+    lg: "text-base font-medium",
+  };
 
   return (
-    <div 
+    <div
       className={cn(
-        "flex items-center gap-1", 
+        "flex items-center gap-1",
         vertical ? "flex-col" : "flex-row",
         className
-      )} 
+      )}
       {...props}
     >
       <Button
-        size={buttonSize}
         variant="ghost"
-        disabled={isLoading}
+        size="icon"
         onClick={onUpvote}
+        disabled={disabled || isLoading}
         className={cn(
-          "rounded-full p-0 h-auto", 
-          userVote === "up" ? "text-orange-600" : "text-gray-500 hover:text-orange-600"
+          buttonSizes[size],
+          userVote === "up" && "text-green-500 bg-green-50 hover:bg-green-100 hover:text-green-600"
         )}
       >
         {isLoading ? (
-          <Loader2 size={iconSize} className="animate-spin" />
+          <Loader2 className={cn(iconSizes[size], "animate-spin")} />
         ) : (
-          <ArrowBigUp size={iconSize} />
+          <ArrowUp className={iconSizes[size]} />
         )}
-        <span className="sr-only">Upvote</span>
       </Button>
       
       {showScore && (
-        <span className={cn("font-medium", fontSize, scoreColor)}>
+        <span className={cn(scoreSizes[size], "text-center min-w-[20px]")}>
           {score}
         </span>
       )}
       
       <Button
-        size={buttonSize}
         variant="ghost"
-        disabled={isLoading}
+        size="icon"
         onClick={onDownvote}
+        disabled={disabled || isLoading}
         className={cn(
-          "rounded-full p-0 h-auto", 
-          userVote === "down" ? "text-blue-600" : "text-gray-500 hover:text-blue-600"
+          buttonSizes[size],
+          userVote === "down" && "text-red-500 bg-red-50 hover:bg-red-100 hover:text-red-600"
         )}
       >
-        {isLoading ? (
-          <Loader2 size={iconSize} className="animate-spin" />
-        ) : (
-          <ArrowBigDown size={iconSize} />
-        )}
-        <span className="sr-only">Downvote</span>
+        <ArrowDown className={iconSizes[size]} />
       </Button>
     </div>
-  )
+  );
 }

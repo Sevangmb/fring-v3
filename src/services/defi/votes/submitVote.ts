@@ -5,15 +5,13 @@ import { VoteType } from '@/services/votes/types';
 /**
  * Soumet un vote pour un ensemble dans un défi
  * @param defiId ID du défi
- * @param ensembleId ID de l'ensemble
  * @param vote Type de vote (up/down)
  * @returns Succès ou échec
  */
 export const submitVote = async (
   defiId: number,
   ensembleId: number,
-  vote: VoteType,
-  entityType = 'ensemble'
+  vote: VoteType
 ): Promise<boolean> => {
   try {
     if (!vote) return false;

@@ -10,13 +10,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { submitVote as submitEnsembleVote } from "@/services/ensemble/votes";
-import { submitVote as submitDefiVote } from "@/services/defi/votes/submitVote";
-import { getUserVote as getUserEnsembleVote } from "@/services/ensemble/getUserVote";
-import { getUserVote as getUserDefiVote } from "@/services/defi/votes/getUserVote";
 import { VoteType } from "@/services/votes/types";
 import { useToast } from "@/hooks/use-toast";
-import { writeLog } from "@/services/logs";
+import RedditStyleVoter from "@/components/molecules/RedditStyleVoter";
 
 interface VoterDialogProps {
   elementId: number;
@@ -36,25 +32,29 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+  // Convert ensembleId to number to prevent type errors
+  const ensembleIdAsNumber = ensembleId !== undefined 
+    ? (typeof ensembleId === 'string' ? parseInt(ensembleId, 10) : Number(ensembleId)) 
+    : undefined;
+
   useEffect(() => {
     const loadUserVote = async () => {
       try {
         let vote: VoteType = null;
         
         if (elementType === "ensemble") {
+          const { getUserVote: getUserEnsembleVote } = await import("@/services/ensemble/getUserVote");
           vote = await getUserEnsembleVote(elementId);
         } else if (elementType === "defi") {
-          // Convert ensembleId to number properly
-          const ensembleIdNumber = ensembleId !== undefined 
-            ? (typeof ensembleId === 'string' ? parseInt(ensembleId, 10) : Number(ensembleId))
-            : 0;
-          
-          vote = await getUserDefiVote(elementId, ensembleIdNumber);
+          const { getUserVote: getUserDefiVote } = await import("@/services/defi/votes/getUserVote");
+          // Ensure ensembleIdAsNumber is a number
+          vote = await getUserDefiVote(elementId, ensembleIdAsNumber || 0);
         }
         
         setUserVote(vote);
       } catch (error) {
         console.error("Erreur lors du chargement du vote:", error);
+        const { writeLog } = await import("@/services/logs");
         writeLog(
           "Erreur lors du chargement du vote utilisateur", 
           "error", 
@@ -65,24 +65,22 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
     };
 
     loadUserVote();
-  }, [elementId, elementType, ensembleId]);
+  }, [elementId, elementType, ensembleIdAsNumber]);
 
-  const handleVote = async (vote: "up" | "down") => {
+  const handleVoteInDialog = async (vote: VoteType) => {
+    if (!vote) return;
     setIsSubmitting(true);
+    
     try {
       let success = false;
       
       if (elementType === "ensemble") {
+        const { submitVote: submitEnsembleVote } = await import("@/services/ensemble/votes");
         success = await submitEnsembleVote(elementId, vote);
       } else if (elementType === "defi") {
-        // Ensure ensembleId is always converted to a number
-        const ensembleIdNumber = typeof ensembleId === 'string' 
-          ? parseInt(ensembleId, 10) 
-          : ensembleId !== undefined 
-              ? Number(ensembleId) 
-              : 0;
-          
-        success = await submitDefiVote(elementId, vote, ensembleIdNumber);
+        const { submitVote: submitDefiVote } = await import("@/services/defi/votes/submitVote");
+        // Ensure ensembleIdAsNumber is a number when passing to the function
+        success = await submitDefiVote(elementId, vote, ensembleIdAsNumber || 0);
       }
       
       if (success) {
@@ -92,14 +90,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
           description: vote === "up" ? "Vous aimez cet élément" : "Vous n'aimez pas cet élément",
         });
         
-        writeLog(
-          `Vote ${vote} enregistré`, 
-          "info", 
-          `Element type: ${elementType}, Element ID: ${elementId}`,
-          "votes"
-        );
-        
-        if (onVoteSubmitted) {
+        if (onVoteSubmitted && (vote === "up" || vote === "down")) {
           onVoteSubmitted(vote);
         }
         
@@ -110,13 +101,6 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
           description: "Impossible d'enregistrer votre vote. Veuillez réessayer.",
           variant: "destructive",
         });
-        
-        writeLog(
-          "Échec de l'enregistrement du vote", 
-          "warning", 
-          `Element type: ${elementType}, Element ID: ${elementId}, Vote: ${vote}`,
-          "votes"
-        );
       }
     } catch (error) {
       console.error("Erreur lors du vote:", error);
@@ -125,13 +109,6 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
         description: "Une erreur est survenue lors de l'enregistrement de votre vote.",
         variant: "destructive",
       });
-      
-      writeLog(
-        "Erreur lors de l'enregistrement du vote", 
-        "error", 
-        `Element type: ${elementType}, Element ID: ${elementId}, Vote: ${vote}, Error: ${error instanceof Error ? error.message : String(error)}`,
-        "votes"
-      );
     } finally {
       setIsSubmitting(false);
     }
@@ -167,24 +144,19 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
             Donnez votre avis sur {elementType === "ensemble" ? "cet ensemble" : "ce défi"}
           </DialogDescription>
         </DialogHeader>
-        <div className="flex justify-center space-x-4 py-4">
-          <Button
-            onClick={() => handleVote("up")}
-            disabled={isSubmitting}
-            className="bg-green-500 hover:bg-green-600"
-          >
-            <ThumbsUp className="h-5 w-5 mr-2" />
-            J'aime
-          </Button>
-          <Button
-            onClick={() => handleVote("down")}
-            disabled={isSubmitting}
-            variant="outline"
-            className="border-red-500 text-red-500 hover:bg-red-50 hover:text-red-600"
-          >
-            <ThumbsDown className="h-5 w-5 mr-2" />
-            Je n'aime pas
-          </Button>
+        <div className="flex justify-center py-4">
+          <RedditStyleVoter
+            entityType={elementType}
+            entityId={elementId}
+            defiId={ensembleIdAsNumber}
+            initialVote={userVote}
+            size="lg"
+            vertical={false}
+            showScore={false}
+            onVoteChange={(vote) => handleVoteInDialog(vote)}
+            isLoading={isSubmitting}
+            className="gap-6"
+          />
         </div>
       </DialogContent>
     </Dialog>

@@ -28,7 +28,7 @@ export const getUserVote = async (
       .eq('user_id', userId);
     
     // Si on vérifie un vote pour un ensemble spécifique dans un défi
-    if (elementType === 'defi' && ensembleId) {
+    if (elementType === 'defi' && ensembleId !== undefined) {
       query = query.eq('ensemble_id', ensembleId);
     } else if (elementType === 'defi') {
       query = query.is('ensemble_id', null);
