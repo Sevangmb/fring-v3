@@ -24,7 +24,7 @@ export const submitVote = async (
       throw new Error("Utilisateur non connecté");
     }
 
-    console.log(`Soumission du vote: défi=${defiId}, ensemble=${ensembleId}, vote=${vote}, utilisateur=${userId}`);
+    console.log(`Soumission du vote pour défi ${defiId}, ensemble ${ensembleId}, vote=${vote}, utilisateur=${userId}`);
 
     // Vérifier si l'utilisateur a déjà voté pour cet ensemble dans ce défi
     const { data: existingVote, error: checkError } = await supabase
