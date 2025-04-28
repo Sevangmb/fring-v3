@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import Card, { CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/molecules/Card";
@@ -19,7 +18,8 @@ const VetementCard: React.FC<VetementCardProps> = ({ vetement, onDelete, showOwn
   const navigate = useNavigate();
   const { categories, getCategoryNameById } = useVetements();
 
-  const handleEdit = () => {
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
     navigate(`/mes-vetements/modifier/${vetement.id}`);
   };
 

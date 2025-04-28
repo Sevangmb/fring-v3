@@ -63,6 +63,10 @@ export const authenticatedRoutes: RouteObject[] = [
     element: protect(ModifierVetement)
   },
   {
+    path: "/mes-vetements/modifier/:id",
+    element: protect(ModifierVetement)
+  },
+  {
     path: "/vetements/amis",
     element: protect(VetementsAmis)
   },
