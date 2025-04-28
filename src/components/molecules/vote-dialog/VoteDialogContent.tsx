@@ -1,11 +1,10 @@
 
 import React from "react";
 import { Box, Typography } from "@mui/material";
-import { WifiOff, AlertTriangle, ThumbsUp, ThumbsDown } from "lucide-react";
-import VoteButtons from "@/components/defis/voting/VoteButtons";
+import { WifiOff, AlertTriangle } from "lucide-react";
 import EnsembleContentDisplay from "../EnsembleContentDisplay";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import VoteButtons from "@/components/defis/voting/VoteButtons";
 import EnsembleImages from "@/components/ensembles/EnsembleImages";
 
 interface VoteDialogContentProps {
@@ -31,111 +30,83 @@ const VoteDialogContent: React.FC<VoteDialogContentProps> = ({
   isOffline,
   onVote
 }) => {
-  const connectionError = isOffline;
-  const hasEmptyEnsemble = ensemble && (!ensemble.vetements || ensemble.vetements.length === 0);
-  
+  if (loading) {
+    return (
+      <Box className="flex justify-center items-center min-h-[200px]">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </Box>
+    );
+  }
+
+  // Handle error states
+  if (error || !ensemble) {
+    return (
+      <Alert variant="destructive" className="mb-4">
+        <AlertDescription>
+          {error || "L'ensemble n'a pas pu être chargé"}
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  // Handle offline state
+  if (isOffline) {
+    return (
+      <Alert variant="destructive" className="mb-4">
+        <Box className="flex items-center gap-2">
+          <WifiOff className="h-4 w-4" />
+          <AlertDescription>
+            Problème de connexion. Vérifiez votre connexion internet.
+          </AlertDescription>
+        </Box>
+      </Alert>
+    );
+  }
+
   return (
-    <>
-      {connectionError && (
-        <Alert variant="destructive" className="mb-4 bg-red-100 text-red-900 border-red-200 dark:bg-red-900 dark:text-red-50 dark:border-red-800">
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <WifiOff size={16} />
-            <AlertDescription>
-              Problème de connexion. Vérifiez votre connexion internet.
-            </AlertDescription>
-          </Box>
-        </Alert>
-      )}
+    <div className="space-y-6">
+      {/* Images Section */}
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg">
+        <EnsembleImages 
+          vetementsByType={vetementsByType}
+          className="w-full h-full object-cover"
+        />
+      </div>
       
-      {(!ensemble && !loading && !error) && (
-        <Alert variant="destructive" className="mb-4 bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900 dark:text-amber-50 dark:border-amber-800">
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <AlertTriangle size={16} />
-            <AlertDescription>
-              Aucun ensemble disponible. L'ensemble n'a pas pu être chargé ou n'existe pas.
-            </AlertDescription>
-          </Box>
-        </Alert>
-      )}
-      
-      {hasEmptyEnsemble && (
-        <Alert variant="destructive" className="mb-4 bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900 dark:text-amber-50 dark:border-amber-800">
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <AlertTriangle size={16} />
-            <AlertDescription>
-              Cet ensemble ne contient aucun vêtement.
-            </AlertDescription>
-          </Box>
-        </Alert>
-      )}
-      
-      {error && (
-        <Alert variant="destructive" className="mb-4 bg-red-100 text-red-900 border-red-200 dark:bg-red-900 dark:text-red-50 dark:border-red-800">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      
-      {ensemble && !loading && (
-        <div className="text-center mb-4">
-          <h3 className="text-xl font-semibold text-primary">{ensemble.nom}</h3>
+      {/* Ensemble Details */}
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-lg font-semibold">{ensemble.nom}</h3>
           {ensemble.description && (
-            <p className="text-muted-foreground mt-1">{ensemble.description}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {ensemble.description}
+            </p>
           )}
         </div>
-      )}
-      
-      {ensemble && !loading && (
-        <div className="mb-6">
-          <EnsembleImages 
-            vetementsByType={vetementsByType}
-            className="w-full"
+
+        <EnsembleContentDisplay 
+          ensemble={ensemble}
+          loading={loading}
+          error={error || ''}
+          vetementsByType={vetementsByType}
+        />
+      </div>
+
+      {/* Vote Buttons */}
+      {!hasVoted && (
+        <div className="flex justify-center pt-4">
+          <VoteButtons
+            userVote={userVote}
+            onVote={onVote}
+            size="lg"
+            showLabels={true}
+            isLoading={isVoting}
+            disabled={isOffline}
+            connectionError={isOffline}
           />
         </div>
       )}
-      
-      <EnsembleContentDisplay
-        ensemble={ensemble}
-        loading={loading}
-        error={error || ''}
-        vetementsByType={vetementsByType}
-      />
-      
-      {!hasVoted && ensemble && (
-        <div className="flex justify-center gap-6 pt-4">
-          <Button
-            onClick={() => onVote('up')}
-            disabled={isVoting || loading || isOffline}
-            variant="outline"
-            className={`p-6 rounded-full hover:bg-green-100 transition-colors ${
-              userVote === 'up' ? 'bg-green-100 border-green-500' : ''
-            }`}
-            aria-label="J'aime"
-          >
-            {isVoting ? (
-              <div className="animate-spin h-6 w-6 border-2 border-green-500 border-t-transparent rounded-full"></div>
-            ) : (
-              <ThumbsUp size={32} className={userVote === 'up' ? 'text-green-500' : 'text-gray-500'} />
-            )}
-          </Button>
-          
-          <Button
-            onClick={() => onVote('down')}
-            disabled={isVoting || loading || isOffline}
-            variant="outline"
-            className={`p-6 rounded-full hover:bg-red-100 transition-colors ${
-              userVote === 'down' ? 'bg-red-100 border-red-500' : ''
-            }`}
-            aria-label="Je n'aime pas"
-          >
-            {isVoting ? (
-              <div className="animate-spin h-6 w-6 border-2 border-red-500 border-t-transparent rounded-full"></div>
-            ) : (
-              <ThumbsDown size={32} className={userVote === 'down' ? 'text-red-500' : 'text-gray-500'} />
-            )}
-          </Button>
-        </div>
-      )}
-    </>
+    </div>
   );
 };
 
