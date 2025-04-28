@@ -34,6 +34,26 @@ export const weatherTypeOptions = [
 
 export type WeatherTypeOption = typeof weatherTypeOptions[number]["value"];
 
+// État options
+export const etatOptions = [
+  { value: "neuf", label: "Neuf" },
+  { value: "très bon", label: "Très bon" },
+  { value: "bon", label: "Bon" },
+  { value: "moyen", label: "Moyen" },
+  { value: "usé", label: "Usé" },
+] as const;
+
+export type EtatOption = typeof etatOptions[number]["value"];
+
+// Disponibilité options
+export const disponibiliteOptions = [
+  { value: "disponible", label: "Disponible" },
+  { value: "réservé", label: "Réservé" },
+  { value: "vendu", label: "Vendu" },
+] as const;
+
+export type DisponibiliteOption = typeof disponibiliteOptions[number]["value"];
+
 // Schema for vetement form
 export const vetementFormSchema = z.object({
   nom: z.string().min(1, "Le nom est requis"),
@@ -48,6 +68,15 @@ export const vetementFormSchema = z.object({
   temperature: z.enum(["froid", "tempere", "chaud"]).optional(),
   weatherType: z.enum(["normal", "pluie", "neige"]).optional(),
   image_url: z.string().optional(),
+  // Nouveaux champs pour la vente
+  a_vendre: z.boolean().optional().default(false),
+  prix_achat: z.number().optional().nullable(),
+  prix_vente: z.number().optional().nullable(),
+  lieu_vente: z.string().optional().nullable(),
+  infos_vente: z.string().optional().nullable(),
+  promo_pourcentage: z.number().min(0).max(100).optional().nullable(),
+  etat: z.enum(["neuf", "très bon", "bon", "moyen", "usé"]).optional().nullable(),
+  disponibilite: z.enum(["disponible", "réservé", "vendu"]).optional().default("disponible"),
 });
 
 // Type for form values

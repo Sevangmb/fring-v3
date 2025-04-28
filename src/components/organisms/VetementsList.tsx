@@ -16,6 +16,7 @@ interface VetementsListProps {
   onVetementDeleted: (id: number) => void;
   showOwner?: boolean;
   hideTitle?: boolean;
+  showVenteInfo?: boolean;
 }
 
 const VetementsList: React.FC<VetementsListProps> = ({ 
@@ -25,7 +26,8 @@ const VetementsList: React.FC<VetementsListProps> = ({
   isAuthenticated,
   onVetementDeleted,
   showOwner = false,
-  hideTitle = false
+  hideTitle = false,
+  showVenteInfo = false
 }) => {
   const { handleDelete, navigateToAdd, navigateToLogin, navigateToFriends } = useVetementOperations();
 
@@ -79,7 +81,7 @@ const VetementsList: React.FC<VetementsListProps> = ({
       <EmptyStateMessage
         icon={<Shirt size={48} />}
         title="Aucun vêtement trouvé"
-        description="Vous n'avez pas encore ajouté de vêtements à votre collection."
+        description={showVenteInfo ? "Vous n'avez pas encore de vêtements à vendre." : "Vous n'avez pas encore ajouté de vêtements à votre collection."}
         buttonText="Ajouter un vêtement"
         buttonIcon={<Plus className="mr-2 h-4 w-4" />}
         onButtonClick={navigateToAdd}
@@ -110,6 +112,7 @@ const VetementsList: React.FC<VetementsListProps> = ({
           vetement={vetement} 
           onDelete={onDeleteVetement}
           showOwner={showOwner}
+          showVenteInfo={showVenteInfo}
         />
       ))}
     </div>

@@ -14,4 +14,13 @@ export interface Vetement {
   owner_email?: string;
   temperature?: "froid" | "tempere" | "chaud";
   weatherType?: "pluie" | "neige" | "normal";
+  // Nouveaux champs pour la vente
+  prix_achat?: number;
+  prix_vente?: number;
+  a_vendre?: boolean;
+  lieu_vente?: string;
+  infos_vente?: string;
+  promo_pourcentage?: number;
+  etat?: "neuf" | "très bon" | "bon" | "moyen" | "usé";
+  disponibilite?: "disponible" | "réservé" | "vendu";
 }

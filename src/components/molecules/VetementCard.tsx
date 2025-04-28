@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import Card, { CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/molecules/Card";
 import { Text } from "@/components/atoms/Typography";
 import { Button } from "@/components/ui/button";
-import { Shirt, Edit, Trash2, TagIcon, User } from "lucide-react";
+import { Shirt, Edit, Trash2, TagIcon, User, CircleDollarSign } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Vetement } from '@/services/vetement/types';
 import { useVetements } from '@/hooks/useVetements';
 import FavoriButton from '@/components/atoms/FavoriButton';
@@ -12,9 +14,10 @@ interface VetementCardProps {
   vetement: Vetement;
   onDelete: (id: number) => Promise<void>;
   showOwner?: boolean;
+  showVenteInfo?: boolean;
 }
 
-const VetementCard: React.FC<VetementCardProps> = ({ vetement, onDelete, showOwner = false }) => {
+const VetementCard: React.FC<VetementCardProps> = ({ vetement, onDelete, showOwner = false, showVenteInfo = false }) => {
   const navigate = useNavigate();
   const { categories, getCategoryNameById } = useVetements();
 
@@ -31,6 +34,23 @@ const VetementCard: React.FC<VetementCardProps> = ({ vetement, onDelete, showOwn
     }
   };
 
+  // Calculer le prix final avec réduction si applicable
+  const calculerPrixFinal = () => {
+    if (!vetement.prix_vente) return null;
+    if (!vetement.promo_pourcentage) return vetement.prix_vente;
+    
+    const reduction = vetement.prix_vente * (vetement.promo_pourcentage / 100);
+    return vetement.prix_vente - reduction;
+  };
+
+  // Calculer la marge si les deux prix sont disponibles
+  const calculerMarge = () => {
+    if (!vetement.prix_achat || !vetement.prix_vente) return null;
+    return vetement.prix_vente - vetement.prix_achat;
+  };
+
+  const marge = calculerMarge();
+  const prixFinal = calculerPrixFinal();
   const categoryName = getCategoryNameById(vetement.categorie_id);
 
   return (
@@ -64,6 +84,16 @@ const VetementCard: React.FC<VetementCardProps> = ({ vetement, onDelete, showOwn
           )}
         </div>
         
+        {/* Indicateur "À vendre" */}
+        {vetement.a_vendre && (
+          <div className="absolute top-2 left-2 z-10">
+            <Badge variant="secondary" className="flex items-center gap-1 px-2 py-1 bg-primary/80 text-primary-foreground backdrop-blur-sm">
+              <CircleDollarSign className="h-3 w-3" />
+              <span className="text-xs font-medium">À vendre</span>
+            </Badge>
+          </div>
+        )}
+        
         <div className="aspect-square bg-muted/20 relative">
           {vetement.image_url ? (
             <img 
@@ -96,6 +126,59 @@ const VetementCard: React.FC<VetementCardProps> = ({ vetement, onDelete, showOwn
             <CardDescription className="line-clamp-1">
               {vetement.marque}
             </CardDescription>
+          )}
+
+          {/* Informations de vente */}
+          {(showVenteInfo || vetement.a_vendre) && vetement.prix_vente && (
+            <div className="mt-3 space-y-1">
+              <div className="flex items-center justify-between">
+                <Text variant="subtle">Prix:</Text>
+                <div className="flex items-center gap-2">
+                  {vetement.promo_pourcentage ? (
+                    <>
+                      <Text className="line-through text-muted-foreground">
+                        {vetement.prix_vente} €
+                      </Text>
+                      <Text className="font-semibold text-primary">
+                        {prixFinal?.toFixed(2)} €
+                      </Text>
+                      <Badge variant="outline" className="ml-1">
+                        -{vetement.promo_pourcentage}%
+                      </Badge>
+                    </>
+                  ) : (
+                    <Text className="font-semibold">{vetement.prix_vente} €</Text>
+                  )}
+                </div>
+              </div>
+
+              {marge !== null && (
+                <div className="flex items-center justify-between text-xs">
+                  <Text variant="subtle">Marge:</Text>
+                  <Text className={marge > 0 ? "text-green-600" : "text-red-600"}>
+                    {marge.toFixed(2)} €
+                  </Text>
+                </div>
+              )}
+
+              {vetement.etat && (
+                <div className="flex items-center justify-between text-xs">
+                  <Text variant="subtle">État:</Text>
+                  <Badge variant="outline" className="capitalize">
+                    {vetement.etat}
+                  </Badge>
+                </div>
+              )}
+
+              {vetement.disponibilite && vetement.disponibilite !== "disponible" && (
+                <Badge 
+                  className={`w-full justify-center mt-1 ${
+                    vetement.disponibilite === "vendu" ? "bg-green-600" : "bg-amber-500"
+                  }`}>
+                  {vetement.disponibilite === "vendu" ? "Vendu" : "Réservé"}
+                </Badge>
+              )}
+            </div>
           )}
         </CardHeader>
         

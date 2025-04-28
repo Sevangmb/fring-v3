@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Form } from "@/components/ui/form";
-import { Save, FileText, Info, Tag } from "lucide-react";
+import { FileText, Info, Tag, CircleDollarSign } from "lucide-react";
 import { useVetementForm } from "@/hooks/useVetementForm";
 import VetementFormFields from "./VetementFormFields";
 import { VetementFormValues } from "./schema/VetementFormSchema";
@@ -64,6 +64,10 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
             <Info className="h-4 w-4" />
             Informations supplémentaires
           </TabsTrigger>
+          <TabsTrigger value="vente" className="flex items-center gap-2">
+            <CircleDollarSign className="h-4 w-4" />
+            Vente
+          </TabsTrigger>
           <TabsTrigger value="etiquette" className="flex items-center gap-2">
             <Tag className="h-4 w-4" />
             Étiquette
@@ -103,6 +107,16 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
                   />
                 </TabsContent>
                 
+                <TabsContent value="vente">
+                  <VetementFormFields
+                    form={form}
+                    marques={marques}
+                    loading={loading}
+                    onCategoriesChange={() => {}}
+                    activeTab="vente"
+                  />
+                </TabsContent>
+                
                 <TabsContent value="etiquette">
                   <VetementFormFields
                     form={form}
@@ -117,7 +131,7 @@ const VetementFormContainer: React.FC<VetementFormContainerProps> = ({
                   isSubmitting={isSubmitting}
                   onCancel={() => navigate("/mes-vetements/liste")}
                   submitLabel={submitLabel || (mode === "create" ? "Ajouter le vêtement" : "Enregistrer les modifications")}
-                  submitIcon={submitIcon || (mode === "update" ? <Save className="mr-2 h-4 w-4" /> : undefined)}
+                  submitIcon={submitIcon || undefined}
                 />
               </form>
             </Form>

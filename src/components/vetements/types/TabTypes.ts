@@ -1,4 +1,9 @@
 
-export type TabType = 'mes-vetements' | 'ajouter-vetement' | 'vetements-amis' | 'mes-ensembles' | 'ajouter-ensemble';
-
-export type TabChangeHandler = (value: TabType) => void;
+export type TabType = 
+  | 'mes-vetements'
+  | 'ajouter-vetement'
+  | 'mes-ensembles'
+  | 'ajouter-ensemble'
+  | 'vetements-amis'
+  | 'ensembles-amis'
+  | 'a-vendre'; // Nouvel onglet

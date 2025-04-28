@@ -1,3 +1,4 @@
+
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { VetementFormValues } from "./schema/VetementFormSchema";
@@ -9,7 +10,8 @@ import MarqueField from "./form-fields/MarqueField";
 import DescriptionField from "./form-fields/DescriptionField";
 import TemperatureField from "./form-fields/TemperatureField";
 import WeatherTypeField from "./form-fields/WeatherTypeField";
-import { Tag } from "lucide-react";
+import VenteFields from "./form-fields/VenteFields";
+import { Tag, Info, CircleDollarSign } from "lucide-react";
 
 interface VetementFormFieldsProps {
   form: UseFormReturn<VetementFormValues>;
@@ -85,6 +87,14 @@ const VetementFormFields: React.FC<VetementFormFieldsProps> = ({
             </p>
           </div>
         </div>
+      </div>
+    );
+  }
+  
+  if (activeTab === "vente") {
+    return (
+      <div className="space-y-4">
+        <VenteFields form={form} />
       </div>
     );
   }

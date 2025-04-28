@@ -2,6 +2,7 @@ import React from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import AjouterEnsembleTab from "./tabs/AjouterEnsembleTab";
 import MesVetementsTab from "./tabs/MesVetementsTab";
+import AVendreTab from "./tabs/AVendreTab";
 import AjouterVetement from "@/pages/vetements/AjouterVetement";
 import MesEnsembles from "@/pages/ensembles/MesEnsembles";
 import { useVetementsData } from "@/hooks/useVetementsData";
@@ -44,6 +45,10 @@ const TabContentRenderer: React.FC<TabContentRendererProps> = ({ children }) => 
       
       <TabsContent value="ajouter-ensemble">
         <AjouterEnsembleTab />
+      </TabsContent>
+      
+      <TabsContent value="a-vendre">
+        <AVendreTab />
       </TabsContent>
       
       {/* Other tab contents will be provided via children */}

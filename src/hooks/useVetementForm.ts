@@ -30,6 +30,14 @@ export const useVetementForm = (
       marque: "",
       temperature: undefined,
       image_url: "",
+      a_vendre: false,
+      prix_achat: null,
+      prix_vente: null,
+      lieu_vente: "",
+      infos_vente: "",
+      promo_pourcentage: null,
+      etat: null,
+      disponibilite: "disponible"
     },
   });
 
@@ -77,6 +85,17 @@ export const useVetementForm = (
         image_url: imagePreview || data.image_url || null,
       };
       
+      // Si a_vendre est false, on s'assure que les champs de vente sont null/vides
+      if (!formDataWithImage.a_vendre) {
+        formDataWithImage.prix_achat = null;
+        formDataWithImage.prix_vente = null;
+        formDataWithImage.lieu_vente = null;
+        formDataWithImage.infos_vente = null;
+        formDataWithImage.promo_pourcentage = null;
+        formDataWithImage.etat = null;
+        formDataWithImage.disponibilite = "disponible";
+      }
+      
       console.log("Données complètes avec image:", formDataWithImage);
       
       if (mode === "update" && onSubmit) {
@@ -91,7 +110,15 @@ export const useVetementForm = (
           marque: formDataWithImage.marque || null,
           image_url: formDataWithImage.image_url || null,
           temperature: formDataWithImage.temperature || null,
-          weatherType: formDataWithImage.weatherType || null
+          weatherType: formDataWithImage.weatherType || null,
+          a_vendre: formDataWithImage.a_vendre || false,
+          prix_achat: formDataWithImage.prix_achat || null,
+          prix_vente: formDataWithImage.prix_vente || null,
+          lieu_vente: formDataWithImage.lieu_vente || null,
+          infos_vente: formDataWithImage.infos_vente || null,
+          promo_pourcentage: formDataWithImage.promo_pourcentage || null,
+          etat: formDataWithImage.etat || null,
+          disponibilite: formDataWithImage.disponibilite || "disponible"
         });
         
         toast({
