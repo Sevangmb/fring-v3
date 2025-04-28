@@ -63,6 +63,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
         // Organiser les vêtements par type
         const vetements = ensembleData?.vetements || [];
         const organizedVetements = organizeVetementsByType(vetements);
+        console.log("Organized vetements by type:", organizedVetements);
         setVetementsByType(organizedVetements);
       } catch (err) {
         console.error("Erreur lors du chargement de l'ensemble:", err);
@@ -117,7 +118,7 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
 
         <DialogHeader>
           <DialogTitle className="text-center text-primary">
-            Voter pour {ensemble?.nom || 'cet ensemble'}
+            {loading ? 'Chargement...' : `Voter pour ${ensemble?.nom || 'cet ensemble'}`}
           </DialogTitle>
           <DialogDescription className="text-center">
             Donnez votre avis sur cet ensemble
@@ -130,36 +131,46 @@ const VoterDialog: React.FC<VoterDialogProps> = ({
           </Alert>
         )}
         
-        {/* Affichage des images de l'ensemble */}
-        {!loading && ensemble && (
-          <div className="mb-4">
-            <EnsembleImages 
-              vetementsByType={vetementsByType}
-              className="w-full" 
-            />
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
           </div>
+        ) : (
+          <>
+            {/* Affichage des images de l'ensemble */}
+            {ensemble && (
+              <div className="mb-4">
+                <EnsembleImages 
+                  vetementsByType={vetementsByType}
+                  className="w-full" 
+                />
+              </div>
+            )}
+            
+            {/* Affichage du contenu de l'ensemble */}
+            <div className="py-2 mb-4">
+              <EnsembleContentDisplay
+                ensemble={ensemble}
+                loading={loading}
+                error={error || ''}
+                vetementsByType={vetementsByType}
+              />
+            </div>
+            
+            {!error && ensemble && (
+              <div className="flex justify-center py-4">
+                <RedditStyleVoter
+                  entityType={elementType === "ensemble" ? "ensemble" : "tenue"}
+                  entityId={targetEnsembleId || 0}
+                  defiId={elementType === "defi" ? elementId : undefined}
+                  size="lg"
+                  onVoteChange={handleVoteChange}
+                  showScore={true}
+                />
+              </div>
+            )}
+          </>
         )}
-        
-        {/* Affichage du contenu de l'ensemble */}
-        <div className="py-2 mb-4">
-          <EnsembleContentDisplay
-            ensemble={ensemble}
-            loading={loading}
-            error={error || ''}
-            vetementsByType={vetementsByType}
-          />
-        </div>
-        
-        <div className="flex justify-center py-4">
-          <RedditStyleVoter
-            entityType={elementType === "ensemble" ? "ensemble" : "tenue"}
-            entityId={targetEnsembleId || 0}
-            defiId={elementType === "defi" ? elementId : undefined}
-            size="lg"
-            onVoteChange={handleVoteChange}
-            showScore={true}
-          />
-        </div>
       </DialogContent>
     </Dialog>
   );

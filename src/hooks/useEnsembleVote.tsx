@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { VoteType } from "@/services/votes/types";
@@ -54,18 +55,23 @@ export const useEnsembleVote = ({
     setError(null);
     
     try {
+      console.log(`Loading ensemble data for ID: ${ensembleId}`);
       const ensembleData = await fetchEnsembleById(ensembleId);
       
       if (!ensembleData) {
+        console.error(`No ensemble found with ID: ${ensembleId}`);
         setError("Impossible de charger l'ensemble");
         return;
       }
       
+      console.log("Ensemble data loaded successfully:", ensembleData);
       setEnsemble(ensembleData);
       
       // Organiser les vêtements par type
       const vetements = ensembleData?.vetements || [];
+      console.log("Organizing vetements:", vetements);
       const organizedVetements = organizeVetementsByType(vetements);
+      console.log("Organized vetements by type:", organizedVetements);
       setVetementsByType(organizedVetements);
     } catch (err) {
       console.error("Erreur lors du chargement de l'ensemble:", err);
@@ -103,14 +109,17 @@ export const useEnsembleVote = ({
     if (isVoting || isOffline) return;
     
     setIsVoting(true);
+    console.log(`Submitting vote ${vote} for ensemble ${ensembleId}`);
     
     try {
       // Soumettre le vote
       if (defiId) {
         // Si c'est un vote dans le cadre d'un défi
-        await submitVote('ensemble', ensembleId, vote);
+        console.log(`Voting for ensemble ${ensembleId} in defi ${defiId}`);
+        await submitVote(defiId, ensembleId, vote);
       } else {
         // Vote pour un ensemble hors défi
+        console.log(`Voting for standalone ensemble ${ensembleId}`);
         await submitVote('ensemble', ensembleId, vote);
       }
       
@@ -145,6 +154,8 @@ export const useEnsembleVote = ({
         description: `Vous avez ${vote === 'up' ? 'aimé' : 'disliké'} cet ensemble.`,
         variant: vote === 'up' ? "default" : "destructive",
       });
+      
+      console.log("Vote submitted successfully");
     } catch (err) {
       console.error("Erreur lors du vote:", err);
       toast({

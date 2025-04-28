@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Box, Typography } from "@mui/material";
 import { WifiOff, AlertTriangle } from "lucide-react";
 import EnsembleContentDisplay from "../EnsembleContentDisplay";
@@ -30,6 +30,13 @@ const VoteDialogContent: React.FC<VoteDialogContentProps> = ({
   isOffline,
   onVote
 }) => {
+  useEffect(() => {
+    console.log("VoteDialogContent rendering with ensemble:", ensemble);
+    console.log("VoteDialogContent vetementsByType:", vetementsByType);
+    console.log("VoteDialogContent loading:", loading);
+    console.log("VoteDialogContent error:", error);
+  }, [ensemble, vetementsByType, loading, error]);
+
   if (loading) {
     return (
       <Box className="flex justify-center items-center min-h-[200px]">
@@ -39,11 +46,22 @@ const VoteDialogContent: React.FC<VoteDialogContentProps> = ({
   }
 
   // Handle error states
-  if (error || !ensemble) {
+  if (error) {
     return (
       <Alert variant="destructive" className="mb-4">
         <AlertDescription>
-          {error || "L'ensemble n'a pas pu être chargé"}
+          {error}
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  // Handle null ensemble
+  if (!ensemble) {
+    return (
+      <Alert variant="destructive" className="mb-4">
+        <AlertDescription>
+          L'ensemble n'a pas pu être chargé
         </AlertDescription>
       </Alert>
     );

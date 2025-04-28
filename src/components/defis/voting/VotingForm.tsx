@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Text } from "@/components/atoms/Typography";
 import { Progress } from "@/components/ui/progress";
@@ -26,6 +26,10 @@ const VotingForm: React.FC<VotingFormProps> = ({
   onVote,
   error
 }) => {
+  useEffect(() => {
+    console.log("VotingForm - Current Ensemble:", currentEnsemble);
+  }, [currentEnsemble]);
+
   // Early return if no ensemble
   if (!currentEnsemble) {
     return (

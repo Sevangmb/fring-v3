@@ -10,13 +10,16 @@ interface EnsembleImagesProps {
 }
 
 const EnsembleImages: React.FC<EnsembleImagesProps> = ({ vetementsByType, className = "" }) => {
-  const hasAnyVetement = Object.values(vetementsByType).some(array => array.length > 0);
+  // Vérification des données
+  const hasVetements = vetementsByType && typeof vetementsByType === 'object';
+  const hasAnyVetement = hasVetements && Object.values(vetementsByType).some(array => array && array.length > 0);
   
   useEffect(() => {
-    console.log("Ensemble Images - Vêtements par type:", vetementsByType);
-  }, [vetementsByType]);
+    console.log("EnsembleImages - Vêtements par type:", vetementsByType);
+    console.log("EnsembleImages - hasAnyVetement:", hasAnyVetement);
+  }, [vetementsByType, hasAnyVetement]);
   
-  if (!hasAnyVetement) {
+  if (!hasVetements || !hasAnyVetement) {
     return (
       <div className={cn("grid place-items-center p-4 bg-muted/10 rounded-lg", className)}>
         <p className="text-sm text-muted-foreground">Aucun vêtement disponible</p>
@@ -25,12 +28,13 @@ const EnsembleImages: React.FC<EnsembleImagesProps> = ({ vetementsByType, classN
   }
   
   const getImageUrl = (item: any) => {
-    return item.vetement?.image_url || item.image_url;
+    if (!item) return null;
+    return item.vetement?.image_url || item.image_url || null;
   };
   
   const renderVetementImage = (type: string, placeholderIcon: React.ReactNode, label: string) => {
     const vetements = vetementsByType[type];
-    const hasVetement = vetements && vetements.length > 0;
+    const hasVetement = vetements && Array.isArray(vetements) && vetements.length > 0;
     const imageUrl = hasVetement ? getImageUrl(vetements[0]) : null;
     
     return (
