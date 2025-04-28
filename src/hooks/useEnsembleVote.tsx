@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { VoteType } from "@/services/votes/types";
+import { VoteType, EntityType } from "@/services/votes/types";
 import { getUserVote } from "@/services/votes/getUserVote";
 import { submitVote } from "@/services/votes/submitVote";
 import { getVotesCount } from "@/services/votes/getVotesCount";
@@ -116,7 +116,8 @@ export const useEnsembleVote = ({
       if (defiId) {
         // Si c'est un vote dans le cadre d'un défi
         console.log(`Voting for ensemble ${ensembleId} in defi ${defiId}`);
-        await submitVote(defiId, ensembleId, vote);
+        // Fix: convert defiId from number to 'defi' EntityType and pass ensembleId as third parameter
+        await submitVote('defi', defiId, vote, ensembleId);
       } else {
         // Vote pour un ensemble hors défi
         console.log(`Voting for standalone ensemble ${ensembleId}`);
