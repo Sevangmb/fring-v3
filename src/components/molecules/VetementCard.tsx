@@ -65,18 +65,20 @@ const VetementCard: React.FC<VetementCardProps> = ({ vetement, onDelete, showOwn
           {!showOwner && (
             <div className="flex items-center gap-1">
               <Button 
-                variant="secondary" 
+                variant="primary" 
                 size="icon" 
-                className="h-7 w-7 bg-background/80 backdrop-blur-sm"
+                className="h-7 w-7 bg-theme-teal-dark text-white hover:bg-theme-teal-medium shadow-sm"
                 onClick={handleEdit}
+                title="Modifier"
               >
                 <Edit size={14} />
               </Button>
               <Button 
                 variant="destructive" 
                 size="icon" 
-                className="h-7 w-7 bg-destructive/80 backdrop-blur-sm"
+                className="h-7 w-7"
                 onClick={handleDelete}
+                title="Supprimer"
               >
                 <Trash2 size={14} />
               </Button>
@@ -91,6 +93,20 @@ const VetementCard: React.FC<VetementCardProps> = ({ vetement, onDelete, showOwn
               <CircleDollarSign className="h-3 w-3" />
               <span className="text-xs font-medium">À vendre</span>
             </Badge>
+          </div>
+        )}
+        
+        {/* Bouton modifier mobile - visible uniquement sur petits écrans */}
+        {!showOwner && (
+          <div className="sm:hidden absolute right-2 bottom-2 z-10">
+            <Button
+              variant="primary"
+              size="sm"
+              className="bg-theme-teal-dark text-white hover:bg-theme-teal-medium shadow"
+              onClick={handleEdit}
+            >
+              <Edit className="mr-1 h-4 w-4" /> Modifier
+            </Button>
           </div>
         )}
         

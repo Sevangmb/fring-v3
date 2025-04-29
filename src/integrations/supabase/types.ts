@@ -477,42 +477,66 @@ export type Database = {
       }
       vetements: {
         Row: {
+          a_vendre: boolean | null
           categorie_id: number
           couleur: string
           created_at: string
           description: string | null
+          disponibilite: string | null
+          etat: string | null
           id: number
           image_url: string | null
+          infos_vente: string | null
+          lieu_vente: string | null
           marque: string | null
           nom: string
+          prix_achat: number | null
+          prix_vente: number | null
+          promo_pourcentage: number | null
           taille: string
           temperature: string | null
           user_id: string | null
           weather_type: string | null
         }
         Insert: {
+          a_vendre?: boolean | null
           categorie_id: number
           couleur: string
           created_at?: string
           description?: string | null
+          disponibilite?: string | null
+          etat?: string | null
           id?: number
           image_url?: string | null
+          infos_vente?: string | null
+          lieu_vente?: string | null
           marque?: string | null
           nom: string
+          prix_achat?: number | null
+          prix_vente?: number | null
+          promo_pourcentage?: number | null
           taille: string
           temperature?: string | null
           user_id?: string | null
           weather_type?: string | null
         }
         Update: {
+          a_vendre?: boolean | null
           categorie_id?: number
           couleur?: string
           created_at?: string
           description?: string | null
+          disponibilite?: string | null
+          etat?: string | null
           id?: number
           image_url?: string | null
+          infos_vente?: string | null
+          lieu_vente?: string | null
           marque?: string | null
           nom?: string
+          prix_achat?: number | null
+          prix_vente?: number | null
+          promo_pourcentage?: number | null
           taille?: string
           temperature?: string | null
           user_id?: string | null
