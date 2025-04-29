@@ -65,7 +65,7 @@ const VetementCard: React.FC<VetementCardProps> = ({ vetement, onDelete, showOwn
           {!showOwner && (
             <div className="flex items-center gap-1">
               <Button 
-                variant="primary" 
+                variant="secondary" 
                 size="icon" 
                 className="h-7 w-7 bg-theme-teal-dark text-white hover:bg-theme-teal-medium shadow-sm"
                 onClick={handleEdit}
@@ -100,7 +100,7 @@ const VetementCard: React.FC<VetementCardProps> = ({ vetement, onDelete, showOwn
         {!showOwner && (
           <div className="sm:hidden absolute right-2 bottom-2 z-10">
             <Button
-              variant="primary"
+              variant="secondary"
               size="sm"
               className="bg-theme-teal-dark text-white hover:bg-theme-teal-medium shadow"
               onClick={handleEdit}
