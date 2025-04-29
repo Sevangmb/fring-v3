@@ -49,7 +49,16 @@ const ModifierVetementContent: React.FC<ModifierVetementContentProps> = ({
         marque: formData.marque || null,
         image_url: formData.image_url || null,
         temperature: formData.temperature || null,
-        weatherType: formData.weatherType || null
+        weatherType: formData.weatherType || null,
+        // Ajout des champs pour la vente
+        a_vendre: formData.a_vendre || false,
+        prix_achat: formData.prix_achat || null,
+        prix_vente: formData.prix_vente || null,
+        lieu_vente: formData.lieu_vente || null,
+        infos_vente: formData.infos_vente || null,
+        promo_pourcentage: formData.promo_pourcentage || null,
+        etat: formData.etat || null,
+        disponibilite: formData.disponibilite || "disponible"
       };
       
       console.log("Données préparées pour mise à jour:", updateData);
@@ -65,7 +74,8 @@ const ModifierVetementContent: React.FC<ModifierVetementContentProps> = ({
         description: "Les modifications ont été enregistrées avec succès.",
       });
       
-      navigate("/mes-vetements/liste");
+      // Correction de la redirection pour éviter l'erreur 404
+      navigate("/mes-vetements");
     } catch (error) {
       console.error("Erreur lors de la mise à jour:", error);
       toast({

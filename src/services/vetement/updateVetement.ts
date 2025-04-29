@@ -38,10 +38,12 @@ export const updateVetement = async (id: number, vetement: Partial<Vetement>): P
     // Nettoyer les données avant la mise à jour
     const cleanedData: any = {};
     
-    // Liste de colonnes connues dans la table vetements
+    // Liste de colonnes connues dans la table vetements, mise à jour avec les nouveaux champs
     const columnNames = [
       'id', 'nom', 'categorie_id', 'couleur', 'taille', 'description', 
-      'marque', 'image_url', 'user_id', 'created_at', 'temperature', 'weather_type'
+      'marque', 'image_url', 'user_id', 'created_at', 'temperature', 'weather_type',
+      'a_vendre', 'prix_achat', 'prix_vente', 'lieu_vente', 'infos_vente',
+      'promo_pourcentage', 'etat', 'disponibilite'
     ];
     
     console.log('Colonnes disponibles:', columnNames);
@@ -85,11 +87,11 @@ export const updateVetement = async (id: number, vetement: Partial<Vetement>): P
     // Ne garder que les propriétés qui existent dans la table
     Object.entries(vetement).forEach(([key, value]) => {
       // Ne pas inclure les propriétés undefined, categorie_id (déjà traitée) ou qui n'existent pas dans la table
-      if (value !== undefined && key !== 'categorie_id' && columnNames.includes(key)) {
-        cleanedData[key] = value;
-      } else if (value !== undefined && !columnNames.includes(key)) {
-        // Cas spécial pour weatherType -> weather_type
-        if (key === 'weatherType' && columnNames.includes('weather_type')) {
+      if (value !== undefined && key !== 'categorie_id') {
+        if (columnNames.includes(key)) {
+          cleanedData[key] = value;
+        } else if (key === 'weatherType' && columnNames.includes('weather_type')) {
+          // Cas spécial pour weatherType -> weather_type
           cleanedData['weather_type'] = value;
         } else {
           console.log(`La colonne '${key}' n'existe pas dans la table vetements et sera ignorée`);
