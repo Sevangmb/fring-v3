@@ -3,9 +3,11 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchMarques } from "@/services/marqueService";
+import { fetchCategories } from "@/services/categorieService";
 
 export const useVetementsData = (type = "mes-vetements", searchTerm = "") => {
   const [vetements, setVetements] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [marques, setMarques] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -71,6 +73,16 @@ export const useVetementsData = (type = "mes-vetements", searchTerm = "") => {
     }
   }, [user, authLoading, type, searchTerm]);
   
+  // Fonction pour charger les catégories
+  const loadCategories = useCallback(async () => {
+    try {
+      const data = await fetchCategories();
+      setCategories(data || []);
+    } catch (err) {
+      console.error("Erreur lors du chargement des catégories:", err);
+    }
+  }, []);
+  
   // Fonction pour charger les marques
   const loadMarques = useCallback(async () => {
     try {
@@ -84,8 +96,14 @@ export const useVetementsData = (type = "mes-vetements", searchTerm = "") => {
   // Exécuter une fois lors du montage du composant
   useEffect(() => {
     fetchVetements();
+    loadCategories();
     loadMarques();
-  }, [fetchVetements, loadMarques]);
+  }, [fetchVetements, loadCategories, loadMarques]);
+  
+  // Fonction pour recharger tous les vêtements
+  const reloadVetements = useCallback(() => {
+    fetchVetements();
+  }, [fetchVetements]);
   
   // Fonction pour gérer la suppression d'un vêtement
   const handleVetementDeleted = useCallback((id: number) => {
@@ -94,11 +112,13 @@ export const useVetementsData = (type = "mes-vetements", searchTerm = "") => {
   
   return { 
     vetements, 
+    categories,
     marques,
     isLoading, 
     error, 
     isAuthenticated,
     fetchVetements,
+    reloadVetements,
     handleVetementDeleted
   };
 };
