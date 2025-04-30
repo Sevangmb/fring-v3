@@ -1,7 +1,8 @@
 
 import { Vetement } from '@/services/vetement/types';
 import { TenueSuggestion, VetementType } from './types';
-import { determinerTypeVetement, estAdaptePluie, estAEviterPluie } from './vetementClassifier';
+import { determinerTypeVetement } from './vetementTypeClassifier';
+import { estAdaptePluie, estAEviterPluie } from './waterproofUtils';
 
 /**
  * Sélectionne un vêtement adapté à la température et à la météo
