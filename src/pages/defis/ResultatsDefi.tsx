@@ -1,131 +1,92 @@
 
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { Text } from "@/components/atoms/Typography";
-import VotingCarousel from "@/components/defis/VotingCarousel";
-import RankingList from "@/components/defis/voting/RankingList";
-import Layout from "@/components/templates/Layout";
-import PageHeader from "@/components/organisms/PageHeader";
-import { Trophy, Loader2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getDefiParticipationsWithVotes } from "@/services/defi/votes";
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import PageLayout from "@/components/templates/PageLayout";
+import ResultsDisplay from '@/components/defis/voting/ResultsDisplay';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import { fetchDefiById } from '@/services/defi/votes/fetchDefiById';
 
 const ResultatsDefi: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const defiId = parseInt(id || "0", 10);
+  const navigate = useNavigate();
   const [defi, setDefi] = useState<any>(null);
-  const [participations, setParticipations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  
   useEffect(() => {
-    const loadDefiData = async () => {
-      if (!defiId || isNaN(defiId)) {
-        setError("ID du défi invalide");
+    const loadDefi = async () => {
+      if (!id) {
+        setError("ID du défi non spécifié");
         setLoading(false);
         return;
       }
-
+      
       try {
-        setLoading(true);
+        const defiData = await fetchDefiById(parseInt(id));
         
-        // Charger les détails du défi
-        const { supabase } = await import('@/lib/supabase');
-        const { data: defiData, error: defiError } = await supabase
-          .from('defis')
-          .select('*')
-          .eq('id', defiId)
-          .single();
+        if (!defiData) {
+          setError("Défi non trouvé");
+          setLoading(false);
+          return;
+        }
         
-        if (defiError) throw defiError;
         setDefi(defiData);
-        
-        // Charger les participations avec votes
-        const participationsData = await getDefiParticipationsWithVotes(defiId);
-        setParticipations(participationsData);
+        setLoading(false);
       } catch (err) {
-        console.error("Erreur lors du chargement des données:", err);
-        setError("Impossible de charger les données du défi");
-      } finally {
+        console.error("Erreur lors du chargement du défi:", err);
+        setError("Erreur lors du chargement du défi");
         setLoading(false);
       }
     };
     
-    loadDefiData();
-  }, [defiId]);
-
+    loadDefi();
+  }, [id]);
+  
+  const handleBack = () => {
+    navigate(`/defis/${id}`);
+  };
+  
   return (
-    <Layout>
-      <PageHeader 
-        title="Résultats du défi" 
-        description={defi?.titre || "Découvrez les résultats et classements"} 
-      />
-      
+    <PageLayout>
       <div className="container mx-auto px-4 py-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2">
-            <Trophy className="h-6 w-6 text-primary" />
-            <CardTitle>{defi?.titre || "Résultats"}</CardTitle>
-          </CardHeader>
+        <div className="flex items-center mb-6">
+          <Button 
+            variant="outline" 
+            onClick={handleBack}
+            className="mr-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Retour au défi
+          </Button>
           
-          <CardContent>
-            {loading ? (
-              <div className="flex justify-center items-center h-64">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              </div>
-            ) : error ? (
-              <div className="p-4 text-center">
-                <Text className="text-destructive">{error}</Text>
-              </div>
-            ) : participations.length === 0 ? (
-              <div className="p-8 text-center">
-                <Text className="text-muted-foreground">
-                  Aucune participation n'a été trouvée pour ce défi.
-                </Text>
-              </div>
-            ) : (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Les gagnants du défi</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {participations.slice(0, 3).map((participation, index) => (
-                      <div key={participation.id} className={`rounded-lg border p-4 ${
-                        index === 0 ? 'bg-amber-50 border-amber-200' : 
-                        index === 1 ? 'bg-gray-50 border-gray-200' : 
-                        'bg-orange-50 border-orange-100'
-                      }`}>
-                        <div className="flex items-center gap-2 mb-2">
-                          {index === 0 ? (
-                            <Trophy className="h-5 w-5 text-amber-500" />
-                          ) : index === 1 ? (
-                            <Trophy className="h-5 w-5 text-gray-500" />
-                          ) : (
-                            <Trophy className="h-5 w-5 text-orange-500" />
-                          )}
-                          <span className="font-bold">#{index + 1}</span>
-                        </div>
-                        <h4 className="font-medium">{participation.ensemble?.nom || `Ensemble #${participation.ensemble_id}`}</h4>
-                        <div className="flex justify-between items-center mt-2 text-sm">
-                          <span>{participation.votes.up} 👍 | {participation.votes.down} 👎</span>
-                          <span className="font-semibold">Score: {participation.score}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <RankingList participations={participations} />
-                
-                <div className="mt-8">
-                  <h3 className="text-lg font-semibold mb-4">Toutes les participations</h3>
-                  <VotingCarousel defiId={defiId} />
+          <h1 className="text-3xl font-bold">
+            {loading ? "Chargement..." : error ? "Erreur" : `Résultats : ${defi?.titre}`}
+          </h1>
+        </div>
+        
+        {error ? (
+          <div className="bg-red-50 border border-red-200 p-6 rounded-lg">
+            <p className="text-red-600">{error}</p>
+          </div>
+        ) : (
+          <>
+            {defi && (
+              <div className="mb-8">
+                <p className="text-gray-600">{defi.description}</p>
+                <div className="flex gap-4 mt-4 text-sm text-gray-500">
+                  <div>Du {new Date(defi.date_debut).toLocaleDateString('fr-FR')}</div>
+                  <div>au {new Date(defi.date_fin).toLocaleDateString('fr-FR')}</div>
+                  <div>{defi.participants_count || 0} participant(s)</div>
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
+            
+            {id && <ResultsDisplay defiId={parseInt(id)} />}
+          </>
+        )}
       </div>
-    </Layout>
+    </PageLayout>
   );
 };
 

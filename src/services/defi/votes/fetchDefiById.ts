@@ -1,27 +1,28 @@
 
-import { supabase } from "@/lib/supabase";
-import { fetchWithRetry } from "@/services/network/retryUtils";
+import { supabase } from '@/lib/supabase';
+import { Defi } from '../types';
 
 /**
- * Récupérer les détails d'un défi par son ID
+ * Récupère un défi par son ID
+ * @param id ID du défi
+ * @returns Défi ou null si non trouvé
  */
-export const fetchDefiById = async (defiId: number) => {
+export const fetchDefiById = async (id: number): Promise<Defi | null> => {
   try {
-    const { data, error } = await fetchWithRetry(
-      async () => {
-        return await supabase
-          .from('defis')
-          .select('*')
-          .eq('id', defiId)
-          .single();
-      }
-    );
+    const { data, error } = await supabase
+      .from('defis')
+      .select('*')
+      .eq('id', id)
+      .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error(`Erreur lors de la récupération du défi ${id}:`, error);
+      return null;
+    }
     
-    return data;
+    return data as Defi;
   } catch (error) {
-    console.error("Erreur lors de la récupération du défi:", error);
+    console.error(`Erreur lors de la récupération du défi ${id}:`, error);
     return null;
   }
 };

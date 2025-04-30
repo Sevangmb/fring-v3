@@ -1,99 +1,123 @@
 
 import { supabase } from '@/lib/supabase';
+import { Defi } from '../types';
+
+interface WinningEnsemble {
+  ensembleId: number;
+  ensembleNom?: string;
+  userId?: string;
+  userEmail?: string;
+  score: number;
+  upvotes: number;
+  downvotes: number;
+  totalVotes: number;
+}
 
 /**
- * Récupère l'ensemble gagnant pour un défi
+ * Calcule l'ensemble gagnant pour un défi
+ * @param defiId ID du défi
+ * @returns Infos sur l'ensemble gagnant ou null si aucun vote
  */
-export const getWinningEnsemble = async (defiId: number) => {
+export const getWinningEnsemble = async (defiId: number): Promise<WinningEnsemble | null> => {
   try {
-    // Récupérer toutes les participations pour ce défi
-    const { data: participations, error: participationsError } = await supabase
-      .from('defi_participations')
-      .select(`
-        id, 
-        ensemble_id,
-        user_id,
-        tenue:ensemble_id(
-          id,
-          nom,
-          description,
-          user_id
-        )
-      `)
-      .eq('defi_id', defiId);
-    
-    if (participationsError) throw participationsError;
-    
-    if (!participations || participations.length === 0) {
+    // Vérifier si le défi existe
+    const { data: defi, error: defiError } = await supabase
+      .from('defis')
+      .select('*')
+      .eq('id', defiId)
+      .single();
+      
+    if (defiError) {
+      console.error('Erreur lors de la récupération du défi:', defiError);
+      return null;
+    }
+      
+    // Récupérer tous les votes pour ce défi
+    const { data: votes, error: votesError } = await supabase
+      .from('defi_votes')
+      .select('tenue_id, vote_type')
+      .eq('defi_id', defiId)
+      .not('tenue_id', 'is', null);
+      
+    if (votesError) {
+      console.error('Erreur lors de la récupération des votes:', votesError);
       return null;
     }
     
-    // Créer un tableau pour stocker les scores
-    const scores: { [key: number]: number } = {};
-    
-    // Pour chaque ensemble, récupérer les votes
-    for (const participation of participations) {
-      const ensembleId = participation.ensemble_id;
-      
-      // Obtenir les votes pour cet ensemble dans ce défi
-      const { data: votes, error: votesError } = await supabase
-        .from('defi_votes')
-        .select('vote_type')
-        .eq('defi_id', defiId)
-        .eq('tenue_id', ensembleId);  // Utiliser tenue_id au lieu de ensemble_id
-      
-      if (votesError) throw votesError;
-      
-      // Calculer le score (votes positifs - votes négatifs)
-      const upVotes = votes.filter(v => v.vote_type === 'up').length;
-      const downVotes = votes.filter(v => v.vote_type === 'down').length;
-      const score = upVotes - downVotes;
-      
-      scores[ensembleId] = score;
+    if (!votes || votes.length === 0) {
+      console.log('Aucun vote pour ce défi');
+      return null;
     }
     
-    // Trouver l'ID de l'ensemble avec le score le plus élevé
-    let maxScore = -Infinity;
-    let winningEnsembleId: number | null = null;
+    // Regrouper les votes par ensemble et calculer le score
+    const ensembleVotes: Record<number, { up: number, down: number }> = {};
     
-    for (const [ensembleId, score] of Object.entries(scores)) {
+    votes.forEach(vote => {
+      if (!vote.tenue_id) return;
+      
+      if (!ensembleVotes[vote.tenue_id]) {
+        ensembleVotes[vote.tenue_id] = { up: 0, down: 0 };
+      }
+      
+      if (vote.vote_type === 'up') {
+        ensembleVotes[vote.tenue_id].up += 1;
+      } else if (vote.vote_type === 'down') {
+        ensembleVotes[vote.tenue_id].down += 1;
+      }
+    });
+    
+    // Calculer le score pour chaque ensemble
+    let maxScore = -Infinity;
+    let winningEnsembleIds: number[] = [];
+    
+    Object.entries(ensembleVotes).forEach(([ensembleId, voteCounts]) => {
+      const score = voteCounts.up - voteCounts.down;
+      
       if (score > maxScore) {
         maxScore = score;
-        winningEnsembleId = parseInt(ensembleId);
+        winningEnsembleIds = [Number(ensembleId)];
+      } else if (score === maxScore) {
+        winningEnsembleIds.push(Number(ensembleId));
       }
-    }
+    });
     
-    // Si tous les scores sont négatifs ou nuls, il n'y a pas de gagnant
-    if (maxScore <= 0) {
+    if (winningEnsembleIds.length === 0) {
+      console.log('Aucun gagnant trouvé');
       return null;
     }
     
-    // Trouver l'ensemble gagnant
-    const winningParticipation = participations.find(p => p.ensemble_id === winningEnsembleId);
+    // Récupérer les informations sur l'ensemble gagnant
+    const winningId = winningEnsembleIds[0];
+    const voteCounts = ensembleVotes[winningId];
     
-    if (!winningParticipation) {
-      return null;
+    // Récupérer les informations sur l'ensemble et son créateur
+    const { data: ensemble, error: ensembleError } = await supabase
+      .from('tenues')
+      .select(`
+        id, 
+        nom, 
+        user_id,
+        profiles:user_id (email)
+      `)
+      .eq('id', winningId)
+      .single();
+    
+    if (ensembleError) {
+      console.error('Erreur lors de la récupération de l\'ensemble:', ensembleError);
     }
-    
-    // Récupérer les informations de l'utilisateur gagnant
-    const { data: userData, error: userError } = await supabase
-      .from('profiles')
-      .select('email')
-      .eq('id', winningParticipation.user_id)
-      .maybeSingle();  // Utiliser maybeSingle() au lieu de single()
-    
-    if (userError) throw userError;
-    
-    const tenue = winningParticipation.tenue as any;
     
     return {
-      ...tenue,
-      user_email: userData?.email,
+      ensembleId: winningId,
+      ensembleNom: ensemble?.nom,
+      userId: ensemble?.user_id,
+      userEmail: ensemble?.profiles?.email,
       score: maxScore,
-      ensembleName: tenue?.nom || `Ensemble #${winningEnsembleId}`
+      upvotes: voteCounts.up,
+      downvotes: voteCounts.down,
+      totalVotes: voteCounts.up + voteCounts.down
     };
   } catch (error) {
-    console.error('Erreur lors de la récupération de l\'ensemble gagnant:', error);
+    console.error('Erreur lors du calcul du gagnant:', error);
     return null;
   }
 };

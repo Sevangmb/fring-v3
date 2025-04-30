@@ -1,28 +1,29 @@
 
-import React from "react";
+import React from 'react';
+import { Progress } from '@/components/ui/progress';
 
 interface VoteProgressProps {
-  upVotes: number;
-  downVotes: number;
+  current: number;
+  total: number;
+  votedCount?: number;
 }
 
-const VoteProgress: React.FC<VoteProgressProps> = ({
-  upVotes,
-  downVotes
-}) => {
-  const totalVotes = upVotes + downVotes;
-  const upPercentage = totalVotes ? (upVotes / totalVotes) * 100 : 50;
-
+const VoteProgress: React.FC<VoteProgressProps> = ({ current, total, votedCount }) => {
+  const progressPercentage = Math.round((current / total) * 100);
+  
   return (
-    <div className="mt-6">
-      <div className="flex justify-between text-sm mb-1">
-        <span>👎 {downVotes}</span>
-        <span>👍 {upVotes}</span>
+    <div className="mb-6">
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-sm font-medium">
+          {votedCount !== undefined ? (
+            `${votedCount} sur ${total} tenues évaluées`
+          ) : (
+            `Tenue ${current} sur ${total}`
+          )}
+        </span>
+        <span className="text-sm font-medium">{progressPercentage}%</span>
       </div>
-      <div className="flex items-center gap-2">
-        <div className="bg-red-200 h-2 rounded-full" style={{ width: `${100 - upPercentage}%` }}></div>
-        <div className="bg-green-200 h-2 rounded-full" style={{ width: `${upPercentage}%` }}></div>
-      </div>
+      <Progress value={progressPercentage} className="h-2" />
     </div>
   );
 };
