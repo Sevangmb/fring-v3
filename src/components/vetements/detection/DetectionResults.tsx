@@ -1,7 +1,6 @@
 
-import React from "react";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import React from 'react';
+import { Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface DetectionResultsProps {
   error: string | null;
@@ -11,7 +10,7 @@ interface DetectionResultsProps {
 }
 
 /**
- * Affiche les résultats et l'état du processus de détection
+ * Affiche les résultats et le progrès de la détection d'attributs de vêtements
  */
 const DetectionResults: React.FC<DetectionResultsProps> = ({
   error,
@@ -19,35 +18,42 @@ const DetectionResults: React.FC<DetectionResultsProps> = ({
   currentStep,
   loading
 }) => {
-  // Si aucune donnée à afficher, ne rien rendre
-  if (!error && steps.length === 0 && !currentStep && !loading) {
+  if (!loading && !error && (!steps || steps.length === 0)) {
     return null;
   }
-  
+
+  const currentStepIndex = currentStep ? parseInt(currentStep) : -1;
+
   return (
-    <div className="w-full mt-4 text-center">
+    <div className="w-full mt-2">
       {error && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertTitle>Erreur de détection</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      
-      {loading && (
-        <div className="flex items-center justify-center">
-          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          <span className="text-sm">{currentStep || "Analyse en cours..."}</span>
+        <div className="p-3 bg-destructive/10 text-destructive rounded-md flex items-center gap-2">
+          <AlertCircle size={16} />
+          <span>{error}</span>
         </div>
       )}
-      
-      {!loading && steps.length > 0 && (
-        <div className="text-sm text-muted-foreground space-y-1">
+
+      {loading && steps && steps.length > 0 && (
+        <div className="space-y-2">
           {steps.map((step, index) => (
-            <div key={index} className="flex items-center">
-              <span className="inline-block w-4 h-4 mr-2 rounded-full bg-primary/20 text-xs flex items-center justify-center">
-                ✓
-              </span>
-              {step}
+            <div 
+              key={step} 
+              className={`flex items-center gap-2 text-sm ${
+                index < currentStepIndex 
+                  ? 'text-muted-foreground' 
+                  : index === currentStepIndex 
+                    ? 'text-primary' 
+                    : 'text-muted-foreground/50'
+              }`}
+            >
+              {index < currentStepIndex ? (
+                <CheckCircle size={16} className="text-primary" />
+              ) : index === currentStepIndex ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <div className="w-4 h-4 rounded-full border border-muted-foreground/30" />
+              )}
+              <span>{step}</span>
             </div>
           ))}
         </div>

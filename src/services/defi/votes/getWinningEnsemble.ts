@@ -107,14 +107,10 @@ export const getWinningEnsemble = async (defiId: number): Promise<WinningEnsembl
     }
     
     // Correction pour accéder à l'email du profil
-    let userEmail = null;
-    if (ensemble?.profiles) {
-      // Vérifier si profiles est un objet ou un tableau
-      if (Array.isArray(ensemble.profiles)) {
-        userEmail = ensemble.profiles[0]?.email || null;
-      } else {
-        userEmail = ensemble.profiles.email || null;
-      }
+    let userEmail: string | null = null;
+    if (ensemble?.profiles && typeof ensemble.profiles === 'object') {
+      // Vérifier si profiles est un objet et extraire l'email
+      userEmail = (ensemble.profiles as any).email || null;
     }
     
     return {

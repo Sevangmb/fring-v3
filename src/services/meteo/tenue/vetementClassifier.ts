@@ -1,7 +1,7 @@
 
 import { Vetement } from "@/services/vetement/types";
 import { VetementType } from "./types";
-import { calculateTemperatureScore, WeatherTenue } from "../temperatureUtils";
+import { calculateTemperatureScore, TemperatureType, WeatherTenue, WeatherType } from "../temperatureUtils";
 import { removeDiacritics } from "@/lib/stringUtils";
 
 /**
@@ -22,8 +22,11 @@ export const evaluateVetementForWeather = async (
   
   // 1. Score pour la température
   if (weatherTenue.temperature && vetement.temperature) {
+    // S'assurer que la température est de type TemperatureType
+    const vetementTemp = vetement.temperature as TemperatureType;
+    
     const temperatureScore = calculateTemperatureScore(
-      vetement.temperature, 
+      vetementTemp,
       weatherTenue.temperature
     );
     
@@ -50,7 +53,7 @@ export const evaluateVetementForWeather = async (
       totalScore += 20; // Assez bien adapté
     }
     // Si le vêtement est adapté pour un temps spécifique mais qu'il fait normal
-    else if (vetement.weather_type !== 'normal' && weatherTenue.weather === 'normal') {
+    else if (vetement.weather_type !== 'normal' && typeof weatherTenue.weather === 'string') {
       totalScore += 15; // Moins idéal mais acceptable
     }
     // Dans les autres cas (vêtement normal par temps de pluie/neige)

@@ -89,7 +89,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       <DetectionResults 
         error={error || null}
         steps={stepLabels}
-        currentStep={currentStep}
+        currentStep={currentStep !== null ? `${currentStep}` : null}
         loading={isDetecting}
       />
     </div>
