@@ -46,7 +46,7 @@ export const useTenueSuggestion = (meteo: MeteoData | null, vetements: Vetement[
         toast({
           title: "Suggestion incomplète",
           description: "Votre garde-robe ne contient pas tous les types de vêtements nécessaires pour une tenue complète",
-          variant: "warning"
+          variant: "destructive"  // Changed from "warning" to "destructive" to match allowed types
         });
       }
     } catch (err) {
