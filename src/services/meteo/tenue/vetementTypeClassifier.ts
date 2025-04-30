@@ -35,18 +35,23 @@ export const determinerTypeVetement = async (vetement: Vetement): Promise<Veteme
   // Liste des termes pour chaque type
   const hautsTerms = ['tshirt', 't-shirt', 'chemise', 'pull', 'veste', 'sweat', 'manteau', 'haut'];
   const basTerms = ['pantalon', 'jean', 'short', 'jupe', 'bas'];
-  const chaussuresTerms = ['chaussure', 'basket', 'botte', 'sandale', 'mocassin'];
+  const chaussuresTerms = ['chaussure', 'basket', 'botte', 'sandale', 'mocassin', 'sneakers', 'tennis'];
   
-  if (hautsTerms.some(term => normalizedName.includes(term))) {
+  // Vérification prioritaire pour les chaussures - pour éviter les mauvaises classifications
+  if (chaussuresTerms.some(term => normalizedName.includes(term))) {
+    return VetementType.CHAUSSURES;
+  }
+  
+  // Ensuite vérifier pour les hauts (mais seulement si ce n'est pas des chaussures)
+  if (hautsTerms.some(term => normalizedName.includes(term)) && 
+      !normalizedName.includes('chaussure') && 
+      !normalizedName.includes('basket')) {
     return VetementType.HAUT;
   }
   
+  // Enfin, vérifier pour les bas
   if (basTerms.some(term => normalizedName.includes(term))) {
     return VetementType.BAS;
-  }
-  
-  if (chaussuresTerms.some(term => normalizedName.includes(term))) {
-    return VetementType.CHAUSSURES;
   }
   
   // Par défaut, on considère que c'est un haut

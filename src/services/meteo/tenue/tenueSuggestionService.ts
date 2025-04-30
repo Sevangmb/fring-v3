@@ -16,14 +16,23 @@ const selectionnerVetementAdapte = async (
   // Filtrer les vêtements par type
   const vetementsFiltered = [];
   
+  // Pré-vérification de debug
+  console.log(`Recherche de vêtements de type ${typeVetement}, collection: ${vetements.length} items`);
+  
   for (const vetement of vetements) {
     const type = await determinerTypeVetement(vetement);
     if (type === typeVetement) {
+      console.log(`Vêtement trouvé pour type ${typeVetement}: ${vetement.nom} (ID: ${vetement.id})`);
       vetementsFiltered.push(vetement);
     }
   }
   
-  if (vetementsFiltered.length === 0) return null;
+  console.log(`Nombre de ${typeVetement} trouvés: ${vetementsFiltered.length}`);
+  
+  if (vetementsFiltered.length === 0) {
+    console.warn(`Aucun vêtement trouvé pour le type: ${typeVetement}`);
+    return null;
+  }
   
   // Déterminer la catégorie de température
   let tempCategory: 'froid' | 'tempere' | 'chaud';
@@ -132,38 +141,44 @@ export const suggestVetements = async (
       return { haut: null, bas: null, chaussures: null };
     }
     
-    // Essayer jusqu'à 3 fois pour s'assurer d'avoir une tenue complète
-    let haut = null, bas = null, chaussures = null;
-    let tentatives = 0;
+    // Commencer par chercher les chaussures pour éviter une mauvaise classification
+    let chaussures = await selectionnerVetementAdapte(vetements, temperature, isRaining, VetementType.CHAUSSURES);
+    console.log(`Chaussures sélectionnées: ${chaussures?.nom || 'Non trouvées'}`);
     
-    while ((haut === null || bas === null || chaussures === null) && tentatives < 3) {
-      tentatives++;
-      console.log(`Tentative ${tentatives} de génération de tenue complète`);
+    // Créer une liste de vêtements sans les chaussures trouvées pour éviter de réutiliser le même item
+    const vetementsRestants = chaussures ? vetements.filter(v => v.id !== chaussures?.id) : vetements;
+    
+    // Ensuite sélectionner un haut
+    const haut = await selectionnerVetementAdapte(vetementsRestants, temperature, isRaining, VetementType.HAUT);
+    console.log(`Haut sélectionné: ${haut?.nom || 'Non trouvé'}`);
+    
+    // Puis un bas
+    const vetementsRestantsSansPull = haut ? vetementsRestants.filter(v => v.id !== haut?.id) : vetementsRestants;
+    const bas = await selectionnerVetementAdapte(vetementsRestantsSansPull, temperature, isRaining, VetementType.BAS);
+    console.log(`Bas sélectionné: ${bas?.nom || 'Non trouvé'}`);
+    
+    // Nouvelle tentative pour les chaussures si non trouvées
+    if (!chaussures) {
+      console.log("Seconde tentative pour trouver des chaussures...");
+      const vetementsFiltrés = vetements.filter(v => {
+        const nom = v.nom.toLowerCase();
+        return nom.includes('chaussure') || 
+               nom.includes('basket') || 
+               nom.includes('botte') || 
+               nom.includes('sandale');
+      });
       
-      // Sélectionner un haut, un bas et des chaussures adaptés
-      if (haut === null) {
-        haut = await selectionnerVetementAdapte(vetements, temperature, isRaining, VetementType.HAUT);
-      }
-      
-      if (bas === null) {
-        bas = await selectionnerVetementAdapte(vetements, temperature, isRaining, VetementType.BAS);
-      }
-      
-      if (chaussures === null) {
-        chaussures = await selectionnerVetementAdapte(vetements, temperature, isRaining, VetementType.CHAUSSURES);
+      if (vetementsFiltrés.length > 0) {
+        chaussures = vetementsFiltrés[Math.floor(Math.random() * vetementsFiltrés.length)];
+        console.log(`Chaussures trouvées lors de la seconde tentative: ${chaussures.nom}`);
       }
     }
     
-    console.log(`Suggestion générée: 
+    console.log(`Suggestion finale de tenue: 
       Haut=${haut?.nom || 'Non trouvé'}, 
       Bas=${bas?.nom || 'Non trouvé'}, 
       Chaussures=${chaussures?.nom || 'Non trouvé'}
     `);
-    
-    // Ajouter un avertissement si certains éléments sont manquants
-    if (!haut || !bas || !chaussures) {
-      console.warn("Tenue incomplète générée. Certains vêtements n'ont pas été trouvés.");
-    }
     
     return { haut, bas, chaussures };
   } catch (error) {

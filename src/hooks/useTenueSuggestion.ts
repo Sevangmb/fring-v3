@@ -29,9 +29,21 @@ export const useTenueSuggestion = (meteo: MeteoData | null, vetements: Vetement[
       const temperature = meteo.current.temperature;
       
       console.log(`Conditions météo actuelles: Température ${temperature}°C, ${isRaining ? 'Il pleut' : 'Pas de pluie'}, Précip: ${meteo.current.precipitationChance}%`);
+      console.log(`Disponible: ${vetements.length} vêtements pour générer une suggestion`);
+      
+      // Détails des vêtements pour debug
+      vetements.forEach(v => {
+        console.log(`Vêtement disponible: ID=${v.id}, Nom=${v.nom}, CatID=${v.categorie_id}`);
+      });
       
       // Générer une suggestion de tenue
       const suggestion = await suggestVetements(vetements, temperature, isRaining);
+      
+      // Vérifier la cohérence des sélections
+      if (suggestion.chaussures && suggestion.chaussures.nom.toLowerCase().includes('pull')) {
+        console.error("ERREUR: Un pull a été classé comme chaussures!");
+        suggestion.chaussures = null;
+      }
       
       // Générer un message adapté aux conditions et à la tenue
       const message = generateOutfitMessage(temperature, meteo.current.description, isRaining);

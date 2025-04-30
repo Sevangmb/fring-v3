@@ -18,8 +18,8 @@ export const VETEMENTS_BAS = [
 ];
 
 export const VETEMENTS_CHAUSSURES = [
-  'chaussures', 'basket', 'baskets', 'tennis', 'bottes', 'bottines', 
-  'mocassins', 'sandales', 'tongs', 'escarpins', 'derbies'
+  'chaussures', 'basket', 'baskets', 'sneakers', 'tennis', 'bottes', 'bottines', 
+  'mocassins', 'sandales', 'tongs', 'escarpins', 'derbies', 'chaussure'
 ];
 
 // Liste des vêtements adaptés à la pluie
