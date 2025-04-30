@@ -16,7 +16,7 @@ export const addDemoVetements = async (): Promise<boolean> => {
         marque: 'Basique',
         description: 'T-shirt blanc basique',
         temperature: 'tempere',
-        weatherType: 'normal'
+        weather_type: 'normal'
       },
       {
         nom: 'Jean bleu',
@@ -26,7 +26,7 @@ export const addDemoVetements = async (): Promise<boolean> => {
         marque: 'Jeaniste',
         description: 'Jean bleu classique',
         temperature: 'tempere',
-        weatherType: 'normal'
+        weather_type: 'normal'
       },
       {
         nom: 'Baskets noires',
@@ -36,7 +36,7 @@ export const addDemoVetements = async (): Promise<boolean> => {
         marque: 'SportPlus',
         description: 'Baskets noires confortables',
         temperature: 'tempere',
-        weatherType: 'normal'
+        weather_type: 'normal'
       }
     ];
 
@@ -80,7 +80,7 @@ export const createDemoVetementsForUser = async (): Promise<boolean> => {
         marque: 'Basique',
         description: 'T-shirt blanc basique',
         temperature: 'tempere',
-        weatherType: 'normal',
+        weather_type: 'normal',
         user_id: user.id
       },
       {
@@ -91,7 +91,7 @@ export const createDemoVetementsForUser = async (): Promise<boolean> => {
         marque: 'Jeaniste',
         description: 'Jean bleu classique',
         temperature: 'tempere',
-        weatherType: 'normal',
+        weather_type: 'normal',
         user_id: user.id
       },
       {
@@ -102,7 +102,7 @@ export const createDemoVetementsForUser = async (): Promise<boolean> => {
         marque: 'Élégant',
         description: 'Veste noire élégante',
         temperature: 'froid',
-        weatherType: 'normal',
+        weather_type: 'normal',
         user_id: user.id
       }
     ];

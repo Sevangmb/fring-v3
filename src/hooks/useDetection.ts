@@ -8,9 +8,20 @@ export interface DetectionResults {
   [key: string]: any;
 }
 
+export interface DetectionStep {
+  label: string;
+  status: 'pending' | 'processing' | 'complete' | 'error';
+}
+
 export const useDetection = () => {
   const [isDetecting, setIsDetecting] = useState(false);
   const [results, setResults] = useState<DetectionResults>({});
+  const [error, setError] = useState<string | null>(null);
+  const [steps, setSteps] = useState<DetectionStep[]>([
+    { label: 'Analyse de l\'image', status: 'pending' },
+    { label: 'Détection des attributs', status: 'pending' }
+  ]);
+  const [currentStep, setCurrentStep] = useState<number | null>(null);
   const { toast } = useToast();
 
   const simulateDetection = async (imageFile: File): Promise<DetectionResults> => {
@@ -48,10 +59,21 @@ export const useDetection = () => {
     }
 
     setIsDetecting(true);
+    setError(null);
+    setCurrentStep(0);
+    updateStepStatus(0, 'processing');
     
     try {
+      // Étape 1: Analyse de l'image
+      await new Promise(resolve => setTimeout(resolve, 500));
+      updateStepStatus(0, 'complete');
+      setCurrentStep(1);
+      updateStepStatus(1, 'processing');
+      
+      // Étape 2: Détection des attributs
       // Remplacer par un appel API réel dans une version future
       const detectedAttributes = await simulateDetection(imageFile);
+      updateStepStatus(1, 'complete');
       
       // Mettre à jour les résultats
       setResults(detectedAttributes);
@@ -64,16 +86,33 @@ export const useDetection = () => {
       return detectedAttributes;
     } catch (error) {
       console.error("Erreur lors de la détection:", error);
+      setError("Impossible d'analyser l'image");
       toast({
         title: "Erreur",
         description: "Impossible d'analyser l'image",
         variant: "destructive",
       });
       
+      // Marquer l'étape actuelle comme en erreur
+      if (currentStep !== null) {
+        updateStepStatus(currentStep, 'error');
+      }
+      
       return null;
     } finally {
       setIsDetecting(false);
     }
+  };
+
+  // Fonction pour mettre à jour le statut d'une étape
+  const updateStepStatus = (stepIndex: number, status: DetectionStep['status']) => {
+    setSteps(prevSteps => {
+      const newSteps = [...prevSteps];
+      if (newSteps[stepIndex]) {
+        newSteps[stepIndex] = { ...newSteps[stepIndex], status };
+      }
+      return newSteps;
+    });
   };
 
   // Fonction pour appliquer les résultats de détection au formulaire
@@ -92,10 +131,20 @@ export const useDetection = () => {
     });
   };
 
+  // Fonction pour déclencher la détection d'image
+  const detectImage = async (imageFile: File) => {
+    const results = await detectAttributesFromImage(imageFile);
+    return results;
+  };
+
   return {
     isDetecting,
     results,
     detectAttributesFromImage,
     applyDetectionResults,
+    error,
+    steps,
+    currentStep,
+    detectImage
   };
 };

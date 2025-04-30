@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { VetementFormValues } from "../schema/VetementFormSchema";
 import { useImageUpload } from "@/hooks/useImageUpload";
@@ -21,14 +21,16 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   setImagePreview
 }) => {
   const { fileInputRef, handleImageChange } = useImageUpload(user, setImagePreview);
-  
   const { 
-    loading,
+    isDetecting,
     error,
     steps,
     currentStep,
-    detectImage
-  } = useDetection(form, imagePreview);
+    results,
+    detectImage,
+    detectAttributesFromImage,
+    applyDetectionResults
+  } = useDetection();
 
   const handleDeleteImage = () => {
     setImagePreview(null);
@@ -37,19 +39,42 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     form.setValue('image_url', '');
   };
 
+  const handleDetect = async () => {
+    if (!imagePreview) return;
+
+    try {
+      // Convertir la string base64 ou URL en objet File
+      const response = await fetch(imagePreview);
+      const blob = await response.blob();
+      const file = new File([blob], "image.jpg", { type: blob.type });
+
+      // Détecter les attributs de l'image
+      const results = await detectAttributesFromImage(file);
+      
+      // Appliquer les résultats au formulaire si disponibles
+      if (results) {
+        applyDetectionResults(form, results);
+      }
+    } catch (err) {
+      console.error("Erreur lors de la détection:", err);
+    }
+  };
+
   // Convertir DetectionStep[] en string[] pour corriger l'erreur de type
-  const stepLabels = steps.map(step => typeof step === 'string' ? step : step.label);
+  const stepLabels = Array.isArray(steps) 
+    ? steps.map(step => typeof step === 'string' ? step : step.label)
+    : [];
 
   return (
     <div className="flex flex-col items-center w-full">
       <div className="w-full mb-4">
         <ImagePreviewArea 
           imagePreview={imagePreview}
-          loading={loading}
+          loading={isDetecting}
           onClick={() => fileInputRef.current?.click()}
           onDelete={imagePreview ? handleDeleteImage : undefined}
-          onDetect={imagePreview ? detectImage : undefined}
-          detectingColor={loading}
+          onDetect={imagePreview ? handleDetect : undefined}
+          detectingColor={isDetecting}
         />
       </div>
       
@@ -62,10 +87,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       />
       
       <DetectionResults 
-        error={error}
+        error={error || null}
         steps={stepLabels}
         currentStep={currentStep}
-        loading={loading}
+        loading={isDetecting}
       />
     </div>
   );
