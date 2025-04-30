@@ -27,9 +27,9 @@ const selectionnerVetementAdapte = async (
   
   // Déterminer la catégorie de température
   let tempCategory: 'froid' | 'tempere' | 'chaud';
-  if (temperature < 10) {
+  if (temperature < 15) {
     tempCategory = 'froid';
-  } else if (temperature > 20) {
+  } else if (temperature > 25) {
     tempCategory = 'chaud';
   } else {
     tempCategory = 'tempere';
@@ -38,19 +38,46 @@ const selectionnerVetementAdapte = async (
   console.log(`Recherche de vêtements pour ${typeVetement}, température: ${tempCategory} (${temperature}°C), pluie: ${isRaining ? 'Oui' : 'Non'}`);
   
   // Filtrer par adaptation à la température (si disponible)
-  const vetementsTemperatureOk = vetementsFiltered.filter(v => 
-    !v.temperature || v.temperature === tempCategory
-  );
+  let vetementsTemperatureOk = vetementsFiltered;
   
-  // Si aucun vêtement adapté à la température, utiliser tous les vêtements du type
-  const vetementsEligibles = vetementsTemperatureOk.length > 0 ? vetementsTemperatureOk : vetementsFiltered;
+  // Pour les températures froides, privilégier fortement les vêtements chauds
+  if (tempCategory === 'froid') {
+    const vetementsFroid = vetementsFiltered.filter(v => 
+      v.temperature === 'froid' || 
+      (v.description && (
+        v.description.toLowerCase().includes('hiver') || 
+        v.description.toLowerCase().includes('chaud') || 
+        v.description.toLowerCase().includes('épais')
+      ))
+    );
+    
+    if (vetementsFroid.length > 0) {
+      vetementsTemperatureOk = vetementsFroid;
+    }
+  }
+  // Pour les températures chaudes, privilégier fortement les vêtements légers/d'été
+  else if (tempCategory === 'chaud') {
+    const vetementsChauds = vetementsFiltered.filter(v => 
+      v.temperature === 'chaud' || 
+      (v.description && (
+        v.description.toLowerCase().includes('été') || 
+        v.description.toLowerCase().includes('ete') || 
+        v.description.toLowerCase().includes('léger') ||
+        v.description.toLowerCase().includes('leger')
+      ))
+    );
+    
+    if (vetementsChauds.length > 0) {
+      vetementsTemperatureOk = vetementsChauds;
+    }
+  }
   
   // S'il pleut, privilégier fortement les vêtements adaptés à la pluie
   if (isRaining) {
     console.log(`Recherche de vêtements adaptés à la pluie pour ${typeVetement}`);
     
     // 1. Vêtements explicitement adaptés à la pluie
-    const vetementsAdaptesPluie = vetementsEligibles.filter(v => 
+    const vetementsAdaptesPluie = vetementsTemperatureOk.filter(v => 
       estAdaptePluie(v) || v.weather_type === 'pluie'
     );
     
@@ -61,21 +88,19 @@ const selectionnerVetementAdapte = async (
     }
     
     // 2. Exclure les vêtements à éviter sous la pluie
-    const vetementsNonDeconseilles = vetementsEligibles.filter(v => !estAEviterPluie(v));
+    const vetementsNonDeconseilles = vetementsTemperatureOk.filter(v => !estAEviterPluie(v));
     
     if (vetementsNonDeconseilles.length > 0) {
       console.log(`${vetementsNonDeconseilles.length} vêtements non déconseillés sous la pluie trouvés pour ${typeVetement}`);
       return vetementsNonDeconseilles[Math.floor(Math.random() * vetementsNonDeconseilles.length)];
     }
-    
-    console.log(`Aucun vêtement idéal pour la pluie trouvé pour ${typeVetement}, utilisation d'un vêtement standard`);
   } 
   // S'il fait beau, ÉVITER les vêtements adaptés à la pluie
   else {
     console.log(`Recherche de vêtements adaptés au beau temps pour ${typeVetement}`);
     
     // Exclusion des vêtements spécifiquement adaptés à la pluie quand il fait beau
-    const vetementsBeauTemps = vetementsEligibles.filter(v => 
+    const vetementsBeauTemps = vetementsTemperatureOk.filter(v => 
       v.weather_type !== 'pluie' && !estAdaptePluie(v)
     );
     
@@ -84,38 +109,10 @@ const selectionnerVetementAdapte = async (
       console.log(`${vetementsBeauTemps.length} vêtements adaptés au beau temps trouvés pour ${typeVetement}`);
       return vetementsBeauTemps[Math.floor(Math.random() * vetementsBeauTemps.length)];
     }
-    
-    // Sinon, si température chaude, privilégier les vêtements légers
-    if (tempCategory === 'chaud') {
-      const vetementsLegers = vetementsEligibles.filter(v => 
-        v.description?.toLowerCase().includes('léger') || 
-        v.description?.toLowerCase().includes('leger') ||
-        v.temperature === 'chaud'
-      );
-      
-      if (vetementsLegers.length > 0) {
-        console.log(`${vetementsLegers.length} vêtements légers trouvés pour ${typeVetement}`);
-        return vetementsLegers[Math.floor(Math.random() * vetementsLegers.length)];
-      }
-    } 
-    // S'il fait froid, privilégier les vêtements chauds
-    else if (tempCategory === 'froid') {
-      const vetementsChauds = vetementsEligibles.filter(v => 
-        v.description?.toLowerCase().includes('chaud') || 
-        v.description?.toLowerCase().includes('épais') ||
-        v.description?.toLowerCase().includes('epais') ||
-        v.temperature === 'froid'
-      );
-      
-      if (vetementsChauds.length > 0) {
-        console.log(`${vetementsChauds.length} vêtements chauds trouvés pour ${typeVetement}`);
-        return vetementsChauds[Math.floor(Math.random() * vetementsChauds.length)];
-      }
-    }
   }
   
-  // Choisir aléatoirement parmi les vêtements éligibles
-  return vetementsEligibles[Math.floor(Math.random() * vetementsEligibles.length)];
+  // Choisir aléatoirement parmi les vêtements selon la température
+  return vetementsTemperatureOk[Math.floor(Math.random() * vetementsTemperatureOk.length)];
 };
 
 /**
@@ -129,12 +126,44 @@ export const suggestVetements = async (
   try {
     console.log(`Génération de suggestion de tenue: Température ${temperature}°C, Pluie: ${isRaining ? 'Oui' : 'Non'}`);
     
-    // Sélectionner un haut, un bas et des chaussures adaptés
-    const haut = await selectionnerVetementAdapte(vetements, temperature, isRaining, VetementType.HAUT);
-    const bas = await selectionnerVetementAdapte(vetements, temperature, isRaining, VetementType.BAS);
-    const chaussures = await selectionnerVetementAdapte(vetements, temperature, isRaining, VetementType.CHAUSSURES);
+    // Vérifier si nous avons suffisamment de vêtements
+    if (!vetements || vetements.length === 0) {
+      console.warn("Aucun vêtement disponible pour générer une suggestion");
+      return { haut: null, bas: null, chaussures: null };
+    }
     
-    console.log(`Suggestion générée: Haut=${haut?.nom || 'Non trouvé'}, Bas=${bas?.nom || 'Non trouvé'}, Chaussures=${chaussures?.nom || 'Non trouvé'}`);
+    // Essayer jusqu'à 3 fois pour s'assurer d'avoir une tenue complète
+    let haut = null, bas = null, chaussures = null;
+    let tentatives = 0;
+    
+    while ((haut === null || bas === null || chaussures === null) && tentatives < 3) {
+      tentatives++;
+      console.log(`Tentative ${tentatives} de génération de tenue complète`);
+      
+      // Sélectionner un haut, un bas et des chaussures adaptés
+      if (haut === null) {
+        haut = await selectionnerVetementAdapte(vetements, temperature, isRaining, VetementType.HAUT);
+      }
+      
+      if (bas === null) {
+        bas = await selectionnerVetementAdapte(vetements, temperature, isRaining, VetementType.BAS);
+      }
+      
+      if (chaussures === null) {
+        chaussures = await selectionnerVetementAdapte(vetements, temperature, isRaining, VetementType.CHAUSSURES);
+      }
+    }
+    
+    console.log(`Suggestion générée: 
+      Haut=${haut?.nom || 'Non trouvé'}, 
+      Bas=${bas?.nom || 'Non trouvé'}, 
+      Chaussures=${chaussures?.nom || 'Non trouvé'}
+    `);
+    
+    // Ajouter un avertissement si certains éléments sont manquants
+    if (!haut || !bas || !chaussures) {
+      console.warn("Tenue incomplète générée. Certains vêtements n'ont pas été trouvés.");
+    }
     
     return { haut, bas, chaussures };
   } catch (error) {

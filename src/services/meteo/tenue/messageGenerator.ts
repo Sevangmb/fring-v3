@@ -12,19 +12,15 @@ export const generateOutfitMessage = (
   
   // Message selon la température
   if (temperature < 5) {
-    message = 'Il fait très froid aujourd\'hui ! Voici une tenue qui vous tiendra bien au chaud.';
-  } else if (temperature < 10) {
-    message = 'Le temps est frais, cette tenue vous protègera du froid.';
+    message = 'Il fait très froid aujourd\'hui ! Voici une tenue d\'hiver qui vous tiendra bien au chaud.';
   } else if (temperature < 15) {
-    message = 'Température fraîche aujourd\'hui, voici une tenue confortable.';
+    message = 'Le temps est frais, cette tenue d\'hiver vous protègera du froid.';
   } else if (temperature < 20) {
-    message = 'Le temps est agréable, cette tenue sera parfaite pour aujourd\'hui.';
+    message = 'Température douce aujourd\'hui, voici une tenue mi-saison confortable.';
   } else if (temperature < 25) {
-    message = 'Il fait doux aujourd\'hui, voici une tenue adaptée à cette belle journée !';
-  } else if (temperature < 30) {
-    message = 'Il fait chaud ! Cette tenue légère sera idéale.';
+    message = 'Il fait doux aujourd\'hui, voici une tenue d\'été adaptée à cette belle journée !';
   } else {
-    message = 'Canicule ! Voici une tenue très légère pour affronter cette chaleur.';
+    message = 'Il fait chaud ! Cette tenue d\'été légère sera idéale pour affronter cette chaleur.';
   }
   
   // Ajouter une mention sur la pluie ou le beau temps
@@ -36,7 +32,7 @@ export const generateOutfitMessage = (
     message += ' Profitez du soleil avec cette tenue !';
   } else if (weatherDescription.toLowerCase().includes('nuage') || 
              weatherDescription.toLowerCase().includes('couvert')) {
-    message += ' Le temps est nuageux, mais cette tenue reste adaptée.';
+    message += ' Le temps est nuageux, mais cette tenue reste parfaitement adaptée.';
   }
   
   return message;

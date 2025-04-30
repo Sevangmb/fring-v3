@@ -25,19 +25,30 @@ export const useTenueSuggestion = (meteo: MeteoData | null, vetements: Vetement[
       setIsGenerating(true);
       
       // Vérifier s'il pleut et récupérer les détails météo actuels
-      const isRaining = meteo.current.isRaining || meteo.current.precipitationChance > 70;
+      const isRaining = meteo.current.isRaining || meteo.current.precipitationChance > 60;
       const temperature = meteo.current.temperature;
       
       console.log(`Conditions météo actuelles: Température ${temperature}°C, ${isRaining ? 'Il pleut' : 'Pas de pluie'}, Précip: ${meteo.current.precipitationChance}%`);
       
       // Générer une suggestion de tenue
       const suggestion = await suggestVetements(vetements, temperature, isRaining);
+      
+      // Générer un message adapté aux conditions et à la tenue
       const message = generateOutfitMessage(temperature, meteo.current.description, isRaining);
       
       setTenueSuggestion({
         ...suggestion,
         message
       });
+      
+      // Vérifier si la suggestion est complète
+      if (!suggestion.haut || !suggestion.bas || !suggestion.chaussures) {
+        toast({
+          title: "Suggestion incomplète",
+          description: "Votre garde-robe ne contient pas tous les types de vêtements nécessaires pour une tenue complète",
+          variant: "warning"
+        });
+      }
     } catch (err) {
       console.error('Erreur lors de la génération de la suggestion de tenue:', err);
       toast({
