@@ -50,7 +50,7 @@ const selectionnerVetementAdapte = async (
     
     // 1. Vêtements explicitement adaptés à la pluie
     const vetementsAdaptesPluie = vetementsEligibles.filter(v => 
-      estAdaptePluie(v) || v.weatherType === 'pluie'
+      estAdaptePluie(v) || v.weather_type === 'pluie'
     );
     
     if (vetementsAdaptesPluie.length > 0) {
@@ -68,30 +68,48 @@ const selectionnerVetementAdapte = async (
     }
     
     console.log(`Aucun vêtement idéal pour la pluie trouvé pour ${typeVetement}, utilisation d'un vêtement standard`);
-  } else if (tempCategory === 'chaud') {
-    // S'il fait chaud, privilégier les vêtements légers
-    const vetementsLegers = vetementsEligibles.filter(v => 
-      v.description?.toLowerCase().includes('léger') || 
-      v.description?.toLowerCase().includes('leger') ||
-      v.temperature === 'chaud'
+  } 
+  // S'il fait beau, ÉVITER les vêtements adaptés à la pluie
+  else {
+    console.log(`Recherche de vêtements adaptés au beau temps pour ${typeVetement}`);
+    
+    // Exclusion des vêtements spécifiquement adaptés à la pluie quand il fait beau
+    const vetementsBeauTemps = vetementsEligibles.filter(v => 
+      v.weather_type !== 'pluie' && !estAdaptePluie(v)
     );
     
-    if (vetementsLegers.length > 0) {
-      console.log(`${vetementsLegers.length} vêtements légers trouvés pour ${typeVetement}`);
-      return vetementsLegers[Math.floor(Math.random() * vetementsLegers.length)];
+    // S'il y a des vêtements adaptés au beau temps, les privilégier
+    if (vetementsBeauTemps.length > 0) {
+      console.log(`${vetementsBeauTemps.length} vêtements adaptés au beau temps trouvés pour ${typeVetement}`);
+      return vetementsBeauTemps[Math.floor(Math.random() * vetementsBeauTemps.length)];
     }
-  } else if (tempCategory === 'froid') {
-    // S'il fait froid, privilégier les vêtements chauds
-    const vetementsChauds = vetementsEligibles.filter(v => 
-      v.description?.toLowerCase().includes('chaud') || 
-      v.description?.toLowerCase().includes('épais') ||
-      v.description?.toLowerCase().includes('epais') ||
-      v.temperature === 'froid'
-    );
     
-    if (vetementsChauds.length > 0) {
-      console.log(`${vetementsChauds.length} vêtements chauds trouvés pour ${typeVetement}`);
-      return vetementsChauds[Math.floor(Math.random() * vetementsChauds.length)];
+    // Sinon, si température chaude, privilégier les vêtements légers
+    if (tempCategory === 'chaud') {
+      const vetementsLegers = vetementsEligibles.filter(v => 
+        v.description?.toLowerCase().includes('léger') || 
+        v.description?.toLowerCase().includes('leger') ||
+        v.temperature === 'chaud'
+      );
+      
+      if (vetementsLegers.length > 0) {
+        console.log(`${vetementsLegers.length} vêtements légers trouvés pour ${typeVetement}`);
+        return vetementsLegers[Math.floor(Math.random() * vetementsLegers.length)];
+      }
+    } 
+    // S'il fait froid, privilégier les vêtements chauds
+    else if (tempCategory === 'froid') {
+      const vetementsChauds = vetementsEligibles.filter(v => 
+        v.description?.toLowerCase().includes('chaud') || 
+        v.description?.toLowerCase().includes('épais') ||
+        v.description?.toLowerCase().includes('epais') ||
+        v.temperature === 'froid'
+      );
+      
+      if (vetementsChauds.length > 0) {
+        console.log(`${vetementsChauds.length} vêtements chauds trouvés pour ${typeVetement}`);
+        return vetementsChauds[Math.floor(Math.random() * vetementsChauds.length)];
+      }
     }
   }
   

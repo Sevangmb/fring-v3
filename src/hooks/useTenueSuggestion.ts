@@ -24,13 +24,15 @@ export const useTenueSuggestion = (meteo: MeteoData | null, vetements: Vetement[
     try {
       setIsGenerating(true);
       
-      // Vérifier s'il pleut
-      const isRaining = meteo.current.isRaining;
-      console.log(`Conditions météo actuelles: ${isRaining ? 'Il pleut' : 'Pas de pluie'}`);
+      // Vérifier s'il pleut et récupérer les détails météo actuels
+      const isRaining = meteo.current.isRaining || meteo.current.precipitationChance > 70;
+      const temperature = meteo.current.temperature;
+      
+      console.log(`Conditions météo actuelles: Température ${temperature}°C, ${isRaining ? 'Il pleut' : 'Pas de pluie'}, Précip: ${meteo.current.precipitationChance}%`);
       
       // Générer une suggestion de tenue
-      const suggestion = await suggestVetements(vetements, meteo.current.temperature, isRaining);
-      const message = generateOutfitMessage(meteo.current.temperature, meteo.current.description, isRaining);
+      const suggestion = await suggestVetements(vetements, temperature, isRaining);
+      const message = generateOutfitMessage(temperature, meteo.current.description, isRaining);
       
       setTenueSuggestion({
         ...suggestion,
