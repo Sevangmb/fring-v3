@@ -1,154 +1,167 @@
-
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { VetementFormValues, vetementFormSchema } from "@/components/vetements/schema/VetementFormSchema";
-import { addVetement } from "@/services/vetement";
+import { VetementFormValues } from "@/components/vetements/schema/VetementFormSchema";
+import { supabase } from "@/lib/supabase";
+import { Vetement } from "@/services/vetement/types";
 
-export const useVetementForm = (
-  user: any,
-  initialValues?: VetementFormValues,
-  onSubmit?: (data: VetementFormValues) => Promise<void>,
-  mode: "create" | "update" = "create"
-) => {
+export const useVetementForm = (vetementId?: number) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  const form = useForm<VetementFormValues>({
-    resolver: zodResolver(vetementFormSchema),
-    defaultValues: initialValues || {
-      nom: "",
-      categorie_id: 0,
-      couleur: "",
-      taille: "",
-      description: "",
-      marque: "",
-      temperature: undefined,
-      image_url: "",
-      a_vendre: false,
-      prix_achat: null,
-      prix_vente: null,
-      lieu_vente: "",
-      infos_vente: "",
-      promo_pourcentage: null,
-      etat: null,
-      disponibilite: "disponible"
-    },
-  });
-
-  useEffect(() => {
-    if (initialValues) {
-      console.log("Initialisation du formulaire avec:", initialValues);
-      
-      Object.entries(initialValues).forEach(([key, value]) => {
-        if (value !== undefined && key !== 'id' && key !== 'created_at' && key !== 'user_id') {
-          form.setValue(key as keyof VetementFormValues, value === null ? "" : value);
-        }
-      });
-      
-      if (initialValues.image_url) {
-        setImagePreview(initialValues.image_url);
-      }
-    }
-  }, [initialValues, form]);
-
-  useEffect(() => {
-    const subscription = form.watch((value, { name, type }) => {
-      console.log("Form value changed:", name, value);
-    });
-    return () => subscription.unsubscribe();
-  }, [form]);
-
-  const handleSubmit = async (data: VetementFormValues) => {
-    if (!user) {
-      toast({
-        title: "Non autorisé",
-        description: "Vous devez être connecté pour gérer vos vêtements.",
-        variant: "destructive",
-      });
-      navigate("/login");
-      return;
-    }
-
+  const addVetement = async (formValues: VetementFormValues): Promise<boolean> => {
     try {
       setIsSubmitting(true);
-      console.log("===== DÉBUT SOUMISSION FORMULAIRE =====");
-      console.log("Données brutes du formulaire:", data);
-      
-      const formDataWithImage = {
-        ...data,
-        image_url: imagePreview || data.image_url || null,
+
+      if (!user) {
+        throw new Error("Utilisateur non authentifié");
+      }
+
+      const vetementData: Omit<Vetement, "id" | "created_at"> = {
+        nom: formValues.nom,
+        categorie_id: formValues.categorie_id,
+        couleur: formValues.couleur,
+        taille: formValues.taille,
+        description: formValues.description || null,
+        marque: formValues.marque || null,
+        image_url: formValues.image_url || null,
+        user_id: user.id,
+        temperature: formValues.temperature || null,
+        weather_type: formValues.weather_type || null,
+        a_vendre: formValues.a_vendre || false,
+        prix_achat: formValues.prix_achat || null,
+        prix_vente: formValues.prix_vente || null,
+        promo_pourcentage: formValues.promo_pourcentage || null,
+        etat: formValues.etat || null,
+        lieu_vente: formValues.lieu_vente || null,
+        disponibilite: formValues.disponibilite || "disponible",
+        infos_vente: formValues.infos_vente || null,
       };
-      
-      // Si a_vendre est false, on s'assure que les champs de vente sont null/vides
-      if (!formDataWithImage.a_vendre) {
-        formDataWithImage.prix_achat = null;
-        formDataWithImage.prix_vente = null;
-        formDataWithImage.lieu_vente = null;
-        formDataWithImage.infos_vente = null;
-        formDataWithImage.promo_pourcentage = null;
-        formDataWithImage.etat = null;
-        formDataWithImage.disponibilite = "disponible";
-      }
-      
-      console.log("Données complètes avec image:", formDataWithImage);
-      
-      if (mode === "update" && onSubmit) {
-        await onSubmit(formDataWithImage);
-      } else {
-        await addVetement({
-          nom: formDataWithImage.nom,
-          categorie_id: formDataWithImage.categorie_id,
-          couleur: formDataWithImage.couleur,
-          taille: formDataWithImage.taille,
-          description: formDataWithImage.description || null,
-          marque: formDataWithImage.marque || null,
-          image_url: formDataWithImage.image_url || null,
-          temperature: formDataWithImage.temperature || null,
-          weatherType: formDataWithImage.weatherType || null,
-          a_vendre: formDataWithImage.a_vendre || false,
-          prix_achat: formDataWithImage.prix_achat || null,
-          prix_vente: formDataWithImage.prix_vente || null,
-          lieu_vente: formDataWithImage.lieu_vente || null,
-          infos_vente: formDataWithImage.infos_vente || null,
-          promo_pourcentage: formDataWithImage.promo_pourcentage || null,
-          etat: formDataWithImage.etat || null,
-          disponibilite: formDataWithImage.disponibilite || "disponible"
-        });
-        
+
+      const { error } = await supabase
+        .from('vetements')
+        .insert([vetementData]);
+
+      if (error) {
+        console.error("Erreur lors de l'ajout du vêtement:", error);
         toast({
-          title: "Vêtement ajouté avec succès!",
-          description: "Votre nouveau vêtement a été ajouté à votre collection.",
+          title: "Erreur",
+          description: "Impossible d'ajouter le vêtement. Veuillez réessayer.",
+          variant: "destructive",
         });
-        
-        navigate("/mes-vetements/liste");
+        return false;
       }
-      
-      console.log("===== FIN SOUMISSION FORMULAIRE =====");
+
+      toast({
+        title: "Succès",
+        description: "Vêtement ajouté avec succès!",
+      });
+      return true;
     } catch (error) {
-      console.error("Erreur lors de la gestion du vêtement:", error);
+      console.error("Erreur lors de l'ajout du vêtement:", error);
       toast({
         title: "Erreur",
-        description: "Une erreur s'est produite lors de la gestion du vêtement.",
+        description: "Une erreur est survenue lors de l'ajout du vêtement.",
         variant: "destructive",
       });
+      return false;
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const updateVetement = async (formValues: VetementFormValues): Promise<boolean> => {
+    try {
+      setIsSubmitting(true);
+      
+      if (!vetementId || !user) {
+        throw new Error("Impossible de mettre à jour le vêtement");
+      }
+      
+      const vetementData: Omit<Vetement, "id" | "created_at"> = {
+        nom: formValues.nom,
+        categorie_id: formValues.categorie_id,
+        couleur: formValues.couleur,
+        taille: formValues.taille,
+        description: formValues.description || null,
+        marque: formValues.marque || null,
+        image_url: formValues.image_url || null,
+        user_id: user.id,
+        temperature: formValues.temperature || null,
+        weather_type: formValues.weather_type || null,
+        a_vendre: formValues.a_vendre || false,
+        prix_achat: formValues.prix_achat || null,
+        prix_vente: formValues.prix_vente || null,
+        promo_pourcentage: formValues.promo_pourcentage || null,
+        etat: formValues.etat || null,
+        lieu_vente: formValues.lieu_vente || null,
+        disponibilite: formValues.disponibilite || "disponible",
+        infos_vente: formValues.infos_vente || null,
+      };
+      
+      const { error } = await supabase
+        .from('vetements')
+        .update(vetementData)
+        .eq('id', vetementId);
+      
+      if (error) {
+        console.error("Erreur lors de la mise à jour du vêtement:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de mettre à jour le vêtement. Veuillez réessayer.",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      toast({
+        title: "Succès",
+        description: "Vêtement mis à jour avec succès!",
+      });
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du vêtement:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la mise à jour du vêtement.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFormSubmit = useCallback(
+    async (formValues: VetementFormValues, isEditMode: boolean) => {
+      if (isSubmitting) return false;
+
+      try {
+        let success;
+        if (isEditMode && vetementId) {
+          success = await updateVetement(formValues);
+        } else {
+          success = await addVetement(formValues);
+        }
+
+        if (success) {
+          navigate("/mes-vetements");
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error("Erreur lors de la soumission du formulaire:", error);
+        return false;
+      }
+    },
+    [navigate, isSubmitting, vetementId, updateVetement, addVetement]
+  );
+
   return {
-    form,
     isSubmitting,
-    imagePreview,
-    setImagePreview,
-    loading,
-    setLoading,
-    handleSubmit,
+    handleFormSubmit,
   };
 };

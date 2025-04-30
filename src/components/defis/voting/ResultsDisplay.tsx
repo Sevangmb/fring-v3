@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { getWinningEnsemble } from '@/services/defi/votes/getWinningEnsemble';
 import { getDefiParticipationsWithVotes } from '@/services/defi/votes/getDefiParticipationsWithVotes';
@@ -8,18 +7,32 @@ import { Card } from '@/components/ui/card';
 import { ThumbsUp, ThumbsDown, Award, Medal, Trophy } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface ResultsDisplayProps {
+export interface ResultsDisplayProps {
   defiId: number;
+  winner?: any; // Added this property
+  votingResults?: { [key: number]: { id: number; name: string; upVotes: number; totalVotes: number; } }; // Added this property
+  onClose?: () => void; // Added this property
 }
 
-const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ defiId }) => {
-  const [loading, setLoading] = useState(true);
-  const [winner, setWinner] = useState<any>(null);
+const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ 
+  defiId, 
+  winner: initialWinner, 
+  votingResults, 
+  onClose 
+}) => {
+  const [loading, setLoading] = useState(!initialWinner);
+  const [winner, setWinner] = useState<any>(initialWinner || null);
   const [topParticipants, setTopParticipants] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Only fetch results if not provided
     const fetchResults = async () => {
+      if (initialWinner) {
+        setWinner(initialWinner);
+        return;
+      }
+      
       try {
         setLoading(true);
         
@@ -48,7 +61,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ defiId }) => {
     };
     
     fetchResults();
-  }, [defiId]);
+  }, [defiId, initialWinner]);
   
   if (loading) {
     return (

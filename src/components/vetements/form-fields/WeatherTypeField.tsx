@@ -13,13 +13,13 @@ interface WeatherTypeFieldProps {
 
 const WeatherTypeField: React.FC<WeatherTypeFieldProps> = ({ form }) => {
   // Obtenir la valeur actuelle pour l'afficher dans le label si elle existe
-  const weatherTypeValue = form.watch('weatherType');
+  const weatherTypeValue = form.watch('weather_type');
   const hasDetectedValue = !!weatherTypeValue;
 
   return (
     <FormField
       control={form.control}
-      name="weatherType"
+      name="weather_type"
       render={({ field }) => (
         <FormItem className="space-y-2">
           <FormLabel>

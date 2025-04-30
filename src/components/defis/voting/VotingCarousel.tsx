@@ -96,7 +96,7 @@ const VotingCarousel: React.FC<VotingCarouselProps> = ({ defiId }) => {
       <VoteProgress 
         current={currentIndex + 1} 
         total={participations.length} 
-        votedCount={participations.length - hasMoreToVote ? participations.length : 0}
+        votedCount={participations.length - (hasMoreToVote ? participations.length : 0)}
       />
       
       <div 

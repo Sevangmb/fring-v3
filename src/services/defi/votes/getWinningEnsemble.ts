@@ -110,7 +110,7 @@ export const getWinningEnsemble = async (defiId: number): Promise<WinningEnsembl
       ensembleId: winningId,
       ensembleNom: ensemble?.nom,
       userId: ensemble?.user_id,
-      userEmail: ensemble?.profiles?.email,
+      userEmail: ensemble?.profiles?.email as string,
       score: maxScore,
       upvotes: voteCounts.up,
       downvotes: voteCounts.down,

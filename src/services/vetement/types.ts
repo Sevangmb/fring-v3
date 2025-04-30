@@ -20,4 +20,5 @@ export interface Vetement {
   infos_vente?: string;
   temperature?: string;
   weather_type?: string;
+  owner_email?: string; // Added this property
 }

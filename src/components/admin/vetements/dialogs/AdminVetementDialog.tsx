@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -30,7 +29,7 @@ const vetementFormSchema = z.object({
   marque: z.string().nullable().optional(),
   image_url: z.string().url("L'URL de l'image n'est pas valide").nullable().optional(),
   temperature: z.enum(["froid", "tempere", "chaud"]).nullable().optional(),
-  weatherType: z.enum(["pluie", "neige", "normal"]).nullable().optional(),
+  weather_type: z.enum(["pluie", "neige", "normal"]).nullable().optional(),
   user_id: z.string().uuid().nullable().optional(),
 });
 
@@ -58,7 +57,7 @@ const AdminVetementDialog: React.FC<AdminVetementDialogProps> = ({
       marque: vetement?.marque || '',
       image_url: vetement?.image_url || '',
       temperature: (vetement?.temperature as any) || null,
-      weatherType: (vetement?.weatherType as any) || null,
+      weather_type: (vetement?.weather_type as any) || null,
       user_id: vetement?.user_id || null,
     }
   });
@@ -105,7 +104,7 @@ const AdminVetementDialog: React.FC<AdminVetementDialogProps> = ({
         marque: values.marque || null,
         image_url: values.image_url || null,
         temperature: values.temperature || null,
-        weatherType: values.weatherType || null,
+        weather_type: values.weather_type || null, // Changed from weatherType to weather_type
         // Si user_id est "none", le traiter comme null
         user_id: values.user_id === "none" ? null : values.user_id
       };
@@ -298,7 +297,7 @@ const AdminVetementDialog: React.FC<AdminVetementDialogProps> = ({
               
               <FormField
                 control={form.control}
-                name="weatherType"
+                name="weather_type"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Type de météo</FormLabel>
