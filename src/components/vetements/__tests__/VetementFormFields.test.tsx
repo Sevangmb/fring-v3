@@ -31,7 +31,7 @@ describe('VetementFormFields', () => {
         marque: '',
         image_url: '',
         temperature: undefined,
-        weatherType: undefined
+        weather_type: undefined
       },
     });
     
@@ -63,7 +63,7 @@ describe('VetementFormFields', () => {
         marque: '',
         image_url: '',
         temperature: undefined,
-        weatherType: undefined
+        weather_type: undefined
       },
     });
     
@@ -93,7 +93,7 @@ describe('VetementFormFields', () => {
         marque: '',
         image_url: '',
         temperature: undefined,
-        weatherType: undefined
+        weather_type: undefined
       },
     });
     

@@ -1,98 +1,138 @@
 
-import { VetementType, VETEMENTS_HAUTS, VETEMENTS_BAS, VETEMENTS_CHAUSSURES, VETEMENTS_PLUIE, VETEMENTS_A_EVITER_PLUIE } from './types';
-import { Vetement } from '@/services/vetement/types';
-import { supabase } from '@/lib/supabase';
+import { Vetement } from "@/services/vetement/types";
+import { VetementType, determinerTypeVetement } from "./index";
+import { calculateTemperatureScore, WeatherTenue } from "../temperatureUtils";
+import { removeDiacritics } from "@/lib/stringUtils";
 
 /**
- * Détermine le type de vêtement (haut, bas, chaussures) en fonction de sa catégorie
- * Utilise d'abord categorie_id si disponible, sinon se rabat sur le nom de la catégorie
+ * Cette fonction évalue si un vêtement convient pour une tenue pour une certaine météo
+ * @param vetement Le vêtement à évaluer
+ * @param weatherTenue Informations sur les conditions météo souhaitées
+ * @returns Score entre 0 et 100 indiquant la pertinence du vêtement pour cette météo
  */
-export const determinerTypeVetement = async (vetement: Vetement): Promise<VetementType | null> => {
-  try {
-    // Si on a un ID de catégorie, on récupère l'information depuis la base de données
-    if (vetement.categorie_id) {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('nom')
-        .eq('id', vetement.categorie_id)
-        .single();
-        
-      if (error) {
-        console.error('Erreur lors de la récupération de la catégorie:', error);
-      } else if (data) {
-        const categorieLower = data.nom.toLowerCase();
-        
-        if (VETEMENTS_HAUTS.some(h => categorieLower.includes(h))) return VetementType.HAUT;
-        if (VETEMENTS_BAS.some(b => categorieLower.includes(b))) return VetementType.BAS;
-        if (VETEMENTS_CHAUSSURES.some(c => categorieLower.includes(c))) return VetementType.CHAUSSURES;
-      }
+export const evaluateVetementForWeather = async (
+  vetement: Vetement, 
+  weatherTenue: WeatherTenue
+): Promise<number> => {
+  if (!vetement) return 0;
+  
+  // Scores cumulatifs pour différents critères
+  let totalScore = 0;
+  let maxPossibleScore = 0;
+  
+  // 1. Score pour la température
+  if (weatherTenue.temperature && vetement.temperature) {
+    const temperatureScore = calculateTemperatureScore(
+      vetement.temperature, 
+      weatherTenue.temperature
+    );
+    
+    totalScore += temperatureScore * 50; // Pondération de la température
+    maxPossibleScore += 50;
+  }
+  
+  // 2. Score pour le type de météo (pluie, neige)
+  if (weatherTenue.weather && vetement.weather_type) {
+    // Si le temps est normal, tous les vêtements sont adaptés
+    if (weatherTenue.weather === 'normal') {
+      totalScore += 30;
+    } 
+    // Si le vêtement est spécifiquement adapté au temps en cours
+    else if (vetement.weather_type === weatherTenue.weather) {
+      totalScore += 30;
+    } 
+    // Si le vêtement est spécifié pour la pluie mais qu'il neige
+    else if (vetement.weather_type === 'pluie' && weatherTenue.weather === 'neige') {
+      totalScore += 15; // Partiellement adapté
+    }
+    // Si le vêtement est adapté à la neige mais qu'il pleut
+    else if (vetement.weather_type === 'neige' && weatherTenue.weather === 'pluie') {
+      totalScore += 20; // Assez bien adapté
+    }
+    // Si le vêtement est adapté pour un temps spécifique mais qu'il fait normal
+    else if (vetement.weather_type !== 'normal' && weatherTenue.weather === 'normal') {
+      totalScore += 15; // Moins idéal mais acceptable
+    }
+    // Dans les autres cas (vêtement normal par temps de pluie/neige)
+    else {
+      totalScore += 5; // Peu adapté
     }
     
-    // Si pas d'identifiant valide ou catégorie non trouvée, vérifier le nom du vetement et la description
-    const nomLower = vetement.nom.toLowerCase();
-    const descriptionLower = vetement.description ? vetement.description.toLowerCase() : '';
-    const textToCheck = nomLower + ' ' + descriptionLower;
-    
-    if (VETEMENTS_HAUTS.some(h => textToCheck.includes(h))) return VetementType.HAUT;
-    if (VETEMENTS_BAS.some(b => textToCheck.includes(b))) return VetementType.BAS;
-    if (VETEMENTS_CHAUSSURES.some(c => textToCheck.includes(c))) return VetementType.CHAUSSURES;
-    
-    return null;
-  } catch (err) {
-    console.error('Erreur lors de la détermination du type de vêtement:', err);
-    return null;
+    maxPossibleScore += 30;
   }
+  
+  // 3. Score additionnel selon le type de vêtement (haut/bas/chaussures)
+  const vetementType = await determinerTypeVetement(vetement);
+  
+  // Ajuster les scores pour certaines combinaisons spécifiques
+  if (weatherTenue.weather === 'pluie') {
+    // Pour la pluie, les chaussures imperméables sont importantes
+    if (vetementType === VetementType.CHAUSSURES) {
+      // Vérifier si le nom ou la description mentionne l'imperméabilité
+      const isWaterproof = checkWaterproofAttributes(vetement);
+      totalScore += isWaterproof ? 20 : 0;
+      maxPossibleScore += 20;
+    }
+    
+    // Pour la pluie, les vêtements imperméables sont importants pour le haut
+    if (vetementType === VetementType.HAUT) {
+      // Vérifier si le nom ou la description mentionne l'imperméabilité
+      const isWaterproof = checkWaterproofAttributes(vetement);
+      totalScore += isWaterproof ? 15 : 0;
+      maxPossibleScore += 15;
+    }
+  }
+  
+  // Pour la neige, les vêtements chauds et imperméables sont importants
+  if (weatherTenue.weather === 'neige') {
+    const isWarm = vetement.temperature === 'chaud';
+    const isWaterproof = checkWaterproofAttributes(vetement);
+    
+    if (vetementType === VetementType.CHAUSSURES) {
+      totalScore += isWaterproof ? 15 : 0;
+      totalScore += isWarm ? 10 : 0;
+      maxPossibleScore += 25;
+    }
+    
+    if (vetementType === VetementType.HAUT || vetementType === VetementType.BAS) {
+      totalScore += isWaterproof ? 10 : 0;
+      totalScore += isWarm ? 15 : 0;
+      maxPossibleScore += 25;
+    }
+  }
+  
+  // Calculer le score final sur 100
+  const finalScore = maxPossibleScore > 0 
+    ? Math.round((totalScore / maxPossibleScore) * 100)
+    : 50; // Score par défaut si aucun critère n'a été évalué
+    
+  return Math.min(100, Math.max(0, finalScore)); // Garantir que le score est entre 0 et 100
 };
 
 /**
- * Vérifie si un vêtement est adapté à la pluie en fonction de sa catégorie ou de son type de météo
+ * Vérifie si les attributs du vêtement indiquent qu'il est imperméable
  */
-export const estAdaptePluie = (vetement: Vetement): boolean => {
-  // Vérifier si le type de météo du vêtement est explicitement "pluie"
-  if (vetement.weatherType === 'pluie') return true;
+function checkWaterproofAttributes(vetement: Vetement): boolean {
+  const waterproofTerms = ['imperméable', 'impermeable', 'étanche', 'etanche', 'waterproof', 'pluie'];
   
-  // Récupérer le nom de la catégorie si nécessaire
-  let categorieName = '';
-  if (vetement.categorie_id) {
-    // Idéalement, cette fonction devrait être asynchrone et récupérer le nom de la catégorie
-    // Pour simplifier, on utilise juste l'ID dans cet exemple
-    categorieName = `catégorie ${vetement.categorie_id}`;
+  // Vérifier dans le nom
+  const name = removeDiacritics(vetement.nom.toLowerCase());
+  if (waterproofTerms.some(term => name.includes(removeDiacritics(term)))) {
+    return true;
   }
   
-  // Vérifier dans le nom, la catégorie et la description
-  const nomLower = vetement.nom ? vetement.nom.toLowerCase() : '';
-  const descriptionLower = vetement.description ? vetement.description.toLowerCase() : '';
-  const textToCheck = nomLower + ' ' + categorieName + ' ' + descriptionLower;
-  
-  // Vérifier les mots-clés associés aux vêtements imperméables
-  return VETEMENTS_PLUIE.some(v => textToCheck.includes(v));
-};
-
-/**
- * Vérifie si un vêtement est à éviter sous la pluie en fonction de sa catégorie
- */
-export const estAEviterPluie = (vetement: Vetement): boolean => {
-  // Si le type de météo du vêtement est explicitement "neige", c'est généralement bon pour la pluie aussi
-  if (vetement.weatherType === 'neige') return false;
-  
-  // Si le type de météo est explicitement "pluie", c'est adapté
-  if (vetement.weatherType === 'pluie') return false;
-  
-  // Si le type de météo est autre chose que "pluie" ou "neige"
-  if (vetement.weatherType && vetement.weatherType !== 'normal') return true;
-  
-  // Récupérer le nom de la catégorie si nécessaire
-  let categorieName = '';
-  if (vetement.categorie_id) {
-    // Idéalement, cette fonction devrait être asynchrone et récupérer le nom de la catégorie
-    // Pour simplifier, on utilise juste l'ID dans cet exemple
-    categorieName = `catégorie ${vetement.categorie_id}`;
+  // Vérifier dans la description si présente
+  if (vetement.description) {
+    const description = removeDiacritics(vetement.description.toLowerCase());
+    if (waterproofTerms.some(term => description.includes(removeDiacritics(term)))) {
+      return true;
+    }
   }
   
-  // Sinon, vérifier par le nom, la catégorie ou la description
-  const nomLower = vetement.nom ? vetement.nom.toLowerCase() : '';
-  const descriptionLower = vetement.description ? vetement.description.toLowerCase() : '';
-  const textToCheck = nomLower + ' ' + categorieName + ' ' + descriptionLower;
+  // Si le vêtement est spécifiquement marqué pour la pluie
+  if (vetement.weather_type === 'pluie') {
+    return true;
+  }
   
-  return VETEMENTS_A_EVITER_PLUIE.some(v => textToCheck.includes(v));
-};
+  return false;
+}

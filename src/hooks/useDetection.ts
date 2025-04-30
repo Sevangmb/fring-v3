@@ -1,157 +1,101 @@
 
-import { useState } from "react";
-import { UseFormReturn } from "react-hook-form";
-import { VetementFormValues } from "@/components/vetements/schema/VetementFormSchema";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "./use-toast";
+import { useState, useEffect } from 'react';
+import { useToast } from './use-toast';
 
-// Type pour les étapes de détection
-export interface DetectionStep {
-  id: string;
-  label: string;
-  completed: boolean;
+export interface DetectionResults {
+  temperature?: string;
+  weather_type?: string;
+  [key: string]: any;
 }
 
-export const useDetection = (
-  form: UseFormReturn<VetementFormValues>,
-  imageUrl: string | null
-) => {
+export const useDetection = () => {
+  const [isDetecting, setIsDetecting] = useState(false);
+  const [results, setResults] = useState<DetectionResults>({});
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [steps, setSteps] = useState<DetectionStep[]>([]);
-  const [currentStep, setCurrentStep] = useState<string | null>(null);
 
-  // Fonction pour détecter les informations sur l'image
-  const detectImage = async () => {
-    if (!imageUrl) {
-      setError("Aucune image n'a été sélectionnée");
+  const simulateDetection = async (imageFile: File): Promise<DetectionResults> => {
+    return new Promise((resolve) => {
+      // Simulation de détection avec délai aléatoire
+      const detectionTime = Math.random() * 1000 + 500; // entre 500ms et 1500ms
+      
+      setTimeout(() => {
+        // Données simulées avec probabilités variables
+        const temperatures = ['froid', 'tempere', 'chaud'];
+        const weatherTypes = ['normal', 'pluie', 'neige'];
+        
+        // Choix aléatoire avec plus de chances pour des valeurs "normales"
+        const temperatureIndex = Math.random() > 0.7 ? Math.floor(Math.random() * 3) : 1; // 70% tempere
+        const weatherTypeIndex = Math.random() > 0.7 ? Math.floor(Math.random() * 3) : 0; // 70% normal
+        
+        const detectedResults = {
+          temperature: temperatures[temperatureIndex],
+          weather_type: weatherTypes[weatherTypeIndex],
+        };
+        
+        resolve(detectedResults);
+      }, detectionTime);
+    });
+  };
+
+  const detectAttributesFromImage = async (imageFile: File) => {
+    if (!imageFile) {
+      toast({
+        title: "Erreur",
+        description: "Aucune image à analyser",
+        variant: "destructive",
+      });
       return;
     }
 
+    setIsDetecting(true);
+    
     try {
-      setLoading(true);
-      setError(null);
-      setSteps([]);
-      setCurrentStep("Préparation de l'image...");
+      // Remplacer par un appel API réel dans une version future
+      const detectedAttributes = await simulateDetection(imageFile);
       
-      // Étape 1: Préparation
-      addStep({
-        id: "preparation",
-        label: "Préparation de l'image",
-        completed: true
-      });
-      
-      // Étape 2: Analyse
-      setCurrentStep("Analyse de l'image...");
-      
-      // Appel de la fonction Edge pour détecter la couleur et la catégorie
-      const { data, error } = await supabase.functions.invoke('detect-color', {
-        body: { imageUrl }
-      });
-      
-      if (error) {
-        throw new Error(`Erreur lors de l'analyse: ${error.message}`);
-      }
-      
-      addStep({
-        id: "analyse",
-        label: "Analyse de l'image terminée",
-        completed: true
-      });
-      
-      // Étape 3: Application des résultats
-      setCurrentStep("Application des résultats...");
-      
-      console.log("Résultats détectés:", data);
-      
-      if (data?.color) {
-        form.setValue('couleur', data.color);
-      }
-      
-      // Si une catégorie a été détectée, la définir
-      if (data?.category) {
-        const categoryId = await findCategoryIdByName(data.category);
-        if (categoryId) {
-          form.setValue('categorie_id', categoryId);
-        }
-      }
-      
-      // Si une température a été détectée
-      if (data?.temperature) {
-        form.setValue('temperature', data.temperature);
-      }
-      
-      // Si un type de météo a été détecté
-      if (data?.weatherType) {
-        form.setValue('weatherType', data.weatherType);
-      }
-      
-      addStep({
-        id: "resultats",
-        label: "Résultats appliqués",
-        completed: true
-      });
-      
-      // Notification de succès
-      toast({
-        title: "Détection réussie",
-        description: "Les informations ont été détectées et appliquées au formulaire.",
-      });
-      
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Une erreur est survenue lors de la détection";
-      console.error("Erreur de détection:", err);
-      setError(errorMessage);
+      // Mettre à jour les résultats
+      setResults(detectedAttributes);
       
       toast({
-        title: "Erreur de détection",
-        description: errorMessage,
+        title: "Analyse terminée",
+        description: "Les attributs du vêtement ont été détectés",
+      });
+      
+      return detectedAttributes;
+    } catch (error) {
+      console.error("Erreur lors de la détection:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'analyser l'image",
         variant: "destructive",
       });
+      
+      return null;
     } finally {
-      setLoading(false);
-      setCurrentStep(null);
+      setIsDetecting(false);
     }
   };
 
-  // Ajouter une étape au processus
-  const addStep = (step: DetectionStep) => {
-    setSteps(prev => [...prev, step]);
-  };
-  
-  // Trouver l'ID d'une catégorie par son nom
-  const findCategoryIdByName = async (categoryName: string): Promise<number | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('id, nom')
-        .ilike('nom', `%${categoryName}%`)
-        .limit(1);
-      
-      if (error) {
-        console.error("Erreur lors de la recherche de la catégorie:", error);
-        return null;
+  // Fonction pour appliquer les résultats de détection au formulaire
+  const applyDetectionResults = (form: any, results: DetectionResults) => {
+    if (!results || Object.keys(results).length === 0) return;
+    
+    // Pour chaque attribut détecté, mettre à jour le formulaire
+    Object.entries(results).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        try {
+          form.setValue(key, value);
+        } catch (error) {
+          console.error(`Erreur lors de l'application de la valeur pour ${key}:`, error);
+        }
       }
-      
-      if (data && data.length > 0) {
-        console.log(`Catégorie trouvée: ${data[0].nom} (ID: ${data[0].id})`);
-        return data[0].id;
-      }
-      
-      console.log(`Aucune catégorie correspondante trouvée pour: ${categoryName}`);
-      return null;
-    } catch (err) {
-      console.error("Erreur lors de la recherche de la catégorie:", err);
-      return null;
-    }
+    });
   };
 
   return {
-    loading,
-    error,
-    steps,
-    currentStep,
-    detectImage
+    isDetecting,
+    results,
+    detectAttributesFromImage,
+    applyDetectionResults,
   };
 };

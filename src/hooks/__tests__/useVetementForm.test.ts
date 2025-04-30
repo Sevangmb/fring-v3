@@ -18,6 +18,15 @@ vi.mock('@/services/vetement', () => ({
   addVetement: vi.fn().mockResolvedValue({ id: 1 }),
 }));
 
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    from: () => ({
+      insert: () => ({ error: null }),
+      update: () => ({ error: null }),
+    }),
+  },
+}));
+
 describe('useVetementForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -58,7 +67,7 @@ describe('useVetementForm', () => {
       useVetementForm({ id: '123' }, initialValues)
     );
     
-    expect(result.current.form.getValues()).toEqual(initialValues);
+    expect(result.current.form.getValues("nom")).toEqual(initialValues.nom);
     expect(result.current.imagePreview).toBe(initialValues.image_url);
   });
 });

@@ -106,11 +106,17 @@ export const getWinningEnsemble = async (defiId: number): Promise<WinningEnsembl
       console.error('Erreur lors de la récupération de l\'ensemble:', ensembleError);
     }
     
+    // Correction pour accéder à l'email du profil
+    let userEmail = null;
+    if (ensemble?.profiles) {
+      userEmail = ensemble.profiles.email;
+    }
+    
     return {
       ensembleId: winningId,
       ensembleNom: ensemble?.nom,
       userId: ensemble?.user_id,
-      userEmail: ensemble?.profiles?.email as string,
+      userEmail: userEmail,
       score: maxScore,
       upvotes: voteCounts.up,
       downvotes: voteCounts.down,

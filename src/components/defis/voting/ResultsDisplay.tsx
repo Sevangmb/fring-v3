@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { getWinningEnsemble } from '@/services/defi/votes/getWinningEnsemble';
 import { getDefiParticipationsWithVotes } from '@/services/defi/votes/getDefiParticipationsWithVotes';
@@ -8,10 +9,10 @@ import { ThumbsUp, ThumbsDown, Award, Medal, Trophy } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export interface ResultsDisplayProps {
-  defiId: number;
-  winner?: any; // Added this property
-  votingResults?: { [key: number]: { id: number; name: string; upVotes: number; totalVotes: number; } }; // Added this property
-  onClose?: () => void; // Added this property
+  defiId?: number;
+  winner?: any;
+  votingResults?: { [key: number]: { id: number; name: string; upVotes: number; totalVotes: number; } };
+  onClose?: () => void;
 }
 
 const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ 
@@ -30,6 +31,11 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     const fetchResults = async () => {
       if (initialWinner) {
         setWinner(initialWinner);
+        return;
+      }
+      
+      if (!defiId) {
+        setError("ID du défi manquant");
         return;
       }
       
@@ -142,27 +148,25 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 </div>
                 
                 <div className="p-4">
-                  <h3 className="text-xl font-bold mb-2">{ensemble?.nom || "Sans nom"}</h3>
+                  <h3 className="text-lg font-bold">{ensemble?.nom || "Tenue sans nom"}</h3>
                   {ensemble?.description && (
-                    <p className="text-gray-600 mb-4 line-clamp-2">{ensemble.description}</p>
+                    <p className="text-sm text-gray-600 mt-1">{ensemble.description}</p>
                   )}
                   
-                  <div className="flex justify-between items-center mt-4">
-                    <div className="flex items-center gap-2">
-                      <ThumbsUp className="h-4 w-4 text-green-600" />
-                      <span>{participant.votes?.up || 0}</span>
+                  <div className="mt-3 flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center text-green-600">
+                        <ThumbsUp className="h-4 w-4 mr-1" />
+                        <span>{participant.votes?.up || 0}</span>
+                      </div>
+                      <div className="flex items-center text-red-600">
+                        <ThumbsDown className="h-4 w-4 mr-1" />
+                        <span>{participant.votes?.down || 0}</span>
+                      </div>
                     </div>
-                    <div className="text-lg font-bold">
-                      {score > 0 ? `+${score}` : score}
+                    <div className="text-sm font-medium">
+                      Score: {score}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <ThumbsDown className="h-4 w-4 text-red-600" />
-                      <span>{participant.votes?.down || 0}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-2 text-center text-sm text-gray-600">
-                    {totalVotes} vote{totalVotes !== 1 ? 's' : ''} au total
                   </div>
                 </div>
               </VetementCardContainer>

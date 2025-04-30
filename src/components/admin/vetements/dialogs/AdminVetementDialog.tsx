@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -104,7 +105,7 @@ const AdminVetementDialog: React.FC<AdminVetementDialogProps> = ({
         marque: values.marque || null,
         image_url: values.image_url || null,
         temperature: values.temperature || null,
-        weather_type: values.weather_type || null, // Changed from weatherType to weather_type
+        weather_type: values.weather_type || null,
         // Si user_id est "none", le traiter comme null
         user_id: values.user_id === "none" ? null : values.user_id
       };

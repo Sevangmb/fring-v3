@@ -49,7 +49,7 @@ const ModifierVetementContent: React.FC<ModifierVetementContentProps> = ({
         marque: formData.marque || null,
         image_url: formData.image_url || null,
         temperature: formData.temperature || null,
-        weatherType: formData.weatherType || null,
+        weather_type: formData.weather_type || null,
         // Ajout des champs pour la vente
         a_vendre: formData.a_vendre || false,
         prix_achat: formData.prix_achat || null,

@@ -164,7 +164,8 @@ const VotingDialog: React.FC<VotingDialogProps> = ({
           <ResultsDisplay 
             winner={winner} 
             votingResults={votingResults} 
-            onClose={() => onOpenChange(false)} 
+            onClose={() => onOpenChange(false)}
+            defiId={defiId}
           />
         ) : (
           <VotingForm 
