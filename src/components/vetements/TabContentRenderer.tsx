@@ -2,11 +2,13 @@ import React from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import AjouterEnsembleTab from "./tabs/AjouterEnsembleTab";
 import MesVetementsTab from "./tabs/MesVetementsTab";
-import AVendreTab from "./tabs/AVendreTab";
+import VetementsAmisTab from "./tabs/VetementsAmisTab";
 import AjouterVetement from "@/pages/vetements/AjouterVetement";
 import MesEnsembles from "@/pages/ensembles/MesEnsembles";
 import { useVetementsData } from "@/hooks/useVetementsData";
 import { useCategories } from "@/hooks/useCategories";
+import { useAmis } from "@/hooks/useAmis";
+import EnsemblesAmisList from "../ensembles/EnsemblesAmisList";
 
 interface TabContentRendererProps {
   children?: React.ReactNode;
@@ -14,13 +16,16 @@ interface TabContentRendererProps {
 
 const TabContentRenderer: React.FC<TabContentRendererProps> = ({ children }) => {
   // Fetch the needed data for MesVetementsTab
-  const { vetements, marques, isLoading, error } = useVetementsData('mes-vetements', '');
+  const { vetements, marques, isLoading, error, handleVetementDeleted } = useVetementsData('mes-vetements', '');
   const { categories, loadingCategories } = useCategories();
+  const { filteredAmis, loadingAmis } = useAmis();
   
   // Ensure marques are strings, not objects
   const formattedMarques = marques.map(marque => 
     typeof marque === 'string' ? marque : marque.nom
   );
+
+  const acceptedFriends = filteredAmis?.amisAcceptes || [];
   
   return (
     <>
@@ -32,6 +37,7 @@ const TabContentRenderer: React.FC<TabContentRendererProps> = ({ children }) => 
           isLoading={isLoading || loadingCategories}
           error={error}
           isAuthenticated={true}
+          onVetementDeleted={handleVetementDeleted}
         />
       </TabsContent>
       
@@ -47,8 +53,22 @@ const TabContentRenderer: React.FC<TabContentRendererProps> = ({ children }) => 
         <AjouterEnsembleTab />
       </TabsContent>
       
-      <TabsContent value="a-vendre">
-        <AVendreTab />
+      <TabsContent value="vetements-amis">
+        <VetementsAmisTab
+          vetements={[]} 
+          categories={categories}
+          marques={formattedMarques}
+          acceptedFriends={acceptedFriends}
+          isLoading={isLoading || loadingAmis || loadingCategories}
+          error={error}
+          isAuthenticated={true}
+          onVetementDeleted={handleVetementDeleted}
+          description="Parcourez les vêtements partagés par vos amis."
+        />
+      </TabsContent>
+      
+      <TabsContent value="ensembles-amis">
+        <EnsemblesAmisList />
       </TabsContent>
       
       {/* Other tab contents will be provided via children */}

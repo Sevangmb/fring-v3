@@ -5,5 +5,5 @@ export type TabType =
   | 'mes-ensembles'
   | 'ajouter-ensemble'
   | 'vetements-amis'
-  | 'ensembles-amis'
-  | 'a-vendre'; // Nouvel onglet
+  | 'ensembles-amis';
+

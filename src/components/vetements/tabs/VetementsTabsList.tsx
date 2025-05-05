@@ -1,7 +1,7 @@
 
 import React from "react";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shirt, PlusCircle, Users, ShoppingBag, CircleDollarSign } from "lucide-react";
+import { Shirt, PlusCircle, Users, ShoppingBag } from "lucide-react";
 import { TabType } from "../types/TabTypes";
 
 interface VetementsTabsListProps {
@@ -68,14 +68,14 @@ const VetementsTabsList: React.FC<VetementsTabsListProps> = ({ onTabChange, acti
       </TabsTrigger>
       
       <TabsTrigger 
-        value="a-vendre" 
-        onClick={() => onTabChange('a-vendre')}
+        value="ensembles-amis" 
+        onClick={() => onTabChange('ensembles-amis')}
         className="flex items-center gap-2"
-        data-state={activeTab === 'a-vendre' ? 'active' : ''}
+        data-state={activeTab === 'ensembles-amis' ? 'active' : ''}
       >
-        <CircleDollarSign className="h-4 w-4" />
-        <span className="hidden sm:inline">À vendre</span>
-        <span className="sm:hidden">Vendre</span>
+        <Users className="h-4 w-4" />
+        <span className="hidden sm:inline">Ens. Amis</span>
+        <span className="sm:hidden">Ens.</span>
       </TabsTrigger>
     </TabsList>
   );

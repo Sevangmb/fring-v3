@@ -8,6 +8,7 @@ export function useVetementsFilters() {
   const [categorieFilter, setCategorieFilter] = useState<string>("all");
   const [marqueFilter, setMarqueFilter] = useState<string>("all");
   const [friendFilter, setFriendFilter] = useState<string>("all");
+  const [aVendreFilter, setAVendreFilter] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'mes-vetements' | 'vetements-amis' | 'mes-ensembles'>('mes-vetements');
   const [activeTab, setActiveTab] = useState<string>("mes-vetements");
   const [categoryTab, setCategoryTab] = useState<string>("all");
@@ -21,6 +22,7 @@ export function useVetementsFilters() {
     setCategorieFilter("all");
     setMarqueFilter("all");
     setFriendFilter("all");
+    setAVendreFilter(false);
     setCategoryTab("all");
   }, []);
 
@@ -31,6 +33,7 @@ export function useVetementsFilters() {
     }
 
     console.log("Filtrage avec friendFilter:", friendFilter);
+    console.log("Filtrage avec aVendreFilter:", aVendreFilter);
     console.log("Vêtements avant filtrage:", vetements.length);
 
     return vetements.filter(vetement => {
@@ -56,6 +59,9 @@ export function useVetementsFilters() {
       // Assurons-nous que le filtrage fonctionne correctement
       const friendMatch = friendFilter === "all" || 
         (viewMode === 'vetements-amis' && friendFilter !== "all" && vetement.user_id === friendFilter);
+        
+      // Filtre pour "À vendre"
+      const aVendreMatch = !aVendreFilter || vetement.a_vendre === true;
 
       if (viewMode === 'vetements-amis' && friendFilter !== "all") {
         console.log(
@@ -66,10 +72,10 @@ export function useVetementsFilters() {
         );
       }
 
-      return searchMatch && categoryMatch && marqueMatch && 
+      return searchMatch && categoryMatch && marqueMatch && aVendreMatch && 
         (viewMode !== 'vetements-amis' || friendFilter === "all" || friendMatch);
     });
-  }, [searchTerm, categorieFilter, marqueFilter, friendFilter, viewMode]);
+  }, [searchTerm, categorieFilter, marqueFilter, friendFilter, aVendreFilter, viewMode]);
 
   return {
     searchTerm,
@@ -80,6 +86,8 @@ export function useVetementsFilters() {
     setMarqueFilter,
     friendFilter,
     setFriendFilter,
+    aVendreFilter,
+    setAVendreFilter,
     viewMode,
     handleViewModeChange,
     filterVetements,
