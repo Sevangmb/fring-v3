@@ -16,6 +16,11 @@ export const useVetementsData = (type = "mes-vetements", friendFilter = "") => {
   
   const isAuthenticated = !!user;
 
+  // Effet de debug pour suivre les changements de friendFilter
+  useEffect(() => {
+    console.log("useVetementsData - friendFilter changé:", friendFilter);
+  }, [friendFilter]);
+
   // Fonction pour charger les vêtements
   const fetchVetements = useCallback(async () => {
     if (authLoading) return;
@@ -50,6 +55,15 @@ export const useVetementsData = (type = "mes-vetements", friendFilter = "") => {
         console.log("Chargement des vêtements des amis avec le filtre:", friendFilter);
         
         const data = await fetchVetementsAmis(friendFilter !== "all" ? friendFilter : undefined);
+        console.log("Données reçues de fetchVetementsAmis:", data?.length, "vêtements");
+        if (data && data.length > 0) {
+          console.log("Exemple de vêtement reçu:", {
+            id: data[0].id,
+            nom: data[0].nom,
+            user_id: data[0].user_id,
+            owner_email: data[0].owner_email
+          });
+        }
         setVetements(data || []);
         setIsLoading(false);
         return;
@@ -98,8 +112,9 @@ export const useVetementsData = (type = "mes-vetements", friendFilter = "") => {
   
   // Fonction pour recharger tous les vêtements
   const reloadVetements = useCallback(() => {
+    console.log("Rechargement des vêtements avec le filtre:", friendFilter);
     fetchVetements();
-  }, [fetchVetements]);
+  }, [fetchVetements, friendFilter]);
   
   // Fonction pour gérer la suppression d'un vêtement
   const handleVetementDeleted = useCallback((id: number) => {

@@ -22,7 +22,8 @@ const SearchFilterBar: React.FC = () => {
     resetFilters,
     marques,
     showFriendFilter,
-    friends
+    friends,
+    onFriendFilterChange
   } = useSearchFilter();
   
   const {
@@ -37,8 +38,8 @@ const SearchFilterBar: React.FC = () => {
       categorieFilter,
       marqueFilter,
       friendFilter,
-      availableCategories: categories,
-      availableFriends: friends
+      availableCategories: categories?.length,
+      availableFriends: friends?.length
     });
   }, [searchTerm, categorieFilter, marqueFilter, friendFilter, categories, friends]);
 
@@ -48,6 +49,14 @@ const SearchFilterBar: React.FC = () => {
 
   const handleResetFilters = () => {
     resetFilters();
+  };
+
+  const handleFriendFilterChange = (value: string) => {
+    console.log("Changement de filtre ami dans SearchFilterBar:", value);
+    setFriendFilter(value);
+    if (onFriendFilterChange) {
+      onFriendFilterChange(value);
+    }
   };
 
   return (
@@ -102,7 +111,7 @@ const SearchFilterBar: React.FC = () => {
         </Select>
         
         {showFriendFilter && (
-          <Select value={friendFilter} onValueChange={setFriendFilter}>
+          <Select value={friendFilter} onValueChange={handleFriendFilterChange}>
             <SelectTrigger className="w-[180px]">
               <div className="flex items-center">
                 <User className="mr-2 h-4 w-4" />
@@ -112,7 +121,7 @@ const SearchFilterBar: React.FC = () => {
             <SelectContent>
               <SelectItem value="all">Tous les amis</SelectItem>
               {friends.map(friend => (
-                <SelectItem key={friend.id} value={friend.ami_id === friend.user_id ? friend.ami_id : friend.user_id}>
+                <SelectItem key={friend.id} value={friend.user_id === friend.ami_id ? friend.ami_id : friend.user_id}>
                   {friend.email?.split('@')[0] || 'Ami'}
                 </SelectItem>
               ))}

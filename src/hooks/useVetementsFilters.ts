@@ -30,6 +30,9 @@ export function useVetementsFilters() {
       return [];
     }
 
+    console.log("Filtrage avec friendFilter:", friendFilter);
+    console.log("Vêtements avant filtrage:", vetements.length);
+
     return vetements.filter(vetement => {
       // Filtre par terme de recherche
       const searchMatch = !searchTerm || 
@@ -50,12 +53,21 @@ export function useVetementsFilters() {
         vetement.marque === marqueFilter;
 
       // Filtre par ami (pour le mode 'vetements-amis')
-      // Corrigé pour filtrer correctement par user_id au lieu de owner_email
+      // Assurons-nous que le filtrage fonctionne correctement
       const friendMatch = friendFilter === "all" || 
-        (viewMode === 'vetements-amis' && vetement.user_id === friendFilter);
+        (viewMode === 'vetements-amis' && friendFilter !== "all" && vetement.user_id === friendFilter);
+
+      if (viewMode === 'vetements-amis' && friendFilter !== "all") {
+        console.log(
+          "Vêtement", vetement.id, vetement.nom, 
+          "user_id:", vetement.user_id, 
+          "friendFilter:", friendFilter, 
+          "match:", vetement.user_id === friendFilter
+        );
+      }
 
       return searchMatch && categoryMatch && marqueMatch && 
-        (viewMode !== 'vetements-amis' || friendMatch);
+        (viewMode !== 'vetements-amis' || friendFilter === "all" || friendMatch);
     });
   }, [searchTerm, categorieFilter, marqueFilter, friendFilter, viewMode]);
 

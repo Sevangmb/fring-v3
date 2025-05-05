@@ -98,7 +98,6 @@ const VetementsAmis = () => {
   };
   
   // Fonction pour gérer la suppression d'un vêtement
-  // Ajoutons cette fonction qui manquait
   const handleVetementDeleted = (id: number) => {
     console.log(`Vêtement ${id} supprimé`);
     // Recharger les vêtements après suppression
