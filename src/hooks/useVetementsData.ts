@@ -4,8 +4,9 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchMarques } from "@/services/marqueService";
 import { fetchCategories } from "@/services/categorieService";
+import { fetchVetementsAmis } from "@/services/vetement/fetchVetements";
 
-export const useVetementsData = (type = "mes-vetements", searchTerm = "") => {
+export const useVetementsData = (type = "mes-vetements", friendFilter = "") => {
   const [vetements, setVetements] = useState([]);
   const [categories, setCategories] = useState([]);
   const [marques, setMarques] = useState([]);
@@ -45,21 +46,16 @@ export const useVetementsData = (type = "mes-vetements", searchTerm = "") => {
           .eq("a_vendre", true)
           .order("created_at", { ascending: false });
       } else if (type === "vetements-amis") {
-        // Vêtements des amis - utiliser la fonction Supabase RPC
-        const { data, error: rpcError } = await supabase
-          .rpc("get_friends_vetements");
-          
-        if (rpcError) throw rpcError;
+        // Pour le type vêtements-amis, utilisez la fonction fetchVetementsAmis
+        console.log("Chargement des vêtements des amis avec le filtre:", friendFilter);
         
+        const data = await fetchVetementsAmis(friendFilter !== "all" ? friendFilter : undefined);
         setVetements(data || []);
         setIsLoading(false);
         return;
       }
 
-      if (searchTerm) {
-        query = query.ilike("nom", `%${searchTerm}%`);
-      }
-      
+      // Exécuter la requête pour les autres cas
       const { data, error: fetchError } = await query;
       
       if (fetchError) throw fetchError;
@@ -71,7 +67,7 @@ export const useVetementsData = (type = "mes-vetements", searchTerm = "") => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, authLoading, type, searchTerm]);
+  }, [user, authLoading, type, friendFilter]);
   
   // Fonction pour charger les catégories
   const loadCategories = useCallback(async () => {

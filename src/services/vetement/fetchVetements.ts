@@ -52,28 +52,7 @@ export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]>
       return [];
     }
     
-    // Vérifier si l'amitié existe pour déboguer
-    if (friendId && friendId !== 'all') {
-      console.log('Vérification de l\'amitié entre', currentUserId, 'et', friendId);
-      
-      const { data: amitieData, error: amitieError } = await supabase
-        .from('amis')
-        .select('*')
-        .or(`and(user_id.eq.${currentUserId},ami_id.eq.${friendId}),and(user_id.eq.${friendId},ami_id.eq.${currentUserId})`)
-        .eq('status', 'accepted');
-      
-      console.log('Résultat de la vérification d\'amitié:', amitieData, amitieError);
-      
-      if (amitieError) {
-        console.error('Erreur lors de la vérification de l\'amitié:', amitieError);
-      } else if (!amitieData || amitieData.length === 0) {
-        console.warn(`Aucune relation d'amitié acceptée trouvée entre ${currentUserId} et ${friendId}`);
-      } else {
-        console.log('Relation d\'amitié confirmée:', amitieData);
-      }
-    }
-    
-    // Si un ID d'ami spécifique est fourni et n'est pas 'all', utiliser la fonction get_specific_friend_clothes
+    // Si un ID d'ami spécifique est fourni et n'est pas 'all', utiliser get_specific_friend_clothes
     if (friendId && friendId !== 'all') {
       console.log('Récupération des vêtements pour l\'ami spécifique:', friendId);
       
@@ -84,7 +63,7 @@ export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]>
         
         if (error) {
           console.error('Erreur lors de la récupération des vêtements de l\'ami:', error);
-          if (error.message.includes('n\'est pas dans vos amis')) {
+          if (error.message && error.message.includes('n\'est pas dans vos amis')) {
             console.warn(`L'utilisateur ${friendId} n'est pas dans vos amis ou la demande n'est pas acceptée`);
             return [];
           }
@@ -92,6 +71,17 @@ export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]>
         }
         
         console.log('Vêtements de l\'ami récupérés:', data?.length || 0, 'vêtements');
+        
+        // Déboguer les données retournées
+        if (data && data.length > 0) {
+          console.log('Premier vêtement de l\'ami:', {
+            id: data[0].id,
+            nom: data[0].nom,
+            user_id: data[0].user_id,
+            owner_email: data[0].owner_email
+          });
+        }
+        
         return data as Vetement[];
         
       } catch (innerError) {
@@ -112,6 +102,17 @@ export const fetchVetementsAmis = async (friendId?: string): Promise<Vetement[]>
         }
         
         console.log('Vêtements des amis récupérés:', data?.length || 0, 'vêtements');
+        
+        // Déboguer les données retournées
+        if (data && data.length > 0) {
+          console.log('Échantillon des vêtements des amis:', data.slice(0, 3).map(v => ({
+            id: v.id,
+            nom: v.nom,
+            user_id: v.user_id,
+            owner_email: v.owner_email
+          })));
+        }
+        
         return data as Vetement[];
       } catch (innerError) {
         console.error('Erreur inattendue lors de la récupération des vêtements des amis:', innerError);

@@ -49,9 +49,10 @@ export function useVetementsFilters() {
       const marqueMatch = marqueFilter === "all" || 
         vetement.marque === marqueFilter;
 
-      // Filtre par ami (uniquement pour le mode 'vetements-amis')
+      // Filtre par ami (pour le mode 'vetements-amis')
+      // Corrigé pour filtrer correctement par user_id au lieu de owner_email
       const friendMatch = friendFilter === "all" || 
-        (viewMode === 'vetements-amis' && vetement.owner_email === friendFilter);
+        (viewMode === 'vetements-amis' && vetement.user_id === friendFilter);
 
       return searchMatch && categoryMatch && marqueMatch && 
         (viewMode !== 'vetements-amis' || friendMatch);

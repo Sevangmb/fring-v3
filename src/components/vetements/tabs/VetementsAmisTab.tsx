@@ -70,7 +70,18 @@ const VetementsAmisTabContent: React.FC<{
   onVetementDeleted: (id: number) => void;
 }> = ({ vetements, isLoading, error, isAuthenticated, onVetementDeleted }) => {
   // Now we can safely use the context because we're inside the provider
-  const { searchTerm, categorieFilter, marqueFilter } = useSearchFilter();
+  const { searchTerm, categorieFilter, marqueFilter, friendFilter } = useSearchFilter();
+  
+  // Ajouter un log pour afficher les filtres actuels
+  React.useEffect(() => {
+    console.log("Filtres actuels dans VetementsAmisTabContent:", {
+      searchTerm,
+      categorieFilter,
+      marqueFilter,
+      friendFilter,
+      numberOfVetements: vetements.length
+    });
+  }, [searchTerm, categorieFilter, marqueFilter, friendFilter, vetements.length]);
   
   return (
     <>

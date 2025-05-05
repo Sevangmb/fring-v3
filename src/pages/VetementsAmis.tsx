@@ -21,6 +21,8 @@ const VetementsAmis = () => {
     filterVetements
   } = useVetementsFilters();
 
+  // Nous devons utiliser un mode spécifique pour filtrer les vêtements des amis
+  // et passer le friendFilter pour filtrer correctement par ID d'ami
   const {
     vetements,
     categories,
@@ -44,6 +46,16 @@ const VetementsAmis = () => {
     console.log("Filtre d'ami actuel dans VetementsAmis:", friendFilter);
     console.log("Nombre de vêtements affichés:", vetements.length);
     console.log("Amis acceptés:", acceptedFriends.length);
+    
+    // Vérification des IDs des vêtements et de leurs propriétaires
+    if (vetements.length > 0) {
+      console.log("Vêtements après filtrage:", vetements.map(v => ({
+        id: v.id,
+        nom: v.nom,
+        user_id: v.user_id,
+        owner_email: v.owner_email
+      })));
+    }
   }, [friendFilter, vetements, acceptedFriends]);
 
   // Effet pour afficher un message informatif si aucun vêtement n'est trouvé
@@ -76,13 +88,6 @@ const VetementsAmis = () => {
       return () => clearTimeout(timeoutId);
     }
   }, [isLoading, loadingAmis, vetements.length, friendFilter, acceptedFriends.length, user]);
-
-  const filteredVetements = filterVetements(vetements, categories);
-
-  const handleVetementDeleted = (id: number) => {
-    console.log(`Vêtement ${id} supprimé`);
-    reloadVetements();
-  };
 
   // Cette fonction est appelée lorsqu'un ami est sélectionné dans le filtre
   const handleFriendFilterChange = (friendId: string) => {
@@ -120,7 +125,7 @@ const VetementsAmis = () => {
               <SearchFilterBar />
               
               <VetementsList 
-                vetements={filteredVetements}
+                vetements={vetements} // Nous utilisons directement les vêtements filtrés par API
                 isLoading={isLoading || loadingAmis}
                 error={error}
                 isAuthenticated={!!user}
