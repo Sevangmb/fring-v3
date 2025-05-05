@@ -96,6 +96,14 @@ const VetementsAmis = () => {
     // Force le rechargement des vêtements avec le nouveau filtre ami
     reloadVetements();
   };
+  
+  // Fonction pour gérer la suppression d'un vêtement
+  // Ajoutons cette fonction qui manquait
+  const handleVetementDeleted = (id: number) => {
+    console.log(`Vêtement ${id} supprimé`);
+    // Recharger les vêtements après suppression
+    reloadVetements();
+  };
 
   // S'assurer que les marques sont au bon format
   const marquesFormatted = marques ? marques.map(m => typeof m === 'string' ? m : m.nom) : [];
