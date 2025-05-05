@@ -9,6 +9,7 @@ import { useMessages } from "@/hooks/useMessages";
 import NavLinks from "../molecules/NavLinks";
 import AuthButtons from "../molecules/AuthButtons";
 import MobileMenu from "../mobile/MobileMenu";
+import ThemeSwitcher from "../molecules/ThemeSwitcher";
 
 interface NavbarProps {
   className?: string;
@@ -68,17 +69,21 @@ const Navbar = ({ className }: NavbarProps) => {
 
         {/* Auth Buttons - Desktop */}
         <div className="hidden md:flex items-center space-x-4">
+          <ThemeSwitcher />
           <AuthButtons user={user} />
         </div>
 
         {/* Mobile Menu Button */}
-        <button
-          className="md:hidden flex items-center"
-          onClick={toggleMenu}
-          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-        >
-          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <div className="md:hidden flex items-center space-x-2">
+          <ThemeSwitcher />
+          <button
+            className="flex items-center"
+            onClick={toggleMenu}
+            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+          >
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       {/* New Mobile Menu Component */}

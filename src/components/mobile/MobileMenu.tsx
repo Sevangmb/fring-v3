@@ -1,9 +1,9 @@
 
-import React from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { forwardRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import MobileUserProfile from "./MobileUserProfile";
+import { cn } from "@/lib/utils";
 import MobileNavItems from "./MobileNavItems";
+import MobileUserProfile from "./MobileUserProfile";
 import MobileMenuFooter from "./MobileMenuFooter";
 
 interface MobileMenuProps {
@@ -11,31 +11,36 @@ interface MobileMenuProps {
   onClose: () => void;
 }
 
-const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-  
-  const isAdmin = user?.email && ['admin@fring.app', 'sevans@hotmail.fr', 'pedro@hotmail.fr'].includes(user.email);
+const MobileMenu = forwardRef<HTMLDivElement, MobileMenuProps>(
+  ({ isOpen, onClose }, ref) => {
+    const { user } = useAuth();
 
-  if (!isOpen) return null;
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          "fixed inset-0 z-50 bg-background/95 backdrop-blur-sm transition-transform duration-300",
+          isOpen ? "translate-x-0" : "translate-x-full"
+        )}
+        aria-hidden={!isOpen}
+      >
+        <div className="flex flex-col h-full overflow-y-auto">
+          {/* Header area with profile info if logged in */}
+          {user && <MobileUserProfile user={user} />}
 
-  const handleLogout = async () => {
-    await signOut();
-    navigate("/");
-    onClose();
-  };
+          {/* Navigation Links */}
+          <div className="flex-1 py-4">
+            <MobileNavItems onItemClick={onClose} />
+          </div>
 
-  return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col h-full overflow-y-auto">
-      <div className="flex flex-col flex-1 p-4">
-        <MobileUserProfile user={user} />
-        <MobileNavItems onClose={onClose} isAdmin={isAdmin} />
+          {/* Footer with theme switcher */}
+          <MobileMenuFooter />
+        </div>
       </div>
-      
-      <MobileMenuFooter onLogout={handleLogout} />
-    </div>
-  );
-};
+    );
+  }
+);
+
+MobileMenu.displayName = "MobileMenu";
 
 export default MobileMenu;

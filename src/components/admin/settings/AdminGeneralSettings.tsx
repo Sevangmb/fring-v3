@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Settings, Save, Globe, Moon, Sun } from 'lucide-react';
+import { Settings, Save, Globe, Moon, Sun, Monitor } from 'lucide-react';
 import {
   Form,
   FormControl,
@@ -16,6 +16,7 @@ import {
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface GeneralSettingsFormValues {
   appName: string;
@@ -28,21 +29,31 @@ interface GeneralSettingsFormValues {
 const AdminGeneralSettings: React.FC = () => {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const { theme, setTheme } = useTheme();
   
   const form = useForm<GeneralSettingsFormValues>({
     defaultValues: {
       appName: 'Fring',
       logoUrl: '/logo.svg',
-      darkMode: false,
-      theme: 'system',
+      darkMode: theme === 'dark',
+      theme: theme,
       language: 'fr',
     }
   });
+
+  // Mettre à jour les valeurs par défaut quand le thème change
+  useEffect(() => {
+    form.setValue('darkMode', theme === 'dark');
+    form.setValue('theme', theme);
+  }, [theme, form]);
 
   const onSubmit = async (data: GeneralSettingsFormValues) => {
     setIsSaving(true);
     
     try {
+      // Appliquer le thème sélectionné
+      setTheme(data.theme as 'light' | 'dark' | 'system');
+      
       // Simulation d'un enregistrement des données
       await new Promise(resolve => setTimeout(resolve, 1000));
       
@@ -61,6 +72,23 @@ const AdminGeneralSettings: React.FC = () => {
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Gérer le changement de mode sombre directement
+  const handleDarkModeChange = (checked: boolean) => {
+    const newTheme = checked ? 'dark' : 'light';
+    form.setValue('darkMode', checked);
+    form.setValue('theme', newTheme);
+    setTheme(newTheme);
+  };
+
+  // Gérer le changement de thème directement
+  const handleThemeChange = (value: string) => {
+    if (value) {
+      setTheme(value as 'light' | 'dark' | 'system');
+      form.setValue('theme', value);
+      form.setValue('darkMode', value === 'dark');
     }
   };
 
@@ -122,7 +150,7 @@ const AdminGeneralSettings: React.FC = () => {
                       <ToggleGroup
                         type="single"
                         value={field.value}
-                        onValueChange={field.onChange}
+                        onValueChange={handleThemeChange}
                         className="justify-start"
                       >
                         <ToggleGroupItem value="light" aria-label="Clair">
@@ -134,7 +162,7 @@ const AdminGeneralSettings: React.FC = () => {
                           Sombre
                         </ToggleGroupItem>
                         <ToggleGroupItem value="system" aria-label="Système">
-                          <Settings className="h-4 w-4 mr-2" />
+                          <Monitor className="h-4 w-4 mr-2" />
                           Système
                         </ToggleGroupItem>
                       </ToggleGroup>
@@ -152,15 +180,15 @@ const AdminGeneralSettings: React.FC = () => {
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                     <div className="space-y-0.5">
-                      <FormLabel>Mode sombre automatique</FormLabel>
+                      <FormLabel>Mode sombre</FormLabel>
                       <FormDescription>
-                        Activer le mode sombre automatiquement selon les préférences du système.
+                        Activer ou désactiver le mode sombre.
                       </FormDescription>
                     </div>
                     <FormControl>
                       <Switch
                         checked={field.value}
-                        onCheckedChange={field.onChange}
+                        onCheckedChange={handleDarkModeChange}
                       />
                     </FormControl>
                   </FormItem>

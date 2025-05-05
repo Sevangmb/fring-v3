@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { BrowserRouter, useRoutes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from './contexts/ThemeContext';
 import { initializeVoteTables } from './services/database/voteTables';
 import { initializeLogsSystem } from './services/logs';
 import { allRoutes } from './routes';
@@ -50,10 +52,12 @@ function App() {
         <TooltipProvider>
           <QueryClientProvider client={queryClient}>
             <AuthProvider>
-              <AppInitializer>
-                <AppRoutes />
-                <Toaster />
-              </AppInitializer>
+              <ThemeProvider>
+                <AppInitializer>
+                  <AppRoutes />
+                  <Toaster />
+                </AppInitializer>
+              </ThemeProvider>
             </AuthProvider>
           </QueryClientProvider>
         </TooltipProvider>

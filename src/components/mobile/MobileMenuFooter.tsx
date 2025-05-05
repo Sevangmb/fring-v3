@@ -1,32 +1,22 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
-import MobileSocialLinks from "./MobileSocialLinks";
+import React from 'react';
+import ThemeSwitcher from '@/components/molecules/ThemeSwitcher';
 
 interface MobileMenuFooterProps {
-  onLogout: () => void;
+  className?: string;
 }
 
-const MobileMenuFooter: React.FC<MobileMenuFooterProps> = ({ onLogout }) => {
+const MobileMenuFooter: React.FC<MobileMenuFooterProps> = ({ className }) => {
   return (
-    <>
-      <div className="p-4 mt-auto">
-        <Button 
-          variant="destructive" 
-          className="w-full h-12"
-          onClick={onLogout}
-        >
-          <LogOut className="mr-2 h-5 w-5" />
-          Déconnexion
-        </Button>
+    <div className={`px-4 py-6 border-t ${className}`}>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          © {new Date().getFullYear()} Fring
+        </p>
+        
+        <ThemeSwitcher variant="icon" />
       </div>
-
-      <div className="p-4 text-center text-xs text-muted-foreground">
-        <MobileSocialLinks />
-        <p>© 2025 Fring App. All rights reserved.</p>
-      </div>
-    </>
+    </div>
   );
 };
 
