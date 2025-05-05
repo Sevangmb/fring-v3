@@ -85,18 +85,27 @@ const selectionnerVetementAdapte = async (
   if (isRaining) {
     console.log(`Recherche de vêtements adaptés à la pluie pour ${typeVetement}`);
     
-    // 1. Vêtements explicitement adaptés à la pluie
+    // 1. AMÉLIORATION: Priorité absolue aux vêtements explicitement adaptés à la pluie
+    const vetementsExplicitementPluie = vetementsTemperatureOk.filter(v => 
+      v.weather_type === 'pluie'
+    );
+    
+    if (vetementsExplicitementPluie.length > 0) {
+      console.log(`${vetementsExplicitementPluie.length} vêtements explicitement marqués pour la pluie trouvés pour ${typeVetement}`);
+      return vetementsExplicitementPluie[Math.floor(Math.random() * vetementsExplicitementPluie.length)];
+    }
+    
+    // 2. Deuxième priorité: vêtements adaptés à la pluie selon leur description
     const vetementsAdaptesPluie = vetementsTemperatureOk.filter(v => 
-      estAdaptePluie(v) || v.weather_type === 'pluie'
+      estAdaptePluie(v) && v.weather_type !== 'pluie'
     );
     
     if (vetementsAdaptesPluie.length > 0) {
       console.log(`${vetementsAdaptesPluie.length} vêtements adaptés à la pluie trouvés pour ${typeVetement}`);
-      // Choisir aléatoirement parmi les vêtements adaptés à la pluie
       return vetementsAdaptesPluie[Math.floor(Math.random() * vetementsAdaptesPluie.length)];
     }
     
-    // 2. Exclure les vêtements à éviter sous la pluie
+    // 3. Dernière priorité: exclure les vêtements à éviter sous la pluie
     const vetementsNonDeconseilles = vetementsTemperatureOk.filter(v => !estAEviterPluie(v));
     
     if (vetementsNonDeconseilles.length > 0) {
@@ -139,6 +148,18 @@ export const suggestVetements = async (
     if (!vetements || vetements.length === 0) {
       console.warn("Aucun vêtement disponible pour générer une suggestion");
       return { haut: null, bas: null, chaussures: null };
+    }
+    
+    // AMÉLIORATION: Séparation claire entre les vêtements adaptés à la pluie et les autres
+    let vetementsAdaptesPluie = [];
+    let vetementsNormaux = [...vetements];
+    
+    if (isRaining) {
+      // Pré-filtrer les vêtements pour la pluie
+      vetementsAdaptesPluie = vetements.filter(v => 
+        v.weather_type === 'pluie' || estAdaptePluie(v)
+      );
+      console.log(`Nombre de vêtements adaptés à la pluie: ${vetementsAdaptesPluie.length}`);
     }
     
     // Commencer par chercher les chaussures pour éviter une mauvaise classification

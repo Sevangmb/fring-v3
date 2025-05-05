@@ -24,16 +24,31 @@ export const useTenueSuggestion = (meteo: MeteoData | null, vetements: Vetement[
     try {
       setIsGenerating(true);
       
-      // Vérifier s'il pleut et récupérer les détails météo actuels
-      const isRaining = meteo.current.isRaining || meteo.current.precipitationChance > 60;
+      // Amélioration: Détection plus précise s'il pleut
+      const isRaining = meteo.current.isRaining || 
+                        meteo.current.precipitationChance > 60 ||
+                        meteo.current.description.toLowerCase().includes('pluie');
+                        
       const temperature = meteo.current.temperature;
       
       console.log(`Conditions météo actuelles: Température ${temperature}°C, ${isRaining ? 'Il pleut' : 'Pas de pluie'}, Précip: ${meteo.current.precipitationChance}%`);
       console.log(`Disponible: ${vetements.length} vêtements pour générer une suggestion`);
       
+      // Debug: Montrer les vêtements adaptés à la pluie disponibles
+      if (isRaining) {
+        const vetementsMarquesPluie = vetements.filter(v => v.weather_type === 'pluie');
+        console.log(`Vêtements spécifiquement marqués pour la pluie: ${vetementsMarquesPluie.length}`);
+        
+        if (vetementsMarquesPluie.length > 0) {
+          vetementsMarquesPluie.forEach(v => {
+            console.log(`  - ${v.nom} (ID: ${v.id}, Type: ${v.categorie_id})`);
+          });
+        }
+      }
+      
       // Détails des vêtements pour debug
       vetements.forEach(v => {
-        console.log(`Vêtement disponible: ID=${v.id}, Nom=${v.nom}, CatID=${v.categorie_id}`);
+        console.log(`Vêtement disponible: ID=${v.id}, Nom=${v.nom}, CatID=${v.categorie_id}, WeatherType=${v.weather_type || 'non défini'}`);
       });
       
       // Générer une suggestion de tenue
@@ -58,7 +73,7 @@ export const useTenueSuggestion = (meteo: MeteoData | null, vetements: Vetement[
         toast({
           title: "Suggestion incomplète",
           description: "Votre garde-robe ne contient pas tous les types de vêtements nécessaires pour une tenue complète",
-          variant: "destructive"  // Changed from "warning" to "destructive" to match allowed types
+          variant: "destructive"
         });
       }
     } catch (err) {
