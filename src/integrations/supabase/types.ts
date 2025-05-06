@@ -675,6 +675,10 @@ export type Database = {
           owner_email: string
         }[]
       }
+      get_nearby_shops: {
+        Args: { lat: number; lng: number; radius_km?: number }
+        Returns: Json[]
+      }
       get_specific_friend_clothes: {
         Args: { friend_id_param: string }
         Returns: {

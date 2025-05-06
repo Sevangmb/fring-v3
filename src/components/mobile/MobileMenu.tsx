@@ -30,7 +30,7 @@ const MobileMenu = forwardRef<HTMLDivElement, MobileMenuProps>(
 
           {/* Navigation Links */}
           <div className="flex-1 py-4">
-            <MobileNavItems onItemClick={onClose} />
+            <MobileNavItems onClose={onClose} />
           </div>
 
           {/* Footer with theme switcher */}

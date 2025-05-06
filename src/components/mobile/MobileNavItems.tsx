@@ -4,15 +4,20 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Home, Shirt, Heart, Users, MessageCircle, Shield, LayoutDashboard, User } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import MobileMenuItem from "./MobileMenuItem";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface MobileNavItemsProps {
   onClose: () => void;
-  isAdmin: boolean;
+  isAdmin?: boolean;
 }
 
-const MobileNavItems: React.FC<MobileNavItemsProps> = ({ onClose, isAdmin }) => {
+const MobileNavItems: React.FC<MobileNavItemsProps> = ({ onClose }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  // Vérifiez si l'utilisateur est un administrateur
+  const isAdmin = user?.email && ['admin@fring.app', 'sevans@hotmail.fr', 'pedro@hotmail.fr'].includes(user.email);
   
   const handleNavigate = (path: string) => {
     navigate(path);
